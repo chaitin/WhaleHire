@@ -11,14 +11,34 @@ echo "Running pre-push code quality checks..."
 PROJECT_ROOT="$(dirname "$0")/.."
 cd "$PROJECT_ROOT"
 
-# Check for Go files in backend
-go_files=$(find backend -name "*.go" -type f 2>/dev/null || true)
+# Get list of files to be pushed (from local commits not yet on remote)
+remote="$1"
+url="$2"
 
-# Check for frontend files
-frontend_files=$(find ui -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" 2>/dev/null || true)
+# Get the range of commits to be pushed
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+    # Check if we have commits to push
+    range=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+    if [ "$range" = "0" ]; then
+        echo "No new commits to push, skipping code quality checks."
+        exit 0
+    fi
+    
+    # Get changed files in commits to be pushed
+    changed_files=$(git diff --name-only @{u}..HEAD 2>/dev/null || git diff --name-only --cached)
+else
+    # If no HEAD (initial commit), check staged files
+    changed_files=$(git diff --name-only --cached)
+fi
+
+# Check for Go files in the changed files
+go_files=$(echo "$changed_files" | grep -E '^backend/.*\.go$' || true)
+
+# Check for frontend files in the changed files (exclude node_modules)
+frontend_files=$(echo "$changed_files" | grep -E '^ui/src/.*\.(ts|tsx|js|jsx)$' || true)
 
 if [ -z "$go_files" ] && [ -z "$frontend_files" ]; then
-    echo "No Go or frontend files found, skipping code quality checks."
+    echo "No Go or frontend files changed, skipping code quality checks."
     exit 0
 fi
 

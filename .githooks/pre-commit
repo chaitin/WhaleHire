@@ -14,8 +14,8 @@ cd "$PROJECT_ROOT"
 # Check for Go files in backend
 go_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^backend/.*\.go$' || true)
 
-# Check for frontend files
-frontend_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^ui/.*\.(ts|tsx|js|jsx)$' || true)
+# Check for frontend files (exclude node_modules)
+frontend_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^ui/src/.*\.(ts|tsx|js|jsx)$' || true)
 
 if [ -z "$go_files" ] && [ -z "$frontend_files" ]; then
     echo "No Go or frontend files to check, skipping code quality checks."
