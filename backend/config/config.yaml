@@ -1,0 +1,17 @@
+logger:
+  level: info
+server:
+  http:
+    host: 0.0.0.0:8888
+admin:
+  user: { { .ADMIN_USER } }
+  password: { { .ADMIN_PASSWORD } }
+database:
+  master: postgres://{{.POSTGRES_USER}}:{{.POSTGRES_PASSWORD}}@whalehire-db:5432/{{.POSTGRES_DB}}?sslmode=disable&timezone=Asia/Shanghai
+  slave: postgres://{{.POSTGRES_USER}}:{{.POSTGRES_PASSWORD}}@whalehire-db:5432/{{.POSTGRES_DB}}?sslmode=disable&timezone=Asia/Shanghai
+redis:
+  host: whalehire-redis
+  port: "6379"
+  pass: { { .REDIS_PASSWORD } }
+  db: 0
+  idle_conn: 10
