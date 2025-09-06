@@ -1,5 +1,5 @@
 CREATE TABLE "admins" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "username" character varying NOT NULL,
     "password" character varying NOT NULL,
     "status" character varying NOT NULL,
@@ -8,9 +8,28 @@ CREATE TABLE "admins" (
     "updated_at" timestamptz NOT NULL,
     PRIMARY KEY ("id")
 );
+-- Add default admin user
+INSERT INTO "admins" (
+        "id",
+        "username",
+        "password",
+        "status",
+        "last_active_at",
+        "created_at",
+        "updated_at"
+    )
+VALUES (
+        gen_random_uuid(),
+        'admin',
+        '123456',
+        'active',
+        NOW(),
+        NOW(),
+        NOW()
+    );
 CREATE UNIQUE INDEX "admins_username_key" ON "admins" ("username");
 CREATE TABLE "admin_login_histories" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "ip" character varying NOT NULL,
     "country" character varying NOT NULL,
     "province" character varying NOT NULL,
@@ -37,7 +56,7 @@ INSERT INTO "roles" ("id", "name", "description", "created_at")
 VALUES (1, '超级管理员', '系统超级管理员，拥有所有权限', NOW()),
     (2, '普通管理员', '普通管理员，拥有基本管理权限', NOW());
 CREATE TABLE "admin_roles" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "admin_id" uuid NOT NULL,
     "role_id" bigint NOT NULL,
     PRIMARY KEY ("id"),
@@ -46,7 +65,7 @@ CREATE TABLE "admin_roles" (
 );
 CREATE UNIQUE INDEX "adminrole_role_id_admin_id" ON "admin_roles" ("role_id", "admin_id");
 CREATE TABLE "users" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "deleted_at" timestamptz NULL,
     "username" character varying NULL,
     "password" character varying NULL,
@@ -59,7 +78,7 @@ CREATE TABLE "users" (
     PRIMARY KEY ("id")
 );
 CREATE TABLE "user_identities" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "deleted_at" timestamptz NULL,
     "platform" character varying NOT NULL DEFAULT 'email',
     "identity_id" character varying NOT NULL,
@@ -74,7 +93,7 @@ CREATE TABLE "user_identities" (
     SET NULL
 );
 CREATE TABLE "user_login_histories" (
-    "id" uuid NOT NULL,
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "ip" character varying NOT NULL,
     "country" character varying NOT NULL,
     "province" character varying NOT NULL,
