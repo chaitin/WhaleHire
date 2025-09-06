@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Git pre-commit hook for code quality checks
+# This hook runs before committing changes
+
+set -e
+
+echo "Running pre-commit code quality checks..."
+
+# Get project root directory
+PROJECT_ROOT="$(dirname "$0")/.."
+cd "$PROJECT_ROOT"
+
+# Check for Go files in backend
+go_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^backend/.*\.go$' || true)
+
+# Check for frontend files
+frontend_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^ui/.*\.(ts|tsx|js|jsx)$' || true)
+
+if [ -z "$go_files" ] && [ -z "$frontend_files" ]; then
+    echo "No Go or frontend files to check, skipping code quality checks."
+    exit 0
+fi
+
+# Backend Go files check
+if [ -n "$go_files" ]; then
+    echo "Found Go files to check: $go_files"
+    echo "Running backend code quality checks..."
+    
+    cd backend
+    
+    # Run code formatting check
+    echo "Checking Go code format..."
+    if ! make check-fmt; then
+        echo "❌ Go code format check failed. Please run 'make fmt' in backend directory."
+        exit 1
+    fi
+    
+    # Run go vet
+    echo "Running go vet..."
+    if ! make vet; then
+        echo "❌ go vet failed. Please fix the issues before committing."
+        exit 1
+    fi
+    
+    # Run linter
+    echo "Running golangci-lint..."
+    if ! make lint; then
+        echo "❌ Go linter failed. Please fix the issues before committing."
+        exit 1
+    fi
+    
+    # Run go mod tidy check
+    echo "Checking go.mod and go.sum..."
+    if ! make tidy; then
+        echo "❌ go mod tidy failed. Please run 'make tidy' in backend directory."
+        exit 1
+    fi
+    
+    cd ..
+fi
+
+# Frontend files check
+if [ -n "$frontend_files" ]; then
+    echo "Found frontend files to check: $frontend_files"
+    echo "Running frontend code quality checks..."
+    
+    cd ui
+    
+    # Check if package.json exists
+    if [ ! -f "package.json" ]; then
+        echo "❌ package.json not found in ui directory."
+        exit 1
+    fi
+    
+    # Run ESLint if available
+    if npm list eslint >/dev/null 2>&1; then
+        echo "Running ESLint..."
+        if ! npm run lint 2>/dev/null; then
+            echo "❌ ESLint failed. Please fix the issues before committing."
+            exit 1
+        fi
+    else
+        echo "⚠️  ESLint not found, skipping frontend linting."
+    fi
+    
+    # Run type check if TypeScript is used
+    if [ -f "tsconfig.json" ]; then
+        echo "Running TypeScript type check..."
+        if ! npx tsc --noEmit 2>/dev/null; then
+            echo "❌ TypeScript type check failed. Please fix the issues before committing."
+            exit 1
+        fi
+    fi
+    
+    cd ..
+fi
+
+echo "All code quality checks passed! ✅"
+echo "Proceeding with commit..."

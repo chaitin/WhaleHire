@@ -2,10 +2,7 @@ package v1
 
 import (
 	"context"
-	"crypto/md5"
-	"fmt"
 	"log/slog"
-	"sync"
 	"time"
 
 	"github.com/GoYoko/web"
@@ -19,20 +16,12 @@ import (
 	"github.com/ptonlix/whalehire/backend/pkg/session"
 )
 
-// CacheEntry 缓存条目
-type CacheEntry struct {
-	data      []byte
-	createdAt time.Time
-}
-
 type UserHandler struct {
-	usecase   domain.UserUsecase
-	session   *session.Session
-	logger    *slog.Logger
-	cfg       *config.Config
-	vsixCache map[string]*CacheEntry
-	cacheMu   sync.RWMutex
-	limiter   *rate.Limiter
+	usecase domain.UserUsecase
+	session *session.Session
+	logger  *slog.Logger
+	cfg     *config.Config
+	limiter *rate.Limiter
 }
 
 func NewUserHandler(
@@ -46,12 +35,11 @@ func NewUserHandler(
 	cfg *config.Config,
 ) *UserHandler {
 	u := &UserHandler{
-		usecase:   usecase,
-		session:   session,
-		logger:    logger,
-		cfg:       cfg,
-		vsixCache: make(map[string]*CacheEntry),
-		limiter:   rate.NewLimiter(rate.Every(10*time.Second), 1),
+		usecase: usecase,
+		session: session,
+		logger:  logger,
+		cfg:     cfg,
+		limiter: rate.NewLimiter(rate.Every(10*time.Second), 1),
 	}
 
 	// admin
@@ -86,26 +74,6 @@ func NewUserHandler(
 	g.GET("/login-history", web.BaseHandler(u.LoginHistory, web.WithPage()))
 
 	return u
-}
-
-// generateCacheKey 生成缓存键
-func (h *UserHandler) generateCacheKey(version, baseUrl string) string {
-	hash := md5.Sum([]byte(version + ":" + baseUrl))
-	return fmt.Sprintf("%x", hash)
-}
-
-// cleanExpiredCache 清理过期缓存
-func (h *UserHandler) cleanExpiredCache() {
-	h.cacheMu.Lock()
-	defer h.cacheMu.Unlock()
-
-	now := time.Now()
-	for key, entry := range h.vsixCache {
-		// 缓存1小时后过期
-		if now.Sub(entry.createdAt) > time.Hour {
-			delete(h.vsixCache, key)
-		}
-	}
 }
 
 // Login 用户登录

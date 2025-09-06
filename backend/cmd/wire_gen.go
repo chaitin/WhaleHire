@@ -7,11 +7,13 @@
 package main
 
 import (
+	"log/slog"
+
 	"github.com/GoYoko/web"
 	"github.com/ptonlix/whalehire/backend/config"
 	"github.com/ptonlix/whalehire/backend/db"
 	"github.com/ptonlix/whalehire/backend/internal/middleware"
-	"github.com/ptonlix/whalehire/backend/internal/user/handler/v1"
+	v1 "github.com/ptonlix/whalehire/backend/internal/user/handler/v1"
 	"github.com/ptonlix/whalehire/backend/internal/user/repo"
 	"github.com/ptonlix/whalehire/backend/internal/user/usecase"
 	"github.com/ptonlix/whalehire/backend/pkg"
@@ -20,7 +22,6 @@ import (
 	"github.com/ptonlix/whalehire/backend/pkg/session"
 	"github.com/ptonlix/whalehire/backend/pkg/store"
 	"github.com/ptonlix/whalehire/backend/pkg/version"
-	"log/slog"
 )
 
 // Injectors from wire.go:

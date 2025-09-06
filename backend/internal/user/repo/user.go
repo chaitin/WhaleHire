@@ -195,13 +195,6 @@ func (r *UserRepo) DeleteAdmin(ctx context.Context, id string) error {
 	return r.db.Admin.DeleteOne(admin).Exec(ctx)
 }
 
-func (r *UserRepo) updateAvatar(ctx context.Context, tx *db.Tx, ui *db.UserIdentity, avatar string) error {
-	if err := tx.UserIdentity.UpdateOneID(ui.ID).SetAvatarURL(avatar).Exec(ctx); err != nil {
-		return err
-	}
-	return tx.User.UpdateOneID(ui.UserID).SetAvatarURL(avatar).Exec(ctx)
-}
-
 func (r *UserRepo) checkLimit(ctx context.Context, tx *db.Tx) error {
 	count, err := tx.User.Query().Count(ctx)
 	if err != nil {

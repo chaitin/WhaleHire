@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Git pre-push hook for code quality checks
+# This hook runs before pushing to remote repository
+
+set -e
+
+echo "Running pre-push code quality checks..."
+
+# Get project root directory
+PROJECT_ROOT="$(dirname "$0")/.."
+cd "$PROJECT_ROOT"
+
+# Check for Go files in backend
+go_files=$(find backend -name "*.go" -type f 2>/dev/null || true)
+
+# Check for frontend files
+frontend_files=$(find ui -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" 2>/dev/null || true)
+
+if [ -z "$go_files" ] && [ -z "$frontend_files" ]; then
+    echo "No Go or frontend files found, skipping code quality checks."
+    exit 0
+fi
+
+# Backend Go files check
+if [ -n "$go_files" ]; then
+    echo "Running backend code quality checks..."
+    
+    cd backend
+    
+    # Run code formatting check
+    echo "Checking Go code format..."
+    if ! make check-fmt; then
+        echo "❌ Go code format check failed. Please run 'make fmt' in backend directory."
+        exit 1
+    fi
+    
+    # Run go vet
+    echo "Running go vet..."
+    if ! make vet; then
+        echo "❌ go vet failed. Please fix the issues before pushing."
+        exit 1
+    fi
+    
+    # Run linter
+    echo "Running golangci-lint..."
+    if ! make lint; then
+        echo "❌ Go linter failed. Please fix the issues before pushing."
+        exit 1
+    fi
+    
+    # Run go mod tidy check
+    echo "Checking go.mod and go.sum..."
+    if ! make tidy; then
+        echo "❌ go mod tidy failed. Please run 'make tidy' in backend directory."
+        exit 1
+    fi
+    
+    cd ..
+fi
+
+# Frontend files check
+if [ -n "$frontend_files" ]; then
+    echo "Running frontend code quality checks..."
+    
+    cd ui
+    
+    # Check if package.json exists
+    if [ ! -f "package.json" ]; then
+        echo "❌ package.json not found in ui directory."
+        exit 1
+    fi
+    
+    # Run ESLint if available
+    if npm list eslint >/dev/null 2>&1; then
+        echo "Running ESLint..."
+        if ! npm run lint 2>/dev/null; then
+            echo "❌ ESLint failed. Please fix the issues before pushing."
+            exit 1
+        fi
+    else
+        echo "⚠️  ESLint not found, skipping frontend linting."
+    fi
+    
+    # Run type check if TypeScript is used
+    if [ -f "tsconfig.json" ]; then
+        echo "Running TypeScript type check..."
+        if ! npx tsc --noEmit 2>/dev/null; then
+            echo "❌ TypeScript type check failed. Please fix the issues before pushing."
+            exit 1
+        fi
+    fi
+    
+    # Run build check
+    echo "Running build check..."
+    if ! npm run build 2>/dev/null; then
+        echo "❌ Frontend build failed. Please fix the issues before pushing."
+        exit 1
+    fi
+    
+    cd ..
+fi
+
+echo "All code quality checks passed! ✅"
+echo "Proceeding with push..."

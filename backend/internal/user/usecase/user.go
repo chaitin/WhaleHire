@@ -244,9 +244,6 @@ func (u *UserUsecase) CreateAdmin(ctx context.Context, req *domain.CreateAdminRe
 func (u *UserUsecase) Update(ctx context.Context, req *domain.UpdateUserReq) (*domain.User, error) {
 	user, err := u.repo.Update(ctx, req.ID, func(tx *db.Tx, old *db.User, up *db.UserUpdateOne) error {
 		if req.Status != nil {
-			if *req.Status == consts.UserStatusLocked {
-				// TODO
-			}
 			up.SetStatus(*req.Status)
 		}
 		if req.Password != nil {

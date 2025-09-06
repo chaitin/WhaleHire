@@ -14,7 +14,7 @@ func WithTx(ctx context.Context, client *db.Client, fn func(tx *db.Tx) error) er
 	}
 	defer func() {
 		if v := recover(); v != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			panic(v)
 		}
 	}()
