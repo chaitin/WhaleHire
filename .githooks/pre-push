@@ -8,7 +8,7 @@ set -e
 echo "Running pre-push code quality checks..."
 
 # Get project root directory
-PROJECT_ROOT="$(dirname "$0")/.."
+PROJECT_ROOT="$(dirname "$0")/../.."
 cd "$PROJECT_ROOT"
 
 # Get list of files to be pushed (from local commits not yet on remote)
