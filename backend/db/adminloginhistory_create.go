@@ -139,6 +139,14 @@ func (alhc *AdminLoginHistoryCreate) SetID(u uuid.UUID) *AdminLoginHistoryCreate
 	return alhc
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (alhc *AdminLoginHistoryCreate) SetNillableID(u *uuid.UUID) *AdminLoginHistoryCreate {
+	if u != nil {
+		alhc.SetID(*u)
+	}
+	return alhc
+}
+
 // SetOwnerID sets the "owner" edge to the Admin entity by ID.
 func (alhc *AdminLoginHistoryCreate) SetOwnerID(id uuid.UUID) *AdminLoginHistoryCreate {
 	alhc.mutation.SetOwnerID(id)
@@ -193,9 +201,17 @@ func (alhc *AdminLoginHistoryCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (alhc *AdminLoginHistoryCreate) defaults() {
+	if _, ok := alhc.mutation.AdminID(); !ok {
+		v := adminloginhistory.DefaultAdminID()
+		alhc.mutation.SetAdminID(v)
+	}
 	if _, ok := alhc.mutation.CreatedAt(); !ok {
 		v := adminloginhistory.DefaultCreatedAt()
 		alhc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := alhc.mutation.ID(); !ok {
+		v := adminloginhistory.DefaultID()
+		alhc.mutation.SetID(v)
 	}
 }
 

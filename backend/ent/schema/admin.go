@@ -29,7 +29,7 @@ func (Admin) Annotations() []schema.Annotation {
 // Fields of the Admin.
 func (Admin) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("username").Unique(),
 		field.String("password"),
 		field.String("status").GoType(consts.AdminStatus("")),

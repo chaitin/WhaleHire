@@ -5,9 +5,11 @@ package runtime
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/ptonlix/whalehire/backend/consts"
 	"github.com/ptonlix/whalehire/backend/db/admin"
 	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
+	"github.com/ptonlix/whalehire/backend/db/adminrole"
 	"github.com/ptonlix/whalehire/backend/db/role"
 	"github.com/ptonlix/whalehire/backend/db/user"
 	"github.com/ptonlix/whalehire/backend/db/useridentity"
@@ -35,18 +37,45 @@ func init() {
 	admin.DefaultUpdatedAt = adminDescUpdatedAt.Default.(func() time.Time)
 	// admin.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	admin.UpdateDefaultUpdatedAt = adminDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// adminDescID is the schema descriptor for id field.
+	adminDescID := adminFields[0].Descriptor()
+	// admin.DefaultID holds the default value on creation for the id field.
+	admin.DefaultID = adminDescID.Default.(func() uuid.UUID)
 	adminloginhistoryFields := schema.AdminLoginHistory{}.Fields()
 	_ = adminloginhistoryFields
+	// adminloginhistoryDescAdminID is the schema descriptor for admin_id field.
+	adminloginhistoryDescAdminID := adminloginhistoryFields[1].Descriptor()
+	// adminloginhistory.DefaultAdminID holds the default value on creation for the admin_id field.
+	adminloginhistory.DefaultAdminID = adminloginhistoryDescAdminID.Default.(func() uuid.UUID)
 	// adminloginhistoryDescCreatedAt is the schema descriptor for created_at field.
 	adminloginhistoryDescCreatedAt := adminloginhistoryFields[10].Descriptor()
 	// adminloginhistory.DefaultCreatedAt holds the default value on creation for the created_at field.
 	adminloginhistory.DefaultCreatedAt = adminloginhistoryDescCreatedAt.Default.(func() time.Time)
+	// adminloginhistoryDescID is the schema descriptor for id field.
+	adminloginhistoryDescID := adminloginhistoryFields[0].Descriptor()
+	// adminloginhistory.DefaultID holds the default value on creation for the id field.
+	adminloginhistory.DefaultID = adminloginhistoryDescID.Default.(func() uuid.UUID)
+	adminroleFields := schema.AdminRole{}.Fields()
+	_ = adminroleFields
+	// adminroleDescAdminID is the schema descriptor for admin_id field.
+	adminroleDescAdminID := adminroleFields[1].Descriptor()
+	// adminrole.DefaultAdminID holds the default value on creation for the admin_id field.
+	adminrole.DefaultAdminID = adminroleDescAdminID.Default.(func() uuid.UUID)
+	// adminroleDescID is the schema descriptor for id field.
+	adminroleDescID := adminroleFields[0].Descriptor()
+	// adminrole.DefaultID holds the default value on creation for the id field.
+	adminrole.DefaultID = adminroleDescID.Default.(func() uuid.UUID)
 	roleFields := schema.Role{}.Fields()
 	_ = roleFields
 	// roleDescCreatedAt is the schema descriptor for created_at field.
 	roleDescCreatedAt := roleFields[3].Descriptor()
 	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
 	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	userMixin := schema.User{}.Mixin()
+	userMixinHooks0 := userMixin[0].Hooks()
+	user.Hooks[0] = userMixinHooks0[0]
+	userMixinInters0 := userMixin[0].Interceptors()
+	user.Interceptors[0] = userMixinInters0[0]
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescPlatform is the schema descriptor for platform field.
@@ -65,8 +94,21 @@ func init() {
 	userDescUpdatedAt := userFields[8].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userFields[0].Descriptor()
+	// user.DefaultID holds the default value on creation for the id field.
+	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	useridentityMixin := schema.UserIdentity{}.Mixin()
+	useridentityMixinHooks0 := useridentityMixin[0].Hooks()
+	useridentity.Hooks[0] = useridentityMixinHooks0[0]
+	useridentityMixinInters0 := useridentityMixin[0].Interceptors()
+	useridentity.Interceptors[0] = useridentityMixinInters0[0]
 	useridentityFields := schema.UserIdentity{}.Fields()
 	_ = useridentityFields
+	// useridentityDescUserID is the schema descriptor for user_id field.
+	useridentityDescUserID := useridentityFields[1].Descriptor()
+	// useridentity.DefaultUserID holds the default value on creation for the user_id field.
+	useridentity.DefaultUserID = useridentityDescUserID.Default.(func() uuid.UUID)
 	// useridentityDescPlatform is the schema descriptor for platform field.
 	useridentityDescPlatform := useridentityFields[2].Descriptor()
 	// useridentity.DefaultPlatform holds the default value on creation for the platform field.
@@ -75,12 +117,24 @@ func init() {
 	useridentityDescCreatedAt := useridentityFields[8].Descriptor()
 	// useridentity.DefaultCreatedAt holds the default value on creation for the created_at field.
 	useridentity.DefaultCreatedAt = useridentityDescCreatedAt.Default.(func() time.Time)
+	// useridentityDescID is the schema descriptor for id field.
+	useridentityDescID := useridentityFields[0].Descriptor()
+	// useridentity.DefaultID holds the default value on creation for the id field.
+	useridentity.DefaultID = useridentityDescID.Default.(func() uuid.UUID)
 	userloginhistoryFields := schema.UserLoginHistory{}.Fields()
 	_ = userloginhistoryFields
+	// userloginhistoryDescUserID is the schema descriptor for user_id field.
+	userloginhistoryDescUserID := userloginhistoryFields[1].Descriptor()
+	// userloginhistory.DefaultUserID holds the default value on creation for the user_id field.
+	userloginhistory.DefaultUserID = userloginhistoryDescUserID.Default.(func() uuid.UUID)
 	// userloginhistoryDescCreatedAt is the schema descriptor for created_at field.
 	userloginhistoryDescCreatedAt := userloginhistoryFields[13].Descriptor()
 	// userloginhistory.DefaultCreatedAt holds the default value on creation for the created_at field.
 	userloginhistory.DefaultCreatedAt = userloginhistoryDescCreatedAt.Default.(func() time.Time)
+	// userloginhistoryDescID is the schema descriptor for id field.
+	userloginhistoryDescID := userloginhistoryFields[0].Descriptor()
+	// userloginhistory.DefaultID holds the default value on creation for the id field.
+	userloginhistory.DefaultID = userloginhistoryDescID.Default.(func() uuid.UUID)
 }
 
 const (

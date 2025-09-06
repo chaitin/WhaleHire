@@ -23,8 +23,8 @@ func (AdminRole) Annotations() []schema.Annotation {
 // Fields of the AdminRole.
 func (AdminRole) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}),
-		field.UUID("admin_id", uuid.UUID{}),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New),
+		field.UUID("admin_id", uuid.UUID{}).Default(uuid.New),
 		field.Int64("role_id"),
 	}
 }

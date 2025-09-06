@@ -2,8 +2,11 @@ package config
 
 import (
 	_ "embed"
+	"fmt"
+	"path/filepath"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
 	"github.com/ptonlix/whalehire/backend/pkg/logger"
@@ -59,11 +62,21 @@ type Config struct {
 }
 
 func Init() (*Config, error) {
+	envPaths := []string{
+		".env",
+		filepath.Join("..", ".env"),
+		filepath.Join("..", "..", ".env"),
+	}
+	for _, path := range envPaths {
+		if err := godotenv.Load(path); err == nil {
+			break
+		}
+	}
 	v := viper.New()
-	v.AutomaticEnv()
 	v.SetEnvPrefix("WHALEHIRE")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
+	v.AutomaticEnv()
+	// 设置默认值
 	v.SetDefault("debug", false)
 	v.SetDefault("read_only", false)
 	v.SetDefault("logger.level", "info")
@@ -87,6 +100,11 @@ func Init() (*Config, error) {
 	v.SetDefault("embedding.model_name", "qwen3-embedding-0.6b")
 	v.SetDefault("embedding.api_endpoint", "https://aiapi.chaitin.net/v1/embeddings")
 	v.SetDefault("embedding.api_key", "")
+
+	// 打印从环境变量中读取的所有配置值
+	fmt.Println("从环境变量读取的配置值:")
+	fmt.Println("Database Master:", v.GetString("database.master"))
+	fmt.Println("Database Slave:", v.GetString("database.slave"))
 
 	c := Config{}
 	if err := v.Unmarshal(&c); err != nil {

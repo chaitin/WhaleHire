@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  whalehire-db:
+    image: pgvector/pgvector:pg17
+    container_name: whalehire-postgres
+    environment:
+      POSTGRES_DB: whalehire
+      POSTGRES_USER: whalehire
+      POSTGRES_PASSWORD: whalehire123
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - whalehire-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U whalehire -d whalehire"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  whalehire-redis:
+    image: redis:7-alpine
+    container_name: whalehire-redis
+    environment:
+      REDIS_PASSWORD: redis123
+    command: redis-server --requirepass redis123
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - whalehire-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端服务
+  whalehire-backend:
+    build:
+      context: ./backend
+      dockerfile: build/Dockerfile
+      args:
+        VERSION: "1.0.0"
+        BUILD_TIME: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        GIT_COMMIT: "$(git rev-parse HEAD)"
+    container_name: whalehire-backend
+    environment:
+      POSTGRES_USER: whalehire
+      POSTGRES_PASSWORD: whalehire123
+      POSTGRES_DB: whalehire
+      REDIS_PASSWORD: redis123
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: admin123
+    ports:
+      - "8888:8888"
+    depends_on:
+      whalehire-db:
+        condition: service_healthy
+      whalehire-redis:
+        condition: service_healthy
+    networks:
+      - whalehire-network
+    volumes:
+      - ./backend/config:/app/config
+      - ./backend/templates:/app/templates
+    restart: unless-stopped
+
+  # 前端服务
+  whalehire-frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: whalehire-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:8888
+    depends_on:
+      - whalehire-backend
+    networks:
+      - whalehire-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  whalehire-network:
+    driver: bridge

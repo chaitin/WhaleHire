@@ -94,6 +94,14 @@ func (ac *AdminCreate) SetID(u uuid.UUID) *AdminCreate {
 	return ac
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (ac *AdminCreate) SetNillableID(u *uuid.UUID) *AdminCreate {
+	if u != nil {
+		ac.SetID(*u)
+	}
+	return ac
+}
+
 // AddLoginHistoryIDs adds the "login_histories" edge to the AdminLoginHistory entity by IDs.
 func (ac *AdminCreate) AddLoginHistoryIDs(ids ...uuid.UUID) *AdminCreate {
 	ac.mutation.AddLoginHistoryIDs(ids...)
@@ -185,6 +193,10 @@ func (ac *AdminCreate) defaults() {
 	if _, ok := ac.mutation.UpdatedAt(); !ok {
 		v := admin.DefaultUpdatedAt()
 		ac.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := ac.mutation.ID(); !ok {
+		v := admin.DefaultID()
+		ac.mutation.SetID(v)
 	}
 }
 
@@ -297,6 +309,13 @@ func (ac *AdminCreate) createSpec() (*Admin, *sqlgraph.CreateSpec) {
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &AdminRoleCreate{config: ac.config, mutation: newAdminRoleMutation(ac.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}

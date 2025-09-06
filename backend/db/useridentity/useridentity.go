@@ -5,8 +5,10 @@ package useridentity
 import (
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 	"github.com/ptonlix/whalehire/backend/consts"
 )
 
@@ -70,11 +72,22 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+// Note that the variables below are initialized by the runtime
+// package on the initialization of the application. Therefore,
+// it should be imported in the main as follows:
+//
+//	import _ "github.com/ptonlix/whalehire/backend/db/runtime"
 var (
+	Hooks        [1]ent.Hook
+	Interceptors [1]ent.Interceptor
+	// DefaultUserID holds the default value on creation for the "user_id" field.
+	DefaultUserID func() uuid.UUID
 	// DefaultPlatform holds the default value on creation for the "platform" field.
 	DefaultPlatform consts.UserPlatform
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )
 
 // OrderOption defines the ordering options for the UserIdentity queries.

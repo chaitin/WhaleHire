@@ -31,6 +31,14 @@ func (arc *AdminRoleCreate) SetAdminID(u uuid.UUID) *AdminRoleCreate {
 	return arc
 }
 
+// SetNillableAdminID sets the "admin_id" field if the given value is not nil.
+func (arc *AdminRoleCreate) SetNillableAdminID(u *uuid.UUID) *AdminRoleCreate {
+	if u != nil {
+		arc.SetAdminID(*u)
+	}
+	return arc
+}
+
 // SetRoleID sets the "role_id" field.
 func (arc *AdminRoleCreate) SetRoleID(i int64) *AdminRoleCreate {
 	arc.mutation.SetRoleID(i)
@@ -40,6 +48,14 @@ func (arc *AdminRoleCreate) SetRoleID(i int64) *AdminRoleCreate {
 // SetID sets the "id" field.
 func (arc *AdminRoleCreate) SetID(u uuid.UUID) *AdminRoleCreate {
 	arc.mutation.SetID(u)
+	return arc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (arc *AdminRoleCreate) SetNillableID(u *uuid.UUID) *AdminRoleCreate {
+	if u != nil {
+		arc.SetID(*u)
+	}
 	return arc
 }
 
@@ -60,6 +76,7 @@ func (arc *AdminRoleCreate) Mutation() *AdminRoleMutation {
 
 // Save creates the AdminRole in the database.
 func (arc *AdminRoleCreate) Save(ctx context.Context) (*AdminRole, error) {
+	arc.defaults()
 	return withHooks(ctx, arc.sqlSave, arc.mutation, arc.hooks)
 }
 
@@ -82,6 +99,18 @@ func (arc *AdminRoleCreate) Exec(ctx context.Context) error {
 func (arc *AdminRoleCreate) ExecX(ctx context.Context) {
 	if err := arc.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (arc *AdminRoleCreate) defaults() {
+	if _, ok := arc.mutation.AdminID(); !ok {
+		v := adminrole.DefaultAdminID()
+		arc.mutation.SetAdminID(v)
+	}
+	if _, ok := arc.mutation.ID(); !ok {
+		v := adminrole.DefaultID()
+		arc.mutation.SetID(v)
 	}
 }
 
@@ -378,6 +407,7 @@ func (arcb *AdminRoleCreateBulk) Save(ctx context.Context) ([]*AdminRole, error)
 	for i := range arcb.builders {
 		func(i int, root context.Context) {
 			builder := arcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*AdminRoleMutation)
 				if !ok {

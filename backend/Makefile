@@ -31,3 +31,11 @@ swag:
 
 migrate_sql:
 	migrate create -ext sql -dir migration -seq ${SEQ}
+
+# 生成迁移文件（基于当前Ent schema）
+generate-migration:
+	@if [ -z "$(NAME)" ]; then \
+		echo "Usage: make generate-migration NAME=migration_name"; \
+		exit 1; \
+	fi
+	cd script && go run create_migration.go $(NAME)

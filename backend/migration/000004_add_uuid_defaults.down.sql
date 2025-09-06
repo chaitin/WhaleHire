@@ -1,0 +1,3 @@
+-- Migration: add_uuid_defaults
+-- Created: 2025-09-06 17:45:41
+-- TODO: Add rollback SQL statements here
