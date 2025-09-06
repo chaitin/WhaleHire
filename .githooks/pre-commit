@@ -8,7 +8,6 @@ set -e
 echo "Running pre-commit code quality checks..."
 
 # Get project root directory
-# When run from .git/hooks/, we need to go up two levels to reach project root
 PROJECT_ROOT="$(dirname "$0")/../.."
 cd "$PROJECT_ROOT"
 
