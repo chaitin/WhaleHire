@@ -1,3 +1,3 @@
 -- Migration: add_user_tables
--- Created: 2025-09-06 17:34:10
+-- Created: 2025-09-06 18:13:52
 -- TODO: Add rollback SQL statements here

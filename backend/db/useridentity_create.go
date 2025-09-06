@@ -150,14 +150,6 @@ func (uic *UserIdentityCreate) SetID(u uuid.UUID) *UserIdentityCreate {
 	return uic
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (uic *UserIdentityCreate) SetNillableID(u *uuid.UUID) *UserIdentityCreate {
-	if u != nil {
-		uic.SetID(*u)
-	}
-	return uic
-}
-
 // SetUser sets the "user" edge to the User entity.
 func (uic *UserIdentityCreate) SetUser(u *User) *UserIdentityCreate {
 	return uic.SetUserID(u.ID)
@@ -200,13 +192,6 @@ func (uic *UserIdentityCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (uic *UserIdentityCreate) defaults() error {
-	if _, ok := uic.mutation.UserID(); !ok {
-		if useridentity.DefaultUserID == nil {
-			return fmt.Errorf("db: uninitialized useridentity.DefaultUserID (forgotten import db/runtime?)")
-		}
-		v := useridentity.DefaultUserID()
-		uic.mutation.SetUserID(v)
-	}
 	if _, ok := uic.mutation.Platform(); !ok {
 		v := useridentity.DefaultPlatform
 		uic.mutation.SetPlatform(v)
@@ -217,13 +202,6 @@ func (uic *UserIdentityCreate) defaults() error {
 		}
 		v := useridentity.DefaultCreatedAt()
 		uic.mutation.SetCreatedAt(v)
-	}
-	if _, ok := uic.mutation.ID(); !ok {
-		if useridentity.DefaultID == nil {
-			return fmt.Errorf("db: uninitialized useridentity.DefaultID (forgotten import db/runtime?)")
-		}
-		v := useridentity.DefaultID()
-		uic.mutation.SetID(v)
 	}
 	return nil
 }

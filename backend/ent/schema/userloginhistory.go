@@ -29,8 +29,8 @@ func (UserLoginHistory) Annotations() []schema.Annotation {
 // Fields of the UserLoginHistory.
 func (UserLoginHistory) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.UUID("user_id", uuid.UUID{}).Optional().Default(uuid.New),
+		field.UUID("id", uuid.UUID{}),
+		field.UUID("user_id", uuid.UUID{}).Optional(),
 		field.String("ip"),
 		field.String("country"),
 		field.String("province"),

@@ -159,14 +159,6 @@ func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	return uc
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
-	if u != nil {
-		uc.SetID(*u)
-	}
-	return uc
-}
-
 // AddLoginHistoryIDs adds the "login_histories" edge to the UserLoginHistory entity by IDs.
 func (uc *UserCreate) AddLoginHistoryIDs(ids ...uuid.UUID) *UserCreate {
 	uc.mutation.AddLoginHistoryIDs(ids...)
@@ -255,13 +247,6 @@ func (uc *UserCreate) defaults() error {
 		}
 		v := user.DefaultUpdatedAt()
 		uc.mutation.SetUpdatedAt(v)
-	}
-	if _, ok := uc.mutation.ID(); !ok {
-		if user.DefaultID == nil {
-			return fmt.Errorf("db: uninitialized user.DefaultID (forgotten import db/runtime?)")
-		}
-		v := user.DefaultID()
-		uc.mutation.SetID(v)
 	}
 	return nil
 }

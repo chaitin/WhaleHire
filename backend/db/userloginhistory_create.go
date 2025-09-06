@@ -182,14 +182,6 @@ func (ulhc *UserLoginHistoryCreate) SetID(u uuid.UUID) *UserLoginHistoryCreate {
 	return ulhc
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (ulhc *UserLoginHistoryCreate) SetNillableID(u *uuid.UUID) *UserLoginHistoryCreate {
-	if u != nil {
-		ulhc.SetID(*u)
-	}
-	return ulhc
-}
-
 // SetOwnerID sets the "owner" edge to the User entity by ID.
 func (ulhc *UserLoginHistoryCreate) SetOwnerID(id uuid.UUID) *UserLoginHistoryCreate {
 	ulhc.mutation.SetOwnerID(id)
@@ -244,17 +236,9 @@ func (ulhc *UserLoginHistoryCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (ulhc *UserLoginHistoryCreate) defaults() {
-	if _, ok := ulhc.mutation.UserID(); !ok {
-		v := userloginhistory.DefaultUserID()
-		ulhc.mutation.SetUserID(v)
-	}
 	if _, ok := ulhc.mutation.CreatedAt(); !ok {
 		v := userloginhistory.DefaultCreatedAt()
 		ulhc.mutation.SetCreatedAt(v)
-	}
-	if _, ok := ulhc.mutation.ID(); !ok {
-		v := userloginhistory.DefaultID()
-		ulhc.mutation.SetID(v)
 	}
 }
 
