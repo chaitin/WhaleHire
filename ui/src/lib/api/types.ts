@@ -48,6 +48,15 @@ export interface RegisterResponse {
   user_id?: string;
 }
 
+// ==================== 用户更新相关类型 ====================
+
+// 更新用户信息请求参数
+export interface UpdateUserRequest {
+  id: string;
+  password?: string;
+  status?: 'active' | 'locked' | 'inactive';
+}
+
 // ==================== 通用响应类型 ====================
 
 export interface ApiResult<T = unknown> {

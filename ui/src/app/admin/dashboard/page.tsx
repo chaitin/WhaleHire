@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { GlassNavigation } from '@/components/ui/glass-navigation'
+import { GlassNavigation } from '@/components/custom/glass-navigation'
 import { 
   Search, 
   Send, 

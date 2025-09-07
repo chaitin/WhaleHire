@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { GlassNavigation } from '@/components/ui/glass-navigation'
+import { GlassNavigation } from '@/components/custom/glass-navigation'
 import { Search, Send, Plus, MessageCircle, FileText, Users, Briefcase, Settings, Mic, ArrowUpRight, ChevronLeft, ChevronRight, User, LogOut } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getUserProfile, getAvatarUrl, getDisplayName, logout } from '@/lib/api'
 import type { UserProfile } from '@/lib/api'
+import { UserProfileDialog } from '@/components/business/user-profile-dialog'
 
 interface ChatHistory {
   id: string
@@ -35,6 +36,7 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [message, setMessage] = useState('')
+  const [isUserProfileDialogOpen, setIsUserProfileDialogOpen] = useState(false)
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [chatHistory] = useState<ChatHistory[]>([
@@ -252,9 +254,9 @@ export default function Dashboard() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="top">
-                     <DropdownMenuItem onClick={() => console.log('查看用户信息')}>
+                     <DropdownMenuItem onClick={() => setIsUserProfileDialogOpen(true)}>
                        <User className="w-4 h-4 mr-2" />
-                       查看用户信息
+                       用户信息
                      </DropdownMenuItem>
                      <DropdownMenuSeparator />
                      <DropdownMenuItem onClick={handleLogout}>
@@ -428,6 +430,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      
+      {/* User Profile Dialog */}
+      <UserProfileDialog 
+        open={isUserProfileDialogOpen} 
+        onOpenChange={setIsUserProfileDialogOpen} 
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 // 用户信息相关 API
 
-import type { UserProfile, ApiResponse } from './types';
+import type { UserProfile, ApiResponse, UpdateUserRequest } from './types';
 
 /**
  * 获取用户信息
@@ -65,5 +65,38 @@ export async function logout(): Promise<boolean> {
   } catch (error) {
     console.error('注销请求失败:', error);
     return false;
+  }
+}
+
+/**
+ * 更新用户信息
+ */
+export async function updateUser(params: UpdateUserRequest): Promise<UserProfile | null> {
+  try {
+    const response = await fetch('/api/v1/user/update', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+      console.error('更新用户信息失败:', response.status, response.statusText);
+      return null;
+    }
+
+    const result: ApiResponse<UserProfile> = await response.json();
+    
+    if (result.code === 0 && result.data) {
+      return result.data;
+    } else {
+      console.error('API返回错误:', result.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('更新用户信息请求失败:', error);
+    return null;
   }
 }
