@@ -57,6 +57,14 @@ export interface UpdateUserRequest {
   status?: 'active' | 'locked' | 'inactive';
 }
 
+// 更新用户资料请求参数
+export interface ProfileUpdateRequest {
+  username?: string;
+  password?: string;
+  old_password?: string;
+  avatar?: string;
+}
+
 // ==================== 通用响应类型 ====================
 
 export interface ApiResult<T = unknown> {

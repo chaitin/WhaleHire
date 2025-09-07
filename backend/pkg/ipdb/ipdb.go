@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
+	"net"
 	"strings"
 
 	"github.com/lionsoul2014/ip2region/binding/golang/xdb"
@@ -32,6 +33,22 @@ func NewIPDB(logger *slog.Logger) (*IPDB, error) {
 }
 
 func (a *IPDB) Lookup(ip string) (*domain.IPAddress, error) {
+	// 处理IPv6地址，ip2region库主要支持IPv4
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return nil, fmt.Errorf("invalid ip address: %s", ip)
+	}
+	
+	// 如果是IPv6地址，使用默认值
+	if parsedIP.To4() == nil {
+		return &domain.IPAddress{
+			IP:       ip,
+			Country:  "未知",
+			Province: "未知",
+			City:     "未知",
+		}, nil
+	}
+	
 	region, err := a.searcher.SearchByStr(ip)
 	if err != nil {
 		return nil, fmt.Errorf("search ip failed: %w", err)

@@ -1,6 +1,6 @@
 // 用户信息相关 API
 
-import type { UserProfile, ApiResponse, UpdateUserRequest } from './types';
+import type { UserProfile, ApiResponse, UpdateUserRequest, ProfileUpdateRequest } from './types';
 
 /**
  * 获取用户信息
@@ -97,6 +97,39 @@ export async function updateUser(params: UpdateUserRequest): Promise<UserProfile
     }
   } catch (error) {
     console.error('更新用户信息请求失败:', error);
+    return null;
+  }
+}
+
+/**
+ * 更新用户资料
+ */
+export async function updateProfile(params: ProfileUpdateRequest): Promise<UserProfile | null> {
+  try {
+    const response = await fetch('/api/v1/user/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+      console.error('更新用户资料失败:', response.status, response.statusText);
+      return null;
+    }
+
+    const result: ApiResponse<UserProfile> = await response.json();
+    
+    if (result.code === 0 && result.data) {
+      return result.data;
+    } else {
+      console.error('API返回错误:', result.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('更新用户资料请求失败:', error);
     return null;
   }
 }

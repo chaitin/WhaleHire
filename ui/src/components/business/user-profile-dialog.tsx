@@ -1,18 +1,16 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Edit3, Save, X, Eye, EyeOff } from 'lucide-react'
-import { getUserProfile, updateUser, getAvatarUrl, getDisplayName } from '@/lib/api/user'
-import type { UserProfile, UpdateUserRequest } from '@/lib/api/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { User, Upload, Save, Eye, EyeOff } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { getUserProfile, updateProfile, getAvatarUrl, getDisplayName } from '@/lib/api/user'
+import type { UserProfile, ProfileUpdateRequest } from '@/lib/api/types'
 
 interface UserProfileDialogProps {
   open: boolean
@@ -22,13 +20,17 @@ interface UserProfileDialogProps {
 export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showOldPassword, setShowOldPassword] = useState(false)
+  const [enablePasswordChange, setEnablePasswordChange] = useState(false)
   const [formData, setFormData] = useState({
+    username: '',
     password: '',
-    status: 'active' as 'active' | 'locked' | 'inactive'
+    oldPassword: '',
+    avatar: ''
   })
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // 获取用户信息
   const fetchUserProfile = async () => {
@@ -38,8 +40,10 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
       if (profile) {
         setUserProfile(profile)
         setFormData({
+          username: profile.username,
           password: '',
-          status: profile.status as 'active' | 'locked' | 'inactive'
+          oldPassword: '',
+          avatar: profile.avatar_url || ''
         })
       }
     } catch (error) {
@@ -50,57 +54,90 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
     }
   }
 
-  // 更新用户信息
-  const handleUpdateUser = async () => {
+  // 处理头像上传
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // 检查文件类型
+      if (!file.type.startsWith('image/')) {
+        setMessage({ type: 'error', text: '请选择图片文件' })
+        return
+      }
+      
+      // 检查文件大小 (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage({ type: 'error', text: '图片大小不能超过5MB' })
+        return
+      }
+
+      // 创建预览URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setFormData({ ...formData, avatar: result })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // 更新用户资料
+  const handleUpdateProfile = async () => {
     if (!userProfile) return
 
     setLoading(true)
     setMessage(null)
     
     try {
-      const updateParams: UpdateUserRequest = {
-        id: userProfile.id,
-        status: formData.status
+      const updateParams: ProfileUpdateRequest = {}
+      
+      // 只有当字段有变化时才包含在更新参数中
+      if (formData.username !== userProfile.username) {
+        updateParams.username = formData.username
       }
       
-      // 只有当密码不为空时才包含密码字段
-      if (formData.password.trim()) {
+      if (enablePasswordChange && formData.password.trim() && formData.oldPassword.trim()) {
         updateParams.password = formData.password
+        updateParams.old_password = formData.oldPassword
+      }
+      
+      if (formData.avatar !== (userProfile.avatar_url || '')) {
+        updateParams.avatar = formData.avatar
       }
 
-      const updatedProfile = await updateUser(updateParams)
+      // 如果没有任何变化，直接返回
+      if (Object.keys(updateParams).length === 0) {
+        setMessage({ type: 'error', text: '没有检测到任何变化' })
+        setLoading(false)
+        return
+      }
+
+      const updatedProfile = await updateProfile(updateParams)
       if (updatedProfile) {
         setUserProfile(updatedProfile)
-        setMessage({ type: 'success', text: '用户信息更新成功' })
-        setIsEditing(false)
-        setFormData({ ...formData, password: '' })
+        setMessage({ type: 'success', text: '用户资料更新成功' })
+        setFormData({ ...formData, password: '', oldPassword: '' }) // 清空密码字段
+        setEnablePasswordChange(false) // 关闭密码修改开关
+        
+        // 如果修改了密码，需要重新登录
+        if (updateParams.password) {
+          setTimeout(() => {
+            onOpenChange(false) // 关闭弹窗
+            // window.location.href = '/' // 返回根页面重新登录
+          }, 1000) // 延迟1秒让用户看到成功消息
+        } else {
+          // 如果只是修改了其他信息，直接关闭弹窗
+          setTimeout(() => {
+            onOpenChange(false)
+          }, 1000)
+        }
       } else {
-        setMessage({ type: 'error', text: '更新用户信息失败' })
+        setMessage({ type: 'error', text: '更新用户资料失败' })
       }
     } catch (error) {
-      console.error('更新用户信息失败:', error)
-      setMessage({ type: 'error', text: '更新用户信息失败' })
+      console.error('更新用户资料失败:', error)
+      setMessage({ type: 'error', text: '更新用户资料失败' })
     } finally {
       setLoading(false)
-    }
-  }
-
-  // 格式化时间戳
-  const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString('zh-CN')
-  }
-
-  // 获取状态显示文本和颜色
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'active':
-        return { text: '正常', color: 'bg-green-100 text-green-800' }
-      case 'locked':
-        return { text: '锁定', color: 'bg-red-100 text-red-800' }
-      case 'inactive':
-        return { text: '禁用', color: 'bg-gray-100 text-gray-800' }
-      default:
-        return { text: '未知', color: 'bg-gray-100 text-gray-800' }
     }
   }
 
@@ -108,7 +145,6 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   useEffect(() => {
     if (open) {
       fetchUserProfile()
-      setIsEditing(false)
       setMessage(null)
     }
   }, [open])
@@ -125,14 +161,14 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
-            用户信息
+            用户资料
           </DialogTitle>
           <DialogDescription>
-            查看和编辑用户基本信息
+            编辑您的个人资料信息
           </DialogDescription>
         </DialogHeader>
 
@@ -152,171 +188,162 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : userProfile ? (
-          <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="profile">基本信息</TabsTrigger>
-              <TabsTrigger value="settings">设置</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="profile" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={getAvatarUrl(userProfile.avatar_url)} />
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-lg">
-                        {getDisplayName(userProfile).charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{getDisplayName(userProfile)}</CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        <Badge className={getStatusInfo(userProfile.status).color}>
-                          {getStatusInfo(userProfile.status).text}
-                        </Badge>
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">用户ID</Label>
-                      <p className="text-sm font-mono bg-gray-50 p-2 rounded">{userProfile.id}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">用户名</Label>
-                      <p className="text-sm">{userProfile.username}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">邮箱</Label>
-                      <p className="text-sm">{userProfile.email}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">状态</Label>
-                      <Badge className={getStatusInfo(userProfile.status).color}>
-                        {getStatusInfo(userProfile.status).text}
-                      </Badge>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">创建时间</Label>
-                      <p className="text-sm">{formatTimestamp(userProfile.created_at)}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-500">最后活跃</Label>
-                      <p className="text-sm">{formatTimestamp(userProfile.last_active_at)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="settings" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    编辑用户信息
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(!isEditing)}
-                    >
-                      {isEditing ? (
-                        <><X className="w-4 h-4 mr-1" /> 取消</>
-                      ) : (
-                        <><Edit3 className="w-4 h-4 mr-1" /> 编辑</>
-                      )}
-                    </Button>
-                  </CardTitle>
-                  <CardDescription>
-                    修改用户的基本设置信息
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="status">用户状态</Label>
-                      <Select
-                        value={formData.status}
-                        onValueChange={(value: string) => 
-                          setFormData({ ...formData, status: value as 'active' | 'locked' | 'inactive' })
-                        }
-                        disabled={!isEditing}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">正常</SelectItem>
-                          <SelectItem value="locked">锁定</SelectItem>
-                          <SelectItem value="inactive">禁用</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="password">重置密码</Label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? 'text' : 'password'}
-                          value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          placeholder="留空则不修改密码"
-                          disabled={!isEditing}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                          disabled={!isEditing}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        密码长度至少6位，留空则不修改当前密码
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {isEditing && (
-                    <div className="flex justify-end space-x-2 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">个人信息</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* 头像编辑 */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={getAvatarUrl(formData.avatar)} />
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
+                      {getDisplayName(userProfile).charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  点击上传按钮更换头像<br />
+                  支持 JPG、PNG 格式，大小不超过 5MB
+                </p>
+              </div>
+
+              {/* 用户名编辑 */}
+              <div className="space-y-2">
+                <Label htmlFor="username">用户名</Label>
+                <Input
+                  id="username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder="请输入用户名"
+                />
+              </div>
+
+              {/* 邮箱显示（只读） */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-500">邮箱</Label>
+                <p className="text-sm bg-gray-50 p-2 rounded">{userProfile.email}</p>
+              </div>
+
+              {/* 密码修改开关 */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">修改密码</Label>
+                  <p className="text-xs text-gray-500">开启后可以修改登录密码</p>
+                </div>
+                <Switch
+                   checked={enablePasswordChange}
+                   onCheckedChange={(checked: boolean) => {
+                     setEnablePasswordChange(checked)
+                     if (!checked) {
+                       setFormData({ ...formData, password: '', oldPassword: '' })
+                     }
+                   }}
+                 />
+              </div>
+
+              {/* 密码修改表单 */}
+              {enablePasswordChange && (
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  {/* 旧密码 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="oldPassword">当前密码</Label>
+                    <div className="relative">
+                      <Input
+                        id="oldPassword"
+                        type={showOldPassword ? 'text' : 'password'}
+                        value={formData.oldPassword}
+                        onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
+                        placeholder="请输入当前密码"
+                        required
+                      />
                       <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsEditing(false)
-                          setFormData({
-                            password: '',
-                            status: userProfile.status as 'active' | 'locked' | 'inactive'
-                          })
-                        }}
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowOldPassword(!showOldPassword)}
                       >
-                        取消
-                      </Button>
-                      <Button
-                        onClick={handleUpdateUser}
-                        disabled={loading}
-                      >
-                        {loading ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {showOldPassword ? (
+                          <EyeOff className="h-4 w-4" />
                         ) : (
-                          <Save className="w-4 h-4 mr-2" />
+                          <Eye className="h-4 w-4" />
                         )}
-                        保存更改
                       </Button>
                     </div>
+                  </div>
+
+                  {/* 新密码 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password">新密码</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        placeholder="请输入新密码"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      密码长度至少6位，包含字母和数字
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 确认修改按钮 */}
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  取消
+                </Button>
+                <Button
+                  onClick={handleUpdateProfile}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  确认修改
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">无法获取用户信息</p>

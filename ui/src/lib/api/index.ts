@@ -9,6 +9,7 @@ export type {
   LoginResponse,
   RegisterResponse,
   ApiResult,
+  ProfileUpdateRequest,
 } from './types';
 
 // 导出认证相关 API
@@ -24,4 +25,5 @@ export {
   getAvatarUrl,
   getDisplayName,
   logout,
+  updateProfile,
 } from './user';
