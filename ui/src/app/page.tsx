@@ -5,11 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import Image from "next/image";
 
 // 登录表单验证模式
 const loginSchema = z.object({
@@ -99,11 +100,11 @@ export default function AuthPage() {
       const result = await response.json();
       if (response.ok) {
         setMessage({ type: 'success', text: '登录成功！正在跳转...' });
-        // 处理登录成功逻辑，比如跳转到仪表板
+        // 跳转到dashboard页面
         setTimeout(() => {
-          // window.location.href = result.redirect_url || '/dashboard';
-          console.log('用户登录成功，跳转到:', result.redirect_url || '/dashboard');
+          window.location.href = '/dashboard';
         }, 1500);
+        console.log('用户登录成功:', result);
       } else {
         setMessage({ type: 'error', text: result.message || '登录失败，请检查用户名和密码' });
       }
@@ -202,9 +203,13 @@ export default function AuthPage() {
         {/* Logo和标题 */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
+            <Image 
+              src="/logo.svg" 
+              alt="WhaleHire Logo" 
+              width={32} 
+              height={32}
+              className="brightness-0 invert"
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">WhaleHire</h1>
           <p className="text-gray-600">AI智能招聘平台</p>
