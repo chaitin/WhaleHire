@@ -122,7 +122,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
         if (updateParams.password) {
           setTimeout(() => {
             onOpenChange(false) // 关闭弹窗
-            // window.location.href = '/' // 返回根页面重新登录
+            window.location.href = '/' // 返回根页面重新登录
           }, 1000) // 延迟1秒让用户看到成功消息
         } else {
           // 如果只是修改了其他信息，直接关闭弹窗

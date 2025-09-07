@@ -51,33 +51,32 @@ export default function Dashboard() {
     { id: 'screen-agent', name: 'Screen Agent', active: false },
     { id: 'interview-agent', name: 'Interview Agent', active: false }
   ])
-
   const featureCards: FeatureCard[] = [
     {
       id: '1',
       title: '制定岗位JD',
-      description: 'Get tailored advice on increasing property visibility and driving sales.',
+      description: '智能助手帮您快速制定专业的岗位描述，精准定位人才需求。',
       icon: <FileText className="w-6 h-6" />,
       color: 'bg-white border-gray-200'
     },
     {
       id: '2',
       title: '一键发布JD',
-      description: 'Learn expert negotiation tips to close deals effectively.',
+      description: '便捷地将职位发布到多个招聘平台，扩大招聘覆盖范围。',
       icon: <Briefcase className="w-6 h-6" />,
       color: 'bg-white border-gray-200'
     },
     {
       id: '3',
       title: '简历搜索',
-      description: 'Discover the best marketing strategies to showcase your properties.',
+      description: '智能匹配算法帮您快速筛选合适的候选人简历。',
       icon: <Search className="w-6 h-6" />,
       color: 'bg-white border-gray-200'
     },
     {
       id: '4',
       title: '候选人评估',
-      description: 'Need help with something else? Ask away, and we\'ll guide you.',
+      description: '全方位评估候选人能力，助您做出更好的招聘决策。',
       icon: <Users className="w-6 h-6" />,
       color: 'bg-white border-gray-200'
     }
@@ -303,7 +302,7 @@ export default function Dashboard() {
         <div className="backdrop-blur-sm border-b border-white/20 px-6 py-4 relative z-10">
           <div className="flex items-center justify-between">
             {/* 左侧 WhaleHire 标题 */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 w-48">
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm">WhaleHire</h1>
             </div>
             
@@ -315,7 +314,11 @@ export default function Dashboard() {
                 className="bg-white/30 backdrop-blur-lg border border-white/40 shadow-xl"
               />
             </div>
-      
+            
+            {/* 右侧占位区域，保持布局平衡 */}
+            <div className="flex-shrink-0 w-48 flex justify-end">
+              <div className="w-6 h-6"></div>
+            </div>
           </div>
         </div>
 
