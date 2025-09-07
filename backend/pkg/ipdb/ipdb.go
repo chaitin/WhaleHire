@@ -38,7 +38,7 @@ func (a *IPDB) Lookup(ip string) (*domain.IPAddress, error) {
 	if parsedIP == nil {
 		return nil, fmt.Errorf("invalid ip address: %s", ip)
 	}
-	
+
 	// 如果是IPv6地址，使用默认值
 	if parsedIP.To4() == nil {
 		return &domain.IPAddress{
@@ -48,7 +48,7 @@ func (a *IPDB) Lookup(ip string) (*domain.IPAddress, error) {
 			City:     "未知",
 		}, nil
 	}
-	
+
 	region, err := a.searcher.SearchByStr(ip)
 	if err != nil {
 		return nil, fmt.Errorf("search ip failed: %w", err)
