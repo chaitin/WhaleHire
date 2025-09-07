@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Image from "next/image";
+import { userLogin, adminLogin, userRegister } from "@/lib/api";
 
 // 登录表单验证模式
 const loginSchema = z.object({
@@ -84,110 +86,78 @@ export default function AuthPage() {
   const handleUserLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     setMessage(null);
-    try {
-      const response = await fetch('/api/v1/user/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password,
-          source: 'browser',
-        }),
-      });
-      
-      const result = await response.json();
-      if (response.ok) {
-        setMessage({ type: 'success', text: '登录成功！正在跳转...' });
-        // 跳转到dashboard页面
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1500);
-        console.log('用户登录成功:', result);
-      } else {
-        setMessage({ type: 'error', text: result.message || '登录失败，请检查用户名和密码' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: '网络错误，请稍后重试' });
-      console.error('登录请求失败:', error);
-    } finally {
-      setIsLoading(false);
+    
+    const result = await userLogin({
+      username: data.username,
+      password: data.password,
+      source: 'browser',
+    });
+    
+    if (result.success) {
+      setMessage({ type: 'success', text: '登录成功！正在跳转...' });
+      // 跳转到dashboard页面
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1500);
+      console.log('用户登录成功:', result.data);
+    } else {
+      setMessage({ type: 'error', text: result.message || '登录失败，请检查用户名和密码' });
     }
+    
+    setIsLoading(false);
   };
 
   // 管理员登录处理
   const handleAdminLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     setMessage(null);
-    try {
-      const response = await fetch('/api/v1/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password,
-          source: 'browser',
-        }),
-      });
-      
-      const result = await response.json();
-      if (response.ok) {
-        setMessage({ type: 'success', text: '管理员登录成功！正在跳转...' });
-        // 处理登录成功逻辑，比如跳转到管理后台
-        setTimeout(() => {
-          // window.location.href = result.redirect_url || '/admin';
-          console.log('管理员登录成功，跳转到:', result.redirect_url || '/admin');
-        }, 1500);
-      } else {
-        setMessage({ type: 'error', text: result.message || '登录失败，请检查管理员账号和密码' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: '网络错误，请稍后重试' });
-      console.error('登录请求失败:', error);
-    } finally {
-      setIsLoading(false);
+    
+    const result = await adminLogin({
+      username: data.username,
+      password: data.password,
+      source: 'browser',
+    });
+    
+    if (result.success) {
+      setMessage({ type: 'success', text: '管理员登录成功！正在跳转...' });
+      // 处理登录成功逻辑，比如跳转到管理后台
+      setTimeout(() => {
+        window.location.href = result.data?.redirect_url || '/admin/dashboard';
+      }, 1500);
+      console.log('管理员登录成功，跳转到:', result.data?.redirect_url || '/admin/dashboard');
+    } else {
+      setMessage({ type: 'error', text: result.message || '登录失败，请检查管理员账号和密码' });
     }
+    
+    setIsLoading(false);
   };
 
   // 注册处理
   const handleRegister = async (data: RegisterFormData) => {
     setIsLoading(true);
     setMessage(null);
-    try {
-      const response = await fetch('/api/v1/user/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: data.username,
-          email: data.email,
-          password: data.password,
-        }),
-      });
-      
-      const result = await response.json();
-      if (response.ok) {
-        setMessage({ type: 'success', text: '注册成功！请使用新账户登录' });
-        // 重置注册表单
-        registerForm.reset();
-        // 延迟切换到登录页面
-        setTimeout(() => {
-          setActiveTab('user-login');
-          setMessage(null);
-        }, 2000);
-      } else {
-        setMessage({ type: 'error', text: result.message || '注册失败，请检查输入信息' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: '网络错误，请稍后重试' });
-      console.error('注册请求失败:', error);
-    } finally {
-      setIsLoading(false);
+    
+    const result = await userRegister({
+      username: data.username,
+      email: data.email,
+      password: data.password,
+    });
+    
+    if (result.success) {
+      setMessage({ type: 'success', text: '注册成功！请使用新账户登录' });
+      // 重置注册表单
+      registerForm.reset();
+      // 延迟切换到登录页面
+      setTimeout(() => {
+        setActiveTab('user-login');
+        setMessage(null);
+      }, 2000);
+      console.log('用户注册成功:', result.data);
+    } else {
+      setMessage({ type: 'error', text: result.message || '注册失败，请检查输入信息' });
     }
+    
+    setIsLoading(false);
   };
 
   // 清除消息提示
@@ -265,7 +235,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>密码</FormLabel>
                           <FormControl>
-                             <Input type="password" placeholder="请输入密码" {...field} onFocus={clearMessage} />
+                             <PasswordInput placeholder="请输入密码" {...field} onFocus={clearMessage} />
                            </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -302,7 +272,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>密码</FormLabel>
                           <FormControl>
-                             <Input type="password" placeholder="请输入密码" {...field} onFocus={clearMessage} />
+                             <PasswordInput placeholder="请输入密码" {...field} onFocus={clearMessage} />
                            </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -352,7 +322,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>密码</FormLabel>
                           <FormControl>
-                             <Input type="password" placeholder="请输入密码" {...field} onFocus={clearMessage} />
+                             <PasswordInput placeholder="请输入密码" {...field} onFocus={clearMessage} />
                            </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -365,7 +335,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>确认密码</FormLabel>
                           <FormControl>
-                             <Input type="password" placeholder="请再次输入密码" {...field} onFocus={clearMessage} />
+                             <PasswordInput placeholder="请再次输入密码" {...field} onFocus={clearMessage} />
                            </FormControl>
                           <FormMessage />
                         </FormItem>

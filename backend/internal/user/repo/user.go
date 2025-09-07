@@ -43,7 +43,7 @@ func NewUserRepo(
 	cfg *config.Config,
 ) domain.UserRepo {
 	cache := cache.New(5*time.Minute, 10*time.Minute)
-	return &UserRepo{db: db, redis: redis, cfg: cfg, cache: cache}
+	return &UserRepo{db: db, ipdb: ipdb, redis: redis, cfg: cfg, cache: cache}
 }
 
 func (r *UserRepo) InitAdmin(ctx context.Context, username, password string) error {

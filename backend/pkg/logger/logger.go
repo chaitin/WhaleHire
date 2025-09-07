@@ -25,7 +25,8 @@ func NewLogger(cfg *Config) *slog.Logger {
 		level.Set(slog.LevelWarn)
 	}
 	base := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
+		Level:     level,
+		AddSource: true, // 启用源码位置信息
 	})
 	handler := &ContextLogger{Handler: base}
 	return slog.New(handler)
