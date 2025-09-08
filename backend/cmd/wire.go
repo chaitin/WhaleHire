@@ -12,17 +12,19 @@ import (
 
 	"github.com/ptonlix/whalehire/backend/config"
 	"github.com/ptonlix/whalehire/backend/db"
+	generalagentV1 "github.com/ptonlix/whalehire/backend/internal/general_agent/handler/v1"
 	userV1 "github.com/ptonlix/whalehire/backend/internal/user/handler/v1"
 	"github.com/ptonlix/whalehire/backend/pkg/version"
 )
 
 type Server struct {
-	config  *config.Config
-	web     *web.Web
-	ent     *db.Client
-	logger  *slog.Logger
-	userV1  *userV1.UserHandler
-	version *version.VersionInfo
+	config         *config.Config
+	web            *web.Web
+	ent            *db.Client
+	logger         *slog.Logger
+	userV1         *userV1.UserHandler
+	generalagentV1 *generalagentV1.GeneralAgentHandler
+	version        *version.VersionInfo
 }
 
 func newServer() (*Server, error) {

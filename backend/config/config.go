@@ -50,6 +50,14 @@ type Config struct {
 		IdleConn int    `mapstructure:"idle_conn"`
 	} `mapstructure:"redis"`
 
+	GeneralAgent struct {
+		LLM struct {
+			ModelName string `mapstructure:"model_name"`
+			BaseURL   string `mapstructure:"base_url"`
+			APIKey    string `mapstructure:"api_key"`
+		} `mapstructure:"llm"`
+	} `mapstructure:"general_agent"`
+
 	Embedding struct {
 		ModelName   string `mapstructure:"model_name"`
 		APIEndpoint string `mapstructure:"api_endpoint"`
@@ -97,6 +105,10 @@ func Init() (*Config, error) {
 	v.SetDefault("redis.db", 0)
 	v.SetDefault("redis.idle_conn", 20)
 	v.SetDefault("data_report.key", "")
+	v.SetDefault("general_agent.llm.model_name", "deepseek-chat")
+	v.SetDefault("general_agent.llm.base_url", "https://api.deepseek.com/v1")
+	v.SetDefault("general_agent.llm.api_key", "")
+
 	v.SetDefault("embedding.model_name", "qwen3-embedding-0.6b")
 	v.SetDefault("embedding.api_endpoint", "https://aiapi.chaitin.net/v1/embeddings")
 	v.SetDefault("embedding.api_key", "")
