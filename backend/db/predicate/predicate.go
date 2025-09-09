@@ -15,6 +15,15 @@ type AdminLoginHistory func(*sql.Selector)
 // AdminRole is the predicate function for adminrole builders.
 type AdminRole func(*sql.Selector)
 
+// Attachment is the predicate function for attachment builders.
+type Attachment func(*sql.Selector)
+
+// Conversation is the predicate function for conversation builders.
+type Conversation func(*sql.Selector)
+
+// Message is the predicate function for message builders.
+type Message func(*sql.Selector)
+
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
 

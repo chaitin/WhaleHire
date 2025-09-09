@@ -15,6 +15,9 @@ import (
 	"github.com/ptonlix/whalehire/backend/db/admin"
 	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
 	"github.com/ptonlix/whalehire/backend/db/adminrole"
+	"github.com/ptonlix/whalehire/backend/db/attachment"
+	"github.com/ptonlix/whalehire/backend/db/conversation"
+	"github.com/ptonlix/whalehire/backend/db/message"
 	"github.com/ptonlix/whalehire/backend/db/role"
 	"github.com/ptonlix/whalehire/backend/db/user"
 	"github.com/ptonlix/whalehire/backend/db/useridentity"
@@ -82,6 +85,9 @@ func checkColumn(table, column string) error {
 			admin.Table:             admin.ValidColumn,
 			adminloginhistory.Table: adminloginhistory.ValidColumn,
 			adminrole.Table:         adminrole.ValidColumn,
+			attachment.Table:        attachment.ValidColumn,
+			conversation.Table:      conversation.ValidColumn,
+			message.Table:           message.ValidColumn,
 			role.Table:              role.ValidColumn,
 			user.Table:              user.ValidColumn,
 			useridentity.Table:      useridentity.ValidColumn,

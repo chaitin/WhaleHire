@@ -9,6 +9,9 @@ import (
 	"github.com/ptonlix/whalehire/backend/consts"
 	"github.com/ptonlix/whalehire/backend/db/admin"
 	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
+	"github.com/ptonlix/whalehire/backend/db/attachment"
+	"github.com/ptonlix/whalehire/backend/db/conversation"
+	"github.com/ptonlix/whalehire/backend/db/message"
 	"github.com/ptonlix/whalehire/backend/db/role"
 	"github.com/ptonlix/whalehire/backend/db/user"
 	"github.com/ptonlix/whalehire/backend/db/useridentity"
@@ -50,6 +53,97 @@ func init() {
 	adminloginhistoryDescCreatedAt := adminloginhistoryFields[10].Descriptor()
 	// adminloginhistory.DefaultCreatedAt holds the default value on creation for the created_at field.
 	adminloginhistory.DefaultCreatedAt = adminloginhistoryDescCreatedAt.Default.(func() time.Time)
+	attachmentMixin := schema.Attachment{}.Mixin()
+	attachmentMixinHooks0 := attachmentMixin[0].Hooks()
+	attachment.Hooks[0] = attachmentMixinHooks0[0]
+	attachmentMixinInters0 := attachmentMixin[0].Interceptors()
+	attachment.Interceptors[0] = attachmentMixinInters0[0]
+	attachmentFields := schema.Attachment{}.Fields()
+	_ = attachmentFields
+	// attachmentDescType is the schema descriptor for type field.
+	attachmentDescType := attachmentFields[2].Descriptor()
+	// attachment.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	attachment.TypeValidator = attachmentDescType.Validators[0].(func(string) error)
+	// attachmentDescURL is the schema descriptor for url field.
+	attachmentDescURL := attachmentFields[3].Descriptor()
+	// attachment.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	attachment.URLValidator = attachmentDescURL.Validators[0].(func(string) error)
+	// attachmentDescCreatedAt is the schema descriptor for created_at field.
+	attachmentDescCreatedAt := attachmentFields[5].Descriptor()
+	// attachment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	attachment.DefaultCreatedAt = attachmentDescCreatedAt.Default.(func() time.Time)
+	// attachmentDescUpdatedAt is the schema descriptor for updated_at field.
+	attachmentDescUpdatedAt := attachmentFields[6].Descriptor()
+	// attachment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	attachment.DefaultUpdatedAt = attachmentDescUpdatedAt.Default.(func() time.Time)
+	// attachment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	attachment.UpdateDefaultUpdatedAt = attachmentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// attachmentDescID is the schema descriptor for id field.
+	attachmentDescID := attachmentFields[0].Descriptor()
+	// attachment.DefaultID holds the default value on creation for the id field.
+	attachment.DefaultID = attachmentDescID.Default.(func() uuid.UUID)
+	conversationMixin := schema.Conversation{}.Mixin()
+	conversationMixinHooks0 := conversationMixin[0].Hooks()
+	conversation.Hooks[0] = conversationMixinHooks0[0]
+	conversationMixinInters0 := conversationMixin[0].Interceptors()
+	conversation.Interceptors[0] = conversationMixinInters0[0]
+	conversationFields := schema.Conversation{}.Fields()
+	_ = conversationFields
+	// conversationDescTitle is the schema descriptor for title field.
+	conversationDescTitle := conversationFields[2].Descriptor()
+	// conversation.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	conversation.TitleValidator = conversationDescTitle.Validators[0].(func(string) error)
+	// conversationDescStatus is the schema descriptor for status field.
+	conversationDescStatus := conversationFields[4].Descriptor()
+	// conversation.DefaultStatus holds the default value on creation for the status field.
+	conversation.DefaultStatus = conversationDescStatus.Default.(string)
+	// conversationDescCreatedAt is the schema descriptor for created_at field.
+	conversationDescCreatedAt := conversationFields[5].Descriptor()
+	// conversation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	conversation.DefaultCreatedAt = conversationDescCreatedAt.Default.(func() time.Time)
+	// conversationDescUpdatedAt is the schema descriptor for updated_at field.
+	conversationDescUpdatedAt := conversationFields[6].Descriptor()
+	// conversation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	conversation.DefaultUpdatedAt = conversationDescUpdatedAt.Default.(func() time.Time)
+	// conversation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	conversation.UpdateDefaultUpdatedAt = conversationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// conversationDescID is the schema descriptor for id field.
+	conversationDescID := conversationFields[0].Descriptor()
+	// conversation.DefaultID holds the default value on creation for the id field.
+	conversation.DefaultID = conversationDescID.Default.(func() uuid.UUID)
+	messageMixin := schema.Message{}.Mixin()
+	messageMixinHooks0 := messageMixin[0].Hooks()
+	message.Hooks[0] = messageMixinHooks0[0]
+	messageMixinInters0 := messageMixin[0].Interceptors()
+	message.Interceptors[0] = messageMixinInters0[0]
+	messageFields := schema.Message{}.Fields()
+	_ = messageFields
+	// messageDescRole is the schema descriptor for role field.
+	messageDescRole := messageFields[2].Descriptor()
+	// message.RoleValidator is a validator for the "role" field. It is called by the builders before save.
+	message.RoleValidator = messageDescRole.Validators[0].(func(string) error)
+	// messageDescType is the schema descriptor for type field.
+	messageDescType := messageFields[4].Descriptor()
+	// message.DefaultType holds the default value on creation for the type field.
+	message.DefaultType = messageDescType.Default.(string)
+	// messageDescSequence is the schema descriptor for sequence field.
+	messageDescSequence := messageFields[7].Descriptor()
+	// message.DefaultSequence holds the default value on creation for the sequence field.
+	message.DefaultSequence = messageDescSequence.Default.(int)
+	// messageDescCreatedAt is the schema descriptor for created_at field.
+	messageDescCreatedAt := messageFields[8].Descriptor()
+	// message.DefaultCreatedAt holds the default value on creation for the created_at field.
+	message.DefaultCreatedAt = messageDescCreatedAt.Default.(func() time.Time)
+	// messageDescUpdatedAt is the schema descriptor for updated_at field.
+	messageDescUpdatedAt := messageFields[9].Descriptor()
+	// message.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	message.DefaultUpdatedAt = messageDescUpdatedAt.Default.(func() time.Time)
+	// message.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	message.UpdateDefaultUpdatedAt = messageDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// messageDescID is the schema descriptor for id field.
+	messageDescID := messageFields[0].Descriptor()
+	// message.DefaultID holds the default value on creation for the id field.
+	message.DefaultID = messageDescID.Default.(func() uuid.UUID)
 	roleFields := schema.Role{}.Fields()
 	_ = roleFields
 	// roleDescCreatedAt is the schema descriptor for created_at field.

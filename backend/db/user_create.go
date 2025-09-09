@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/ptonlix/whalehire/backend/consts"
+	"github.com/ptonlix/whalehire/backend/db/conversation"
 	"github.com/ptonlix/whalehire/backend/db/user"
 	"github.com/ptonlix/whalehire/backend/db/useridentity"
 	"github.com/ptonlix/whalehire/backend/db/userloginhistory"
@@ -189,6 +190,21 @@ func (uc *UserCreate) AddIdentities(u ...*UserIdentity) *UserCreate {
 	return uc.AddIdentityIDs(ids...)
 }
 
+// AddConversationIDs adds the "conversations" edge to the Conversation entity by IDs.
+func (uc *UserCreate) AddConversationIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddConversationIDs(ids...)
+	return uc
+}
+
+// AddConversations adds the "conversations" edges to the Conversation entity.
+func (uc *UserCreate) AddConversations(c ...*Conversation) *UserCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddConversationIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -362,6 +378,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ConversationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ConversationsTable,
+			Columns: []string{user.ConversationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(conversation.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

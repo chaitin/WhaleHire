@@ -49,9 +49,11 @@ type UserEdges struct {
 	LoginHistories []*UserLoginHistory `json:"login_histories,omitempty"`
 	// Identities holds the value of the identities edge.
 	Identities []*UserIdentity `json:"identities,omitempty"`
+	// Conversations holds the value of the conversations edge.
+	Conversations []*Conversation `json:"conversations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // LoginHistoriesOrErr returns the LoginHistories value or an error if the edge
@@ -70,6 +72,15 @@ func (e UserEdges) IdentitiesOrErr() ([]*UserIdentity, error) {
 		return e.Identities, nil
 	}
 	return nil, &NotLoadedError{edge: "identities"}
+}
+
+// ConversationsOrErr returns the Conversations value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ConversationsOrErr() ([]*Conversation, error) {
+	if e.loadedTypes[2] {
+		return e.Conversations, nil
+	}
+	return nil, &NotLoadedError{edge: "conversations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -179,6 +190,11 @@ func (u *User) QueryLoginHistories() *UserLoginHistoryQuery {
 // QueryIdentities queries the "identities" edge of the User entity.
 func (u *User) QueryIdentities() *UserIdentityQuery {
 	return NewUserClient(u.config).QueryIdentities(u)
+}
+
+// QueryConversations queries the "conversations" edge of the User entity.
+func (u *User) QueryConversations() *ConversationQuery {
+	return NewUserClient(u.config).QueryConversations(u)
 }
 
 // Update returns a builder for updating this User.

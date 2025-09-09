@@ -20,6 +20,12 @@ type Tx struct {
 	AdminLoginHistory *AdminLoginHistoryClient
 	// AdminRole is the client for interacting with the AdminRole builders.
 	AdminRole *AdminRoleClient
+	// Attachment is the client for interacting with the Attachment builders.
+	Attachment *AttachmentClient
+	// Conversation is the client for interacting with the Conversation builders.
+	Conversation *ConversationClient
+	// Message is the client for interacting with the Message builders.
+	Message *MessageClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// User is the client for interacting with the User builders.
@@ -162,6 +168,9 @@ func (tx *Tx) init() {
 	tx.Admin = NewAdminClient(tx.config)
 	tx.AdminLoginHistory = NewAdminLoginHistoryClient(tx.config)
 	tx.AdminRole = NewAdminRoleClient(tx.config)
+	tx.Attachment = NewAttachmentClient(tx.config)
+	tx.Conversation = NewConversationClient(tx.config)
+	tx.Message = NewMessageClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserIdentity = NewUserIdentityClient(tx.config)

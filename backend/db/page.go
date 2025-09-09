@@ -53,6 +53,48 @@ func (ar *AdminRoleQuery) Page(ctx context.Context, page, size int) ([]*AdminRol
 	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (a *AttachmentQuery) Page(ctx context.Context, page, size int) ([]*Attachment, *PageInfo, error) {
+	cnt, err := a.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rs, err := a.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (c *ConversationQuery) Page(ctx context.Context, page, size int) ([]*Conversation, *PageInfo, error) {
+	cnt, err := c.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rs, err := c.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (m *MessageQuery) Page(ctx context.Context, page, size int) ([]*Message, *PageInfo, error) {
+	cnt, err := m.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rs, err := m.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (r *RoleQuery) Page(ctx context.Context, page, size int) ([]*Role, *PageInfo, error) {
 	cnt, err := r.Count(ctx)
 	if err != nil {

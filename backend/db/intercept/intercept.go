@@ -11,6 +11,9 @@ import (
 	"github.com/ptonlix/whalehire/backend/db/admin"
 	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
 	"github.com/ptonlix/whalehire/backend/db/adminrole"
+	"github.com/ptonlix/whalehire/backend/db/attachment"
+	"github.com/ptonlix/whalehire/backend/db/conversation"
+	"github.com/ptonlix/whalehire/backend/db/message"
 	"github.com/ptonlix/whalehire/backend/db/predicate"
 	"github.com/ptonlix/whalehire/backend/db/role"
 	"github.com/ptonlix/whalehire/backend/db/user"
@@ -155,6 +158,87 @@ func (f TraverseAdminRole) Traverse(ctx context.Context, q db.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *db.AdminRoleQuery", q)
 }
 
+// The AttachmentFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AttachmentFunc func(context.Context, *db.AttachmentQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f AttachmentFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.AttachmentQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.AttachmentQuery", q)
+}
+
+// The TraverseAttachment type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAttachment func(context.Context, *db.AttachmentQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAttachment) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAttachment) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.AttachmentQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.AttachmentQuery", q)
+}
+
+// The ConversationFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ConversationFunc func(context.Context, *db.ConversationQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ConversationFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ConversationQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ConversationQuery", q)
+}
+
+// The TraverseConversation type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseConversation func(context.Context, *db.ConversationQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseConversation) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseConversation) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ConversationQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ConversationQuery", q)
+}
+
+// The MessageFunc type is an adapter to allow the use of ordinary function as a Querier.
+type MessageFunc func(context.Context, *db.MessageQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f MessageFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.MessageQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.MessageQuery", q)
+}
+
+// The TraverseMessage type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseMessage func(context.Context, *db.MessageQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseMessage) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseMessage) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.MessageQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.MessageQuery", q)
+}
+
 // The RoleFunc type is an adapter to allow the use of ordinary function as a Querier.
 type RoleFunc func(context.Context, *db.RoleQuery) (db.Value, error)
 
@@ -272,6 +356,12 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.AdminLoginHistoryQuery, predicate.AdminLoginHistory, adminloginhistory.OrderOption]{typ: db.TypeAdminLoginHistory, tq: q}, nil
 	case *db.AdminRoleQuery:
 		return &query[*db.AdminRoleQuery, predicate.AdminRole, adminrole.OrderOption]{typ: db.TypeAdminRole, tq: q}, nil
+	case *db.AttachmentQuery:
+		return &query[*db.AttachmentQuery, predicate.Attachment, attachment.OrderOption]{typ: db.TypeAttachment, tq: q}, nil
+	case *db.ConversationQuery:
+		return &query[*db.ConversationQuery, predicate.Conversation, conversation.OrderOption]{typ: db.TypeConversation, tq: q}, nil
+	case *db.MessageQuery:
+		return &query[*db.MessageQuery, predicate.Message, message.OrderOption]{typ: db.TypeMessage, tq: q}, nil
 	case *db.RoleQuery:
 		return &query[*db.RoleQuery, predicate.Role, role.OrderOption]{typ: db.TypeRole, tq: q}, nil
 	case *db.UserQuery:

@@ -1,0 +1,3 @@
+-- Migration: add_conversation_tables
+-- Created: 2025-09-09 17:00:13
+-- TODO: Add rollback SQL statements here

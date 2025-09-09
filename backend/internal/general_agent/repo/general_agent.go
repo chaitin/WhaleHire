@@ -4,93 +4,209 @@ import (
 	"context"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/GoYoko/web"
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/config"
 	"github.com/ptonlix/whalehire/backend/db"
+	"github.com/ptonlix/whalehire/backend/db/conversation"
+	"github.com/ptonlix/whalehire/backend/db/message"
 	"github.com/ptonlix/whalehire/backend/domain"
 	"github.com/ptonlix/whalehire/backend/pkg/entx"
 )
 
-// GeneralAgentRepo 通用智能体仓储
 type GeneralAgentRepo struct {
-	db  *db.Client
-	cfg *config.Config
+	db *db.Client
 }
 
-// NewGeneralAgentRepo 创建通用智能体仓储
-func NewGeneralAgentRepo(
-	db *db.Client,
-	cfg *config.Config,
-) domain.GeneralAgentRepo {
-	return &GeneralAgentRepo{
-		db:  db,
-		cfg: cfg,
-	}
+func NewGeneralAgentRepo(db *db.Client) domain.GeneralAgentRepo {
+	return &GeneralAgentRepo{db: db}
 }
 
-// SaveConversation 保存对话记录
-func (r *GeneralAgentRepo) SaveConversation(ctx context.Context, conversation *domain.Conversation) error {
+func (r *GeneralAgentRepo) SaveConversation(ctx context.Context, conv *domain.Conversation) error {
 	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
-		// 这里可以扩展保存对话到数据库的逻辑
-		// 目前先简单返回nil，表示保存成功
-		// 实际项目中需要根据具体的数据库schema来实现
-		return nil
-	})
-}
+		// 创建或更新对话
+		var conversationID uuid.UUID
+		var err error
 
-// GetConversationHistory 获取对话历史
-func (r *GeneralAgentRepo) GetConversationHistory(ctx context.Context, userID string, limit int) ([]*domain.Conversation, error) {
-	// 这里可以扩展从数据库获取对话历史的逻辑
-	// 目前先返回空列表
-	// 实际项目中需要根据具体的数据库schema来实现
-	return []*domain.Conversation{}, nil
-}
+		if conv.ID == "" {
+			// 创建新对话
+			userID, err := uuid.Parse(conv.UserID)
+			if err != nil {
+				return err
+			}
 
-// DeleteConversation 删除对话记录
-func (r *GeneralAgentRepo) DeleteConversation(ctx context.Context, conversationID string) error {
-	convID, err := uuid.Parse(conversationID)
-	if err != nil {
-		return err
-	}
+			create := tx.Conversation.Create().
+				SetUserID(userID).
+				SetTitle(conv.Title).
+				SetStatus(conv.Status)
 
-	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
-		// 这里可以扩展删除对话记录的逻辑
-		// 目前先简单返回nil，表示删除成功
-		// 实际项目中需要根据具体的数据库schema来实现
-		_ = convID // 避免未使用变量警告
-		return nil
-	})
-}
+			if conv.Metadata != nil {
+				create = create.SetMetadata(conv.Metadata)
+			}
 
-// ListConversations 分页获取对话列表
-func (r *GeneralAgentRepo) ListConversations(ctx context.Context, userID string, page *web.Pagination) ([]*domain.Conversation, *db.PageInfo, error) {
-	// 这里可以扩展分页获取对话列表的逻辑
-	// 目前先返回空列表和默认分页信息
-	// 实际项目中需要根据具体的数据库schema来实现
-	pageInfo := &db.PageInfo{
-		HasNextPage: false,
-	}
-	return []*domain.Conversation{}, pageInfo, nil
-}
+			dbConv, err := create.Save(ctx)
+			if err != nil {
+				return err
+			}
+			conversationID = dbConv.ID
+			conv.ID = conversationID.String()
+		} else {
+			// 更新现有对话
+			conversationID, err = uuid.Parse(conv.ID)
+			if err != nil {
+				return err
+			}
 
-// UpdateConversation 更新对话记录
-func (r *GeneralAgentRepo) UpdateConversation(ctx context.Context, conversationID string, fn func(*db.Tx, *domain.Conversation) error) error {
-	convID, err := uuid.Parse(conversationID)
-	if err != nil {
-		return err
-	}
+			update := tx.Conversation.UpdateOneID(conversationID).
+				SetTitle(conv.Title).
+				SetStatus(conv.Status)
 
-	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
-		// 这里可以扩展更新对话记录的逻辑
-		// 目前先创建一个空的对话对象并调用更新函数
-		// 实际项目中需要根据具体的数据库schema来实现
-		conv := &domain.Conversation{
-			ID:        convID.String(),
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			if conv.Metadata != nil {
+				update = update.SetMetadata(conv.Metadata)
+			}
+
+			if err := update.Exec(ctx); err != nil {
+				return err
+			}
 		}
-		return fn(tx, conv)
+
+		// 保存消息
+		for _, msg := range conv.Messages {
+			if msg.ID == "" {
+				// 创建新消息
+				create := tx.Message.Create().
+					SetConversationID(conversationID).
+					SetRole(msg.Role).
+					SetType(msg.Type)
+
+				if msg.Content != nil {
+					create = create.SetContent(*msg.Content)
+				}
+				if msg.AgentName != nil {
+					create = create.SetAgentName(*msg.AgentName)
+				}
+				if msg.MediaURL != nil {
+					create = create.SetMediaURL(*msg.MediaURL)
+				}
+
+				dbMsg, err := create.Save(ctx)
+				if err != nil {
+					return err
+				}
+				msg.ID = dbMsg.ID.String()
+				msg.ConversationID = conversationID.String()
+			}
+		}
+
+		return nil
+	})
+}
+
+func (r *GeneralAgentRepo) GetConversationHistory(ctx context.Context, conversationID string) (*db.Conversation, error) {
+	cid, err := uuid.Parse(conversationID)
+	if err != nil {
+		return nil, err
+	}
+
+	dbConv, err := r.db.Conversation.Query().
+		Where(conversation.ID(cid)).
+		WithMessages(func(q *db.MessageQuery) {
+			q.Order(message.ByCreatedAt(sql.OrderAsc()))
+		}).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return dbConv, nil
+}
+
+func (r *GeneralAgentRepo) DeleteConversation(ctx context.Context, conversationID string) error {
+	cid, err := uuid.Parse(conversationID)
+	if err != nil {
+		return err
+	}
+
+	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		// 软删除相关消息
+		if err := tx.Message.Update().
+			Where(message.ConversationID(cid)).
+			SetDeletedAt(time.Now()).
+			Exec(ctx); err != nil {
+			return err
+		}
+
+		// 软删除对话
+		return tx.Conversation.UpdateOneID(cid).
+			SetDeletedAt(time.Now()).
+			Exec(ctx)
+	})
+}
+
+func (r *GeneralAgentRepo) ListConversations(ctx context.Context, userID string, page *web.Pagination) ([]*db.Conversation, *db.PageInfo, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	q := r.db.Conversation.Query().
+		Where(conversation.UserID(uid)).
+		Order(conversation.ByUpdatedAt(sql.OrderDesc()))
+
+	dbConversations, pageInfo, err := q.Page(ctx, page.Page, page.Size)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return dbConversations, pageInfo, nil
+}
+
+func (r *GeneralAgentRepo) UpdateConversation(ctx context.Context, conversationID string, fn func(*db.Tx, *domain.Conversation) error) error {
+	cid, err := uuid.Parse(conversationID)
+	if err != nil {
+		return err
+	}
+
+	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		// 获取现有对话
+		dbConv, err := tx.Conversation.Query().
+			Where(conversation.ID(cid)).
+			WithMessages().
+			Only(ctx)
+		if err != nil {
+			return err
+		}
+
+		// 转换为 domain 对象
+		conv := &domain.Conversation{
+			ID:        dbConv.ID.String(),
+			UserID:    dbConv.UserID.String(),
+			Title:     dbConv.Title,
+			Metadata:  dbConv.Metadata,
+			Status:    dbConv.Status,
+			CreatedAt: dbConv.CreatedAt,
+			UpdatedAt: dbConv.UpdatedAt,
+		}
+
+		if !dbConv.DeletedAt.IsZero() {
+			conv.DeletedAt = &dbConv.DeletedAt
+		}
+
+		// 执行业务逻辑
+		if err := fn(tx, conv); err != nil {
+			return err
+		}
+
+		// 更新对话
+		update := tx.Conversation.UpdateOneID(cid).
+			SetTitle(conv.Title).
+			SetStatus(conv.Status)
+
+		if conv.Metadata != nil {
+			update = update.SetMetadata(conv.Metadata)
+		}
+
+		return update.Exec(ctx)
 	})
 }

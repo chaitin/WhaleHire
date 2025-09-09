@@ -53,5 +53,6 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("login_histories", UserLoginHistory.Type),
 		edge.To("identities", UserIdentity.Type),
+		edge.To("conversations", Conversation.Type),
 	}
 }

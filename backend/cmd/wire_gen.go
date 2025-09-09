@@ -12,6 +12,9 @@ import (
 	"github.com/GoYoko/web"
 	"github.com/ptonlix/whalehire/backend/config"
 	"github.com/ptonlix/whalehire/backend/db"
+	v1_2 "github.com/ptonlix/whalehire/backend/internal/general_agent/handler/v1"
+	repo2 "github.com/ptonlix/whalehire/backend/internal/general_agent/repo"
+	usecase2 "github.com/ptonlix/whalehire/backend/internal/general_agent/usecase"
 	"github.com/ptonlix/whalehire/backend/internal/middleware"
 	v1 "github.com/ptonlix/whalehire/backend/internal/user/handler/v1"
 	"github.com/ptonlix/whalehire/backend/internal/user/repo"
@@ -50,14 +53,18 @@ func newServer() (*Server, error) {
 	activeMiddleware := middleware.NewActiveMiddleware(redisClient, slogLogger)
 	readOnlyMiddleware := middleware.NewReadOnlyMiddleware(configConfig)
 	userHandler := v1.NewUserHandler(web, userUsecase, authMiddleware, activeMiddleware, readOnlyMiddleware, sessionSession, slogLogger, configConfig)
+	generalAgentRepo := repo2.NewGeneralAgentRepo(client)
+	generalAgentUsecase := usecase2.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
+	generalAgentHandler := v1_2.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
-		config:  configConfig,
-		web:     web,
-		ent:     client,
-		logger:  slogLogger,
-		userV1:  userHandler,
-		version: versionInfo,
+		config:         configConfig,
+		web:            web,
+		ent:            client,
+		logger:         slogLogger,
+		userV1:         userHandler,
+		generalagentV1: generalAgentHandler,
+		version:        versionInfo,
 	}
 	return server, nil
 }
@@ -65,10 +72,11 @@ func newServer() (*Server, error) {
 // wire.go:
 
 type Server struct {
-	config  *config.Config
-	web     *web.Web
-	ent     *db.Client
-	logger  *slog.Logger
-	userV1  *v1.UserHandler
-	version *version.VersionInfo
+	config         *config.Config
+	web            *web.Web
+	ent            *db.Client
+	logger         *slog.Logger
+	userV1         *v1.UserHandler
+	generalagentV1 *v1_2.GeneralAgentHandler
+	version        *version.VersionInfo
 }

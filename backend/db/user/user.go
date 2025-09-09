@@ -38,6 +38,8 @@ const (
 	EdgeLoginHistories = "login_histories"
 	// EdgeIdentities holds the string denoting the identities edge name in mutations.
 	EdgeIdentities = "identities"
+	// EdgeConversations holds the string denoting the conversations edge name in mutations.
+	EdgeConversations = "conversations"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// LoginHistoriesTable is the table that holds the login_histories relation/edge.
@@ -54,6 +56,13 @@ const (
 	IdentitiesInverseTable = "user_identities"
 	// IdentitiesColumn is the table column denoting the identities relation/edge.
 	IdentitiesColumn = "user_id"
+	// ConversationsTable is the table that holds the conversations relation/edge.
+	ConversationsTable = "conversations"
+	// ConversationsInverseTable is the table name for the Conversation entity.
+	// It exists in this package in order to avoid circular dependency with the "conversation" package.
+	ConversationsInverseTable = "conversations"
+	// ConversationsColumn is the table column denoting the conversations relation/edge.
+	ConversationsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -178,6 +187,20 @@ func ByIdentities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newIdentitiesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByConversationsCount orders the results by conversations count.
+func ByConversationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newConversationsStep(), opts...)
+	}
+}
+
+// ByConversations orders the results by conversations terms.
+func ByConversations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newConversationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newLoginHistoriesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -190,5 +213,12 @@ func newIdentitiesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(IdentitiesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, IdentitiesTable, IdentitiesColumn),
+	)
+}
+func newConversationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ConversationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ConversationsTable, ConversationsColumn),
 	)
 }

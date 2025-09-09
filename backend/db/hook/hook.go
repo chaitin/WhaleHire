@@ -45,6 +45,42 @@ func (f AdminRoleFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.AdminRoleMutation", m)
 }
 
+// The AttachmentFunc type is an adapter to allow the use of ordinary
+// function as Attachment mutator.
+type AttachmentFunc func(context.Context, *db.AttachmentMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AttachmentFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.AttachmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.AttachmentMutation", m)
+}
+
+// The ConversationFunc type is an adapter to allow the use of ordinary
+// function as Conversation mutator.
+type ConversationFunc func(context.Context, *db.ConversationMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ConversationFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ConversationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ConversationMutation", m)
+}
+
+// The MessageFunc type is an adapter to allow the use of ordinary
+// function as Message mutator.
+type MessageFunc func(context.Context, *db.MessageMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MessageFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.MessageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.MessageMutation", m)
+}
+
 // The RoleFunc type is an adapter to allow the use of ordinary
 // function as Role mutator.
 type RoleFunc func(context.Context, *db.RoleMutation) (db.Value, error)

@@ -86,6 +86,84 @@ var (
 			},
 		},
 	}
+	// AttachmentsColumns holds the columns for the "attachments" table.
+	AttachmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "type", Type: field.TypeString},
+		{Name: "url", Type: field.TypeString},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "message_id", Type: field.TypeUUID},
+	}
+	// AttachmentsTable holds the schema information for the "attachments" table.
+	AttachmentsTable = &schema.Table{
+		Name:       "attachments",
+		Columns:    AttachmentsColumns,
+		PrimaryKey: []*schema.Column{AttachmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "attachments_messages_attachments",
+				Columns:    []*schema.Column{AttachmentsColumns[7]},
+				RefColumns: []*schema.Column{MessagesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ConversationsColumns holds the columns for the "conversations" table.
+	ConversationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// ConversationsTable holds the schema information for the "conversations" table.
+	ConversationsTable = &schema.Table{
+		Name:       "conversations",
+		Columns:    ConversationsColumns,
+		PrimaryKey: []*schema.Column{ConversationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "conversations_users_conversations",
+				Columns:    []*schema.Column{ConversationsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// MessagesColumns holds the columns for the "messages" table.
+	MessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "role", Type: field.TypeString},
+		{Name: "agent_name", Type: field.TypeString, Nullable: true},
+		{Name: "type", Type: field.TypeString, Default: "text"},
+		{Name: "content", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "media_url", Type: field.TypeString, Nullable: true},
+		{Name: "sequence", Type: field.TypeInt, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "conversation_id", Type: field.TypeUUID},
+	}
+	// MessagesTable holds the schema information for the "messages" table.
+	MessagesTable = &schema.Table{
+		Name:       "messages",
+		Columns:    MessagesColumns,
+		PrimaryKey: []*schema.Column{MessagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "messages_conversations_messages",
+				Columns:    []*schema.Column{MessagesColumns[10]},
+				RefColumns: []*schema.Column{ConversationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -181,6 +259,9 @@ var (
 		AdminsTable,
 		AdminLoginHistoriesTable,
 		AdminRolesTable,
+		AttachmentsTable,
+		ConversationsTable,
+		MessagesTable,
 		RolesTable,
 		UsersTable,
 		UserIdentitiesTable,
@@ -200,6 +281,18 @@ func init() {
 	AdminRolesTable.ForeignKeys[1].RefTable = RolesTable
 	AdminRolesTable.Annotation = &entsql.Annotation{
 		Table: "admin_roles",
+	}
+	AttachmentsTable.ForeignKeys[0].RefTable = MessagesTable
+	AttachmentsTable.Annotation = &entsql.Annotation{
+		Table: "attachments",
+	}
+	ConversationsTable.ForeignKeys[0].RefTable = UsersTable
+	ConversationsTable.Annotation = &entsql.Annotation{
+		Table: "conversations",
+	}
+	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
+	MessagesTable.Annotation = &entsql.Annotation{
+		Table: "messages",
 	}
 	RolesTable.Annotation = &entsql.Annotation{
 		Table: "roles",
