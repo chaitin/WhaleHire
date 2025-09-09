@@ -58,15 +58,15 @@ func NewGeneralAgentHandler(
 	return h
 }
 
-// Generate 生成回复
+// Generate 生成AI回复
 //
 //	@Tags			General Agent
-//	@Summary		生成回复
-//	@Description	生成回复
+//	@Summary		生成AI回复
+//	@Description	根据用户输入的提示词和可选的历史对话记录，生成AI智能体的回复内容。支持传入历史消息以保持对话上下文连贯性。
 //	@ID				generate
 //	@Accept			json
 //	@Produce		json
-//	@Param			param	body		domain.GenerateReq	true	"生成请求参数"
+//	@Param			param	body		domain.GenerateReq	true	"生成请求参数，包含prompt(提示词，必填)和history(历史消息数组，可选)"
 //	@Success		200		{object}	web.Resp{data=domain.GenerateResp}
 //	@Router			/api/v1/general-agent/generate [post]
 func (h *GeneralAgentHandler) Generate(ctx *web.Context, req domain.GenerateReq) error {
@@ -85,15 +85,15 @@ func (h *GeneralAgentHandler) Generate(ctx *web.Context, req domain.GenerateReq)
 	})
 }
 
-// GenerateStream 流式生成回复
+// GenerateStream 流式生成AI回复
 //
 //	@Tags			General Agent
-//	@Summary		流式生成回复
-//	@Description	流式生成回复
+//	@Summary		流式生成AI回复
+//	@Description	以Server-Sent Events(SSE)方式流式生成AI回复，实时返回生成的内容片段。客户端可以实时接收并显示生成过程，提供更好的用户体验。支持超时控制和错误处理。
 //	@ID				generate-stream
 //	@Accept			json
 //	@Produce		text/event-stream
-//	@Param			param	body		domain.GenerateReq	true	"生成请求参数"
+//	@Param			param	body		domain.GenerateReq	true	"生成请求参数，包含prompt(提示词，必填)和history(历史消息数组，可选)"
 //	@Success		200		{object}	domain.StreamChunk
 //	@Router			/api/v1/general-agent/generate-stream [post]
 func (h *GeneralAgentHandler) GenerateStream(ctx *web.Context, req domain.GenerateReq) error {
@@ -182,15 +182,15 @@ func (h *GeneralAgentHandler) writeSSEEvent(ctx *web.Context, event string, data
 	return err
 }
 
-// CreateConversation 创建新对话
+// CreateConversation 创建新对话会话
 //
 //	@Tags			General Agent
-//	@Summary		创建新对话
-//	@Description	创建新对话
+//	@Summary		创建新对话会话
+//	@Description	为当前用户创建一个新的对话会话，用于管理和组织AI对话历史。每个对话会话都有唯一的ID和标题，可以包含多条消息记录。
 //	@ID				create-conversation
 //	@Accept			json
 //	@Produce		json
-//	@Param			param	body		domain.CreateConversationReq	true	"创建对话请求参数"
+//	@Param			param	body		domain.CreateConversationReq	true	"创建对话请求参数，包含title(对话标题，必填，最大256字符)"
 //	@Success		200		{object}	web.Resp{data=domain.Conversation}
 //	@Router			/api/v1/general-agent/conversations [post]
 func (h *GeneralAgentHandler) CreateConversation(ctx *web.Context, req domain.CreateConversationReq) error {
@@ -207,15 +207,17 @@ func (h *GeneralAgentHandler) CreateConversation(ctx *web.Context, req domain.Cr
 	return ctx.Success(conv)
 }
 
-// ListConversations 分页获取对话列表
+// ListConversations 分页获取用户对话列表
 //
 //	@Tags			General Agent
-//	@Summary		获取对话列表
-//	@Description	分页获取用户的对话列表
+//	@Summary		分页获取用户对话列表
+//	@Description	分页获取当前用户的所有对话会话列表，支持按标题搜索和分页查询。返回对话的基本信息包括ID、标题、状态、创建时间等。
 //	@ID				list-conversations
 //	@Accept			json
 //	@Produce		json
-//	@Param			page	query		web.Pagination	true	"分页"
+//	@Param			page	query		int		false	"页码，默认1"
+//	@Param			size	query		int		false	"每页数量，默认10"
+//	@Param			search	query		string	false	"搜索关键词，按对话标题模糊匹配"
 //	@Success		200		{object}	web.Resp{data=domain.ListConversationsResp}
 //	@Router			/api/v1/general-agent/conversations [get]
 func (h *GeneralAgentHandler) ListConversations(c *web.Context, req domain.ListConversationsReq) error {
@@ -232,16 +234,16 @@ func (h *GeneralAgentHandler) ListConversations(c *web.Context, req domain.ListC
 	return c.Success(resp)
 }
 
-// GetConversationHistory 获取对话历史
+// GetConversationHistory 获取指定对话的完整历史记录
 //
 //	@Tags			General Agent
-//	@Summary		获取对话历史
-//	@Description	获取用户最近的对话历史
+//	@Summary		获取对话历史记录
+//	@Description	根据对话ID获取指定对话的完整历史记录，包括所有消息内容、附件信息、消息类型等详细信息。用于恢复和查看完整的对话上下文。
 //	@ID				get-conversation-history
 //	@Accept			json
 //	@Produce		json
-//	@Param			limit	query	int	false	"限制数量"	default(10)
-//	@Success		200	{object}	web.Resp{data=[]domain.Conversation}
+//	@Param			conversation_id	query		string	true	"对话ID，用于指定要获取历史记录的对话"
+//	@Success		200				{object}	web.Resp{data=domain.Conversation}
 //	@Router			/api/v1/general-agent/conversations/history [get]
 func (h *GeneralAgentHandler) GetConversationHistory(c *web.Context, req domain.GetConversationHistoryReq) error {
 	user := middleware.GetUser(c)
@@ -256,15 +258,15 @@ func (h *GeneralAgentHandler) GetConversationHistory(c *web.Context, req domain.
 	return c.Success(conversations)
 }
 
-// DeleteConversation 删除对话
+// DeleteConversation 删除指定对话
 //
 //	@Tags			General Agent
-//	@Summary		删除对话
-//	@Description	删除指定的对话
+//	@Summary		删除指定对话
+//	@Description	根据对话ID删除指定的对话会话及其所有相关的消息记录和附件。此操作不可逆，请谨慎使用。只有对话的创建者才能删除该对话。
 //	@ID				delete-conversation
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path	string	true	"对话ID"
+//	@Param			id	path		string	true	"对话ID，要删除的对话的唯一标识符"
 //	@Success		200	{object}	web.Resp
 //	@Router			/api/v1/general-agent/conversations/{id} [delete]
 func (h *GeneralAgentHandler) DeleteConversation(c *web.Context, req domain.DeleteConversationReq) error {
@@ -280,16 +282,16 @@ func (h *GeneralAgentHandler) DeleteConversation(c *web.Context, req domain.Dele
 	return c.Success(nil)
 }
 
-// AddMessageToConversation 向对话添加消息
+// AddMessageToConversation 向指定对话添加新消息
 //
 //	@Tags			General Agent
-//	@Summary		向对话添加消息
-//	@Description	向指定对话添加新消息
+//	@Summary		向对话添加新消息
+//	@Description	向指定的对话会话中添加新的消息记录。支持多种消息类型(文本、图片、音频、视频、文件)和角色(用户、助手、系统、智能体)。可以包含附件和元数据信息。
 //	@ID				add-message-to-conversation
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string							true	"对话ID"
-//	@Param			param	body		AddMessageToConversationReq	true	"添加消息请求参数"
+//	@Param			id		path		string								true	"对话ID，要添加消息的目标对话的唯一标识符"
+//	@Param			param	body		domain.AddMessageToConversationReq	true	"添加消息请求参数，包含conversation_id(对话ID)和message(消息对象，包含角色、内容、类型等信息)"
 //	@Success		200		{object}	web.Resp
 //	@Router			/api/v1/general-agent/conversations/{id}/addmessage [post]
 func (h *GeneralAgentHandler) AddMessageToConversation(ctx *web.Context, req domain.AddMessageToConversationReq) error {

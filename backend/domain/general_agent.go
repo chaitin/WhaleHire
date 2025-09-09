@@ -110,12 +110,12 @@ type ListConversationsResp struct {
 
 // GetConversationHistoryReq 获取对话历史请求
 type GetConversationHistoryReq struct {
-	ConversationID string `json:"conversation_id"`
+	ConversationID string `json:"conversation_id"  validate:"required"`
 }
 
 // DeleteConversationReq 删除对话请求
 type DeleteConversationReq struct {
-	ConversationID string `json:"conversation_id"`
+	ConversationID string `json:"conversation_id"  validate:"required"`
 }
 
 // AddMessageToConversationReq 向对话添加消息请求
