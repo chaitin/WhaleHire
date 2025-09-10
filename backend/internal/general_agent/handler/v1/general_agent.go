@@ -76,9 +76,54 @@ func (h *GeneralAgentHandler) Generate(ctx *web.Context, req domain.GenerateReq)
 		return errcode.ErrPermission
 	}
 
+	// 处理conversation_id逻辑
+	var conversationID string
+	if req.ConversationID != nil && *req.ConversationID != "" {
+		// 使用现有对话ID
+		conversationID = *req.ConversationID
+	} else {
+		// 创建新对话
+		conv, err := h.usecase.CreateConversation(ctx.Request().Context(), user.ID, &domain.CreateConversationReq{
+			Title: req.Prompt, // 可以根据prompt生成更合适的标题
+		})
+		if err != nil {
+			return err
+		}
+		conversationID = conv.ID
+	}
+
 	resp, err := h.usecase.Generate(ctx.Request().Context(), &req)
 	if err != nil {
 		return err
+	}
+
+	// 保存用户消息
+	userMessage := &domain.Message{
+		ConversationID: conversationID,
+		Role:           "user",
+		Content:        &req.Prompt,
+		Type:           "text",
+	}
+	if err := h.usecase.AddMessageToConversation(ctx.Request().Context(), &domain.AddMessageToConversationReq{
+		ConversationID: conversationID,
+		Message:        userMessage,
+	}); err != nil {
+		h.logger.Error("Failed to save user message", "error", err)
+	}
+
+	// 保存AI回复消息
+	aiResponse := resp.Answer
+	assistantMessage := &domain.Message{
+		ConversationID: conversationID,
+		Role:           "assistant",
+		Content:        &aiResponse,
+		Type:           "text",
+	}
+	if err := h.usecase.AddMessageToConversation(ctx.Request().Context(), &domain.AddMessageToConversationReq{
+		ConversationID: conversationID,
+		Message:        assistantMessage,
+	}); err != nil {
+		h.logger.Error("Failed to save assistant message", "error", err)
 	}
 
 	return ctx.Success(domain.GenerateResp{
@@ -118,7 +163,7 @@ func (h *GeneralAgentHandler) GenerateStream(ctx *web.Context, req domain.Genera
 	} else {
 		// 创建新对话
 		conv, err := h.usecase.CreateConversation(ctx.Request().Context(), user.ID, &domain.CreateConversationReq{
-			Title: "New Conversation", // 可以根据prompt生成更合适的标题
+			Title: req.Prompt, // 可以根据prompt生成更合适的标题
 		})
 		if err != nil {
 			return err
