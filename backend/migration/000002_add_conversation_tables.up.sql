@@ -1,15 +1,3 @@
-ALTER TABLE "admin_login_histories"
-ALTER COLUMN "id" DROP DEFAULT;
-ALTER TABLE "admin_roles"
-ALTER COLUMN "id" DROP DEFAULT;
-ALTER TABLE "admins"
-ALTER COLUMN "id" DROP DEFAULT;
-ALTER TABLE "user_identities"
-ALTER COLUMN "id" DROP DEFAULT;
-ALTER TABLE "user_login_histories"
-ALTER COLUMN "id" DROP DEFAULT;
-ALTER TABLE "users"
-ALTER COLUMN "id" DROP DEFAULT;
 CREATE TABLE "conversations" (
     "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "deleted_at" timestamptz NULL,

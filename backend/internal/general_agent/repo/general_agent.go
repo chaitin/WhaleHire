@@ -162,51 +162,22 @@ func (r *GeneralAgentRepo) ListConversations(ctx context.Context, userID string,
 	return dbConversations, pageInfo, nil
 }
 
-func (r *GeneralAgentRepo) UpdateConversation(ctx context.Context, conversationID string, fn func(*db.Tx, *domain.Conversation) error) error {
+func (r *GeneralAgentRepo) UpdateConversation(ctx context.Context, conversationID string, fn func(*db.Tx, *db.ConversationUpdateOne) error) error {
 	cid, err := uuid.Parse(conversationID)
 	if err != nil {
 		return err
 	}
 
 	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
-		// 获取现有对话
-		dbConv, err := tx.Conversation.Query().
-			Where(conversation.ID(cid)).
-			WithMessages().
-			Only(ctx)
-		if err != nil {
-			return err
-		}
-
-		// 转换为 domain 对象
-		conv := &domain.Conversation{
-			ID:        dbConv.ID.String(),
-			UserID:    dbConv.UserID.String(),
-			Title:     dbConv.Title,
-			Metadata:  dbConv.Metadata,
-			Status:    dbConv.Status,
-			CreatedAt: dbConv.CreatedAt,
-			UpdatedAt: dbConv.UpdatedAt,
-		}
-
-		if !dbConv.DeletedAt.IsZero() {
-			conv.DeletedAt = &dbConv.DeletedAt
-		}
+		// 获取更新器
+		update := tx.Conversation.UpdateOneID(cid)
 
 		// 执行业务逻辑
-		if err := fn(tx, conv); err != nil {
+		if err := fn(tx, update); err != nil {
 			return err
 		}
 
-		// 更新对话
-		update := tx.Conversation.UpdateOneID(cid).
-			SetTitle(conv.Title).
-			SetStatus(conv.Status)
-
-		if conv.Metadata != nil {
-			update = update.SetMetadata(conv.Metadata)
-		}
-
+		// 执行更新
 		return update.Exec(ctx)
 	})
 }

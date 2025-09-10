@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudwego/eino/schema"
+	"github.com/google/uuid"
 
 	"github.com/ptonlix/whalehire/backend/config"
 	"github.com/ptonlix/whalehire/backend/db"
@@ -194,12 +195,30 @@ func (uc *GeneralAgentUsecase) DeleteConversation(ctx context.Context, req *doma
 
 // AddMessageToConversation 向对话添加消息
 func (uc *GeneralAgentUsecase) AddMessageToConversation(ctx context.Context, req *domain.AddMessageToConversationReq) error {
-	return uc.repo.UpdateConversation(ctx, req.ConversationID, func(tx *db.Tx, conv *domain.Conversation) error {
-		req.Message.ConversationID = req.ConversationID
-		req.Message.CreatedAt = time.Now()
-		req.Message.UpdatedAt = time.Now()
-		conv.Messages = append(conv.Messages, req.Message)
-		conv.UpdatedAt = time.Now()
+	return uc.repo.UpdateConversation(ctx, req.ConversationID, func(tx *db.Tx, update *db.ConversationUpdateOne) error {
+		// 创建消息
+		create := tx.Message.Create().
+			SetConversationID(uuid.MustParse(req.ConversationID)).
+			SetRole(req.Message.Role).
+			SetType(req.Message.Type)
+
+		if req.Message.Content != nil {
+			create = create.SetContent(*req.Message.Content)
+		}
+		if req.Message.AgentName != nil {
+			create = create.SetAgentName(*req.Message.AgentName)
+		}
+		if req.Message.MediaURL != nil {
+			create = create.SetMediaURL(*req.Message.MediaURL)
+		}
+
+		_, err := create.Save(ctx)
+		if err != nil {
+			return err
+		}
+
+		// 更新对话时间
+		update.SetUpdatedAt(time.Now())
 		return nil
 	})
 }

@@ -25,7 +25,7 @@ type GeneralAgentRepo interface {
 	GetConversationHistory(ctx context.Context, conversationID string) (*db.Conversation, error)
 	DeleteConversation(ctx context.Context, conversationID string) error
 	ListConversations(ctx context.Context, userID string, page *web.Pagination) ([]*db.Conversation, *db.PageInfo, error)
-	UpdateConversation(ctx context.Context, conversationID string, fn func(*db.Tx, *Conversation) error) error
+	UpdateConversation(ctx context.Context, conversationID string, fn func(*db.Tx, *db.ConversationUpdateOne) error) error
 }
 
 // CreateConversationReq 创建对话请求
@@ -47,8 +47,9 @@ type Conversation struct {
 }
 
 type GenerateReq struct {
-	Prompt  string     `json:"prompt"`
-	History []*Message `json:"history,omitempty"`
+	Prompt         string     `json:"prompt"`
+	History        []*Message `json:"history,omitempty"`
+	ConversationID *string    `json:"conversation_id,omitempty"`
 }
 
 type GenerateResp struct {
@@ -92,6 +93,11 @@ type StreamReader interface {
 type StreamChunk struct {
 	Content string `json:"content"`
 	Done    bool   `json:"done"`
+}
+
+type StreamMetadata struct {
+	Version        string `json:"version"`
+	ConversationID string `json:"conversation_id"`
 }
 
 // ListConversationsReq 获取对话列表请求

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/GoYoko/web"
@@ -52,7 +53,7 @@ func NewGeneralAgentHandler(
 	g.POST("/conversations", web.BindHandler(h.CreateConversation), auth.UserAuth())
 	g.GET("/conversations", web.BindHandler(h.ListConversations), auth.UserAuth())
 	g.GET("/conversations/history", web.BindHandler(h.GetConversationHistory), auth.UserAuth())
-	g.DELETE("/conversations/:id", web.BindHandler(h.DeleteConversation), auth.UserAuth())
+	g.DELETE("/conversations", web.BaseHandler(h.DeleteConversation), auth.UserAuth())
 	g.POST("/conversations/:id/addmessage", web.BindHandler(h.AddMessageToConversation), auth.UserAuth())
 
 	return h
@@ -109,6 +110,29 @@ func (h *GeneralAgentHandler) GenerateStream(ctx *web.Context, req domain.Genera
 	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	ctx.Response().Header().Set("Access-Control-Allow-Headers", "Cache-Control")
 
+	// 处理conversation_id逻辑
+	var conversationID string
+	if req.ConversationID != nil && *req.ConversationID != "" {
+		// 使用现有对话ID
+		conversationID = *req.ConversationID
+	} else {
+		// 创建新对话
+		conv, err := h.usecase.CreateConversation(ctx.Request().Context(), user.ID, &domain.CreateConversationReq{
+			Title: "New Conversation", // 可以根据prompt生成更合适的标题
+		})
+		if err != nil {
+			return err
+		}
+		conversationID = conv.ID
+		if err := h.writeSSEEvent(ctx, "data", domain.StreamMetadata{
+			Version:        "v1",
+			ConversationID: conversationID,
+		}); err != nil {
+			return err
+		}
+
+	}
+
 	// 获取流式读取器
 	streamReader, err := h.usecase.GenerateStream(ctx.Request().Context(), &req)
 	if err != nil {
@@ -119,6 +143,9 @@ func (h *GeneralAgentHandler) GenerateStream(ctx *web.Context, req domain.Genera
 	// 创建带超时的上下文
 	ctx_timeout, cancel := context.WithTimeout(ctx.Request().Context(), 5*time.Minute)
 	defer cancel()
+
+	// 用于收集完整的AI回复内容
+	var fullResponse strings.Builder
 
 	// 流式发送数据
 	for {
@@ -144,6 +171,9 @@ func (h *GeneralAgentHandler) GenerateStream(ctx *web.Context, req domain.Genera
 				return nil
 			}
 
+			// 收集完整回复内容
+			fullResponse.WriteString(chunk.Content)
+
 			// 发送数据事件
 			response := domain.StreamChunk{
 				Content: chunk.Content,
@@ -154,8 +184,37 @@ func (h *GeneralAgentHandler) GenerateStream(ctx *web.Context, req domain.Genera
 				return err
 			}
 
-			// 如果完成，发送完成事件并退出
+			// 如果完成，保存消息到对话并发送完成事件
 			if chunk.Done {
+				// 保存用户消息
+				userMessage := &domain.Message{
+					ConversationID: conversationID,
+					Role:           "user",
+					Content:        &req.Prompt,
+					Type:           "text",
+				}
+				if err := h.usecase.AddMessageToConversation(ctx.Request().Context(), &domain.AddMessageToConversationReq{
+					ConversationID: conversationID,
+					Message:        userMessage,
+				}); err != nil {
+					h.logger.Error("Failed to save user message", "error", err)
+				}
+
+				// 保存AI回复消息
+				aiResponse := fullResponse.String()
+				assistantMessage := &domain.Message{
+					ConversationID: conversationID,
+					Role:           "assistant",
+					Content:        &aiResponse,
+					Type:           "text",
+				}
+				if err := h.usecase.AddMessageToConversation(ctx.Request().Context(), &domain.AddMessageToConversationReq{
+					ConversationID: conversationID,
+					Message:        assistantMessage,
+				}); err != nil {
+					h.logger.Error("Failed to save assistant message", "error", err)
+				}
+
 				if err := h.writeSSEEvent(ctx, "done", map[string]interface{}{
 					"message": "Stream completed",
 				}); err != nil {
@@ -244,7 +303,7 @@ func (h *GeneralAgentHandler) ListConversations(c *web.Context, req domain.ListC
 //	@Produce		json
 //	@Param			conversation_id	query		string	true	"对话ID，用于指定要获取历史记录的对话"
 //	@Success		200				{object}	web.Resp{data=domain.Conversation}
-//	@Router			/api/v1/general-agent/conversations/history [get]
+//	@Router			/api/v1/general-agent/conversations/history [post]
 func (h *GeneralAgentHandler) GetConversationHistory(c *web.Context, req domain.GetConversationHistoryReq) error {
 	user := middleware.GetUser(c)
 	if user == nil {
@@ -269,13 +328,16 @@ func (h *GeneralAgentHandler) GetConversationHistory(c *web.Context, req domain.
 //	@Param			id	path		string	true	"对话ID，要删除的对话的唯一标识符"
 //	@Success		200	{object}	web.Resp
 //	@Router			/api/v1/general-agent/conversations/{id} [delete]
-func (h *GeneralAgentHandler) DeleteConversation(c *web.Context, req domain.DeleteConversationReq) error {
+func (h *GeneralAgentHandler) DeleteConversation(c *web.Context) error {
 	user := middleware.GetUser(c)
 	if user == nil {
 		return errcode.ErrPermission
 	}
 
-	if err := h.usecase.DeleteConversation(c.Request().Context(), &req); err != nil {
+	h.logger.Info(c.QueryParam("id"))
+	if err := h.usecase.DeleteConversation(c.Request().Context(), &domain.DeleteConversationReq{
+		ConversationID: c.QueryParam("id"),
+	}); err != nil {
 		return err
 	}
 
