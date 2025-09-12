@@ -27,6 +27,7 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
   const [hasMore, setHasMore] = useState(true)
   const [_page, setPage] = useState(1)
   const loadingRef = useRef<HTMLDivElement>(null)
+  const loadChatHistoryRef = useRef<((pageNum: number, reset?: boolean) => Promise<void>) | null>(null)
 
   // 格式化相对时间
   const formatRelativeTime = useCallback((timestamp: string) => {
@@ -93,6 +94,9 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
     }
   }, [loading, formatRelativeTime])
 
+  // 更新ref引用
+  loadChatHistoryRef.current = loadChatHistory
+
   // 处理聊天点击
   const handleChatClick = useCallback((chatId: string) => {
     onChatClick?.(chatId)
@@ -117,10 +121,12 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
   // 初始加载
   useEffect(() => {
     const initialLoad = async () => {
-      await loadChatHistory(1, true)
+      if (loadChatHistoryRef.current) {
+        await loadChatHistoryRef.current(1, true)
+      }
     }
     initialLoad()
-  }, []) // 移除loadChatHistory依赖，避免循环依赖
+  }, [])
 
   // 刷新聊天历史
   const refreshChatHistory = useCallback(() => {
