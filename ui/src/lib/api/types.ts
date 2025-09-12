@@ -65,6 +65,117 @@ export interface ProfileUpdateRequest {
   avatar?: string;
 }
 
+// ==================== General Agent 相关类型 ====================
+
+// 消息类型
+export interface Message {
+  id: string;
+  conversation_id: string;
+  role: 'user' | 'assistant' | 'system' | 'agent';
+  content?: string;
+  agent_name?: string;
+  type: 'text' | 'image' | 'audio' | 'video' | 'file';
+  media_url?: string;
+  metadata?: Record<string, unknown>;
+  attachments?: Attachment[];
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
+
+// 附件类型
+export interface Attachment {
+  id: string;
+  message_id: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+  file_url: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
+
+// 对话类型
+export interface Conversation {
+  id: string;
+  user_id: string;
+  title: string;
+  metadata?: Record<string, unknown>;
+  status: string;
+  messages: Message[];
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
+
+// 创建对话请求
+export interface CreateConversationRequest {
+  title: string;
+}
+
+// 生成请求
+export interface GenerateRequest {
+  prompt: string;
+  history?: Message[];
+  conversation_id?: string;
+}
+
+// 生成响应
+export interface GenerateResponse {
+  answer: string;
+}
+
+// 流式数据块
+export interface StreamChunk {
+  content: string;
+  done: boolean;
+}
+
+// 流式元数据
+export interface StreamMetadata {
+  version: string;
+  conversation_id: string;
+}
+
+// 对话列表请求
+export interface ListConversationsRequest {
+  page?: number;
+  size?: number;
+  search?: string;
+}
+
+// 分页信息
+export interface PageInfo {
+  page: number;
+  size: number;
+  total: number;
+  total_pages: number;
+}
+
+// 对话列表响应
+export interface ListConversationsResponse {
+  conversations: Conversation[];
+  page_info: PageInfo;
+}
+
+// 获取对话历史请求
+export interface GetConversationHistoryRequest {
+  conversation_id: string;
+}
+
+// 删除对话请求
+export interface DeleteConversationRequest {
+  conversation_id: string;
+}
+
+// 添加消息到对话请求
+export interface AddMessageToConversationRequest {
+  conversation_id: string;
+  message: Message;
+}
+
 // ==================== 通用响应类型 ====================
 
 export interface ApiResult<T = unknown> {

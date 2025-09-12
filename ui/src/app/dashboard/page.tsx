@@ -14,6 +14,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getUserProfile, getAvatarUrl, getDisplayName, logout } from '@/lib/api'
 import type { UserProfile } from '@/lib/api'
+import { createConversation } from '@/lib/api/general-agent'
 import { UserProfileDialog } from '@/components/business/user-profile-dialog'
 
 interface ChatHistory {
@@ -82,10 +83,19 @@ export default function Dashboard() {
     }
   ]
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      console.log('发送消息:', message)
-      setMessage('')
+  const handleSendMessage = async () => {
+    if (!message.trim()) return
+    
+    const userMessage = message.trim()
+    setMessage('')
+    
+    try {
+      const conv = await createConversation({ title: userMessage.slice(0, 30) || '新对话' })
+      if (conv && conv.id) {
+        router.push(`/chat/${conv.id}?prompt=${encodeURIComponent(userMessage)}`)
+      }
+    } catch (error) {
+      console.error('发送消息失败:', error)
     }
   }
 
@@ -383,7 +393,7 @@ export default function Dashboard() {
         <div className="backdrop-blur-sm p-6 relative z-10">
           <div className="max-w-4xl mx-auto relative z-10">
             {/* AI助手提示卡片 */}
-            <div className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 mb-4 shadow_sm">
               <div className="flex items-start space-x-4">
                 <div className="p-3 bg-blue-100 rounded-full">
                   <MessageCircle className="w-6 h-6 text-blue-600" />

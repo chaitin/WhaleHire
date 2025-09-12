@@ -52,7 +52,7 @@ func NewGeneralAgentHandler(
 	// 对话记录管理路由
 	g.POST("/conversations", web.BindHandler(h.CreateConversation), auth.UserAuth())
 	g.GET("/conversations", web.BindHandler(h.ListConversations), auth.UserAuth())
-	g.GET("/conversations/history", web.BindHandler(h.GetConversationHistory), auth.UserAuth())
+	g.POST("/conversations/history", web.BindHandler(h.GetConversationHistory), auth.UserAuth())
 	g.DELETE("/conversations", web.BaseHandler(h.DeleteConversation), auth.UserAuth())
 	g.POST("/conversations/:id/addmessage", web.BindHandler(h.AddMessageToConversation), auth.UserAuth())
 
@@ -346,8 +346,8 @@ func (h *GeneralAgentHandler) ListConversations(c *web.Context, req domain.ListC
 //	@ID				get-conversation-history
 //	@Accept			json
 //	@Produce		json
-//	@Param			conversation_id	query		string	true	"对话ID，用于指定要获取历史记录的对话"
-//	@Success		200				{object}	web.Resp{data=domain.Conversation}
+//	@Param			request	body		domain.GetConversationHistoryReq	true	"获取对话历史请求参数"
+//	@Success		200		{object}	web.Resp{data=domain.Conversation}
 //	@Router			/api/v1/general-agent/conversations/history [post]
 func (h *GeneralAgentHandler) GetConversationHistory(c *web.Context, req domain.GetConversationHistoryReq) error {
 	user := middleware.GetUser(c)
