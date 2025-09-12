@@ -228,7 +228,7 @@ export default function ChatPage() {
     }
 
     loadConversation()
-  }, [conversationId, searchParams])
+  }, [conversationId, searchParams, messages.length])
 
   // 检查 URL 参数中的 prompt 并自动发送
   useEffect(() => {
@@ -240,7 +240,7 @@ export default function ChatPage() {
         handleSendMessage()
       }, 100)
     }
-  }, [searchParams, isLoading, isGenerating, handleSendMessage])
+  }, [searchParams, isLoading, isGenerating, handleSendMessage, messages.length])
 
   // 逐字显示效果
   useEffect(() => {
@@ -261,7 +261,7 @@ export default function ChatPage() {
   // 自动滚动到底部
   useEffect(() => {
     scrollToBottom()
-  }, [messages, displayedContent])
+  }, [messages.length, displayedContent])
 
   // 复制消息内容
   const handleCopyMessage = (content: string) => {
