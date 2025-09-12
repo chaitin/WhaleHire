@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { MessageCircle, Settings, Loader2 } from 'lucide-react'
 import { listConversations } from '@/lib/api/general-agent'
 import type { ListConversationsRequest, Conversation } from '@/lib/api/types'
@@ -18,13 +17,16 @@ interface ChatHistoryProps {
   className?: string
 }
 
-export function ChatHistory({ onChatClick, className = '' }: ChatHistoryProps) {
+export interface ChatHistoryRef {
+  loadMore: () => void
+}
+
+export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onChatClick, className = '' }, ref) => {
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [_page, setPage] = useState(1)
   const loadingRef = useRef<HTMLDivElement>(null)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   // 格式化相对时间
   const formatRelativeTime = useCallback((timestamp: string) => {
@@ -96,13 +98,9 @@ export function ChatHistory({ onChatClick, className = '' }: ChatHistoryProps) {
     onChatClick?.(chatId)
   }, [onChatClick])
 
-  // 处理滚动事件，基于滚动条位置加载更多数据
-  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
-    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight
-    
-    // 当滚动到底部90%时触发加载
-    if (scrollPercentage >= 0.9 && hasMore && !loading) {
+  // 暴露加载更多方法给父组件
+  const handleLoadMore = useCallback(() => {
+    if (hasMore && !loading) {
       setPage(prev => {
         const nextPage = prev + 1
         loadChatHistory(nextPage)
@@ -110,6 +108,11 @@ export function ChatHistory({ onChatClick, className = '' }: ChatHistoryProps) {
       })
     }
   }, [hasMore, loading, loadChatHistory])
+
+  // 暴露方法给父组件
+  useImperativeHandle(ref, () => ({
+    loadMore: handleLoadMore
+  }), [handleLoadMore])
 
   // 初始加载
   useEffect(() => {
@@ -138,8 +141,15 @@ export function ChatHistory({ onChatClick, className = '' }: ChatHistoryProps) {
         </Button>
       </div>
       
-      <ScrollArea className="h-full scrollbar-thin" ref={scrollAreaRef} onScrollCapture={handleScroll}>
-        <div className="space-y-1.5">
+      <div className="space-y-1.5">
+          {loading && chatHistory.length === 0 && (
+            <div className="flex items-center justify-center py-4">
+              <div className="flex items-center space-x-2 text-gray-400">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span className="text-xs">加载中...</span>
+              </div>
+            </div>
+          )}
           {chatHistory.map((chat) => (
             <div
               key={chat.id}
@@ -213,9 +223,10 @@ export function ChatHistory({ onChatClick, className = '' }: ChatHistoryProps) {
             </div>
           )}
         </div>
-      </ScrollArea>
     </div>
   )
-}
+})
+
+ChatHistory.displayName = 'ChatHistory'
 
 export type { ChatHistoryItem }

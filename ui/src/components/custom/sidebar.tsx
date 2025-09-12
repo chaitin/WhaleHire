@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import { getUserProfile, getAvatarUrl, getDisplayName, logout } from '@/lib/api'
 import type { UserProfile } from '@/lib/api'
 import { UserProfileDialog } from '@/components/business/user-profile-dialog'
-import { ChatHistory } from '@/components/custom/chat-history'
+import { ChatHistory, type ChatHistoryRef } from '@/components/custom/chat-history'
 
 interface NavigationItem {
   id: string
@@ -39,6 +39,7 @@ export function Sidebar({
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [isUserProfileDialogOpen, setIsUserProfileDialogOpen] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const chatHistoryRef = useRef<ChatHistoryRef>(null)
 
   // 获取用户信息
   useEffect(() => {
@@ -79,6 +80,17 @@ export function Sidebar({
     }
   }
 
+  // 处理侧边栏滚动事件，监听是否需要加载更多聊天历史
+  const handleSidebarScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight
+    
+    // 当滚动到底部98%加载更多聊天历史
+    if ((scrollPercentage >= 0.98 ) && chatHistoryRef.current) {
+      chatHistoryRef.current.loadMore()
+    }
+  }, [])
+
   return (
     <>
       <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} h-screen bg-gray-900 text-white flex flex-col transition-all duration-300 scrollbar-thin ${className}`}>
@@ -106,7 +118,7 @@ export function Sidebar({
         {!sidebarCollapsed && (
           <>
             {/* 可滚动的主内容区域 */}
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto scrollbar-thin">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto scrollbar-thin" onScroll={handleSidebarScroll}>
               {/* 顶部标题区域 */}
               <div className="p-4">
                 <div className="flex items-center justify-between mb-6">
@@ -154,7 +166,7 @@ export function Sidebar({
               </div>
 
               {/* 聊天历史 */}
-              <ChatHistory onChatClick={handleChatClick} />
+              <ChatHistory ref={chatHistoryRef} onChatClick={handleChatClick} />
             </div>
 
             {/* 底部用户信息 */}
