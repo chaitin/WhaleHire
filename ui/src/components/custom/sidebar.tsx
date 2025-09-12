@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
-import { Search, Plus, MessageCircle, Settings, ChevronLeft, ChevronRight, User, LogOut } from 'lucide-react'
+import { Search, Plus, MessageCircle, Settings, ChevronLeft, ChevronRight, User, LogOut, PanelLeftClose, PanelLeft } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getUserProfile, getAvatarUrl, getDisplayName, logout } from '@/lib/api'
@@ -108,10 +108,11 @@ export function Sidebar({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-white hover:bg-gray-800 p-1"
+            className="text-gray-400 hover:text-white hover:bg-gray-800 p-2 rounded-md transition-colors"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            title={sidebarCollapsed ? "展开边栏" : "关闭边栏"}
           >
-            {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
           </Button>
         </div>
         

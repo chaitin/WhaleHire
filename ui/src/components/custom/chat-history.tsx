@@ -172,17 +172,6 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
                     className="h-5 w-5 p-0 text-gray-400 hover:text-white"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleChatClick(chat.id)
-                    }}
-                  >
-                    <MessageCircle className="w-2.5 h-2.5" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-5 w-5 p-0 text-gray-400 hover:text-white"
-                    onClick={(e) => {
-                      e.stopPropagation()
                       // TODO: 实现设置功能
                     }}
                   >
