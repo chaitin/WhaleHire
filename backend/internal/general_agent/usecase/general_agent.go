@@ -150,7 +150,7 @@ func (uc *GeneralAgentUsecase) GetConversationHistory(ctx context.Context, req *
 }
 
 // ListConversations 分页获取对话列表
-func (uc *GeneralAgentUsecase) ListConversations(ctx context.Context, userID string, req *domain.ListConversationsReq) ([]*domain.ListConversationsResp, error) {
+func (uc *GeneralAgentUsecase) ListConversations(ctx context.Context, userID string, req *domain.ListConversationsReq) (*domain.ListConversationsResp, error) {
 	dbConversations, pageInfo, err := uc.repo.ListConversations(ctx, userID, &req.Pagination)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list conversations: %w", err)
@@ -182,7 +182,7 @@ func (uc *GeneralAgentUsecase) ListConversations(ctx context.Context, userID str
 		Conversations: conversations,
 	}
 
-	return []*domain.ListConversationsResp{resp}, nil
+	return resp, nil
 }
 
 // DeleteConversation 删除对话

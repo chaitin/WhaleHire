@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { GlassNavigation } from '@/components/custom/glass-navigation'
-import { Sidebar, type NavigationItem, type ChatHistory } from '@/components/custom/sidebar'
+import { Sidebar, type NavigationItem } from '@/components/custom/sidebar'
 import { Send, FileText, Users, Briefcase, Mic, ArrowUpRight, MessageCircle, Search } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -23,11 +23,7 @@ export default function Dashboard() {
   const router = useRouter()
   const [message, setMessage] = useState('')
 
-  const [chatHistory] = useState<ChatHistory[]>([
-    { id: '1', title: 'How can I increase the number of', timestamp: '2小时前' },
-    { id: '2', title: "What's the best approach to", timestamp: '1天前' },
-    { id: '3', title: "What's the best approach to", timestamp: '2天前' }
-  ])
+
 
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([
     { id: 'general', name: 'General', active: true },
@@ -97,13 +93,18 @@ export default function Dashboard() {
     )
   }
 
+  // 处理聊天历史点击
+  const handleChatClick = (chatId: string) => {
+    router.push(`/chat/${chatId}`)
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 to-sky-50">
       {/* 左侧边栏 */}
       <Sidebar 
         navigationItems={navigationItems}
         onNavigationClick={handleNavigationClick}
-        chatHistory={chatHistory}
+        onChatClick={handleChatClick}
       />
 
       {/* 主要内容区域 */}

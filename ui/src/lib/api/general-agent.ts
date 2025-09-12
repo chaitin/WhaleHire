@@ -209,6 +209,7 @@ export async function listConversations(request?: ListConversationsRequest): Pro
 
     const result: ApiResponse<ListConversationsResponse> = await response.json();
     
+    console.log('获取对话列表响应:', result.data);
     if (result.code === 0 && result.data) {
       return result.data;
     } else {
@@ -244,6 +245,7 @@ export async function getConversationHistory(request: GetConversationHistoryRequ
 
     const result: ApiResponse<Conversation> = await response.json();
     
+    console.log('获取对话历史响应:', result.data);
     if (result.code === 0 && result.data) {
       return result.data;
     } else {

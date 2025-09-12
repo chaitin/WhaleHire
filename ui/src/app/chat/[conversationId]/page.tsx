@@ -11,7 +11,8 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { getConversationHistory, generateStream } from '@/lib/api/general-agent'
 import type { Conversation, Message, GenerateRequest, StreamChunk } from '@/lib/api/types'
 import { Sidebar } from '@/components/custom/sidebar'
-import type { NavigationItem, ChatHistory } from '@/components/custom/sidebar'
+import type { NavigationItem } from '@/components/custom/sidebar'
+
 
 
 
@@ -24,7 +25,7 @@ export default function ChatPage() {
   const [_conversation, setConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [streamingContent, setStreamingContent] = useState('')
   const [displayedContent, setDisplayedContent] = useState('')
@@ -32,12 +33,7 @@ export default function ChatPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
-  // 侧边栏状态
-  const [chatHistory] = useState<ChatHistory[]>([
-    { id: '1', title: 'How can I increase the number of', timestamp: '2小时前' },
-    { id: '2', title: "What's the best approach to", timestamp: '1天前' },
-    { id: '3', title: "What's the best approach to", timestamp: '2天前' }
-  ])
+  // 侧边栏状态已由Sidebar组件内部处理
   
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([
     { id: 'general', name: 'General', active: true },
@@ -58,10 +54,16 @@ export default function ChatPage() {
     }
   }
 
+  // 处理聊天历史点击
+  const handleChatClick = (chatId: string) => {
+    router.push(`/chat/${chatId}`)
+  }
+
   // 滚动到底部
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
 
   // 发送消息
   const handleSendMessage = useCallback(async () => {
@@ -168,6 +170,8 @@ export default function ChatPage() {
             setStreamingContent('')
             setDisplayedContent('')
             setIsGenerating(false)
+            
+            // 聊天历史会由Sidebar组件自动刷新
           }, 500) // 延迟500ms确保用户能看到完整的流式效果
         }
       )
@@ -190,6 +194,8 @@ export default function ChatPage() {
     }
   }, [conversationId, message, messages, isGenerating])
 
+  // 聊天历史加载已移至Sidebar组件内部
+
   // 加载对话历史
   useEffect(() => {
     const loadConversation = async () => {
@@ -202,7 +208,12 @@ export default function ChatPage() {
         return
       }
       
-      setIsLoading(true)
+      // 只在初次加载或conversationId变化时显示loading
+      // 如果已经有消息数据，则不显示loading避免闪烁
+      if (messages.length === 0) {
+        setIsLoading(true)
+      }
+      
       try {
         const result = await getConversationHistory({ conversation_id: conversationId })
         if (result) {
@@ -267,8 +278,16 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-gray-500">加载中...</div>
+      <div className="flex h-screen bg-gradient-to-br from-blue-50 to-sky-50">
+        {/* 保持侧边栏显示，避免布局闪烁 */}
+        <Sidebar
+          navigationItems={navigationItems}
+          onNavigationClick={handleNavigationClick}
+          onChatClick={handleChatClick}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-gray-500">加载中...</div>
+        </div>
       </div>
     )
   }
@@ -278,8 +297,8 @@ export default function ChatPage() {
       {/* 左侧边栏 */}
       <Sidebar
         navigationItems={navigationItems}
-        chatHistory={chatHistory}
         onNavigationClick={handleNavigationClick}
+        onChatClick={handleChatClick}
       />
 
       {/* 主要内容区域 */}

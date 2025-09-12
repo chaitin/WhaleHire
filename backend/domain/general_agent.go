@@ -13,7 +13,7 @@ type GeneralAgentUsecase interface {
 	Generate(ctx context.Context, req *GenerateReq) (*GenerateResp, error)
 	GenerateStream(ctx context.Context, req *GenerateReq) (StreamReader, error)
 	CreateConversation(ctx context.Context, userID string, req *CreateConversationReq) (*Conversation, error)
-	ListConversations(ctx context.Context, userID string, req *ListConversationsReq) ([]*ListConversationsResp, error)
+	ListConversations(ctx context.Context, userID string, req *ListConversationsReq) (*ListConversationsResp, error)
 	DeleteConversation(ctx context.Context, req *DeleteConversationReq) error
 	AddMessageToConversation(ctx context.Context, req *AddMessageToConversationReq) error
 	GetConversationHistory(ctx context.Context, req *GetConversationHistoryReq) (*Conversation, error)
