@@ -240,7 +240,7 @@ export default function ChatPage() {
         handleSendMessage()
       }, 100)
     }
-  }, [searchParams, isLoading, messages.length, isGenerating, handleSendMessage])
+  }, [searchParams, isLoading, isGenerating, handleSendMessage])
 
   // 逐字显示效果
   useEffect(() => {

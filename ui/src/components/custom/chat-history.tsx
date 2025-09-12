@@ -91,7 +91,7 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
     } finally {
       setLoading(false)
     }
-  }, [loading])
+  }, [loading, formatRelativeTime])
 
   // 处理聊天点击
   const handleChatClick = useCallback((chatId: string) => {
@@ -116,15 +116,21 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
 
   // 初始加载
   useEffect(() => {
-    loadChatHistory(1, true)
+    const initialLoad = async () => {
+      await loadChatHistory(1, true)
+    }
+    initialLoad()
   }, []) // 移除loadChatHistory依赖，避免循环依赖
 
   // 刷新聊天历史
   const refreshChatHistory = useCallback(() => {
     setPage(1)
     setHasMore(true)
-    loadChatHistory(1, true)
-  }, []) // 移除loadChatHistory依赖，避免循环依赖
+    const refresh = async () => {
+      await loadChatHistory(1, true)
+    }
+    refresh()
+  }, [loadChatHistory])
 
   return (
     <div className={`flex-1 px-4 ${className}`}>
