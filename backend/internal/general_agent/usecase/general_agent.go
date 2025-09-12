@@ -157,9 +157,9 @@ func (uc *GeneralAgentUsecase) ListConversations(ctx context.Context, userID str
 	}
 
 	// 转换为 domain 对象
-	conversations := make([]*domain.Conversation, len(dbConversations))
+	conversations := make([]*domain.ConversationSummary, len(dbConversations))
 	for i, dbConv := range dbConversations {
-		conv := &domain.Conversation{
+		conv := &domain.ConversationSummary{
 			ID:        dbConv.ID.String(),
 			UserID:    dbConv.UserID.String(),
 			Title:     dbConv.Title,

@@ -46,6 +46,18 @@ type Conversation struct {
 	DeletedAt *time.Time             `json:"deleted_at,omitempty"`
 }
 
+// ConversationSummary 对话摘要信息，用于列表接口
+type ConversationSummary struct {
+	ID        string                 `json:"id"`
+	UserID    string                 `json:"user_id"`
+	Title     string                 `json:"title"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	Status    string                 `json:"status"`
+	CreatedAt time.Time              `json:"created_at"`
+	UpdatedAt time.Time              `json:"updated_at"`
+	DeletedAt *time.Time             `json:"deleted_at,omitempty"`
+}
+
 type GenerateReq struct {
 	Prompt         string     `json:"prompt"`
 	History        []*Message `json:"history,omitempty"`
@@ -111,7 +123,7 @@ type ListConversationsReq struct {
 type ListConversationsResp struct {
 	*db.PageInfo
 
-	Conversations []*Conversation `json:"conversations"`
+	Conversations []*ConversationSummary `json:"conversations"`
 }
 
 // GetConversationHistoryReq 获取对话历史请求
