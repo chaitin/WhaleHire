@@ -6,12 +6,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card } from '@/components/ui/card'
-import { Send, ArrowLeft, Mic, Copy, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Send, Mic, Copy, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { getConversationHistory, generateStream } from '@/lib/api/general-agent'
 import type { Conversation, Message, GenerateRequest, StreamChunk } from '@/lib/api/types'
+import { Sidebar } from '@/components/custom/sidebar'
+import type { NavigationItem, ChatHistory } from '@/components/custom/sidebar'
 
-// 打字机效果组件
 
 
 export default function ChatPage() {
@@ -20,7 +21,7 @@ export default function ChatPage() {
   const searchParams = useSearchParams()
   const conversationId = params.conversationId as string
   
-  const [conversation, setConversation] = useState<Conversation | null>(null)
+  const [_conversation, setConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -30,6 +31,32 @@ export default function ChatPage() {
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  // 侧边栏状态
+  const [chatHistory] = useState<ChatHistory[]>([
+    { id: '1', title: 'How can I increase the number of', timestamp: '2小时前' },
+    { id: '2', title: "What's the best approach to", timestamp: '1天前' },
+    { id: '3', title: "What's the best approach to", timestamp: '2天前' }
+  ])
+  
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([
+    { id: 'general', name: 'General', active: true },
+    { id: 'jd-agent', name: 'JD Agent', active: false },
+    { id: 'screen-agent', name: 'Screen Agent', active: false },
+    { id: 'interview-agent', name: 'Interview Agent', active: false }
+  ])
+
+  // 处理导航点击
+  const handleNavigationClick = (itemId: string) => {
+    setNavigationItems(items => 
+      items.map(item => ({ ...item, active: item.id === itemId }))
+    )
+    
+    // 根据导航项进行路由跳转
+    if (itemId === 'dashboard') {
+      router.push('/dashboard')
+    }
+  }
 
   // 滚动到底部
   const scrollToBottom = () => {
@@ -248,30 +275,15 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 to-sky-50">
+      {/* 左侧边栏 */}
+      <Sidebar
+        navigationItems={navigationItems}
+        chatHistory={chatHistory}
+        onNavigationClick={handleNavigationClick}
+      />
+
       {/* 主要内容区域 */}
       <div className="flex-1 flex flex-col">
-        {/* 顶部导航栏 */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              返回
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold text-gray-900">
-                {conversation?.title || '新对话'}
-              </h1>
-              <p className="text-sm text-gray-500">
-                对话ID: {conversationId}
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* 消息区域 */}
         <div className="flex-1 overflow-hidden">
