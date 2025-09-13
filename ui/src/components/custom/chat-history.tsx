@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Settings, Loader2 } from 'lucide-react'
-import { listConversations } from '@/lib/api/general-agent'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { MessageCircle, Ellipsis, Loader2, Trash2 } from 'lucide-react'
+import { listConversations, deleteConversation } from '@/lib/api/general-agent'
 import type { ListConversationsRequest, Conversation } from '@/lib/api/types'
 
 interface ChatHistoryItem {
@@ -26,6 +28,8 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [_page, setPage] = useState(1)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null)
   const loadingRef = useRef<HTMLDivElement>(null)
   const loadChatHistoryRef = useRef<((pageNum: number, reset?: boolean) => Promise<void>) | null>(null)
 
@@ -138,6 +142,49 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
     refresh()
   }, [loadChatHistory])
 
+  // 打开删除确认弹窗
+  const handleDeleteClick = useCallback((chatId: string) => {
+    setChatToDelete(chatId)
+    setDeleteDialogOpen(true)
+  }, [])
+
+  // 确认删除对话
+  const handleConfirmDelete = useCallback(async () => {
+    if (!chatToDelete) return
+    
+    try {
+      const success = await deleteConversation(chatToDelete)
+      if (success) {
+        // 从本地状态中移除已删除的对话
+        setChatHistory(prev => prev.filter(chat => chat.id !== chatToDelete))
+        
+        // 检查是否删除的是当前正在查看的对话
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname
+          const currentConversationId = currentPath.match(/\/chat\/([^/?]+)/)?.[1]
+          
+          // 如果删除的是当前正在查看的对话，跳转到dashboard
+          if (currentConversationId === chatToDelete) {
+            window.location.href = '/dashboard'
+          }
+        }
+      } else {
+        console.error('删除对话失败')
+      }
+    } catch (error) {
+      console.error('删除对话时出错:', error)
+    } finally {
+      setDeleteDialogOpen(false)
+      setChatToDelete(null)
+    }
+  }, [chatToDelete])
+
+  // 取消删除
+  const handleCancelDelete = useCallback(() => {
+    setDeleteDialogOpen(false)
+    setChatToDelete(null)
+  }, [])
+
   return (
     <div className={`flex-1 px-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
@@ -177,18 +224,33 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
                     {chat.timestamp}
                   </p>
                 </div>
-                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-5 w-5 p-0 text-gray-400 hover:text-white"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      // TODO: 实现设置功能
-                    }}
-                  >
-                    <Settings className="w-2.5 h-2.5" />
-                  </Button>
+                <div 
+                  className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-5 w-5 p-0 text-gray-400 hover:text-white"
+                      >
+                        <Ellipsis className="w-3.5 h-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteClick(chat.id)}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-3 h-3 mr-2" />
+                        删除对话
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -223,7 +285,34 @@ export const ChatHistory = forwardRef<ChatHistoryRef, ChatHistoryProps>(({ onCha
               <p className="text-xs text-gray-500">暂无聊天记录</p>
             </div>
           )}
-        </div>
+      </div>
+      
+      {/* 删除确认弹窗 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-gray-900 border border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-white">确认删除对话</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              您确定要删除这个对话吗？此操作无法撤销。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={handleCancelDelete}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              取消
+            </Button>
+            <Button 
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              确认删除
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 })

@@ -70,7 +70,7 @@ export default function Dashboard() {
     
     // 获取当前选中的 agent
     const activeAgent = navigationItems.find(item => item.active)
-    const agentName = activeAgent?.id || 'general'
+    const agentName = activeAgent?.name || 'General'
     
     try {
       const conv = await createConversation({ 

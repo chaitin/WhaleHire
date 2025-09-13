@@ -308,7 +308,7 @@ export default function ChatPage() {
           <div className="max-w-4xl mx-auto flex justify-between items-center">
             <div></div>
             <h1 className="text-xl font-semibold text-gray-800">
-              {navigationItems.find(item => item.active)?.name || 'AI 智能助手'}
+              {_conversation?.agent_name || 'WhaleHire AI'}
             </h1>
             <div></div>
           </div>

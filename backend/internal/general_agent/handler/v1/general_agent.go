@@ -372,7 +372,7 @@ func (h *GeneralAgentHandler) GetConversationHistory(c *web.Context, req domain.
 //	@Produce		json
 //	@Param			id	path		string	true	"对话ID，要删除的对话的唯一标识符"
 //	@Success		200	{object}	web.Resp
-//	@Router			/api/v1/general-agent/conversations/{id} [delete]
+//	@Router			/api/v1/general-agent/conversations [delete]
 func (h *GeneralAgentHandler) DeleteConversation(c *web.Context) error {
 	user := middleware.GetUser(c)
 	if user == nil {

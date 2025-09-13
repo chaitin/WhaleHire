@@ -263,7 +263,7 @@ export async function getConversationHistory(request: GetConversationHistoryRequ
  */
 export async function deleteConversation(conversationId: string): Promise<boolean> {
   try {
-    const response = await fetch(`/api/v1/general-agent/conversations/${conversationId}`, {
+    const response = await fetch(`/api/v1/general-agent/conversations?id=${conversationId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
