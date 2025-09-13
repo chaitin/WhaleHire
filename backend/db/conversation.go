@@ -26,6 +26,8 @@ type Conversation struct {
 	UserID uuid.UUID `json:"user_id,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
+	// AgentName holds the value of the "agent_name" field.
+	AgentName string `json:"agent_name,omitempty"`
 	// Metadata holds the value of the "metadata" field.
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// Status holds the value of the "status" field.
@@ -78,7 +80,7 @@ func (*Conversation) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case conversation.FieldMetadata:
 			values[i] = new([]byte)
-		case conversation.FieldTitle, conversation.FieldStatus:
+		case conversation.FieldTitle, conversation.FieldAgentName, conversation.FieldStatus:
 			values[i] = new(sql.NullString)
 		case conversation.FieldDeletedAt, conversation.FieldCreatedAt, conversation.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -122,6 +124,12 @@ func (c *Conversation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
 				c.Title = value.String
+			}
+		case conversation.FieldAgentName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field agent_name", values[i])
+			} else if value.Valid {
+				c.AgentName = value.String
 			}
 		case conversation.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -203,6 +211,9 @@ func (c *Conversation) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("title=")
 	builder.WriteString(c.Title)
+	builder.WriteString(", ")
+	builder.WriteString("agent_name=")
+	builder.WriteString(c.AgentName)
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
 	builder.WriteString(fmt.Sprintf("%v", c.Metadata))

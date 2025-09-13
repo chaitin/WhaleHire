@@ -30,7 +30,8 @@ type GeneralAgentRepo interface {
 
 // CreateConversationReq 创建对话请求
 type CreateConversationReq struct {
-	Title string `json:"title" validate:"required,max=256"`
+	Title     string `json:"title" validate:"required,max=256"`
+	AgentName string `json:"agent_name"`
 }
 
 // Conversation 对话记录
@@ -38,6 +39,7 @@ type Conversation struct {
 	ID        string                 `json:"id"`
 	UserID    string                 `json:"user_id"`
 	Title     string                 `json:"title"`
+	AgentName string                 `json:"agent_name"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 	Status    string                 `json:"status"`
 	Messages  []*Message             `json:"messages"`
@@ -51,6 +53,7 @@ type ConversationSummary struct {
 	ID        string                 `json:"id"`
 	UserID    string                 `json:"user_id"`
 	Title     string                 `json:"title"`
+	AgentName string                 `json:"agent_name"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 	Status    string                 `json:"status"`
 	CreatedAt time.Time              `json:"created_at"`

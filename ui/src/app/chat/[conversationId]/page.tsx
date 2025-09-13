@@ -303,6 +303,16 @@ export default function ChatPage() {
 
       {/* 主要内容区域 */}
       <div className="flex-1 flex flex-col">
+        {/* 顶部标题区域 */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 p-4">
+          <div className="max-w-4xl mx-auto flex justify-between items-center">
+            <div></div>
+            <h1 className="text-xl font-semibold text-gray-800">
+              {navigationItems.find(item => item.active)?.name || 'AI 智能助手'}
+            </h1>
+            <div></div>
+          </div>
+        </div>
 
         {/* 消息区域 */}
         <div className="flex-1 overflow-hidden">

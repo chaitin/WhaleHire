@@ -38,6 +38,7 @@ func (Conversation) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.UUID("user_id", uuid.UUID{}),
 		field.String("title").NotEmpty(),
+		field.String("agent_name").Optional(),
 		field.JSON("metadata", map[string]interface{}{}).Optional(),
 		field.String("status").Default("active"),
 		field.Time("created_at").Default(time.Now),

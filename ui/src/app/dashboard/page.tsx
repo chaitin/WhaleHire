@@ -68,8 +68,15 @@ export default function Dashboard() {
     const userMessage = message.trim()
     setMessage('')
     
+    // 获取当前选中的 agent
+    const activeAgent = navigationItems.find(item => item.active)
+    const agentName = activeAgent?.id || 'general'
+    
     try {
-      const conv = await createConversation({ title: userMessage.slice(0, 30) || '新对话' })
+      const conv = await createConversation({ 
+        title: userMessage.slice(0, 30) || '新对话',
+        agent_name: agentName
+      })
       if (conv && conv.id) {
         router.push(`/chat/${conv.id}?prompt=${encodeURIComponent(userMessage)}`)
       }

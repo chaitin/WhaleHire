@@ -102,6 +102,7 @@ export interface Conversation {
   id: string;
   user_id: string;
   title: string;
+  agent_name: string;
   metadata?: Record<string, unknown>;
   status: string;
   messages: Message[];
@@ -113,6 +114,7 @@ export interface Conversation {
 // 创建对话请求
 export interface CreateConversationRequest {
   title: string;
+  agent_name: string;
 }
 
 // 生成请求

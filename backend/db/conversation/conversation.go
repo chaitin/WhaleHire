@@ -22,6 +22,8 @@ const (
 	FieldUserID = "user_id"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
+	// FieldAgentName holds the string denoting the agent_name field in the database.
+	FieldAgentName = "agent_name"
 	// FieldMetadata holds the string denoting the metadata field in the database.
 	FieldMetadata = "metadata"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -58,6 +60,7 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldUserID,
 	FieldTitle,
+	FieldAgentName,
 	FieldMetadata,
 	FieldStatus,
 	FieldCreatedAt,
@@ -117,6 +120,11 @@ func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 // ByTitle orders the results by the title field.
 func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTitle, opts...).ToFunc()
+}
+
+// ByAgentName orders the results by the agent_name field.
+func ByAgentName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAgentName, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

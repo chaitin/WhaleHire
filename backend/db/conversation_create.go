@@ -52,6 +52,20 @@ func (cc *ConversationCreate) SetTitle(s string) *ConversationCreate {
 	return cc
 }
 
+// SetAgentName sets the "agent_name" field.
+func (cc *ConversationCreate) SetAgentName(s string) *ConversationCreate {
+	cc.mutation.SetAgentName(s)
+	return cc
+}
+
+// SetNillableAgentName sets the "agent_name" field if the given value is not nil.
+func (cc *ConversationCreate) SetNillableAgentName(s *string) *ConversationCreate {
+	if s != nil {
+		cc.SetAgentName(*s)
+	}
+	return cc
+}
+
 // SetMetadata sets the "metadata" field.
 func (cc *ConversationCreate) SetMetadata(m map[string]interface{}) *ConversationCreate {
 	cc.mutation.SetMetadata(m)
@@ -268,6 +282,10 @@ func (cc *ConversationCreate) createSpec() (*Conversation, *sqlgraph.CreateSpec)
 		_spec.SetField(conversation.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
+	if value, ok := cc.mutation.AgentName(); ok {
+		_spec.SetField(conversation.FieldAgentName, field.TypeString, value)
+		_node.AgentName = value
+	}
 	if value, ok := cc.mutation.Metadata(); ok {
 		_spec.SetField(conversation.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
@@ -408,6 +426,24 @@ func (u *ConversationUpsert) SetTitle(v string) *ConversationUpsert {
 // UpdateTitle sets the "title" field to the value that was provided on create.
 func (u *ConversationUpsert) UpdateTitle() *ConversationUpsert {
 	u.SetExcluded(conversation.FieldTitle)
+	return u
+}
+
+// SetAgentName sets the "agent_name" field.
+func (u *ConversationUpsert) SetAgentName(v string) *ConversationUpsert {
+	u.Set(conversation.FieldAgentName, v)
+	return u
+}
+
+// UpdateAgentName sets the "agent_name" field to the value that was provided on create.
+func (u *ConversationUpsert) UpdateAgentName() *ConversationUpsert {
+	u.SetExcluded(conversation.FieldAgentName)
+	return u
+}
+
+// ClearAgentName clears the value of the "agent_name" field.
+func (u *ConversationUpsert) ClearAgentName() *ConversationUpsert {
+	u.SetNull(conversation.FieldAgentName)
 	return u
 }
 
@@ -559,6 +595,27 @@ func (u *ConversationUpsertOne) SetTitle(v string) *ConversationUpsertOne {
 func (u *ConversationUpsertOne) UpdateTitle() *ConversationUpsertOne {
 	return u.Update(func(s *ConversationUpsert) {
 		s.UpdateTitle()
+	})
+}
+
+// SetAgentName sets the "agent_name" field.
+func (u *ConversationUpsertOne) SetAgentName(v string) *ConversationUpsertOne {
+	return u.Update(func(s *ConversationUpsert) {
+		s.SetAgentName(v)
+	})
+}
+
+// UpdateAgentName sets the "agent_name" field to the value that was provided on create.
+func (u *ConversationUpsertOne) UpdateAgentName() *ConversationUpsertOne {
+	return u.Update(func(s *ConversationUpsert) {
+		s.UpdateAgentName()
+	})
+}
+
+// ClearAgentName clears the value of the "agent_name" field.
+func (u *ConversationUpsertOne) ClearAgentName() *ConversationUpsertOne {
+	return u.Update(func(s *ConversationUpsert) {
+		s.ClearAgentName()
 	})
 }
 
@@ -886,6 +943,27 @@ func (u *ConversationUpsertBulk) SetTitle(v string) *ConversationUpsertBulk {
 func (u *ConversationUpsertBulk) UpdateTitle() *ConversationUpsertBulk {
 	return u.Update(func(s *ConversationUpsert) {
 		s.UpdateTitle()
+	})
+}
+
+// SetAgentName sets the "agent_name" field.
+func (u *ConversationUpsertBulk) SetAgentName(v string) *ConversationUpsertBulk {
+	return u.Update(func(s *ConversationUpsert) {
+		s.SetAgentName(v)
+	})
+}
+
+// UpdateAgentName sets the "agent_name" field to the value that was provided on create.
+func (u *ConversationUpsertBulk) UpdateAgentName() *ConversationUpsertBulk {
+	return u.Update(func(s *ConversationUpsert) {
+		s.UpdateAgentName()
+	})
+}
+
+// ClearAgentName clears the value of the "agent_name" field.
+func (u *ConversationUpsertBulk) ClearAgentName() *ConversationUpsertBulk {
+	return u.Update(func(s *ConversationUpsert) {
+		s.ClearAgentName()
 	})
 }
 

@@ -81,6 +81,7 @@ func (uc *GeneralAgentUsecase) CreateConversation(ctx context.Context, userID st
 	conv := &domain.Conversation{
 		UserID:    userID,
 		Title:     req.Title,
+		AgentName: req.AgentName,
 		Status:    "active",
 		Messages:  []*domain.Message{},
 		CreatedAt: time.Now(),
@@ -106,6 +107,7 @@ func (uc *GeneralAgentUsecase) GetConversationHistory(ctx context.Context, req *
 		ID:        dbConv.ID.String(),
 		UserID:    dbConv.UserID.String(),
 		Title:     dbConv.Title,
+		AgentName: dbConv.AgentName,
 		Metadata:  dbConv.Metadata,
 		Status:    dbConv.Status,
 		CreatedAt: dbConv.CreatedAt,
@@ -163,6 +165,7 @@ func (uc *GeneralAgentUsecase) ListConversations(ctx context.Context, userID str
 			ID:        dbConv.ID.String(),
 			UserID:    dbConv.UserID.String(),
 			Title:     dbConv.Title,
+			AgentName: dbConv.AgentName,
 			Metadata:  dbConv.Metadata,
 			Status:    dbConv.Status,
 			CreatedAt: dbConv.CreatedAt,

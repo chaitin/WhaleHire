@@ -41,6 +41,10 @@ func (r *GeneralAgentRepo) SaveConversation(ctx context.Context, conv *domain.Co
 				SetTitle(conv.Title).
 				SetStatus(conv.Status)
 
+			if conv.AgentName != "" {
+				create = create.SetAgentName(conv.AgentName)
+			}
+
 			if conv.Metadata != nil {
 				create = create.SetMetadata(conv.Metadata)
 			}
@@ -61,6 +65,10 @@ func (r *GeneralAgentRepo) SaveConversation(ctx context.Context, conv *domain.Co
 			update := tx.Conversation.UpdateOneID(conversationID).
 				SetTitle(conv.Title).
 				SetStatus(conv.Status)
+
+			if conv.AgentName != "" {
+				update = update.SetAgentName(conv.AgentName)
+			}
 
 			if conv.Metadata != nil {
 				update = update.SetMetadata(conv.Metadata)

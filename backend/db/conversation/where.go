@@ -71,6 +71,11 @@ func Title(v string) predicate.Conversation {
 	return predicate.Conversation(sql.FieldEQ(FieldTitle, v))
 }
 
+// AgentName applies equality check predicate on the "agent_name" field. It's identical to AgentNameEQ.
+func AgentName(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldEQ(FieldAgentName, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.Conversation {
 	return predicate.Conversation(sql.FieldEQ(FieldStatus, v))
@@ -219,6 +224,81 @@ func TitleEqualFold(v string) predicate.Conversation {
 // TitleContainsFold applies the ContainsFold predicate on the "title" field.
 func TitleContainsFold(v string) predicate.Conversation {
 	return predicate.Conversation(sql.FieldContainsFold(FieldTitle, v))
+}
+
+// AgentNameEQ applies the EQ predicate on the "agent_name" field.
+func AgentNameEQ(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldEQ(FieldAgentName, v))
+}
+
+// AgentNameNEQ applies the NEQ predicate on the "agent_name" field.
+func AgentNameNEQ(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldNEQ(FieldAgentName, v))
+}
+
+// AgentNameIn applies the In predicate on the "agent_name" field.
+func AgentNameIn(vs ...string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldIn(FieldAgentName, vs...))
+}
+
+// AgentNameNotIn applies the NotIn predicate on the "agent_name" field.
+func AgentNameNotIn(vs ...string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldNotIn(FieldAgentName, vs...))
+}
+
+// AgentNameGT applies the GT predicate on the "agent_name" field.
+func AgentNameGT(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldGT(FieldAgentName, v))
+}
+
+// AgentNameGTE applies the GTE predicate on the "agent_name" field.
+func AgentNameGTE(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldGTE(FieldAgentName, v))
+}
+
+// AgentNameLT applies the LT predicate on the "agent_name" field.
+func AgentNameLT(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldLT(FieldAgentName, v))
+}
+
+// AgentNameLTE applies the LTE predicate on the "agent_name" field.
+func AgentNameLTE(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldLTE(FieldAgentName, v))
+}
+
+// AgentNameContains applies the Contains predicate on the "agent_name" field.
+func AgentNameContains(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldContains(FieldAgentName, v))
+}
+
+// AgentNameHasPrefix applies the HasPrefix predicate on the "agent_name" field.
+func AgentNameHasPrefix(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldHasPrefix(FieldAgentName, v))
+}
+
+// AgentNameHasSuffix applies the HasSuffix predicate on the "agent_name" field.
+func AgentNameHasSuffix(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldHasSuffix(FieldAgentName, v))
+}
+
+// AgentNameIsNil applies the IsNil predicate on the "agent_name" field.
+func AgentNameIsNil() predicate.Conversation {
+	return predicate.Conversation(sql.FieldIsNull(FieldAgentName))
+}
+
+// AgentNameNotNil applies the NotNil predicate on the "agent_name" field.
+func AgentNameNotNil() predicate.Conversation {
+	return predicate.Conversation(sql.FieldNotNull(FieldAgentName))
+}
+
+// AgentNameEqualFold applies the EqualFold predicate on the "agent_name" field.
+func AgentNameEqualFold(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldEqualFold(FieldAgentName, v))
+}
+
+// AgentNameContainsFold applies the ContainsFold predicate on the "agent_name" field.
+func AgentNameContainsFold(v string) predicate.Conversation {
+	return predicate.Conversation(sql.FieldContainsFold(FieldAgentName, v))
 }
 
 // MetadataIsNil applies the IsNil predicate on the "metadata" field.

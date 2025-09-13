@@ -80,6 +80,26 @@ func (cu *ConversationUpdate) SetNillableTitle(s *string) *ConversationUpdate {
 	return cu
 }
 
+// SetAgentName sets the "agent_name" field.
+func (cu *ConversationUpdate) SetAgentName(s string) *ConversationUpdate {
+	cu.mutation.SetAgentName(s)
+	return cu
+}
+
+// SetNillableAgentName sets the "agent_name" field if the given value is not nil.
+func (cu *ConversationUpdate) SetNillableAgentName(s *string) *ConversationUpdate {
+	if s != nil {
+		cu.SetAgentName(*s)
+	}
+	return cu
+}
+
+// ClearAgentName clears the value of the "agent_name" field.
+func (cu *ConversationUpdate) ClearAgentName() *ConversationUpdate {
+	cu.mutation.ClearAgentName()
+	return cu
+}
+
 // SetMetadata sets the "metadata" field.
 func (cu *ConversationUpdate) SetMetadata(m map[string]interface{}) *ConversationUpdate {
 	cu.mutation.SetMetadata(m)
@@ -260,6 +280,12 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := cu.mutation.Title(); ok {
 		_spec.SetField(conversation.FieldTitle, field.TypeString, value)
 	}
+	if value, ok := cu.mutation.AgentName(); ok {
+		_spec.SetField(conversation.FieldAgentName, field.TypeString, value)
+	}
+	if cu.mutation.AgentNameCleared() {
+		_spec.ClearField(conversation.FieldAgentName, field.TypeString)
+	}
 	if value, ok := cu.mutation.Metadata(); ok {
 		_spec.SetField(conversation.FieldMetadata, field.TypeJSON, value)
 	}
@@ -416,6 +442,26 @@ func (cuo *ConversationUpdateOne) SetNillableTitle(s *string) *ConversationUpdat
 	if s != nil {
 		cuo.SetTitle(*s)
 	}
+	return cuo
+}
+
+// SetAgentName sets the "agent_name" field.
+func (cuo *ConversationUpdateOne) SetAgentName(s string) *ConversationUpdateOne {
+	cuo.mutation.SetAgentName(s)
+	return cuo
+}
+
+// SetNillableAgentName sets the "agent_name" field if the given value is not nil.
+func (cuo *ConversationUpdateOne) SetNillableAgentName(s *string) *ConversationUpdateOne {
+	if s != nil {
+		cuo.SetAgentName(*s)
+	}
+	return cuo
+}
+
+// ClearAgentName clears the value of the "agent_name" field.
+func (cuo *ConversationUpdateOne) ClearAgentName() *ConversationUpdateOne {
+	cuo.mutation.ClearAgentName()
 	return cuo
 }
 
@@ -628,6 +674,12 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 	}
 	if value, ok := cuo.mutation.Title(); ok {
 		_spec.SetField(conversation.FieldTitle, field.TypeString, value)
+	}
+	if value, ok := cuo.mutation.AgentName(); ok {
+		_spec.SetField(conversation.FieldAgentName, field.TypeString, value)
+	}
+	if cuo.mutation.AgentNameCleared() {
+		_spec.ClearField(conversation.FieldAgentName, field.TypeString)
 	}
 	if value, ok := cuo.mutation.Metadata(); ok {
 		_spec.SetField(conversation.FieldMetadata, field.TypeJSON, value)

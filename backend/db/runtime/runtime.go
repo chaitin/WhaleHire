@@ -94,15 +94,15 @@ func init() {
 	// conversation.TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	conversation.TitleValidator = conversationDescTitle.Validators[0].(func(string) error)
 	// conversationDescStatus is the schema descriptor for status field.
-	conversationDescStatus := conversationFields[4].Descriptor()
+	conversationDescStatus := conversationFields[5].Descriptor()
 	// conversation.DefaultStatus holds the default value on creation for the status field.
 	conversation.DefaultStatus = conversationDescStatus.Default.(string)
 	// conversationDescCreatedAt is the schema descriptor for created_at field.
-	conversationDescCreatedAt := conversationFields[5].Descriptor()
+	conversationDescCreatedAt := conversationFields[6].Descriptor()
 	// conversation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	conversation.DefaultCreatedAt = conversationDescCreatedAt.Default.(func() time.Time)
 	// conversationDescUpdatedAt is the schema descriptor for updated_at field.
-	conversationDescUpdatedAt := conversationFields[6].Descriptor()
+	conversationDescUpdatedAt := conversationFields[7].Descriptor()
 	// conversation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	conversation.DefaultUpdatedAt = conversationDescUpdatedAt.Default.(func() time.Time)
 	// conversation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

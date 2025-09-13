@@ -3139,6 +3139,7 @@ type ConversationMutation struct {
 	id              *uuid.UUID
 	deleted_at      *time.Time
 	title           *string
+	agent_name      *string
 	metadata        *map[string]interface{}
 	status          *string
 	created_at      *time.Time
@@ -3377,6 +3378,55 @@ func (m *ConversationMutation) OldTitle(ctx context.Context) (v string, err erro
 // ResetTitle resets all changes to the "title" field.
 func (m *ConversationMutation) ResetTitle() {
 	m.title = nil
+}
+
+// SetAgentName sets the "agent_name" field.
+func (m *ConversationMutation) SetAgentName(s string) {
+	m.agent_name = &s
+}
+
+// AgentName returns the value of the "agent_name" field in the mutation.
+func (m *ConversationMutation) AgentName() (r string, exists bool) {
+	v := m.agent_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAgentName returns the old "agent_name" field's value of the Conversation entity.
+// If the Conversation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConversationMutation) OldAgentName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAgentName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAgentName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAgentName: %w", err)
+	}
+	return oldValue.AgentName, nil
+}
+
+// ClearAgentName clears the value of the "agent_name" field.
+func (m *ConversationMutation) ClearAgentName() {
+	m.agent_name = nil
+	m.clearedFields[conversation.FieldAgentName] = struct{}{}
+}
+
+// AgentNameCleared returns if the "agent_name" field was cleared in this mutation.
+func (m *ConversationMutation) AgentNameCleared() bool {
+	_, ok := m.clearedFields[conversation.FieldAgentName]
+	return ok
+}
+
+// ResetAgentName resets all changes to the "agent_name" field.
+func (m *ConversationMutation) ResetAgentName() {
+	m.agent_name = nil
+	delete(m.clearedFields, conversation.FieldAgentName)
 }
 
 // SetMetadata sets the "metadata" field.
@@ -3651,7 +3701,7 @@ func (m *ConversationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ConversationMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 8)
 	if m.deleted_at != nil {
 		fields = append(fields, conversation.FieldDeletedAt)
 	}
@@ -3660,6 +3710,9 @@ func (m *ConversationMutation) Fields() []string {
 	}
 	if m.title != nil {
 		fields = append(fields, conversation.FieldTitle)
+	}
+	if m.agent_name != nil {
+		fields = append(fields, conversation.FieldAgentName)
 	}
 	if m.metadata != nil {
 		fields = append(fields, conversation.FieldMetadata)
@@ -3687,6 +3740,8 @@ func (m *ConversationMutation) Field(name string) (ent.Value, bool) {
 		return m.UserID()
 	case conversation.FieldTitle:
 		return m.Title()
+	case conversation.FieldAgentName:
+		return m.AgentName()
 	case conversation.FieldMetadata:
 		return m.Metadata()
 	case conversation.FieldStatus:
@@ -3710,6 +3765,8 @@ func (m *ConversationMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldUserID(ctx)
 	case conversation.FieldTitle:
 		return m.OldTitle(ctx)
+	case conversation.FieldAgentName:
+		return m.OldAgentName(ctx)
 	case conversation.FieldMetadata:
 		return m.OldMetadata(ctx)
 	case conversation.FieldStatus:
@@ -3747,6 +3804,13 @@ func (m *ConversationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTitle(v)
+		return nil
+	case conversation.FieldAgentName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAgentName(v)
 		return nil
 	case conversation.FieldMetadata:
 		v, ok := value.(map[string]interface{})
@@ -3809,6 +3873,9 @@ func (m *ConversationMutation) ClearedFields() []string {
 	if m.FieldCleared(conversation.FieldDeletedAt) {
 		fields = append(fields, conversation.FieldDeletedAt)
 	}
+	if m.FieldCleared(conversation.FieldAgentName) {
+		fields = append(fields, conversation.FieldAgentName)
+	}
 	if m.FieldCleared(conversation.FieldMetadata) {
 		fields = append(fields, conversation.FieldMetadata)
 	}
@@ -3829,6 +3896,9 @@ func (m *ConversationMutation) ClearField(name string) error {
 	case conversation.FieldDeletedAt:
 		m.ClearDeletedAt()
 		return nil
+	case conversation.FieldAgentName:
+		m.ClearAgentName()
+		return nil
 	case conversation.FieldMetadata:
 		m.ClearMetadata()
 		return nil
@@ -3848,6 +3918,9 @@ func (m *ConversationMutation) ResetField(name string) error {
 		return nil
 	case conversation.FieldTitle:
 		m.ResetTitle()
+		return nil
+	case conversation.FieldAgentName:
+		m.ResetAgentName()
 		return nil
 	case conversation.FieldMetadata:
 		m.ResetMetadata()
