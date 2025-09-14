@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Card } from '@/components/ui/card'
-import { Send, Mic, Copy, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Send, Copy, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { getConversationHistory, generateStream } from '@/lib/api/general-agent'
 import type { Conversation, Message, GenerateRequest, StreamChunk } from '@/lib/api/types'
 import { Sidebar } from '@/components/custom/sidebar'
 import type { NavigationItem } from '@/components/custom/sidebar'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 
 
@@ -268,14 +269,6 @@ export default function ChatPage() {
     navigator.clipboard.writeText(content)
   }
 
-  // 格式化时间
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   if (isLoading) {
     return (
       <div className="flex h-screen bg-gradient-to-br from-blue-50 to-sky-50">
@@ -319,107 +312,111 @@ export default function ChatPage() {
           <ScrollArea className="h-full" ref={scrollAreaRef}>
             <div className="max-w-4xl mx-auto p-6 space-y-6">
               {messages.map((msg) => (
-                <div key={msg.id} className="flex space-x-4">
-                  {/* 头像 */}
-                  <Avatar className="w-8 h-8 flex-shrink-0">
-                    {msg.role === 'user' ? (
-                      <AvatarFallback className="bg-blue-100 text-blue-600">
-                        U
-                      </AvatarFallback>
-                    ) : (
+                <div 
+                  key={msg.id} 
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  {/* AI消息左侧头像 */}
+                  {msg.role === 'assistant' && (
+                    <Avatar className="w-8 h-8 mr-3 flex-shrink-0">
                       <AvatarFallback className="bg-green-100 text-green-600">
                         AI
                       </AvatarFallback>
-                    )}
-                  </Avatar>
-                  
-                  {/* 消息内容 */}
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-900">
-                        {msg.role === 'user' ? '您' : 'AI助手'}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {formatTime(msg.created_at)}
-                      </span>
-                    </div>
+                    </Avatar>
+                  )}
+
+                  {/* 消息气泡 */}
+                  <div 
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                      msg.role === 'user'
+                        ? 'bg-blue-600 text-white rounded-br-sm'
+                        : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
+                    }`}
+                  >
+                    {/* 消息内容 */}
+                     <div className="prose prose-sm max-w-none">
+                       {/* 如果是正在生成的消息且还没有内容，显示思考状态 */}
+                       {msg.id === streamingMessageId && !streamingContent && !displayedContent ? (
+                         <div className="flex items-center space-x-2">
+                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                           <span className="text-sm text-gray-600 ml-2">正在思考您的问题...</span>
+                         </div>
+                       ) : (
+                         <div className={`${
+                           msg.role === 'user' ? 'text-white' : 'text-gray-800'
+                         }`}>
+                           {msg.role === 'assistant' ? (
+                              <div className="prose prose-sm max-w-none prose-headings:text-gray-800 prose-p:text-gray-800 prose-strong:text-gray-800 prose-code:text-gray-800 prose-pre:bg-gray-100 prose-pre:text-gray-800">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {msg.id === streamingMessageId ? displayedContent : msg.content}
+                                </ReactMarkdown>
+                              </div>
+                            ) : (
+                             <p className="whitespace-pre-wrap">
+                               {msg.id === streamingMessageId ? displayedContent : msg.content}
+                             </p>
+                           )}
+                           {msg.id === streamingMessageId && streamingContent && displayedContent.length < streamingContent.length && (
+                             <span className="inline-block w-2 h-5 bg-blue-500 animate-pulse ml-1"></span>
+                           )}
+                         </div>
+                       )}
+                     </div>
                     
-                    <Card className="p-4 bg-white shadow-sm">
-                      <div className="prose prose-sm max-w-none">
-                        {/* 如果是正在生成的消息且还没有内容，显示思考状态 */}
-                        {msg.id === streamingMessageId && !streamingContent && !displayedContent ? (
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                            <span className="text-sm text-gray-600 ml-2">正在思考您的问题...</span>
-                          </div>
+                    {/* 仅AI消息显示操作按钮 */}
+                    {msg.role === 'assistant' && (
+                      <div className="flex items-center space-x-3 mt-3 pt-3 border-t border-gray-100">
+                        <button
+                          onClick={() => handleCopyMessage(msg.content || '')}
+                          className="flex items-center text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <Copy className="w-3 h-3 mr-1" />
+                          复制
+                        </button>
+                        {/* 如果是错误消息，显示重试按钮 */}
+                        {(msg.content?.includes('出现了错误') || msg.content?.includes('网络连接出现问题')) ? (
+                          <button
+                            onClick={() => {
+                              // 获取上一条用户消息重新发送
+                              const userMessages = messages.filter(m => m.role === 'user')
+                              const lastUserMessage = userMessages[userMessages.length - 1]
+                              if (lastUserMessage?.content) {
+                                setMessage(lastUserMessage.content)
+                                setTimeout(() => handleSendMessage(), 100)
+                              }
+                            }}
+                            className="flex items-center text-xs text-blue-500 hover:text-blue-700 transition-colors"
+                            disabled={isGenerating}
+                          >
+                            <Send className="w-3 h-3 mr-1" />
+                            重试
+                          </button>
                         ) : (
-                          <p className="text-gray-800 whitespace-pre-wrap">
-                            {msg.id === streamingMessageId ? displayedContent : msg.content}
-                            {msg.id === streamingMessageId && streamingContent && displayedContent.length < streamingContent.length && (
-                              <span className="inline-block w-2 h-5 bg-blue-500 animate-pulse ml-1"></span>
-                            )}
-                          </p>
+                          <>
+                            <button className="flex items-center text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                              <ThumbsUp className="w-3 h-3 mr-1" />
+                              赞
+                            </button>
+                            <button className="flex items-center text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                              <ThumbsDown className="w-3 h-3 mr-1" />
+                              踩
+                            </button>
+                          </>
                         )}
                       </div>
-                      
-                      {/* 消息操作按钮 */}
-                      {msg.role === 'assistant' && (
-                        <div className="flex items-center space-x-2 mt-3 pt-3 border-t border-gray-100">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCopyMessage(msg.content || '')}
-                            className="text-gray-500 hover:text-gray-700"
-                          >
-                            <Copy className="w-3 h-3 mr-1" />
-                            复制
-                          </Button>
-                          {/* 如果是错误消息，显示重试按钮 */}
-                          {(msg.content?.includes('出现了错误') || msg.content?.includes('网络连接出现问题')) ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                // 获取上一条用户消息重新发送
-                                const userMessages = messages.filter(m => m.role === 'user')
-                                const lastUserMessage = userMessages[userMessages.length - 1]
-                                if (lastUserMessage?.content) {
-                                  setMessage(lastUserMessage.content)
-                                  setTimeout(() => handleSendMessage(), 100)
-                                }
-                              }}
-                              className="text-blue-500 hover:text-blue-700"
-                              disabled={isGenerating}
-                            >
-                              <Send className="w-3 h-3 mr-1" />
-                              重试
-                            </Button>
-                          ) : (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-gray-500 hover:text-gray-700"
-                              >
-                                <ThumbsUp className="w-3 h-3 mr-1" />
-                                赞
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-gray-500 hover:text-gray-700"
-                              >
-                                <ThumbsDown className="w-3 h-3 mr-1" />
-                                踩
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </Card>
+                    )}
                   </div>
+
+                  {/* 用户消息右侧头像 */}
+                  {msg.role === 'user' && (
+                    <Avatar className="w-8 h-8 ml-3 flex-shrink-0">
+                      <AvatarFallback className="bg-blue-100 text-blue-600">
+                        U
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
               ))}
               
@@ -429,44 +426,29 @@ export default function ChatPage() {
         </div>
 
         {/* 底部输入区域 */}
-        <div className="bg-white/80 backdrop-blur-sm border-t border-gray-200 p-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-              <div className="flex items-end space-x-4">
-                <div className="flex-1">
-                  <Textarea
-                    placeholder="请输入您的问题"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="min-h-[50px] max-h-32 resize-none border-0 focus:ring-0 bg-transparent text-gray-900 placeholder-gray-500"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage()
-                      }
-                    }}
-                    disabled={isGenerating}
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-10 w-10 p-0"
-                    disabled={isGenerating}
-                  >
-                    <Mic className="w-5 h-5 text-gray-500" />
-                  </Button>
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!message.trim() || isGenerating}
-                    className="h-10 w-10 p-0 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 rounded-full"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+        <div className="bg-white border-t border-gray-200 p-4">
+          <div className="max-w-2xl mx-auto flex items-end space-x-3">
+            <Textarea
+              placeholder="发送消息"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="flex-1 resize-none rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[50px] max-h-32"
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSendMessage()
+                }
+              }}
+              disabled={isGenerating}
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!message.trim() || isGenerating}
+              className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 p-0"
+            >
+              <Send className="w-4 h-4 text-white" />
+            </Button>
           </div>
         </div>
       </div>
