@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudwego/eino-ext/components/document/loader/file"
 	"github.com/cloudwego/eino/components/document"
+	"github.com/cloudwego/eino/schema"
 )
 
 // FileLoader 文件加载器（基于Eino官方实现）
@@ -33,7 +34,7 @@ func NewFileLoader() *FileLoader {
 }
 
 // LoadFile 加载单个文件
-func (fl *FileLoader) LoadFile(ctx context.Context, filePath string) (*Document, error) {
+func (fl *FileLoader) LoadFile(ctx context.Context, filePath string) (*schema.Document, error) {
 	// 使用Eino官方加载器加载文档
 	docs, err := fl.loader.Load(ctx, document.Source{
 		URI: filePath,
@@ -46,44 +47,25 @@ func (fl *FileLoader) LoadFile(ctx context.Context, filePath string) (*Document,
 		return nil, fmt.Errorf("no documents loaded from file: %s", filePath)
 	}
 
-	// 转换为我们的Document格式
+	// 直接使用Eino的Document，添加额外的元数据
 	einoDoc := docs[0]
 
-	// 创建文档
-	doc := &Document{
-		ID:      einoDoc.ID,
-		Content: einoDoc.Content,
-		Source:  filePath,
-		Type:    DocumentTypeFile,
-		Metadata: map[string]any{
-			"file_name": filepath.Base(filePath),
-			"file_ext":  filepath.Ext(filePath),
-		},
+	// 确保元数据不为空
+	if einoDoc.MetaData == nil {
+		einoDoc.MetaData = make(map[string]any)
 	}
 
-	// 从Eino文档的元数据中提取信息
-	if einoDoc.MetaData != nil {
-		for key, value := range einoDoc.MetaData {
-			// 使用官方的元数据键名 <mcreference link="https://www.cloudwego.io/zh/docs/eino/ecosystem_integration/document/loader_local_file/" index="0">0</mcreference>
-			switch key {
-			case file.MetaKeyFileName:
-				doc.Metadata["file_name"] = value
-			case file.MetaKeyExtension:
-				doc.Metadata["file_ext"] = value
-			case file.MetaKeySource:
-				doc.Metadata["source"] = value
-			default:
-				doc.Metadata[key] = value
-			}
-		}
-	}
+	// 添加文件相关的元数据
+	einoDoc.MetaData["file_name"] = filepath.Base(filePath)
+	einoDoc.MetaData["file_ext"] = filepath.Ext(filePath)
+	einoDoc.MetaData["source"] = filePath
 
-	return doc, nil
+	return einoDoc, nil
 }
 
 // LoadFiles 批量加载文件
-func (fl *FileLoader) LoadFiles(ctx context.Context, filePaths []string) ([]*Document, []LoadError) {
-	var documents []*Document
+func (fl *FileLoader) LoadFiles(ctx context.Context, filePaths []string) ([]*schema.Document, []LoadError) {
+	var documents []*schema.Document
 	var errors []LoadError
 
 	for _, filePath := range filePaths {

@@ -14,11 +14,12 @@ import (
 )
 
 func main() {
+	loaddoc.Init()
 	ctx := context.Background()
 
 	// 示例1: 使用并行批量加载链（批量模式）
-	fmt.Println("=== 并行批量加载链示例（批量模式）===")
-	parallelExample(ctx)
+	// fmt.Println("=== 并行批量加载链示例（批量模式）===")
+	// parallelExample(ctx)
 
 	fmt.Println("\n=== 流式响应示例 ===")
 	// 示例2: 使用流式响应
@@ -123,9 +124,8 @@ func parallelExample(ctx context.Context) {
 		// 	"./config.yaml",
 		// },
 		URLs: []string{
-			"https://httpbin.org/json",
-			"https://httpbin.org/uuid",
-			"https://httpbin.org/ip",
+			"https://www.cloudwego.io/zh/docs/eino",
+			"https://www.cloudwego.io/zh/docs/eino/core_modules/chain_and_graph_orchestration/chain_graph_introduction/#graph",
 		},
 	}
 
@@ -149,6 +149,7 @@ func parallelExample(ctx context.Context) {
 	fileCount := 0
 	urlCount := 0
 	for _, doc := range result {
+		fmt.Printf("文档ID: %s, 内容长度: %d\n", doc.ID, len(doc.Content))
 		if doc.MetaData != nil {
 			if docType, ok := doc.MetaData["type"]; ok {
 				switch docType {

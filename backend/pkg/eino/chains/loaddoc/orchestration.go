@@ -10,6 +10,11 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
+func Init() {
+	// 注册到全局的拼接方法中
+	compose.RegisterStreamChunkConcatFunc(ConcatDocumentArray)
+}
+
 // ParallelBatchLoader 并行批量加载器（使用更细粒度的并行处理）
 type ParallelBatchLoader struct {
 	fileLoader *FileLoader
@@ -74,14 +79,8 @@ func (pbl *ParallelBatchLoader) parallelBatchLoadLambda(ctx context.Context, inp
 
 			doc, err := pbl.fileLoader.LoadFile(ctx, filePath)
 			if err == nil {
-				// 转换为 schema.Document
-				schemaDoc := &schema.Document{
-					ID:       doc.ID,
-					Content:  doc.Content,
-					MetaData: doc.Metadata,
-				}
-				// 立即发送单个文档结果
-				writer.Send([]*schema.Document{schemaDoc}, nil)
+				// 直接发送单个文档结果
+				writer.Send([]*schema.Document{doc}, nil)
 			}
 		}
 
@@ -95,14 +94,8 @@ func (pbl *ParallelBatchLoader) parallelBatchLoadLambda(ctx context.Context, inp
 
 			doc, err := pbl.urlLoader.LoadURL(ctx, urlStr)
 			if err == nil {
-				// 转换为 schema.Document
-				schemaDoc := &schema.Document{
-					ID:       doc.ID,
-					Content:  doc.Content,
-					MetaData: doc.Metadata,
-				}
-				// 立即发送单个文档结果
-				writer.Send([]*schema.Document{schemaDoc}, nil)
+				// 直接发送单个文档结果
+				writer.Send([]*schema.Document{doc}, nil)
 			}
 		}
 
@@ -144,4 +137,23 @@ func NewParallelBatchLoadChain(ctx context.Context, urlTimeout time.Duration, ma
 		loader: loader,
 		chain:  chain,
 	}, nil
+}
+
+// ConcatDocumentArray 从二维数组的每一行取第一个元素组成新的一维数组
+func ConcatDocumentArray(das [][]*schema.Document) ([]*schema.Document, error) {
+	if len(das) == 0 {
+		return nil, fmt.Errorf("empty document array")
+	}
+
+	ret := make([]*schema.Document, len(das))
+
+	for i, da := range das {
+		if len(da) > 0 {
+			ret[i] = da[0]
+		} else {
+			ret[i] = nil
+		}
+	}
+
+	return ret, nil
 }

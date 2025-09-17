@@ -2,15 +2,16 @@ package loaddoc
 
 import (
 	"context"
-	"crypto/md5"
 	"fmt"
-	"io"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/cloudwego/eino-ext/components/document/loader/url"
+	urlloader "github.com/cloudwego/eino-ext/components/document/loader/url"
 	"github.com/cloudwego/eino/components/document"
+	"github.com/cloudwego/eino/schema"
 )
 
 // URLLoader 在线链接加载器（基于Eino官方实现）
@@ -43,13 +44,13 @@ func NewURLLoader(timeout time.Duration) *URLLoader {
 	}
 
 	// 初始化Eino官方URL加载器
-	loader, err := url.NewLoader(context.Background(), &url.LoaderConfig{
+	loader, err := urlloader.NewLoader(context.Background(), &urlloader.LoaderConfig{
 		Client:         client,
 		RequestBuilder: requestBuilder,
 	})
 	if err != nil {
 		// 如果初始化失败，使用默认配置
-		loader, _ = url.NewLoader(context.Background(), nil)
+		loader, _ = urlloader.NewLoader(context.Background(), nil)
 	}
 
 	return &URLLoader{
@@ -59,7 +60,7 @@ func NewURLLoader(timeout time.Duration) *URLLoader {
 }
 
 // LoadURL 加载单个URL
-func (ul *URLLoader) LoadURL(ctx context.Context, urlStr string) (*Document, error) {
+func (ul *URLLoader) LoadURL(ctx context.Context, urlStr string) (*schema.Document, error) {
 	// 使用Eino官方加载器加载文档
 	docs, err := ul.loader.Load(ctx, document.Source{
 		URI: urlStr,
@@ -72,39 +73,46 @@ func (ul *URLLoader) LoadURL(ctx context.Context, urlStr string) (*Document, err
 		return nil, fmt.Errorf("no documents loaded from URL: %s", urlStr)
 	}
 
-	// 转换为我们的Document格式
+	// 直接使用Eino的Document，添加额外的元数据
 	einoDoc := docs[0]
 
-	// 生成文档ID
-	docID := ul.generateDocumentID(urlStr, einoDoc.Content)
-
-	// 创建文档
-	doc := &Document{
-		ID:      docID,
-		Content: einoDoc.Content,
-		Source:  urlStr,
-		Type:    DocumentTypeURL,
-		Metadata: map[string]any{
-			"url":            urlStr,
-			"content_length": len(einoDoc.Content),
-			"fetch_time":     time.Now(),
-		},
+	// 确保元数据不为空
+	if einoDoc.MetaData == nil {
+		einoDoc.MetaData = make(map[string]any)
 	}
 
-	// 从Eino文档的元数据中提取信息
-	if einoDoc.MetaData != nil {
-		for key, value := range einoDoc.MetaData {
-			doc.Metadata[key] = value
-		}
+	// 添加URL相关的元数据
+	einoDoc.MetaData["url"] = urlStr
+	einoDoc.MetaData["content_length"] = len(einoDoc.Content)
+	einoDoc.MetaData["fetch_time"] = time.Now()
+	// 从URL中提取域名作为来源
+	einoDoc.MetaData["source"] = ul.extractSourceFromURL(urlStr)
+
+	return einoDoc, nil
+}
+
+// extractSourceFromURL 从URL中提取域名作为来源
+// 例如: www.weibo.com/xxx -> weibo
+func (ul *URLLoader) extractSourceFromURL(urlStr string) string {
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		return urlStr
 	}
 
-	return doc, nil
+	hostParts := strings.Split(parsedURL.Host, ".")
+	if len(hostParts) >= 2 {
+		// 获取倒数第二部分作为主域名
+		// 例如: www.weibo.com -> weibo, api.github.com -> github
+		return hostParts[len(hostParts)-2]
+	}
+
+	return parsedURL.Host
 }
 
 // LoadURLs 批量加载URLs
-func (ul *URLLoader) LoadURLs(ctx context.Context, urls []string) ([]*Document, []LoadError) {
+func (ul *URLLoader) LoadURLs(ctx context.Context, urls []string) ([]*schema.Document, []LoadError) {
 	// 使用通道来收集结果
-	docChan := make(chan *Document, len(urls))
+	docChan := make(chan *schema.Document, len(urls))
 	errChan := make(chan LoadError, len(urls))
 
 	// 使用WaitGroup来等待所有协程完成
@@ -149,7 +157,7 @@ func (ul *URLLoader) LoadURLs(ctx context.Context, urls []string) ([]*Document, 
 	}()
 
 	// 收集结果
-	var documents []*Document
+	var documents []*schema.Document
 	var errors []LoadError
 
 	// 从通道中读取所有文档
@@ -163,14 +171,6 @@ func (ul *URLLoader) LoadURLs(ctx context.Context, urls []string) ([]*Document, 
 	}
 
 	return documents, errors
-}
-
-// generateDocumentID 生成文档唯一ID
-func (ul *URLLoader) generateDocumentID(source, content string) string {
-	h := md5.New()
-	_, _ = io.WriteString(h, source)
-	_, _ = io.WriteString(h, content)
-	return fmt.Sprintf("url_%x", h.Sum(nil))
 }
 
 // IsValidURL 检查URL是否有效（保持向后兼容）
