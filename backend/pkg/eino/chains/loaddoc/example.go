@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	loaddoc.Init()
 	ctx := context.Background()
 
 	// 示例1: 使用并行批量加载链（批量模式）
@@ -51,8 +50,7 @@ func streamExample(ctx context.Context) {
 		// 	"./go.mod",
 		// },
 		URLs: []string{
-			"https://www.cloudwego.io/zh/docs/eino",
-			"https://www.cloudwego.io/zh/docs/eino/core_modules/chain_and_graph_orchestration/chain_graph_introduction/#graph",
+			"https://blog.csdn.net/HeyVIrBbox/article/details/127756449",
 		},
 	}
 

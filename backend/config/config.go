@@ -48,6 +48,10 @@ type Config struct {
 		Pass     string `mapstructure:"pass"`
 		DB       int    `mapstructure:"db"`
 		IdleConn int    `mapstructure:"idle_conn"`
+		Vector   struct {
+			Enabled   bool `mapstructure:"enabled"`
+			Dimension int  `mapstructure:"dimension"`
+		} `mapstructure:"vector"`
 	} `mapstructure:"redis"`
 
 	GeneralAgent struct {
@@ -104,19 +108,22 @@ func Init() (*Config, error) {
 	v.SetDefault("redis.pass", "")
 	v.SetDefault("redis.db", 0)
 	v.SetDefault("redis.idle_conn", 20)
+	v.SetDefault("redis.vector.enabled", false)
+	v.SetDefault("redis.vector.dimension", 4096)
 	v.SetDefault("data_report.key", "")
 	v.SetDefault("general_agent.llm.model_name", "deepseek-chat")
 	v.SetDefault("general_agent.llm.base_url", "https://api.deepseek.com/v1")
 	v.SetDefault("general_agent.llm.api_key", "")
 
-	v.SetDefault("embedding.model_name", "qwen3-embedding-0.6b")
-	v.SetDefault("embedding.api_endpoint", "https://aiapi.chaitin.net/v1/embeddings")
+	v.SetDefault("embedding.model_name", "bge-m3")
+	v.SetDefault("embedding.api_endpoint", "https://model-square.app.baizhi.cloud/v1")
 	v.SetDefault("embedding.api_key", "")
 
 	// 打印从环境变量中读取的所有配置值
 	fmt.Println("从环境变量读取的配置值:")
 	fmt.Println("Database Master:", v.GetString("database.master"))
 	fmt.Println("Database Slave:", v.GetString("database.slave"))
+	fmt.Println("Embedding API Key:", v.GetString("embedding.api_key"))
 
 	c := Config{}
 	if err := v.Unmarshal(&c); err != nil {

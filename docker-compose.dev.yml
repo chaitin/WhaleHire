@@ -20,13 +20,14 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis 缓存 - 开发环境
+# Redis 缓存 - 开发环境
   whalehire-redis:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:latest
     container_name: whalehire-redis-dev
     environment:
       REDIS_PASSWORD: redis123
-    command: redis-server --requirepass redis123
+      REDIS_ARGS: "--dir /data --appendonly no --save 1800 1"
+    command: redis-server --requirepass redis123 --dir /data --appendonly no --save 1800 1
     volumes:
       - redis_dev_data:/data
     ports:

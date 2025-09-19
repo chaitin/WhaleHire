@@ -12,6 +12,7 @@ import (
 	urlloader "github.com/cloudwego/eino-ext/components/document/loader/url"
 	"github.com/cloudwego/eino/components/document"
 	"github.com/cloudwego/eino/schema"
+	"github.com/google/uuid"
 )
 
 // URLLoader 在线链接加载器（基于Eino官方实现）
@@ -82,6 +83,7 @@ func (ul *URLLoader) LoadURL(ctx context.Context, urlStr string) (*schema.Docume
 	}
 
 	// 添加URL相关的元数据
+	einoDoc.ID = uuid.New().String()
 	einoDoc.MetaData["url"] = urlStr
 	einoDoc.MetaData["content_length"] = len(einoDoc.Content)
 	einoDoc.MetaData["fetch_time"] = time.Now()

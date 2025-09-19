@@ -9,6 +9,7 @@ import (
 	"github.com/cloudwego/eino-ext/components/document/loader/file"
 	"github.com/cloudwego/eino/components/document"
 	"github.com/cloudwego/eino/schema"
+	"github.com/google/uuid"
 )
 
 // FileLoader 文件加载器（基于Eino官方实现）
@@ -56,6 +57,7 @@ func (fl *FileLoader) LoadFile(ctx context.Context, filePath string) (*schema.Do
 	}
 
 	// 添加文件相关的元数据
+	einoDoc.ID = uuid.New().String()
 	einoDoc.MetaData["file_name"] = filepath.Base(filePath)
 	einoDoc.MetaData["file_ext"] = filepath.Ext(filePath)
 	einoDoc.MetaData["source"] = filePath

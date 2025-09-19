@@ -10,7 +10,8 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-func Init() {
+func init() {
+	fmt.Println("Init loaddoc orchestration")
 	// 注册到全局的拼接方法中
 	compose.RegisterStreamChunkConcatFunc(ConcatDocumentArray)
 }
