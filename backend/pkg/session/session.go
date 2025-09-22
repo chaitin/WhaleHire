@@ -23,9 +23,10 @@ type Session struct {
 func NewSession(cfg *config.Config) *Session {
 	addr := net.JoinHostPort(cfg.Redis.Host, fmt.Sprint(cfg.Redis.Port))
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: cfg.Redis.Pass,
-		DB:       3,
+		Addr:          addr,
+		Password:      cfg.Redis.Pass,
+		DB:            3,
+		UnstableResp3: true,
 	})
 
 	return &Session{

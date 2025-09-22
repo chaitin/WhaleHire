@@ -6,23 +6,21 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/chains/websearch"
+	"github.com/ptonlix/whalehire/backend/pkg/eino/graphs/retrieverchat"
 	"github.com/ptonlix/whalehire/backend/pkg/eino/models"
 )
 
 func main() {
-
 	ctx := context.Background()
-	factory := models.NewModelFactory()
-
 	// 获取配置
 	cfg, err := config.Init()
 	if err != nil {
 		panic(err)
 	}
+
+	factory := models.NewModelFactory()
 	// 注册OpenAI模型
 	openaiConfig := &models.OpenAIConfig{
 		APIKey:  cfg.GeneralAgent.LLM.APIKey,
@@ -34,25 +32,24 @@ func main() {
 
 	chatModel, err := factory.GetModel(ctx, models.ModelTypeOpenAI, "deepseek-chat-1")
 
-	chain, err := websearch.NewWebSearchChain(ctx, chatModel)
+	graph, err := retrieverchat.NewRetrieverChatGraph(ctx, chatModel, cfg)
+
+	agent, err := graph.Compile(ctx)
 	if err != nil {
-		log.Fatalf("failed to create web search chain: %v", err)
+		panic(err)
 	}
 
-	agent, err := chain.Compile(ctx)
-	if err != nil {
-		log.Fatalf("failed to compile chain: %v", err)
+	// 执行
+	input := &retrieverchat.UserMessage{
+		Input: "请问 Eino 是什么框架",
 	}
-
-	resp, err := agent.Invoke(ctx, &websearch.UserMessage{
-		Query: "最新 AI 咨询",
-	})
-
+	output, err := agent.Invoke(ctx, input)
 	if err != nil {
-		log.Fatalf("failed to invoke agent: %v", err)
+		panic(err)
 	}
 
 	// 输出结果
-	fmt.Printf("%+v", resp)
-
+	for _, msg := range output {
+		fmt.Printf("%+v", msg)
+	}
 }

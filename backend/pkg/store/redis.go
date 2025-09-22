@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -28,10 +29,11 @@ var initOnce sync.Once
 func NewRedisCli(cfg *config.Config) *redis.Client {
 	addr := net.JoinHostPort(cfg.Redis.Host, cfg.Redis.Port)
 	rdb := redis.NewClient(&redis.Options{
-		Addr:         addr,
-		Password:     cfg.Redis.Pass,
-		DB:           cfg.Redis.DB,
-		MaxIdleConns: 3,
+		Addr:          addr,
+		Password:      cfg.Redis.Pass,
+		DB:            cfg.Redis.DB,
+		MaxIdleConns:  3,
+		UnstableResp3: true,
 	})
 	return rdb
 }
@@ -74,6 +76,7 @@ func ScanRedis(ctx context.Context, rdb *redis.Client, pattern string, limit int
 // VectorConfig 向量数据库配置
 type VectorConfig struct {
 	RedisAddr string
+
 	Dimension int
 }
 
@@ -85,25 +88,18 @@ func InitVectorIndex(ctx context.Context, cfg *config.Config) error {
 
 	var err error
 	initOnce.Do(func() {
-		vectorConfig := &VectorConfig{
-			RedisAddr: net.JoinHostPort(cfg.Redis.Host, cfg.Redis.Port),
-			Dimension: cfg.Redis.Vector.Dimension,
-		}
-		err = initRedisIndex(ctx, vectorConfig)
+		err = initRedisIndex(ctx, cfg)
 	})
 	return err
 }
 
 // initRedisIndex 初始化 Redis 向量索引
-func initRedisIndex(ctx context.Context, config *VectorConfig) error {
-	if config.Dimension <= 0 {
+func initRedisIndex(ctx context.Context, cfg *config.Config) error {
+	if cfg.Redis.Vector.Dimension <= 0 {
 		return fmt.Errorf("dimension must be positive")
 	}
 
-	client := redis.NewClient(&redis.Options{
-		Addr:     config.RedisAddr,
-		Protocol: 2,
-	})
+	client := NewRedisCli(cfg)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -134,15 +130,17 @@ func initRedisIndex(ctx context.Context, config *VectorConfig) error {
 		"ON", "HASH",
 		"PREFIX", "1", RedisPrefix,
 		"SCHEMA",
+		DocumentIDField, "TEXT",
 		ContentField, "TEXT",
 		MetadataField, "TEXT",
 		VectorField, "VECTOR", "FLAT",
 		"6",
 		"TYPE", "FLOAT32",
-		"DIM", config.Dimension,
+		"DIM", strconv.Itoa(cfg.Redis.Vector.Dimension),
 		"DISTANCE_METRIC", "COSINE",
 	}
 
+	fmt.Printf("initRedisIndex, indexName=%s, cfg.Redis.Vector.Dimension=%d\n", indexName, cfg.Redis.Vector.Dimension)
 	if err = client.Do(ctx, createIndexArgs...).Err(); err != nil {
 		return fmt.Errorf("failed to create index: %w", err)
 	}

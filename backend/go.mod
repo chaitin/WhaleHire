@@ -8,8 +8,11 @@ require (
 	github.com/cloudwego/eino v0.4.8
 	github.com/cloudwego/eino-ext/components/document/loader/file v0.0.0-20250905035413-86dbae6351d5
 	github.com/cloudwego/eino-ext/components/document/loader/url v0.0.0-20250905035413-86dbae6351d5
+	github.com/cloudwego/eino-ext/components/document/transformer/splitter/recursive v0.0.0-20250916084527-de8ccb471c00
+	github.com/cloudwego/eino-ext/components/embedding/openai v0.0.0-20250916084527-de8ccb471c00
 	github.com/cloudwego/eino-ext/components/indexer/redis v0.0.0-20250916084527-de8ccb471c00
 	github.com/cloudwego/eino-ext/components/model/openai v0.0.0-20250905035413-86dbae6351d5
+	github.com/cloudwego/eino-ext/components/retriever/redis v0.0.0-20250918131725-26709efe4c4d
 	github.com/cloudwego/eino-ext/components/tool/duckduckgo/v2 v2.0.0-20250905035413-86dbae6351d5
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/google/uuid v1.6.0
@@ -44,9 +47,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/cloudwego/eino-ext/components/document/parser/html v0.0.0-20241224063832-9fbcc0e56c28 // indirect
-	github.com/cloudwego/eino-ext/components/document/transformer/splitter/markdown v0.0.0-20250916084527-de8ccb471c00 // indirect
-	github.com/cloudwego/eino-ext/components/document/transformer/splitter/recursive v0.0.0-20250916084527-de8ccb471c00 // indirect
-	github.com/cloudwego/eino-ext/components/embedding/openai v0.0.0-20250916084527-de8ccb471c00 // indirect
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.0.0-20250826113018-8c6f6358d4bb // indirect
 	github.com/corpix/uarand v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

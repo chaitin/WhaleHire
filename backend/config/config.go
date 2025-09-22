@@ -66,7 +66,13 @@ type Config struct {
 		ModelName   string `mapstructure:"model_name"`
 		APIEndpoint string `mapstructure:"api_endpoint"`
 		APIKey      string `mapstructure:"api_key"`
+		Dimension   int    `mapstructure:"dimension"`
 	} `mapstructure:"embedding"`
+
+	Retriever struct {
+		TopK              int     `mapstructure:"top_k"`
+		DistanceThreshold float64 `mapstructure:"distance_threshold"`
+	} `mapstructure:"retriever"`
 
 	DataReport struct {
 		Key string `mapstructure:"key"`
@@ -108,7 +114,7 @@ func Init() (*Config, error) {
 	v.SetDefault("redis.pass", "")
 	v.SetDefault("redis.db", 0)
 	v.SetDefault("redis.idle_conn", 20)
-	v.SetDefault("redis.vector.enabled", false)
+	v.SetDefault("redis.vector.enabled", true)
 	v.SetDefault("redis.vector.dimension", 4096)
 	v.SetDefault("data_report.key", "")
 	v.SetDefault("general_agent.llm.model_name", "deepseek-chat")
@@ -118,6 +124,10 @@ func Init() (*Config, error) {
 	v.SetDefault("embedding.model_name", "bge-m3")
 	v.SetDefault("embedding.api_endpoint", "https://model-square.app.baizhi.cloud/v1")
 	v.SetDefault("embedding.api_key", "")
+	v.SetDefault("embedding.dimension", 4096)
+
+	v.SetDefault("retriever.top_k", 3)
+	v.SetDefault("retriever.distance_threshold", 0.8)
 
 	// 打印从环境变量中读取的所有配置值
 	fmt.Println("从环境变量读取的配置值:")

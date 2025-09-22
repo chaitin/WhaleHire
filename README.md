@@ -11,5 +11,5 @@ docker-compose up -d whalehire-db
 ## 缓存启动
 
 ```bash
-docker-compose up -d whalehire-redis
+docker compose up -d whalehire-redis
 ```

@@ -12,6 +12,7 @@ import (
 	"github.com/ptonlix/whalehire/backend/config"
 	"github.com/ptonlix/whalehire/backend/pkg/eino/chains/knowledgeindexing"
 	"github.com/ptonlix/whalehire/backend/pkg/eino/chains/loaddoc"
+	"github.com/ptonlix/whalehire/backend/pkg/store"
 )
 
 func main() {
@@ -21,6 +22,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = store.InitVectorIndex(ctx, cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	g := compose.NewGraph[*loaddoc.BatchLoadInput, []string]()
 
 	chainLoad, err := loaddoc.NewParallelBatchLoadChain(ctx, 30*time.Second, 5)
