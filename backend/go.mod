@@ -1,4 +1,4 @@
-module github.com/ptonlix/whalehire/backend
+module github.com/chaitin/WhaleHire/backend
 
 go 1.25.1
 

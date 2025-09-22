@@ -5,8 +5,8 @@ package adminrole
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
 )
 
 // ID filters vertices based on their ID field.

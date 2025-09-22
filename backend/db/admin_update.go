@@ -11,13 +11,13 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db/admin"
+	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/adminrole"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/db/admin"
-	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
-	"github.com/ptonlix/whalehire/backend/db/adminrole"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
-	"github.com/ptonlix/whalehire/backend/db/role"
 )
 
 // AdminUpdate is the builder for updating Admin entities.

@@ -7,7 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
 )
 
 // ID filters vertices based on their ID field.

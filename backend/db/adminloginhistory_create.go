@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/db/admin"
+	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/admin"
-	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
 )
 
 // AdminLoginHistoryCreate is the builder for creating a AdminLoginHistory entity.

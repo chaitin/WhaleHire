@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ptonlix/whalehire/backend/pkg/eino/chains/loaddoc"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/loaddoc"
 )
 
 func main() {

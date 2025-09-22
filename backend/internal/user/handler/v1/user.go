@@ -8,12 +8,12 @@ import (
 	"github.com/GoYoko/web"
 	"golang.org/x/time/rate"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/domain"
-	"github.com/ptonlix/whalehire/backend/errcode"
-	"github.com/ptonlix/whalehire/backend/internal/middleware"
-	"github.com/ptonlix/whalehire/backend/pkg/session"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/errcode"
+	"github.com/chaitin/WhaleHire/backend/internal/middleware"
+	"github.com/chaitin/WhaleHire/backend/pkg/session"
 )
 
 type UserHandler struct {

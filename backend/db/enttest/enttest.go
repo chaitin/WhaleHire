@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/ptonlix/whalehire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db"
 	// required by schema hooks.
-	_ "github.com/ptonlix/whalehire/backend/db/runtime"
+	_ "github.com/chaitin/WhaleHire/backend/db/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/ptonlix/whalehire/backend/db/migrate"
+	"github.com/chaitin/WhaleHire/backend/db/migrate"
 )
 
 type (

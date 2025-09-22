@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/tools"
 	"github.com/cloudwego/eino-ext/components/tool/duckduckgo/v2"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/tools"
 )
 
 // WebSearchConfig 网页搜索配置

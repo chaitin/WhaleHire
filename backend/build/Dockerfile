@@ -17,7 +17,7 @@ RUN --mount=type=bind,target=. \
     --mount=type=cache,target=${GOCACHE} \
     GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build \
-    -ldflags "-w -s -X 'github.com/ptonlix/whalehire/backend/pkg/version.Version=${VERSION}' -X 'github.com/ptonlix/whalehire/backend/pkg/version.BuildTime=${BUILD_TIME}' -X 'github.com/ptonlix/whalehire/backend/pkg/version.GitCommit=${GIT_COMMIT}'" \
+    -ldflags "-w -s -X 'github.com/chaitin/WhaleHire/backend/pkg/version.Version=${VERSION}' -X 'github.com/chaitin/WhaleHire/backend/pkg/version.BuildTime=${BUILD_TIME}' -X 'github.com/chaitin/WhaleHire/backend/pkg/version.GitCommit=${GIT_COMMIT}'" \
     -o /out/main \
     cmd/main.go cmd/wire_gen.go
 

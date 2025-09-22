@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
 
-	"github.com/ptonlix/whalehire/backend/pkg/entx"
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		"./schema",
 		&gen.Config{
 			Target:  "../db",
-			Package: "github.com/ptonlix/whalehire/backend/db",
+			Package: "github.com/chaitin/WhaleHire/backend/db",
 			Features: []gen.Feature{
 				gen.FeatureUpsert,
 				gen.FeatureModifier,

@@ -9,10 +9,10 @@ import (
 	"github.com/cloudwego/eino/schema"
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/db"
-	"github.com/ptonlix/whalehire/backend/domain"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/models"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
 )
 
 // GeneralAgentUsecase 通用智能体用例

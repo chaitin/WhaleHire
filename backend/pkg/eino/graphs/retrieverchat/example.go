@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/graphs/retrieverchat"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/models"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/retrieverchat"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
 )
 
 func main() {

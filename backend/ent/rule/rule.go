@@ -9,12 +9,12 @@ import (
 	"entgo.io/ent"
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/db"
-	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
-	"github.com/ptonlix/whalehire/backend/db/user"
-	"github.com/ptonlix/whalehire/backend/db/userloginhistory"
-	"github.com/ptonlix/whalehire/backend/domain"
-	"github.com/ptonlix/whalehire/backend/errcode"
+	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/user"
+	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/errcode"
 )
 
 type PermissionKey struct{}

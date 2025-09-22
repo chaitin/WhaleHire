@@ -12,13 +12,13 @@ import (
 
 	"github.com/GoYoko/web"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/db"
-	"github.com/ptonlix/whalehire/backend/domain"
-	"github.com/ptonlix/whalehire/backend/errcode"
-	"github.com/ptonlix/whalehire/backend/pkg/cvt"
-	"github.com/ptonlix/whalehire/backend/pkg/session"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/errcode"
+	"github.com/chaitin/WhaleHire/backend/pkg/cvt"
+	"github.com/chaitin/WhaleHire/backend/pkg/session"
 )
 
 type UserUsecase struct {

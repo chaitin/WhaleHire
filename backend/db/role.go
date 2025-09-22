@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/ptonlix/whalehire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/role"
 )
 
 // Role is the model entity for the Role schema.

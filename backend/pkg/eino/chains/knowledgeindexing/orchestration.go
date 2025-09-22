@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
-	"github.com/ptonlix/whalehire/backend/config"
 )
 
 // KnowledgeIndexingChain 知识索引处理链

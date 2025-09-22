@@ -9,10 +9,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db/user"
+	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/db/user"
-	"github.com/ptonlix/whalehire/backend/db/userloginhistory"
 )
 
 // UserLoginHistory is the model entity for the UserLoginHistory schema.

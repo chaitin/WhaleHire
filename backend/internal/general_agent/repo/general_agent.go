@@ -8,11 +8,11 @@ import (
 	"github.com/GoYoko/web"
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/db"
-	"github.com/ptonlix/whalehire/backend/db/conversation"
-	"github.com/ptonlix/whalehire/backend/db/message"
-	"github.com/ptonlix/whalehire/backend/domain"
-	"github.com/ptonlix/whalehire/backend/pkg/entx"
+	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 type GeneralAgentRepo struct {

@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/pkg/entx"
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 // Conversation holds the schema definition for the Conversation entity.

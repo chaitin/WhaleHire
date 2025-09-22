@@ -7,10 +7,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/domain"
-	"github.com/ptonlix/whalehire/backend/ent/rule"
-	"github.com/ptonlix/whalehire/backend/pkg/session"
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/ent/rule"
+	"github.com/chaitin/WhaleHire/backend/pkg/session"
 )
 
 const (

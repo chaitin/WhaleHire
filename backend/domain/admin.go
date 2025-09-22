@@ -3,7 +3,7 @@ package domain
 import (
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db"
 )
 
 type GrantRoleReq struct {

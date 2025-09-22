@@ -10,9 +10,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/db/attachment"
+	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/attachment"
-	"github.com/ptonlix/whalehire/backend/db/message"
 )
 
 // Attachment is the model entity for the Attachment schema.

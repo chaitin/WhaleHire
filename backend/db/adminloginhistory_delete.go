@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
 )
 
 // AdminLoginHistoryDelete is the builder for deleting a AdminLoginHistory entity.

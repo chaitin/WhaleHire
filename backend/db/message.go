@@ -9,9 +9,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/conversation"
-	"github.com/ptonlix/whalehire/backend/db/message"
 )
 
 // Message is the model entity for the Message schema.

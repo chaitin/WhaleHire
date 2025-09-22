@@ -12,10 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/db/attachment"
+	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/attachment"
-	"github.com/ptonlix/whalehire/backend/db/conversation"
-	"github.com/ptonlix/whalehire/backend/db/message"
 )
 
 // MessageCreate is the builder for creating a Message entity.

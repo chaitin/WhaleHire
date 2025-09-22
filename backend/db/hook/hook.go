@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ptonlix/whalehire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db"
 )
 
 // The AdminFunc type is an adapter to allow the use of ordinary

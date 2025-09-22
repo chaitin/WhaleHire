@@ -10,9 +10,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/conversation"
-	"github.com/ptonlix/whalehire/backend/db/user"
 )
 
 // Conversation is the model entity for the Conversation schema.

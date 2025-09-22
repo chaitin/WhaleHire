@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/ptonlix/whalehire/backend/pkg/logger"
+	"github.com/chaitin/WhaleHire/backend/pkg/logger"
 )
 
 func RequestID() echo.MiddlewareFunc {

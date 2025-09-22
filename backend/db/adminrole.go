@@ -8,10 +8,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/db/admin"
+	"github.com/chaitin/WhaleHire/backend/db/adminrole"
+	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/admin"
-	"github.com/ptonlix/whalehire/backend/db/adminrole"
-	"github.com/ptonlix/whalehire/backend/db/role"
 )
 
 // AdminRole is the model entity for the AdminRole schema.

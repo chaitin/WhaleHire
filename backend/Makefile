@@ -3,7 +3,7 @@ TAG=main
 OUTPUT=type=docker,dest=${HOME}/tmp/whalehire_server.tar
 GOCACHE=${HOME}/.cache/go-build
 GOMODCACHE=${HOME}/go/pkg/mod
-REGISTRY=ptonlix/whalehire
+REGISTRY=chaitin/WhaleHire
 VERSION=dev-${shell git rev-parse HEAD}
 BUILD_TIME=${shell date -u +"%Y-%m-%dT%H:%M:%SZ"}
 GIT_COMMIT=${shell git rev-parse HEAD}

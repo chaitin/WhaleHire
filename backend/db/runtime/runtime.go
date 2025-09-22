@@ -5,18 +5,18 @@ package runtime
 import (
 	"time"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db/admin"
+	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/attachment"
+	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/user"
+	"github.com/chaitin/WhaleHire/backend/db/useridentity"
+	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/ent/schema"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/db/admin"
-	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
-	"github.com/ptonlix/whalehire/backend/db/attachment"
-	"github.com/ptonlix/whalehire/backend/db/conversation"
-	"github.com/ptonlix/whalehire/backend/db/message"
-	"github.com/ptonlix/whalehire/backend/db/role"
-	"github.com/ptonlix/whalehire/backend/db/user"
-	"github.com/ptonlix/whalehire/backend/db/useridentity"
-	"github.com/ptonlix/whalehire/backend/db/userloginhistory"
-	"github.com/ptonlix/whalehire/backend/ent/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

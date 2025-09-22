@@ -12,10 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db/user"
+	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/db/user"
-	"github.com/ptonlix/whalehire/backend/db/useridentity"
 )
 
 // UserIdentityCreate is the builder for creating a UserIdentity entity.

@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/intent"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
 	"github.com/cloudwego/eino/schema"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/chains/intent"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/models"
 )
 
 func main() {

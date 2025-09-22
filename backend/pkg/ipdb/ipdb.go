@@ -9,7 +9,7 @@ import (
 
 	"github.com/lionsoul2014/ip2region/binding/golang/xdb"
 
-	"github.com/ptonlix/whalehire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/domain"
 )
 
 //go:embed ip2region.xdb

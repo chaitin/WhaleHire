@@ -1,8 +1,8 @@
 package internal
 
 import (
-	generalagentV1 "github.com/ptonlix/whalehire/backend/internal/general_agent/handler/v1"
-	userV1 "github.com/ptonlix/whalehire/backend/internal/user/handler/v1"
+	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
+	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 )
 
 // APIHandlers 包含所有API处理器

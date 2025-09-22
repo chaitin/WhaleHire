@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/ptonlix/whalehire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/consts"
 )
 
 type ActiveMiddleware struct {

@@ -10,11 +10,11 @@ import (
 
 	"github.com/GoYoko/web"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/db"
-	generalagentV1 "github.com/ptonlix/whalehire/backend/internal/general_agent/handler/v1"
-	userV1 "github.com/ptonlix/whalehire/backend/internal/user/handler/v1"
-	"github.com/ptonlix/whalehire/backend/pkg/version"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/db"
+	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
+	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	"github.com/chaitin/WhaleHire/backend/pkg/version"
 )
 
 type Server struct {

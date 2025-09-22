@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
-	"github.com/ptonlix/whalehire/backend/db/useridentity"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 )
 
 // UserIdentityDelete is the builder for deleting a UserIdentity entity.

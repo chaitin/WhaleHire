@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
-	"github.com/ptonlix/whalehire/backend/pkg/logger"
+	"github.com/chaitin/WhaleHire/backend/pkg/logger"
 )
 
 type Config struct {

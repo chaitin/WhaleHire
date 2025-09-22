@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/ptonlix/whalehire/backend/db/attachment"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/attachment"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
 )
 
 // AttachmentDelete is the builder for deleting a Attachment entity.

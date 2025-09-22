@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/GoYoko/web"
-	"github.com/ptonlix/whalehire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db"
 )
 
 // GenerateAgentUsecase 通用智能体用例接口

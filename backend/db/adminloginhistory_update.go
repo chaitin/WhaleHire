@@ -11,10 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/db/admin"
+	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/admin"
-	"github.com/ptonlix/whalehire/backend/db/adminloginhistory"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
 )
 
 // AdminLoginHistoryUpdate is the builder for updating AdminLoginHistory entities.

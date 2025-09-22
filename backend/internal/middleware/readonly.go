@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/ptonlix/whalehire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/config"
 )
 
 type ReadOnlyMiddleware struct {

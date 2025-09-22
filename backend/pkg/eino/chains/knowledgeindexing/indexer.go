@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/pkg/store"
 	"github.com/cloudwego/eino-ext/components/indexer/redis"
 	"github.com/cloudwego/eino/components/indexer"
 	"github.com/cloudwego/eino/schema"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/pkg/store"
 )
 
 // NewIndexer component initialization function of node 'RedisIndexer' in graph 'KnowledgeIndexing'

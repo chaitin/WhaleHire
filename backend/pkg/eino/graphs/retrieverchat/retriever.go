@@ -8,10 +8,10 @@ import (
 	"github.com/cloudwego/eino/schema"
 	redisCli "github.com/redis/go-redis/v9"
 
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/pkg/store"
 	"github.com/cloudwego/eino-ext/components/retriever/redis"
 	"github.com/cloudwego/eino/components/retriever"
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/pkg/store"
 )
 
 func NewRetriever(ctx context.Context, cfg *config.Config) (rtr retriever.Retriever, err error) {

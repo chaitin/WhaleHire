@@ -2,4 +2,4 @@
 
 package db
 
-// The schema-stitching logic is generated in github.com/ptonlix/whalehire/backend/db/runtime/runtime.go
+// The schema-stitching logic is generated in github.com/chaitin/WhaleHire/backend/db/runtime/runtime.go

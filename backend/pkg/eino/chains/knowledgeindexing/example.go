@@ -8,11 +8,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/knowledgeindexing"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/loaddoc"
+	"github.com/chaitin/WhaleHire/backend/pkg/store"
 	"github.com/cloudwego/eino/compose"
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/chains/knowledgeindexing"
-	"github.com/ptonlix/whalehire/backend/pkg/eino/chains/loaddoc"
-	"github.com/ptonlix/whalehire/backend/pkg/store"
 )
 
 func main() {

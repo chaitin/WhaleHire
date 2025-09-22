@@ -12,9 +12,9 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/db"
-	_ "github.com/ptonlix/whalehire/backend/db/runtime"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/db"
+	_ "github.com/chaitin/WhaleHire/backend/db/runtime"
 )
 
 func NewEntDB(cfg *config.Config, logger *slog.Logger) (*db.Client, error) {

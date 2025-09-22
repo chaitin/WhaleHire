@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ptonlix/whalehire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db"
 )
 
 func WithTx(ctx context.Context, client *db.Client, fn func(tx *db.Tx) error) error {

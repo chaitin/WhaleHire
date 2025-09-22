@@ -12,10 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/user"
+	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
 	"github.com/google/uuid"
-	"github.com/ptonlix/whalehire/backend/db/predicate"
-	"github.com/ptonlix/whalehire/backend/db/user"
-	"github.com/ptonlix/whalehire/backend/db/userloginhistory"
 )
 
 // UserLoginHistoryQuery is the builder for querying UserLoginHistory entities.

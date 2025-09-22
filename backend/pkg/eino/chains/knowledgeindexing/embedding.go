@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/cloudwego/eino-ext/components/embedding/openai"
 	"github.com/cloudwego/eino/components/embedding"
-	"github.com/ptonlix/whalehire/backend/config"
 )
 
 func newEmbedding(ctx context.Context, cfg *config.Config) (eb embedding.Embedder, err error) {

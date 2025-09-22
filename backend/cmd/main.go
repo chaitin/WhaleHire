@@ -6,12 +6,12 @@ import (
 	"github.com/GoYoko/web"
 	"github.com/google/wire"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/docs"
-	"github.com/ptonlix/whalehire/backend/internal"
-	"github.com/ptonlix/whalehire/backend/pkg"
-	"github.com/ptonlix/whalehire/backend/pkg/service"
-	"github.com/ptonlix/whalehire/backend/pkg/store"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/docs"
+	"github.com/chaitin/WhaleHire/backend/internal"
+	"github.com/chaitin/WhaleHire/backend/pkg"
+	"github.com/chaitin/WhaleHire/backend/pkg/service"
+	"github.com/chaitin/WhaleHire/backend/pkg/store"
 )
 
 // @title WhaleHire API

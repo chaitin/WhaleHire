@@ -6,8 +6,8 @@ import (
 	"github.com/GoYoko/web"
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/consts"
-	"github.com/ptonlix/whalehire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db"
 )
 
 type UserUsecase interface {

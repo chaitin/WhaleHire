@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 
-	"github.com/ptonlix/whalehire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/consts"
 )
 
 // UserLoginHistory holds the schema definition for the UserLoginHistory entity.

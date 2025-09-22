@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
-	"github.com/ptonlix/whalehire/backend/config"
 )
 
 // RetrieverChatGraph 文档召回聊天图结构

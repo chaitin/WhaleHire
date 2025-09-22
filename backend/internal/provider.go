@@ -3,13 +3,13 @@ package internal
 import (
 	"github.com/google/wire"
 
-	generalagentV1 "github.com/ptonlix/whalehire/backend/internal/general_agent/handler/v1"
-	generalagentrepo "github.com/ptonlix/whalehire/backend/internal/general_agent/repo"
-	generalagentusecase "github.com/ptonlix/whalehire/backend/internal/general_agent/usecase"
-	middleware "github.com/ptonlix/whalehire/backend/internal/middleware"
-	userV1 "github.com/ptonlix/whalehire/backend/internal/user/handler/v1"
-	userrepo "github.com/ptonlix/whalehire/backend/internal/user/repo"
-	userusecase "github.com/ptonlix/whalehire/backend/internal/user/usecase"
+	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
+	generalagentrepo "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
+	generalagentusecase "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
+	middleware "github.com/chaitin/WhaleHire/backend/internal/middleware"
+	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	userrepo "github.com/chaitin/WhaleHire/backend/internal/user/repo"
+	userusecase "github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 )
 
 // NewAPIHandlers 创建 APIHandlers 实例

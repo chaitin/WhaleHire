@@ -17,10 +17,10 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql/schema"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/db"
+	_ "github.com/chaitin/WhaleHire/backend/db/runtime"
 	_ "github.com/lib/pq"
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/db"
-	_ "github.com/ptonlix/whalehire/backend/db/runtime"
 )
 
 // getMigrationDir 获取migration目录的绝对路径

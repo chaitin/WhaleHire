@@ -8,14 +8,14 @@ import (
 	"github.com/GoYoko/web"
 	"github.com/GoYoko/web/locale"
 
-	"github.com/ptonlix/whalehire/backend/config"
-	"github.com/ptonlix/whalehire/backend/errcode"
-	mid "github.com/ptonlix/whalehire/backend/internal/middleware"
-	"github.com/ptonlix/whalehire/backend/pkg/ipdb"
-	"github.com/ptonlix/whalehire/backend/pkg/logger"
-	"github.com/ptonlix/whalehire/backend/pkg/session"
-	"github.com/ptonlix/whalehire/backend/pkg/store"
-	"github.com/ptonlix/whalehire/backend/pkg/version"
+	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/errcode"
+	mid "github.com/chaitin/WhaleHire/backend/internal/middleware"
+	"github.com/chaitin/WhaleHire/backend/pkg/ipdb"
+	"github.com/chaitin/WhaleHire/backend/pkg/logger"
+	"github.com/chaitin/WhaleHire/backend/pkg/session"
+	"github.com/chaitin/WhaleHire/backend/pkg/store"
+	"github.com/chaitin/WhaleHire/backend/pkg/version"
 )
 
 var Provider = wire.NewSet(
