@@ -1,9 +1,9 @@
 PLATFORM=linux/amd64
-TAG=main
+TAG=main-$(shell echo ${PLATFORM} | tr '/' '-')
 OUTPUT=type=docker,dest=${HOME}/tmp/whalehire_server.tar
 GOCACHE=${HOME}/.cache/go-build
 GOMODCACHE=${HOME}/go/pkg/mod
-REGISTRY=chaitin/WhaleHire
+REGISTRY=portus.in.chaitin.net/whalehire
 VERSION=dev-${shell git rev-parse HEAD}
 BUILD_TIME=${shell date -u +"%Y-%m-%dT%H:%M:%SZ"}
 GIT_COMMIT=${shell git rev-parse HEAD}
@@ -20,7 +20,6 @@ image: swag wire
 	  --build-arg GIT_COMMIT=${GIT_COMMIT} \
 	  --platform ${PLATFORM} \
 	  --tag ${REGISTRY}/backend:${TAG} \
-	  --output ${OUTPUT} \
 	  .
 
 wire:

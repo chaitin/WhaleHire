@@ -3,12 +3,12 @@ version: '3.8'
 services:
   # PostgreSQL 数据库
   whalehire-db:
-    image: pgvector/pgvector:pg17
+    image: portus.in.chaitin.net/whalehire/pgvector:pg17
     container_name: whalehire-postgres
     environment:
-      POSTGRES_DB: whalehire
-      POSTGRES_USER: whalehire
-      POSTGRES_PASSWORD: whalehire123
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -17,18 +17,18 @@ services:
     networks:
       - whalehire-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U whalehire -d whalehire"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # Redis 缓存
   whalehire-redis:
-    image: redis:7-alpine
+    image: portus.in.chaitin.net/whalehire/redis:7-alpine
     container_name: whalehire-redis
     environment:
-      REDIS_PASSWORD: redis123
-    command: redis-server --requirepass redis123
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     ports:
@@ -36,28 +36,26 @@ services:
     networks:
       - whalehire-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # 后端服务
   whalehire-backend:
-    build:
-      context: ./backend
-      dockerfile: build/Dockerfile
-      args:
-        VERSION: "1.0.0"
-        BUILD_TIME: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        GIT_COMMIT: "$(git rev-parse HEAD)"
+    image: portus.in.chaitin.net/whalehire/backend:latest
     container_name: whalehire-backend
     environment:
-      POSTGRES_USER: whalehire
-      POSTGRES_PASSWORD: whalehire123
-      POSTGRES_DB: whalehire
-      REDIS_PASSWORD: redis123
-      ADMIN_USER: admin
-      ADMIN_PASSWORD: admin123
+      WHALEHIRE_DATABASE_MASTER: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@whalehire-db:5432/${POSTGRES_DB}?sslmode=disable&timezone=Asia/Shanghai"
+      WHALEHIRE_DATABASE_SLAVE: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@whalehire-db:5432/${POSTGRES_DB}?sslmode=disable&timezone=Asia/Shanghai"   
+      WHALEHIRE_REDIS_HOST: whalehire-redis
+      WHALEHIRE_REDIS_PORT: 6379
+      WHALEHIRE_REDIS_PASS: ${REDIS_PASSWORD}
+      WHALEHIRE_ADMIN_USER: ${WHALEHIRE_ADMIN_USER}
+      WHALEHIRE_ADMIN_PASSWORD: ${WHALEHIRE_ADMIN_PASSWORD}
+      WHALEHIRE_GENERAL_AGENT_LLM_MODEL_NAME: ${WHALEHIRE_GENERAL_AGENT_LLM_MODEL_NAME}
+      WHALEHIRE_GENERAL_AGENT_LLM_BASE_URL: ${WHALEHIRE_GENERAL_AGENT_LLM_BASE_URL}
+      WHALEHIRE_GENERAL_AGENT_LLM_API_KEY: ${WHALEHIRE_GENERAL_AGENT_LLM_API_KEY}
     ports:
       - "8888:8888"
     depends_on:
@@ -74,15 +72,13 @@ services:
 
   # 前端服务
   whalehire-frontend:
-    build:
-      context: ./ui
-      dockerfile: Dockerfile
+    image: portus.in.chaitin.net/whalehire/ui:latest
     container_name: whalehire-frontend
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:8888
+      BACKEND_HOST: whalehire-backend
     depends_on:
       - whalehire-backend
     networks:
