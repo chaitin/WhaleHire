@@ -23,7 +23,7 @@ type GeneralAgentUsecase struct {
 }
 
 // NewGeneralAgentUsecase 创建通用智能体用例
-func NewGeneralAgentUsecase(config *config.Config, repo domain.GeneralAgentRepo) *GeneralAgentUsecase {
+func NewGeneralAgentUsecase(config *config.Config, repo domain.GeneralAgentRepo) domain.GeneralAgentUsecase {
 	factory := models.NewModelFactory()
 
 	// 注册OpenAI模型
