@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -302,4 +303,192 @@ func (r *UserRepo) GetPermissions(ctx context.Context, id uuid.UUID) (*domain.Pe
 
 	r.cache.Set(key, res, 5*time.Minute)
 	return res, nil
+}
+
+func (r *UserRepo) GetSetting(ctx context.Context) (*db.Setting, error) {
+	if b, err := r.redis.Get(ctx, "setting").Result(); err == nil {
+		s := &db.Setting{}
+		if err := json.Unmarshal([]byte(b), s); err == nil {
+			return s, nil
+		}
+	}
+	s, err := r.db.Setting.Query().First(ctx)
+	if db.IsNotFound(err) {
+		s, err = r.db.Setting.Create().
+			SetEnableSSO(false).
+			SetForceTwoFactorAuth(false).
+			SetDisablePasswordLogin(false).
+			Save(ctx)
+	}
+	if err != nil {
+		return nil, err
+	}
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.redis.Set(ctx, "setting", b, time.Hour*24).Err(); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (r *UserRepo) UpdateSetting(ctx context.Context, fn func(*db.Setting, *db.SettingUpdateOne)) (*db.Setting, error) {
+	var res *db.Setting
+	err := entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		s, err := tx.Setting.Query().First(ctx)
+		if err != nil {
+			return err
+		}
+		up := tx.Setting.UpdateOneID(s.ID)
+		fn(s, up)
+		s, err = up.Save(ctx)
+		if err != nil {
+			return err
+		}
+		res = s
+		return r.redis.Del(ctx, "setting").Err()
+	})
+	return res, err
+}
+
+func (r *UserRepo) updateUsername(ctx context.Context, tx *db.Tx, ui *db.UserIdentity, name string) error {
+	if err := tx.UserIdentity.UpdateOneID(ui.ID).SetNickname(name).Exec(ctx); err != nil {
+		return err
+	}
+	return tx.User.UpdateOneID(ui.UserID).SetUsername(name).Exec(ctx)
+}
+
+func (r *UserRepo) updateAvatar(ctx context.Context, tx *db.Tx, ui *db.UserIdentity, avatar string) error {
+	if err := tx.UserIdentity.UpdateOneID(ui.ID).SetAvatarURL(avatar).Exec(ctx); err != nil {
+		return err
+	}
+	return tx.User.UpdateOneID(ui.UserID).SetAvatarURL(avatar).Exec(ctx)
+}
+
+func (r *UserRepo) SignUpOrIn(ctx context.Context, platform consts.UserPlatform, req *domain.OAuthUserInfo) (*db.User, error) {
+	var u *db.User
+	err := entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		ui, err := tx.UserIdentity.Query().
+			WithUser().
+			Where(useridentity.Platform(platform), useridentity.IdentityID(req.ID)).
+			First(ctx)
+		if err == nil {
+			u = ui.Edges.User
+			if u.Status != consts.UserStatusActive {
+				return errcode.ErrUserLock
+			}
+			if ui.Nickname != req.Name {
+				if err = r.updateUsername(ctx, tx, ui, req.Name); err != nil {
+					return err
+				}
+			}
+			if ui.AvatarURL != req.AvatarURL {
+				if err = r.updateAvatar(ctx, tx, ui, req.AvatarURL); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		if !db.IsNotFound(err) {
+			return err
+		}
+		user, err := tx.User.Create().
+			SetUsername(req.Name).
+			SetEmail(req.Email).
+			SetAvatarURL(req.AvatarURL).
+			SetPlatform(platform).
+			SetStatus(consts.UserStatusActive).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		_, err = tx.UserIdentity.Create().
+			SetUserID(user.ID).
+			SetPlatform(platform).
+			SetIdentityID(req.ID).
+			SetUnionID(req.UnionID).
+			SetNickname(req.Name).
+			SetAvatarURL(req.AvatarURL).
+			SetEmail(req.Email).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		u = user
+		return nil
+	})
+	return u, err
+}
+
+func (r *UserRepo) OAuthLogin(ctx context.Context, platform consts.UserPlatform, req *domain.OAuthUserInfo) (*db.User, error) {
+	ui, err := r.db.UserIdentity.Query().
+		WithUser().
+		Where(useridentity.Platform(platform), useridentity.IdentityID(req.ID)).
+		Where(useridentity.HasUser()).
+		Only(ctx)
+	if err != nil {
+		return nil, errcode.ErrNotInvited.Wrap(err)
+	}
+	if ui.Edges.User.Status != consts.UserStatusActive {
+		return nil, errcode.ErrUserLock
+	}
+	if ui.Nickname != req.Name {
+		if err = entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+			return r.updateUsername(ctx, tx, ui, req.Name)
+		}); err != nil {
+			return nil, err
+		}
+	}
+	if ui.AvatarURL != req.AvatarURL {
+		if err = entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+			return r.updateAvatar(ctx, tx, ui, req.AvatarURL)
+		}); err != nil {
+			return nil, err
+		}
+	}
+	return ui.Edges.User, nil
+}
+
+func (r *UserRepo) OAuthRegister(ctx context.Context, platform consts.UserPlatform, inviteCode string, req *domain.OAuthUserInfo) (*db.User, error) {
+	var u *db.User
+	err := entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+
+		_, err := tx.UserIdentity.Query().
+			WithUser().
+			Where(useridentity.Platform(platform), useridentity.IdentityID(req.ID)).
+			First(ctx)
+		if err == nil {
+			e := fmt.Errorf("user already exists for platform %s and identity ID %s", platform, req.ID)
+			return errcode.ErrAccountAlreadyExist.Wrap(e)
+		}
+		if !db.IsNotFound(err) {
+			return err
+		}
+		user, err := tx.User.Create().
+			SetUsername(req.Name).
+			SetEmail(req.Email).
+			SetAvatarURL(req.AvatarURL).
+			SetPlatform(platform).
+			SetStatus(consts.UserStatusActive).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		_, err = tx.UserIdentity.Create().
+			SetUserID(user.ID).
+			SetPlatform(platform).
+			SetIdentityID(req.ID).
+			SetUnionID(req.UnionID).
+			SetNickname(req.Name).
+			SetAvatarURL(req.AvatarURL).
+			SetEmail(req.Email).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		u = user
+		return nil
+	})
+	return u, err
 }

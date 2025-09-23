@@ -20,9 +20,11 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/ent/types"
 	"github.com/google/uuid"
 )
 
@@ -42,6 +44,7 @@ const (
 	TypeConversation      = "Conversation"
 	TypeMessage           = "Message"
 	TypeRole              = "Role"
+	TypeSetting           = "Setting"
 	TypeUser              = "User"
 	TypeUserIdentity      = "UserIdentity"
 	TypeUserLoginHistory  = "UserLoginHistory"
@@ -5726,6 +5729,830 @@ func (m *RoleMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Role edge %s", name)
+}
+
+// SettingMutation represents an operation that mutates the Setting nodes in the graph.
+type SettingMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	enable_sso             *bool
+	force_two_factor_auth  *bool
+	disable_password_login *bool
+	enable_auto_login      *bool
+	dingtalk_oauth         **types.DingtalkOAuth
+	custom_oauth           **types.CustomOAuth
+	base_url               *string
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	done                   bool
+	oldValue               func(context.Context) (*Setting, error)
+	predicates             []predicate.Setting
+}
+
+var _ ent.Mutation = (*SettingMutation)(nil)
+
+// settingOption allows management of the mutation configuration using functional options.
+type settingOption func(*SettingMutation)
+
+// newSettingMutation creates new mutation for the Setting entity.
+func newSettingMutation(c config, op Op, opts ...settingOption) *SettingMutation {
+	m := &SettingMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSetting,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSettingID sets the ID field of the mutation.
+func withSettingID(id uuid.UUID) settingOption {
+	return func(m *SettingMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Setting
+		)
+		m.oldValue = func(ctx context.Context) (*Setting, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Setting.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSetting sets the old Setting of the mutation.
+func withSetting(node *Setting) settingOption {
+	return func(m *SettingMutation) {
+		m.oldValue = func(context.Context) (*Setting, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SettingMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SettingMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Setting entities.
+func (m *SettingMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SettingMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SettingMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Setting.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetEnableSSO sets the "enable_sso" field.
+func (m *SettingMutation) SetEnableSSO(b bool) {
+	m.enable_sso = &b
+}
+
+// EnableSSO returns the value of the "enable_sso" field in the mutation.
+func (m *SettingMutation) EnableSSO() (r bool, exists bool) {
+	v := m.enable_sso
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnableSSO returns the old "enable_sso" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldEnableSSO(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnableSSO is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnableSSO requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnableSSO: %w", err)
+	}
+	return oldValue.EnableSSO, nil
+}
+
+// ResetEnableSSO resets all changes to the "enable_sso" field.
+func (m *SettingMutation) ResetEnableSSO() {
+	m.enable_sso = nil
+}
+
+// SetForceTwoFactorAuth sets the "force_two_factor_auth" field.
+func (m *SettingMutation) SetForceTwoFactorAuth(b bool) {
+	m.force_two_factor_auth = &b
+}
+
+// ForceTwoFactorAuth returns the value of the "force_two_factor_auth" field in the mutation.
+func (m *SettingMutation) ForceTwoFactorAuth() (r bool, exists bool) {
+	v := m.force_two_factor_auth
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldForceTwoFactorAuth returns the old "force_two_factor_auth" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldForceTwoFactorAuth(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldForceTwoFactorAuth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldForceTwoFactorAuth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldForceTwoFactorAuth: %w", err)
+	}
+	return oldValue.ForceTwoFactorAuth, nil
+}
+
+// ResetForceTwoFactorAuth resets all changes to the "force_two_factor_auth" field.
+func (m *SettingMutation) ResetForceTwoFactorAuth() {
+	m.force_two_factor_auth = nil
+}
+
+// SetDisablePasswordLogin sets the "disable_password_login" field.
+func (m *SettingMutation) SetDisablePasswordLogin(b bool) {
+	m.disable_password_login = &b
+}
+
+// DisablePasswordLogin returns the value of the "disable_password_login" field in the mutation.
+func (m *SettingMutation) DisablePasswordLogin() (r bool, exists bool) {
+	v := m.disable_password_login
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisablePasswordLogin returns the old "disable_password_login" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldDisablePasswordLogin(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisablePasswordLogin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisablePasswordLogin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisablePasswordLogin: %w", err)
+	}
+	return oldValue.DisablePasswordLogin, nil
+}
+
+// ResetDisablePasswordLogin resets all changes to the "disable_password_login" field.
+func (m *SettingMutation) ResetDisablePasswordLogin() {
+	m.disable_password_login = nil
+}
+
+// SetEnableAutoLogin sets the "enable_auto_login" field.
+func (m *SettingMutation) SetEnableAutoLogin(b bool) {
+	m.enable_auto_login = &b
+}
+
+// EnableAutoLogin returns the value of the "enable_auto_login" field in the mutation.
+func (m *SettingMutation) EnableAutoLogin() (r bool, exists bool) {
+	v := m.enable_auto_login
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnableAutoLogin returns the old "enable_auto_login" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldEnableAutoLogin(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnableAutoLogin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnableAutoLogin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnableAutoLogin: %w", err)
+	}
+	return oldValue.EnableAutoLogin, nil
+}
+
+// ResetEnableAutoLogin resets all changes to the "enable_auto_login" field.
+func (m *SettingMutation) ResetEnableAutoLogin() {
+	m.enable_auto_login = nil
+}
+
+// SetDingtalkOauth sets the "dingtalk_oauth" field.
+func (m *SettingMutation) SetDingtalkOauth(to *types.DingtalkOAuth) {
+	m.dingtalk_oauth = &to
+}
+
+// DingtalkOauth returns the value of the "dingtalk_oauth" field in the mutation.
+func (m *SettingMutation) DingtalkOauth() (r *types.DingtalkOAuth, exists bool) {
+	v := m.dingtalk_oauth
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDingtalkOauth returns the old "dingtalk_oauth" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldDingtalkOauth(ctx context.Context) (v *types.DingtalkOAuth, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDingtalkOauth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDingtalkOauth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDingtalkOauth: %w", err)
+	}
+	return oldValue.DingtalkOauth, nil
+}
+
+// ClearDingtalkOauth clears the value of the "dingtalk_oauth" field.
+func (m *SettingMutation) ClearDingtalkOauth() {
+	m.dingtalk_oauth = nil
+	m.clearedFields[setting.FieldDingtalkOauth] = struct{}{}
+}
+
+// DingtalkOauthCleared returns if the "dingtalk_oauth" field was cleared in this mutation.
+func (m *SettingMutation) DingtalkOauthCleared() bool {
+	_, ok := m.clearedFields[setting.FieldDingtalkOauth]
+	return ok
+}
+
+// ResetDingtalkOauth resets all changes to the "dingtalk_oauth" field.
+func (m *SettingMutation) ResetDingtalkOauth() {
+	m.dingtalk_oauth = nil
+	delete(m.clearedFields, setting.FieldDingtalkOauth)
+}
+
+// SetCustomOauth sets the "custom_oauth" field.
+func (m *SettingMutation) SetCustomOauth(to *types.CustomOAuth) {
+	m.custom_oauth = &to
+}
+
+// CustomOauth returns the value of the "custom_oauth" field in the mutation.
+func (m *SettingMutation) CustomOauth() (r *types.CustomOAuth, exists bool) {
+	v := m.custom_oauth
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCustomOauth returns the old "custom_oauth" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldCustomOauth(ctx context.Context) (v *types.CustomOAuth, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCustomOauth is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCustomOauth requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCustomOauth: %w", err)
+	}
+	return oldValue.CustomOauth, nil
+}
+
+// ClearCustomOauth clears the value of the "custom_oauth" field.
+func (m *SettingMutation) ClearCustomOauth() {
+	m.custom_oauth = nil
+	m.clearedFields[setting.FieldCustomOauth] = struct{}{}
+}
+
+// CustomOauthCleared returns if the "custom_oauth" field was cleared in this mutation.
+func (m *SettingMutation) CustomOauthCleared() bool {
+	_, ok := m.clearedFields[setting.FieldCustomOauth]
+	return ok
+}
+
+// ResetCustomOauth resets all changes to the "custom_oauth" field.
+func (m *SettingMutation) ResetCustomOauth() {
+	m.custom_oauth = nil
+	delete(m.clearedFields, setting.FieldCustomOauth)
+}
+
+// SetBaseURL sets the "base_url" field.
+func (m *SettingMutation) SetBaseURL(s string) {
+	m.base_url = &s
+}
+
+// BaseURL returns the value of the "base_url" field in the mutation.
+func (m *SettingMutation) BaseURL() (r string, exists bool) {
+	v := m.base_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBaseURL returns the old "base_url" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldBaseURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBaseURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBaseURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBaseURL: %w", err)
+	}
+	return oldValue.BaseURL, nil
+}
+
+// ClearBaseURL clears the value of the "base_url" field.
+func (m *SettingMutation) ClearBaseURL() {
+	m.base_url = nil
+	m.clearedFields[setting.FieldBaseURL] = struct{}{}
+}
+
+// BaseURLCleared returns if the "base_url" field was cleared in this mutation.
+func (m *SettingMutation) BaseURLCleared() bool {
+	_, ok := m.clearedFields[setting.FieldBaseURL]
+	return ok
+}
+
+// ResetBaseURL resets all changes to the "base_url" field.
+func (m *SettingMutation) ResetBaseURL() {
+	m.base_url = nil
+	delete(m.clearedFields, setting.FieldBaseURL)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SettingMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SettingMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SettingMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SettingMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SettingMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Setting entity.
+// If the Setting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SettingMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SettingMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the SettingMutation builder.
+func (m *SettingMutation) Where(ps ...predicate.Setting) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SettingMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SettingMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Setting, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SettingMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SettingMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Setting).
+func (m *SettingMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SettingMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.enable_sso != nil {
+		fields = append(fields, setting.FieldEnableSSO)
+	}
+	if m.force_two_factor_auth != nil {
+		fields = append(fields, setting.FieldForceTwoFactorAuth)
+	}
+	if m.disable_password_login != nil {
+		fields = append(fields, setting.FieldDisablePasswordLogin)
+	}
+	if m.enable_auto_login != nil {
+		fields = append(fields, setting.FieldEnableAutoLogin)
+	}
+	if m.dingtalk_oauth != nil {
+		fields = append(fields, setting.FieldDingtalkOauth)
+	}
+	if m.custom_oauth != nil {
+		fields = append(fields, setting.FieldCustomOauth)
+	}
+	if m.base_url != nil {
+		fields = append(fields, setting.FieldBaseURL)
+	}
+	if m.created_at != nil {
+		fields = append(fields, setting.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, setting.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SettingMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case setting.FieldEnableSSO:
+		return m.EnableSSO()
+	case setting.FieldForceTwoFactorAuth:
+		return m.ForceTwoFactorAuth()
+	case setting.FieldDisablePasswordLogin:
+		return m.DisablePasswordLogin()
+	case setting.FieldEnableAutoLogin:
+		return m.EnableAutoLogin()
+	case setting.FieldDingtalkOauth:
+		return m.DingtalkOauth()
+	case setting.FieldCustomOauth:
+		return m.CustomOauth()
+	case setting.FieldBaseURL:
+		return m.BaseURL()
+	case setting.FieldCreatedAt:
+		return m.CreatedAt()
+	case setting.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SettingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case setting.FieldEnableSSO:
+		return m.OldEnableSSO(ctx)
+	case setting.FieldForceTwoFactorAuth:
+		return m.OldForceTwoFactorAuth(ctx)
+	case setting.FieldDisablePasswordLogin:
+		return m.OldDisablePasswordLogin(ctx)
+	case setting.FieldEnableAutoLogin:
+		return m.OldEnableAutoLogin(ctx)
+	case setting.FieldDingtalkOauth:
+		return m.OldDingtalkOauth(ctx)
+	case setting.FieldCustomOauth:
+		return m.OldCustomOauth(ctx)
+	case setting.FieldBaseURL:
+		return m.OldBaseURL(ctx)
+	case setting.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case setting.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Setting field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SettingMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case setting.FieldEnableSSO:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnableSSO(v)
+		return nil
+	case setting.FieldForceTwoFactorAuth:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetForceTwoFactorAuth(v)
+		return nil
+	case setting.FieldDisablePasswordLogin:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisablePasswordLogin(v)
+		return nil
+	case setting.FieldEnableAutoLogin:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnableAutoLogin(v)
+		return nil
+	case setting.FieldDingtalkOauth:
+		v, ok := value.(*types.DingtalkOAuth)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDingtalkOauth(v)
+		return nil
+	case setting.FieldCustomOauth:
+		v, ok := value.(*types.CustomOAuth)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCustomOauth(v)
+		return nil
+	case setting.FieldBaseURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBaseURL(v)
+		return nil
+	case setting.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case setting.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Setting field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SettingMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SettingMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SettingMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Setting numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SettingMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(setting.FieldDingtalkOauth) {
+		fields = append(fields, setting.FieldDingtalkOauth)
+	}
+	if m.FieldCleared(setting.FieldCustomOauth) {
+		fields = append(fields, setting.FieldCustomOauth)
+	}
+	if m.FieldCleared(setting.FieldBaseURL) {
+		fields = append(fields, setting.FieldBaseURL)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SettingMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SettingMutation) ClearField(name string) error {
+	switch name {
+	case setting.FieldDingtalkOauth:
+		m.ClearDingtalkOauth()
+		return nil
+	case setting.FieldCustomOauth:
+		m.ClearCustomOauth()
+		return nil
+	case setting.FieldBaseURL:
+		m.ClearBaseURL()
+		return nil
+	}
+	return fmt.Errorf("unknown Setting nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SettingMutation) ResetField(name string) error {
+	switch name {
+	case setting.FieldEnableSSO:
+		m.ResetEnableSSO()
+		return nil
+	case setting.FieldForceTwoFactorAuth:
+		m.ResetForceTwoFactorAuth()
+		return nil
+	case setting.FieldDisablePasswordLogin:
+		m.ResetDisablePasswordLogin()
+		return nil
+	case setting.FieldEnableAutoLogin:
+		m.ResetEnableAutoLogin()
+		return nil
+	case setting.FieldDingtalkOauth:
+		m.ResetDingtalkOauth()
+		return nil
+	case setting.FieldCustomOauth:
+		m.ResetCustomOauth()
+		return nil
+	case setting.FieldBaseURL:
+		m.ResetBaseURL()
+		return nil
+	case setting.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case setting.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Setting field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SettingMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SettingMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SettingMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SettingMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SettingMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SettingMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SettingMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Setting unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SettingMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Setting edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.

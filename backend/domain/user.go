@@ -8,6 +8,8 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/ent/types"
+	"github.com/chaitin/WhaleHire/backend/pkg/cvt"
 )
 
 type UserUsecase interface {
@@ -27,7 +29,11 @@ type UserUsecase interface {
 	GetUserCount(ctx context.Context) (int64, error)
 	ListRole(ctx context.Context) ([]*Role, error)
 	GrantRole(ctx context.Context, req *GrantRoleReq) error
+	GetSetting(ctx context.Context) (*Setting, error)
+	UpdateSetting(ctx context.Context, req *UpdateSettingReq) (*Setting, error)
 	GetPermissions(ctx context.Context, id uuid.UUID) (*Permissions, error)
+	OAuthSignUpOrIn(ctx context.Context, req *OAuthSignUpOrInReq) (*OAuthURLResp, error)
+	OAuthCallback(ctx *web.Context, req *OAuthCallbackReq) error
 }
 
 type UserRepo interface {
@@ -49,6 +55,11 @@ type UserRepo interface {
 	ListRole(ctx context.Context) ([]*db.Role, error)
 	GrantRole(ctx context.Context, req *GrantRoleReq) error
 	GetPermissions(ctx context.Context, id uuid.UUID) (*Permissions, error)
+	GetSetting(ctx context.Context) (*db.Setting, error)
+	UpdateSetting(ctx context.Context, fn func(*db.Setting, *db.SettingUpdateOne)) (*db.Setting, error)
+	OAuthRegister(ctx context.Context, platform consts.UserPlatform, inviteCode string, req *OAuthUserInfo) (*db.User, error)
+	OAuthLogin(ctx context.Context, platform consts.UserPlatform, req *OAuthUserInfo) (*db.User, error)
+	SignUpOrIn(ctx context.Context, platform consts.UserPlatform, req *OAuthUserInfo) (*db.User, error)
 }
 
 type ProfileUpdateReq struct {
@@ -231,4 +242,114 @@ type Permissions struct {
 	IsAdmin bool
 	Roles   []*Role
 	UserIDs []uuid.UUID
+}
+
+type UpdateSettingReq struct {
+	EnableSSO            *bool             `json:"enable_sso"`             // 是否开启SSO
+	ForceTwoFactorAuth   *bool             `json:"force_two_factor_auth"`  // 是否强制两步验证
+	DisablePasswordLogin *bool             `json:"disable_password_login"` // 是否禁用密码登录
+	EnableAutoLogin      *bool             `json:"enable_auto_login"`      // 是否开启自动登录
+	DingtalkOAuth        *DingtalkOAuthReq `json:"dingtalk_oauth"`         // 钉钉OAuth配置
+	CustomOAuth          *CustomOAuthReq   `json:"custom_oauth"`           // 自定义OAuth配置
+	BaseURL              *string           `json:"base_url"`               // base url 配置，为了支持前置代理
+}
+
+type DingtalkOAuthReq struct {
+	Enable       *bool   `json:"enable"`        // 钉钉OAuth开关
+	ClientID     *string `json:"client_id"`     // 钉钉客户端ID
+	ClientSecret *string `json:"client_secret"` // 钉钉客户端密钥
+}
+
+type DingtalkOAuth struct {
+	Enable       bool   `json:"enable"`        // 钉钉OAuth开关
+	ClientID     string `json:"client_id"`     // 钉钉客户端ID
+	ClientSecret string `json:"client_secret"` // 钉钉客户端密钥
+}
+
+func (d *DingtalkOAuth) From(e *types.DingtalkOAuth) *DingtalkOAuth {
+	if e == nil {
+		d.Enable = false
+		return d
+	}
+
+	d.Enable = e.Enable
+	d.ClientID = e.ClientID
+	return d
+}
+
+type CustomOAuthReq struct {
+	Enable         *bool    `json:"enable"`           // 自定义OAuth开关
+	ClientID       *string  `json:"client_id"`        // 自定义客户端ID
+	ClientSecret   *string  `json:"client_secret"`    // 自定义客户端密钥
+	AuthorizeURL   *string  `json:"authorize_url"`    // 自定义OAuth授权URL
+	AccessTokenURL *string  `json:"access_token_url"` // 自定义OAuth访问令牌URL
+	UserInfoURL    *string  `json:"userinfo_url"`     // 自定义OAuth用户信息URL
+	Scopes         []string `json:"scopes"`           // 自定义OAuth Scope列表
+	IDField        *string  `json:"id_field"`         // 用户信息回包中的ID字段名
+	NameField      *string  `json:"name_field"`       // 用户信息回包中的用户名字段名
+	AvatarField    *string  `json:"avatar_field"`     // 用户信息回包中的头像URL字段名
+	EmailField     *string  `json:"email_field"`      // 用户信息回包中的邮箱字段名
+}
+
+type CustomOAuth struct {
+	Enable         bool     `json:"enable"`           // 自定义OAuth开关
+	ClientID       string   `json:"client_id"`        // 自定义客户端ID
+	ClientSecret   string   `json:"client_secret"`    // 自定义客户端密钥
+	AuthorizeURL   string   `json:"authorize_url"`    // 自定义OAuth授权URL
+	AccessTokenURL string   `json:"access_token_url"` // 自定义OAuth访问令牌URL
+	UserInfoURL    string   `json:"userinfo_url"`     // 自定义OAuth用户信息URL
+	Scopes         []string `json:"scopes"`           // 自定义OAuth Scope列表
+	IDField        string   `json:"id_field"`         // 用户信息回包中的ID字段名
+	NameField      string   `json:"name_field"`       // 用户信息回包中的用户名字段名
+	AvatarField    string   `json:"avatar_field"`     // 用户信息回包中的头像URL字段名
+	EmailField     string   `json:"email_field"`      // 用户信息回包中的邮箱字段名
+}
+
+func (c *CustomOAuth) From(e *types.CustomOAuth) *CustomOAuth {
+	if e == nil {
+		c.Enable = false
+		return c
+	}
+
+	c.Enable = e.Enable
+	c.ClientID = e.ClientID
+	c.AuthorizeURL = e.AuthorizeURL
+	c.AccessTokenURL = e.AccessTokenURL
+	c.UserInfoURL = e.UserInfoURL
+	c.Scopes = e.Scopes
+	c.IDField = e.IDField
+	c.NameField = e.NameField
+	c.AvatarField = e.AvatarField
+	c.EmailField = e.EmailField
+	return c
+}
+
+type Setting struct {
+	EnableSSO            bool          `json:"enable_sso"`             // 是否开启SSO
+	ForceTwoFactorAuth   bool          `json:"force_two_factor_auth"`  // 是否强制两步验证
+	DisablePasswordLogin bool          `json:"disable_password_login"` // 是否禁用密码登录
+	EnableAutoLogin      bool          `json:"enable_auto_login"`      // 是否开启自动登录
+	DingtalkOAuth        DingtalkOAuth `json:"dingtalk_oauth"`         // 钉钉OAuth接入
+	CustomOAuth          CustomOAuth   `json:"custom_oauth"`           // 自定义OAuth接入
+	BaseURL              string        `json:"base_url,omitempty"`     // base url 配置，为了支持前置代理
+	CreatedAt            int64         `json:"created_at"`             // 创建时间
+	UpdatedAt            int64         `json:"updated_at"`             // 更新时间
+}
+
+func (s *Setting) From(e *db.Setting) *Setting {
+	if e == nil {
+		return s
+	}
+
+	s.EnableSSO = e.EnableSSO
+	s.ForceTwoFactorAuth = e.ForceTwoFactorAuth
+	s.DisablePasswordLogin = e.DisablePasswordLogin
+	s.EnableAutoLogin = e.EnableAutoLogin
+	s.DingtalkOAuth = *cvt.From(e.DingtalkOauth, &DingtalkOAuth{})
+	s.CustomOAuth = *cvt.From(e.CustomOauth, &CustomOAuth{})
+	s.BaseURL = e.BaseURL
+	s.CreatedAt = e.CreatedAt.Unix()
+	s.UpdatedAt = e.UpdatedAt.Unix()
+
+	return s
 }

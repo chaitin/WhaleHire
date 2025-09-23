@@ -93,6 +93,18 @@ func (f RoleFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.RoleMutation", m)
 }
 
+// The SettingFunc type is an adapter to allow the use of ordinary
+// function as Setting mutator.
+type SettingFunc func(context.Context, *db.SettingMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SettingFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.SettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.SettingMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *db.UserMutation) (db.Value, error)

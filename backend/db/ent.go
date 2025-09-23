@@ -19,6 +19,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -89,6 +90,7 @@ func checkColumn(table, column string) error {
 			conversation.Table:      conversation.ValidColumn,
 			message.Table:           message.ValidColumn,
 			role.Table:              role.ValidColumn,
+			setting.Table:           setting.ValidColumn,
 			user.Table:              user.ValidColumn,
 			useridentity.Table:      useridentity.ValidColumn,
 			userloginhistory.Table:  userloginhistory.ValidColumn,

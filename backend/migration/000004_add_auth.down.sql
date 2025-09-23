@@ -1,0 +1,3 @@
+-- Migration: add_auth
+-- Created: 2025-09-23 10:33:48
+-- TODO: Add rollback SQL statements here

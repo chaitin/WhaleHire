@@ -2,9 +2,12 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -16,8 +19,10 @@ import (
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/ent/types"
 	"github.com/chaitin/WhaleHire/backend/errcode"
 	"github.com/chaitin/WhaleHire/backend/pkg/cvt"
+	"github.com/chaitin/WhaleHire/backend/pkg/oauth"
 	"github.com/chaitin/WhaleHire/backend/pkg/session"
 )
 
@@ -319,4 +324,269 @@ func (u *UserUsecase) GrantRole(ctx context.Context, req *domain.GrantRoleReq) e
 
 func (u *UserUsecase) GetPermissions(ctx context.Context, id uuid.UUID) (*domain.Permissions, error) {
 	return u.repo.GetPermissions(ctx, id)
+}
+
+func (u *UserUsecase) getOAuthConfig(baseURL string, setting *db.Setting, platform consts.UserPlatform) (*domain.OAuthConfig, error) {
+	cfg := domain.OAuthConfig{
+		Debug:       u.cfg.Debug,
+		Platform:    platform,
+		RedirectURI: fmt.Sprintf("%s/api/v1/user/oauth/callback", baseURL),
+	}
+
+	switch platform {
+	case consts.UserPlatformDingTalk:
+		if setting.DingtalkOauth == nil || !setting.DingtalkOauth.Enable {
+			return nil, errcode.ErrDingtalkNotEnabled
+		}
+		cfg.ClientID = setting.DingtalkOauth.ClientID
+		cfg.ClientSecret = setting.DingtalkOauth.ClientSecret
+	case consts.UserPlatformCustom:
+		if setting.CustomOauth == nil || !setting.CustomOauth.Enable {
+			return nil, errcode.ErrCustomNotEnabled
+		}
+		cfg.ClientID = setting.CustomOauth.ClientID
+		cfg.ClientSecret = setting.CustomOauth.ClientSecret
+		cfg.AuthorizeURL = setting.CustomOauth.AuthorizeURL
+		cfg.Scopes = setting.CustomOauth.Scopes
+		cfg.TokenURL = setting.CustomOauth.AccessTokenURL
+		cfg.UserInfoURL = setting.CustomOauth.UserInfoURL
+		cfg.IDField = setting.CustomOauth.IDField
+		cfg.NameField = setting.CustomOauth.NameField
+		cfg.AvatarField = setting.CustomOauth.AvatarField
+		cfg.EmailField = setting.CustomOauth.EmailField
+	default:
+		return nil, errcode.ErrUnsupportedPlatform
+	}
+
+	return &cfg, nil
+}
+
+func (u *UserUsecase) GetSetting(ctx context.Context) (*domain.Setting, error) {
+	s, err := u.repo.GetSetting(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return cvt.From(s, &domain.Setting{}), nil
+}
+
+func (u *UserUsecase) OAuthSignUpOrIn(ctx context.Context, req *domain.OAuthSignUpOrInReq) (*domain.OAuthURLResp, error) {
+	setting, err := u.repo.GetSetting(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := u.getOAuthConfig(req.BaseURL, setting, req.Platform)
+	if err != nil {
+		return nil, err
+	}
+
+	oauth, err := oauth.NewOAuther(*cfg)
+	if err != nil {
+		return nil, err
+	}
+	state, url := oauth.GetAuthorizeURL()
+
+	session := &domain.OAuthState{
+		Source:      req.Source,
+		SessionID:   req.SessionID,
+		Kind:        req.OAuthKind(),
+		Platform:    req.Platform,
+		RedirectURL: req.RedirectURL,
+		InviteCode:  req.InviteCode,
+	}
+	b, err := json.Marshal(session)
+	if err != nil {
+		return nil, err
+	}
+	if err := u.redis.Set(ctx, fmt.Sprintf("oauth:state:%s", state), b, 15*time.Minute).Err(); err != nil {
+		return nil, err
+	}
+
+	return &domain.OAuthURLResp{
+		URL: url,
+	}, nil
+}
+
+func (u *UserUsecase) FetchUserInfo(ctx context.Context, req *domain.OAuthCallbackReq, session *domain.OAuthState) (*domain.OAuthUserInfo, error) {
+	setting, err := u.repo.GetSetting(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := u.getOAuthConfig(req.BaseURL, setting, session.Platform)
+	if err != nil {
+		return nil, err
+	}
+
+	oauth, err := oauth.NewOAuther(*cfg)
+	if err != nil {
+		return nil, err
+	}
+	userInfo, err := oauth.GetUserInfo(req.Code)
+	if err != nil {
+		return nil, err
+	}
+	return userInfo, nil
+}
+
+func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq) error {
+	ctx := c.Request().Context()
+	req.IP = c.RealIP()
+	s, err := u.GetSetting(ctx)
+	if err != nil {
+		return err
+	}
+	req.BaseURL = u.cfg.GetBaseURL(c.Request(), s)
+	b, err := u.redis.Get(ctx, fmt.Sprintf("oauth:state:%s", req.State)).Result()
+	if err != nil {
+		return err
+	}
+	var session domain.OAuthState
+	if err := json.Unmarshal([]byte(b), &session); err != nil {
+		return err
+	}
+
+	switch session.Kind {
+	case consts.OAuthKindInvite:
+		setting, err := u.repo.GetSetting(ctx)
+		if err != nil {
+			return err
+		}
+		_, redirect, err := u.WithOAuthCallback(ctx, req, &session, func(ctx context.Context, s *domain.OAuthState, oui *domain.OAuthUserInfo) (*db.User, error) {
+			if setting.EnableAutoLogin {
+				return u.repo.SignUpOrIn(ctx, s.Platform, oui)
+			}
+			return u.repo.OAuthRegister(ctx, s.Platform, s.InviteCode, oui)
+		})
+		if err != nil {
+			return err
+		}
+		if err := c.Redirect(http.StatusFound, redirect); err != nil {
+			return err
+		}
+		return nil
+
+	case consts.OAuthKindLogin:
+		setting, err := u.repo.GetSetting(ctx)
+		if err != nil {
+			return err
+		}
+		user, redirect, err := u.WithOAuthCallback(ctx, req, &session, func(ctx context.Context, s *domain.OAuthState, oui *domain.OAuthUserInfo) (*db.User, error) {
+			if setting.EnableAutoLogin {
+				return u.repo.SignUpOrIn(ctx, s.Platform, oui)
+			}
+			return u.repo.OAuthLogin(ctx, s.Platform, oui)
+		})
+		if err != nil {
+			return err
+		}
+
+		if session.Source == consts.LoginSourceBrowser {
+			resUser := cvt.From(user, &domain.User{})
+			u.logger.With("user", resUser).With("host", c.Request().Host).DebugContext(ctx, "save user session")
+			if _, err := u.session.Save(c, consts.UserSessionName, c.Request().Host, resUser); err != nil {
+				return err
+			}
+		}
+
+		if err := c.Redirect(http.StatusFound, redirect); err != nil {
+			return err
+		}
+		return nil
+
+	default:
+		return errcode.ErrOAuthStateInvalid
+	}
+}
+
+type OAuthUserRepoHandle func(context.Context, *domain.OAuthState, *domain.OAuthUserInfo) (*db.User, error)
+
+func (u *UserUsecase) WithOAuthCallback(ctx context.Context, req *domain.OAuthCallbackReq, session *domain.OAuthState, handle OAuthUserRepoHandle) (*db.User, string, error) {
+	info, err := u.FetchUserInfo(ctx, req, session)
+	if err != nil {
+		return nil, "", err
+	}
+
+	user, err := handle(ctx, session, info)
+	if err != nil {
+		return nil, "", err
+	}
+
+	redirect := session.RedirectURL
+
+	u.logger.With("session", session).Debug("oauth callback", "redirect", redirect)
+	return user, redirect, nil
+}
+
+func (u *UserUsecase) UpdateSetting(ctx context.Context, req *domain.UpdateSettingReq) (*domain.Setting, error) {
+	s, err := u.repo.UpdateSetting(ctx, func(old *db.Setting, up *db.SettingUpdateOne) {
+		if req.EnableSSO != nil {
+			up.SetEnableSSO(*req.EnableSSO)
+		}
+		if req.ForceTwoFactorAuth != nil {
+			up.SetForceTwoFactorAuth(*req.ForceTwoFactorAuth)
+		}
+		if req.DisablePasswordLogin != nil {
+			up.SetDisablePasswordLogin(*req.DisablePasswordLogin)
+		}
+		if req.EnableAutoLogin != nil {
+			up.SetEnableAutoLogin(*req.EnableAutoLogin)
+		}
+		if req.DingtalkOAuth != nil {
+			dingtalk := cvt.NilWithDefault(old.DingtalkOauth, &types.DingtalkOAuth{})
+			if req.DingtalkOAuth.Enable != nil {
+				dingtalk.Enable = *req.DingtalkOAuth.Enable
+			}
+			if req.DingtalkOAuth.ClientID != nil {
+				dingtalk.ClientID = *req.DingtalkOAuth.ClientID
+			}
+			if req.DingtalkOAuth.ClientSecret != nil {
+				dingtalk.ClientSecret = *req.DingtalkOAuth.ClientSecret
+			}
+			up.SetDingtalkOauth(dingtalk)
+		}
+		if req.CustomOAuth != nil {
+			custom := cvt.NilWithDefault(old.CustomOauth, &types.CustomOAuth{})
+			if req.CustomOAuth.Enable != nil {
+				custom.Enable = *req.CustomOAuth.Enable
+			}
+			if req.CustomOAuth.ClientID != nil {
+				custom.ClientID = *req.CustomOAuth.ClientID
+			}
+			if req.CustomOAuth.ClientSecret != nil {
+				custom.ClientSecret = *req.CustomOAuth.ClientSecret
+			}
+			if req.CustomOAuth.AuthorizeURL != nil {
+				custom.AuthorizeURL = *req.CustomOAuth.AuthorizeURL
+			}
+			if req.CustomOAuth.AccessTokenURL != nil {
+				custom.AccessTokenURL = *req.CustomOAuth.AccessTokenURL
+			}
+			if req.CustomOAuth.UserInfoURL != nil {
+				custom.UserInfoURL = *req.CustomOAuth.UserInfoURL
+			}
+			if req.CustomOAuth.Scopes != nil {
+				custom.Scopes = req.CustomOAuth.Scopes
+			}
+			if req.CustomOAuth.IDField != nil {
+				custom.IDField = *req.CustomOAuth.IDField
+			}
+			if req.CustomOAuth.NameField != nil {
+				custom.NameField = *req.CustomOAuth.NameField
+			}
+			if req.CustomOAuth.AvatarField != nil {
+				custom.AvatarField = *req.CustomOAuth.AvatarField
+			}
+			if req.CustomOAuth.EmailField != nil {
+				custom.EmailField = *req.CustomOAuth.EmailField
+			}
+			up.SetCustomOauth(custom)
+		}
+		if req.BaseURL != nil {
+			up.SetBaseURL(*req.BaseURL)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return cvt.From(s, &domain.Setting{}), nil
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -150,6 +151,38 @@ func init() {
 	roleDescCreatedAt := roleFields[3].Descriptor()
 	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
 	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	settingFields := schema.Setting{}.Fields()
+	_ = settingFields
+	// settingDescEnableSSO is the schema descriptor for enable_sso field.
+	settingDescEnableSSO := settingFields[1].Descriptor()
+	// setting.DefaultEnableSSO holds the default value on creation for the enable_sso field.
+	setting.DefaultEnableSSO = settingDescEnableSSO.Default.(bool)
+	// settingDescForceTwoFactorAuth is the schema descriptor for force_two_factor_auth field.
+	settingDescForceTwoFactorAuth := settingFields[2].Descriptor()
+	// setting.DefaultForceTwoFactorAuth holds the default value on creation for the force_two_factor_auth field.
+	setting.DefaultForceTwoFactorAuth = settingDescForceTwoFactorAuth.Default.(bool)
+	// settingDescDisablePasswordLogin is the schema descriptor for disable_password_login field.
+	settingDescDisablePasswordLogin := settingFields[3].Descriptor()
+	// setting.DefaultDisablePasswordLogin holds the default value on creation for the disable_password_login field.
+	setting.DefaultDisablePasswordLogin = settingDescDisablePasswordLogin.Default.(bool)
+	// settingDescEnableAutoLogin is the schema descriptor for enable_auto_login field.
+	settingDescEnableAutoLogin := settingFields[4].Descriptor()
+	// setting.DefaultEnableAutoLogin holds the default value on creation for the enable_auto_login field.
+	setting.DefaultEnableAutoLogin = settingDescEnableAutoLogin.Default.(bool)
+	// settingDescCreatedAt is the schema descriptor for created_at field.
+	settingDescCreatedAt := settingFields[8].Descriptor()
+	// setting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	setting.DefaultCreatedAt = settingDescCreatedAt.Default.(func() time.Time)
+	// settingDescUpdatedAt is the schema descriptor for updated_at field.
+	settingDescUpdatedAt := settingFields[9].Descriptor()
+	// setting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	setting.DefaultUpdatedAt = settingDescUpdatedAt.Default.(func() time.Time)
+	// setting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	setting.UpdateDefaultUpdatedAt = settingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// settingDescID is the schema descriptor for id field.
+	settingDescID := settingFields[0].Descriptor()
+	// setting.DefaultID holds the default value on creation for the id field.
+	setting.DefaultID = settingDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinHooks0 := userMixin[0].Hooks()
 	user.Hooks[0] = userMixinHooks0[0]
@@ -188,6 +221,10 @@ func init() {
 	useridentityDescCreatedAt := useridentityFields[8].Descriptor()
 	// useridentity.DefaultCreatedAt holds the default value on creation for the created_at field.
 	useridentity.DefaultCreatedAt = useridentityDescCreatedAt.Default.(func() time.Time)
+	// useridentityDescID is the schema descriptor for id field.
+	useridentityDescID := useridentityFields[0].Descriptor()
+	// useridentity.DefaultID holds the default value on creation for the id field.
+	useridentity.DefaultID = useridentityDescID.Default.(func() uuid.UUID)
 	userloginhistoryFields := schema.UserLoginHistory{}.Fields()
 	_ = userloginhistoryFields
 	// userloginhistoryDescCreatedAt is the schema descriptor for created_at field.

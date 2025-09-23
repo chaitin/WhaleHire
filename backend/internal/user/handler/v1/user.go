@@ -46,6 +46,7 @@ func NewUserHandler(
 	admin := w.Group("/api/v1/admin")
 	admin.POST("/login", web.BindHandler(u.AdminLogin))
 	admin.GET("/role", web.BaseHandler(u.ListRole))
+	admin.GET("/setting", web.BaseHandler(u.GetSetting))
 
 	admin.Use(auth.Auth(), active.Active("admin"), readonly.Guard())
 	admin.GET("/profile", web.BaseHandler(u.AdminProfile))
@@ -55,9 +56,12 @@ func NewUserHandler(
 	admin.POST("/logout", web.BaseHandler(u.AdminLogout))
 	admin.DELETE("/delete", web.BaseHandler(u.DeleteAdmin))
 	admin.POST("/role", web.BindHandler(u.GrantRole))
+	admin.PUT("/setting", web.BindHandler(u.UpdateSetting))
 
 	// user
 	g := w.Group("/api/v1/user")
+	g.GET("/oauth/signup-or-in", web.BindHandler(u.OAuthSignUpOrIn))
+	g.GET("/oauth/callback", web.BindHandler(u.OAuthCallback))
 	g.POST("/register", web.BindHandler(u.Register))
 	g.POST("/login", web.BindHandler(u.Login))
 
@@ -387,6 +391,43 @@ func (h *UserHandler) GrantRole(c *web.Context, req domain.GrantRoleReq) error {
 	return c.Success(nil)
 }
 
+// GetSetting 获取系统设置
+//
+//	@Tags			Admin
+//	@Summary		获取系统设置
+//	@Description	获取系统设置
+//	@ID				get-setting
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	web.Resp{data=domain.Setting}
+//	@Router			/api/v1/admin/setting [get]
+func (h *UserHandler) GetSetting(c *web.Context) error {
+	resp, err := h.usecase.GetSetting(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	return c.Success(resp)
+}
+
+// UpdateSetting 更新系统设置
+//
+//	@Tags			Admin
+//	@Summary		更新系统设置
+//	@Description	更新为增量更新，只传需要更新的字段
+//	@ID				update-setting
+//	@Accept			json
+//	@Produce		json
+//	@Param			param	body		domain.UpdateSettingReq	true	"更新系统设置参数"
+//	@Success		200		{object}	web.Resp{data=domain.Setting}
+//	@Router			/api/v1/admin/setting [put]
+func (h *UserHandler) UpdateSetting(c *web.Context, req domain.UpdateSettingReq) error {
+	resp, err := h.usecase.UpdateSetting(c.Request().Context(), &req)
+	if err != nil {
+		return err
+	}
+	return c.Success(resp)
+}
+
 // Profile 获取用户信息
 //
 //	@Tags			User Manage
@@ -425,4 +466,44 @@ func (h *UserHandler) UpdateProfile(ctx *web.Context, req domain.ProfileUpdateRe
 
 func (h *UserHandler) InitAdmin() error {
 	return h.usecase.InitAdmin(context.Background())
+}
+
+// OAuthSignUpOrIn 用户 OAuth 登录或注册
+//
+//	@Tags			User
+//	@Summary		用户 OAuth 登录或注册
+//	@Description	用户 OAuth 登录或注册
+//	@ID				user-oauth-signup-or-in
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	query		domain.OAuthSignUpOrInReq	true	"param"
+//	@Success		200	{object}	web.Resp{data=domain.OAuthURLResp}
+//	@Router			/api/v1/user/oauth/signup-or-in [get]
+func (h *UserHandler) OAuthSignUpOrIn(ctx *web.Context, req domain.OAuthSignUpOrInReq) error {
+	h.logger.With("req", req).DebugContext(ctx.Request().Context(), "OAuthSignUpOrIn")
+	s, err := h.usecase.GetSetting(ctx.Request().Context())
+	if err != nil {
+		return err
+	}
+	req.BaseURL = h.cfg.GetBaseURL(ctx.Request(), s)
+	resp, err := h.usecase.OAuthSignUpOrIn(ctx.Request().Context(), &req)
+	if err != nil {
+		return err
+	}
+	return ctx.Success(resp)
+}
+
+// OAuthCallback 用户 OAuth 回调
+//
+//	@Tags			User
+//	@Summary		用户 OAuth 回调
+//	@Description	用户 OAuth 回调
+//	@ID				user-oauth-callback
+//	@Accept			json
+//	@Produce		json
+//	@Param			req	query		domain.OAuthCallbackReq	true	"param"
+//	@Success		200	{object}	web.Resp{data=string}
+//	@Router			/api/v1/user/oauth/callback [get]
+func (h *UserHandler) OAuthCallback(ctx *web.Context, req domain.OAuthCallbackReq) error {
+	return h.usecase.OAuthCallback(ctx, &req)
 }

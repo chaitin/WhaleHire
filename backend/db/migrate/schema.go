@@ -178,6 +178,25 @@ var (
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
 	}
+	// SettingsColumns holds the columns for the "settings" table.
+	SettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "enable_sso", Type: field.TypeBool, Default: false},
+		{Name: "force_two_factor_auth", Type: field.TypeBool, Default: false},
+		{Name: "disable_password_login", Type: field.TypeBool, Default: false},
+		{Name: "enable_auto_login", Type: field.TypeBool, Default: false},
+		{Name: "dingtalk_oauth", Type: field.TypeJSON, Nullable: true},
+		{Name: "custom_oauth", Type: field.TypeJSON, Nullable: true},
+		{Name: "base_url", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SettingsTable holds the schema information for the "settings" table.
+	SettingsTable = &schema.Table{
+		Name:       "settings",
+		Columns:    SettingsColumns,
+		PrimaryKey: []*schema.Column{SettingsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -264,6 +283,7 @@ var (
 		ConversationsTable,
 		MessagesTable,
 		RolesTable,
+		SettingsTable,
 		UsersTable,
 		UserIdentitiesTable,
 		UserLoginHistoriesTable,
@@ -297,6 +317,9 @@ func init() {
 	}
 	RolesTable.Annotation = &entsql.Annotation{
 		Table: "roles",
+	}
+	SettingsTable.Annotation = &entsql.Annotation{
+		Table: "settings",
 	}
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",

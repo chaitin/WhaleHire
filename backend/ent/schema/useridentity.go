@@ -36,7 +36,7 @@ func (UserIdentity) Annotations() []schema.Annotation {
 // Fields of the UserIdentity.
 func (UserIdentity) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.UUID("user_id", uuid.UUID{}).Optional(),
 		field.String("platform").GoType(consts.UserPlatform("")).Default(string(consts.UserPlatformEmail)),
 		field.String("identity_id"),

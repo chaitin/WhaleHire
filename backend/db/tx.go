@@ -28,6 +28,8 @@ type Tx struct {
 	Message *MessageClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// Setting is the client for interacting with the Setting builders.
+	Setting *SettingClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserIdentity is the client for interacting with the UserIdentity builders.
@@ -172,6 +174,7 @@ func (tx *Tx) init() {
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
+	tx.Setting = NewSettingClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserIdentity = NewUserIdentityClient(tx.config)
 	tx.UserLoginHistory = NewUserLoginHistoryClient(tx.config)

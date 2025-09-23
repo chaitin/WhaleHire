@@ -16,6 +16,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -266,6 +267,33 @@ func (f TraverseRole) Traverse(ctx context.Context, q db.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *db.RoleQuery", q)
 }
 
+// The SettingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type SettingFunc func(context.Context, *db.SettingQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f SettingFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.SettingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.SettingQuery", q)
+}
+
+// The TraverseSetting type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseSetting func(context.Context, *db.SettingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseSetting) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseSetting) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.SettingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.SettingQuery", q)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UserFunc func(context.Context, *db.UserQuery) (db.Value, error)
 
@@ -364,6 +392,8 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.MessageQuery, predicate.Message, message.OrderOption]{typ: db.TypeMessage, tq: q}, nil
 	case *db.RoleQuery:
 		return &query[*db.RoleQuery, predicate.Role, role.OrderOption]{typ: db.TypeRole, tq: q}, nil
+	case *db.SettingQuery:
+		return &query[*db.SettingQuery, predicate.Setting, setting.OrderOption]{typ: db.TypeSetting, tq: q}, nil
 	case *db.UserQuery:
 		return &query[*db.UserQuery, predicate.User, user.OrderOption]{typ: db.TypeUser, tq: q}, nil
 	case *db.UserIdentityQuery:
