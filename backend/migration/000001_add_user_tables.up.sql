@@ -8,25 +8,6 @@ CREATE TABLE "admins" (
     "updated_at" timestamptz NOT NULL,
     PRIMARY KEY ("id")
 );
--- Add default admin user
-INSERT INTO "admins" (
-        "id",
-        "username",
-        "password",
-        "status",
-        "last_active_at",
-        "created_at",
-        "updated_at"
-    )
-VALUES (
-        gen_random_uuid(),
-        'admin',
-        '123456',
-        'active',
-        NOW(),
-        NOW(),
-        NOW()
-    );
 CREATE UNIQUE INDEX "admins_username_key" ON "admins" ("username");
 CREATE TABLE "admin_login_histories" (
     "id" uuid NOT NULL DEFAULT gen_random_uuid(),
