@@ -48,6 +48,92 @@ export interface RegisterResponse {
   user_id?: string;
 }
 
+// ==================== 系统设置相关类型 ====================
+
+// 钉钉OAuth配置
+export interface DingtalkOAuth {
+  enable: boolean;
+  client_id: string;
+  client_secret: string;
+}
+
+// 自定义OAuth配置
+export interface CustomOAuth {
+  enable: boolean;
+  client_id: string;
+  client_secret: string;
+  authorize_url: string;
+  access_token_url: string;
+  userinfo_url: string;
+  scopes: string[];
+  id_field: string;
+  name_field: string;
+  avatar_field: string;
+  email_field: string;
+}
+
+// 系统设置
+export interface Setting {
+  enable_sso: boolean;
+  force_two_factor_auth: boolean;
+  disable_password_login: boolean;
+  enable_auto_login: boolean;
+  dingtalk_oauth: DingtalkOAuth;
+  custom_oauth: CustomOAuth;
+  base_url?: string;
+  created_at: number;
+  updated_at: number;
+}
+
+// 更新系统设置请求参数
+export interface UpdateSettingRequest {
+  enable_sso?: boolean;
+  force_two_factor_auth?: boolean;
+  disable_password_login?: boolean;
+  enable_auto_login?: boolean;
+  dingtalk_oauth?: {
+    enable?: boolean;
+    client_id?: string;
+    client_secret?: string;
+  };
+  custom_oauth?: {
+    enable?: boolean;
+    client_id?: string;
+    client_secret?: string;
+    authorize_url?: string;
+    access_token_url?: string;
+    userinfo_url?: string;
+    scopes?: string[];
+    id_field?: string;
+    name_field?: string;
+    avatar_field?: string;
+    email_field?: string;
+  };
+  base_url?: string;
+}
+
+// ==================== OAuth相关类型 ====================
+
+// OAuth登录或注册请求参数
+export interface OAuthSignUpOrInRequest {
+  source?: 'plugin' | 'browser';
+  platform: 'dingtalk' | 'custom';
+  session_id?: string;
+  redirect_url?: string;
+  inviate_code?: string;
+}
+
+// OAuth URL响应
+export interface OAuthURLResponse {
+  url: string;
+}
+
+// OAuth回调请求参数
+export interface OAuthCallbackRequest {
+  state: string;
+  code: string;
+}
+
 // ==================== 用户更新相关类型 ====================
 
 // 更新用户信息请求参数
