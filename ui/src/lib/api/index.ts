@@ -31,6 +31,8 @@ export {
   userLogin,
   adminLogin,
   userRegister,
+  oauthSignUpOrIn,
+  oauthCallback,
 } from './auth';
 
 // 导出用户相关 API

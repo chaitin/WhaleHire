@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/custom/password-input";
+import { Separator } from "@/components/ui/separator";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Image from "next/image";
-import { userLogin, adminLogin, userRegister } from "@/lib/api";
+import { userLogin, adminLogin, userRegister, oauthSignUpOrIn, oauthCallback } from "@/lib/api";
 
 // 登录表单验证模式
 const loginSchema = z.object({
@@ -167,6 +168,66 @@ export default function AuthPage() {
     }
   };
 
+  // OAuth登录处理
+  const handleOAuthLogin = async (platform: 'dingtalk' | 'custom') => {
+    setIsLoading(true);
+    setMessage(null);
+    
+    try {
+      const result = await oauthSignUpOrIn({
+        platform,
+        source: 'browser',
+        redirect_url: window.location.origin + '/auth/callback'
+      });
+      
+      if (result.success && result.data?.url) {
+        // 跳转到OAuth授权页面
+        window.location.href = result.data.url;
+      } else {
+        setMessage({ type: 'error', text: result.message || 'OAuth登录失败' });
+      }
+    } catch (error) {
+      console.error('OAuth登录错误:', error);
+      setMessage({ type: 'error', text: '网络错误，请稍后重试' });
+    }
+    
+    setIsLoading(false);
+  };
+
+  // 处理OAuth回调
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    if (code && state) {
+      handleOAuthCallback(code, state);
+    }
+  }, []);
+
+  const handleOAuthCallback = async (code: string, state: string) => {
+    setIsLoading(true);
+    setMessage(null);
+    
+    try {
+      const result = await oauthCallback({ code, state });
+      
+      if (result.success) {
+        setMessage({ type: 'success', text: 'OAuth登录成功！正在跳转...' });
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      } else {
+        setMessage({ type: 'error', text: result.message || 'OAuth登录失败' });
+      }
+    } catch (error) {
+      console.error('OAuth回调处理错误:', error);
+      setMessage({ type: 'error', text: '登录处理失败，请重试' });
+    }
+    
+    setIsLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -246,6 +307,37 @@ export default function AuthPage() {
                     </Button>
                   </form>
                 </Form>
+
+                {/* OAuth登录按钮 */}
+                <div className="space-y-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <Separator className="w-full" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">或</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="w-12 h-12 rounded-full border-blue-120 hover:bg-blue-50 hover:border-blue-300 relative overflow-hidden"
+                      onClick={() => handleOAuthLogin('dingtalk')}
+                      disabled={isLoading}
+                      title="钉钉登录"
+                    >
+                      <Image 
+                        src="/dingding.svg" 
+                        alt="钉钉" 
+                        fill
+                        className="object-contain p-1"
+                      />
+                    </Button>
+                  </div>
+                </div>
               </TabsContent>
 
               {/* 管理员登录 */}
@@ -283,6 +375,37 @@ export default function AuthPage() {
                     </Button>
                   </form>
                 </Form>
+
+                {/* OAuth登录按钮 */}
+                <div className="space-y-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <Separator className="w-full" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">或</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="w-30 h-30 rounded-full border-blue-200 hover:bg-blue-50 hover:border-blue-300 relative overflow-hidden"
+                      onClick={() => handleOAuthLogin('dingtalk')}
+                      disabled={isLoading}
+                      title="钉钉登录"
+                    >
+                      <Image 
+                        src="/dingding.svg" 
+                        alt="钉钉" 
+                        fill
+                        className="object-contain p-2"
+                      />
+                    </Button>
+                  </div>
+                </div>
               </TabsContent>
 
               {/* 注册 */}

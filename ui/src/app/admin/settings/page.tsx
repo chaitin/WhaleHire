@@ -9,17 +9,13 @@ import {
   Search, 
   Plus, 
   MessageCircle, 
-  Users, 
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  Shield,
-  BarChart3,
-  Database,
-  Cog,
-  User
+  Shield
 } from 'lucide-react'
 import Image from 'next/image'
+import { SystemSettings } from '@/components/admin/system-settings'
 
 interface ChatHistory {
   id: string
@@ -30,20 +26,9 @@ interface ChatHistory {
   message?: string
 }
 
-interface FeatureCard {
-  id: string
-  title: string
-  description: string
-  icon: React.ReactNode
-  color: string
-  value?: string
-}
-
-export default function AdminDashboard() {
+export default function AdminSettingsPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [message, setMessage] = useState('')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [_currentPage, _setCurrentPage] = useState('general')
   
   const [chatHistory] = useState<ChatHistory[]>([
     { 
@@ -73,76 +58,22 @@ export default function AdminDashboard() {
   ])
 
   const [navigationItems, setNavigationItems] = useState([
-    { id: 'general', name: 'General', active: true },
+    { id: 'general', name: 'General', active: false },
     { id: 'user-management', name: 'User Management', active: false },
     { id: 'system-monitor', name: 'System Monitor', active: false },
     { id: 'data-analytics', name: 'Data Analytics', active: false },
-    { id: 'system-settings', name: 'System Settings', active: false }
+    { id: 'system-settings', name: 'System Settings', active: true }
   ])
 
-  const featureCards: FeatureCard[] = [
-    {
-      id: '1',
-      title: '用户管理',
-      description: '管理系统用户，包括普通用户和管理员的权限分配与账户状态。',
-      icon: <Users className="w-6 h-6" />,
-      color: 'bg-white border-gray-200',
-      value: '1,234'
-    },
-    {
-      id: '2',
-      title: '权限控制',
-      description: '配置系统权限，管理角色分配和访问控制策略。',
-      icon: <Shield className="w-6 h-6" />,
-      color: 'bg-white border-gray-200',
-      value: '56'
-    },
-    {
-      id: '3',
-      title: '数据统计',
-      description: '查看系统使用统计，分析用户行为和平台运营数据。',
-      icon: <BarChart3 className="w-6 h-6" />,
-      color: 'bg-white border-gray-200',
-      value: '89%'
-    },
-    {
-      id: '4',
-      title: '系统监控',
-      description: '监控系统运行状态，管理数据库和服务器性能指标。',
-      icon: <Database className="w-6 h-6" />,
-      color: 'bg-white border-gray-200',
-      value: '正常'
-    },
-    {
-      id: '5',
-      title: '系统设置',
-      description: '配置系统参数，包括OAuth设置、安全策略和基础配置。',
-      icon: <Cog className="w-6 h-6" />,
-      color: 'bg-white border-gray-200',
-      value: '已配置'
-    }
-  ]
-
-  const _handleSendMessage = () => {
-    if (message.trim()) {
-      console.log('发送管理员消息:', message)
-      setMessage('')
-    }
-  }
-
-  // 修复handleFeatureClick函数
-  const _handleFeatureClick = (_title: string) => {
-    // 功能卡片的处理逻辑可以在这里添加
-  }
-
-  const _handleNavigationClick = (itemId: string, _itemName: string) => {
-    if (itemId === 'system-settings') {
-      // 导航到系统设置页面
-      window.location.href = '/admin/settings'
+  const handleNavigationClick = (itemId: string, _itemName: string) => {
+    if (itemId === 'general') {
+      window.location.href = '/admin/dashboard'
       return
     }
+    if (itemId === 'system-settings') {
+      return // 当前页面，不需要跳转
+    }
     
-    _setCurrentPage(itemId)
     setNavigationItems(items => 
       items.map(item => ({
         ...item,
@@ -206,7 +137,7 @@ export default function AdminDashboard() {
                 {navigationItems.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => _handleNavigationClick(item.id, item.name)}
+                    onClick={() => handleNavigationClick(item.id, item.name)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                       item.active 
                         ? 'bg-gray-800 text-white' 
@@ -292,68 +223,7 @@ export default function AdminDashboard() {
 
       {/* 主内容区域 */}
       <main className="flex-1 p-6 overflow-auto">
-        <>
-          {/* 搜索栏 */}
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                  type="text"
-                  placeholder="搜索用户、消息或设置..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* 功能卡片网格 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {featureCards.map((card, index) => (
-                <div
-                  key={index}
-                  onClick={() => _handleFeatureClick(card.title)}
-                  className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
-                >
-                  <div className="flex items-center mb-4">
-                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
-                      {card.icon}
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">{card.title}</h3>
-                  </div>
-                  <p className="text-gray-600 mb-4">{card.description}</p>
-                  <div className="text-2xl font-bold text-purple-600">{card.value}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* 聊天历史 */}
-            <div className="bg-white rounded-lg shadow-md">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">最近活动</h2>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {chatHistory.map((chat, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-purple-600" />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{chat.user}</p>
-                          <p className="text-xs text-gray-500">{chat.time}</p>
-                        </div>
-                        <p className="text-sm text-gray-600 truncate">{chat.message}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </>
+        <SystemSettings />
       </main>
     </div>
   )
