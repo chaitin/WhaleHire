@@ -7,6 +7,8 @@
 package main
 
 import (
+	"log/slog"
+
 	"github.com/GoYoko/web"
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
@@ -14,7 +16,7 @@ import (
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	usecase2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
-	"github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
@@ -23,7 +25,6 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/session"
 	"github.com/chaitin/WhaleHire/backend/pkg/store"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
-	"log/slog"
 )
 
 // Injectors from wire.go:

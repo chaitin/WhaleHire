@@ -161,7 +161,10 @@ func sendRequest[T any](c *Client, method, path string, opts ...Opt) (*T, error)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+		if c.debug {
+			log.Printf("[REQ:%s] error response body: %s", rid, string(b))
+		}
+		return nil, fmt.Errorf("status code: %d, response: %s", resp.StatusCode, string(b))
 	}
 
 	var rr T

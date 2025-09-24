@@ -56,6 +56,10 @@ services:
       WHALEHIRE_GENERAL_AGENT_LLM_MODEL_NAME: ${WHALEHIRE_GENERAL_AGENT_LLM_MODEL_NAME}
       WHALEHIRE_GENERAL_AGENT_LLM_BASE_URL: ${WHALEHIRE_GENERAL_AGENT_LLM_BASE_URL}
       WHALEHIRE_GENERAL_AGENT_LLM_API_KEY: ${WHALEHIRE_GENERAL_AGENT_LLM_API_KEY}
+      # 代理配置
+      https_proxy: ${https_proxy:-}
+      http_proxy: ${http_proxy:-}
+      no_proxy: ${no_proxy:-}
     ports:
       - "8888:8888"
     depends_on:

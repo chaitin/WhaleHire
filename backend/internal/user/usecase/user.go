@@ -6,14 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
+	"github.com/GoYoko/web"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
-
-	"github.com/GoYoko/web"
 
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/consts"
@@ -25,6 +25,14 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/oauth"
 	"github.com/chaitin/WhaleHire/backend/pkg/session"
 )
+
+// extractDomain removes the port number from host to create a valid cookie domain
+func extractDomain(host string) string {
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		return h
+	}
+	return host
+}
 
 type UserUsecase struct {
 	cfg     *config.Config
@@ -409,20 +417,24 @@ func (u *UserUsecase) OAuthSignUpOrIn(ctx context.Context, req *domain.OAuthSign
 func (u *UserUsecase) FetchUserInfo(ctx context.Context, req *domain.OAuthCallbackReq, session *domain.OAuthState) (*domain.OAuthUserInfo, error) {
 	setting, err := u.repo.GetSetting(ctx)
 	if err != nil {
+		u.logger.With("error", err).Warn("failed to get setting in FetchUserInfo")
 		return nil, err
 	}
 
 	cfg, err := u.getOAuthConfig(req.BaseURL, setting, session.Platform)
 	if err != nil {
+		u.logger.With("error", err).With("platform", session.Platform).Warn("failed to get OAuth config")
 		return nil, err
 	}
 
 	oauth, err := oauth.NewOAuther(*cfg)
 	if err != nil {
+		u.logger.With("error", err).With("config", cfg).Warn("failed to create OAuth client")
 		return nil, err
 	}
 	userInfo, err := oauth.GetUserInfo(req.Code)
 	if err != nil {
+		u.logger.With("error", err).With("code", req.Code).With("platform", session.Platform).Warn("failed to get user info from OAuth provider")
 		return nil, err
 	}
 	return userInfo, nil
@@ -483,7 +495,8 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 		if session.Source == consts.LoginSourceBrowser {
 			resUser := cvt.From(user, &domain.User{})
 			u.logger.With("user", resUser).With("host", c.Request().Host).DebugContext(ctx, "save user session")
-			if _, err := u.session.Save(c, consts.UserSessionName, c.Request().Host, resUser); err != nil {
+			domain := extractDomain(c.Request().Host)
+			if _, err := u.session.Save(c, consts.UserSessionName, domain, resUser); err != nil {
 				return err
 			}
 		}
