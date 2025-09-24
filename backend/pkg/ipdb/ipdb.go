@@ -75,7 +75,7 @@ func (a *IPDB) Lookup(ip string) (*domain.IPAddress, error) {
 	// 使用 recover 捕获 panic，防止 slice bounds 错误导致服务崩溃
 	var region string
 	var err error
-	
+
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
