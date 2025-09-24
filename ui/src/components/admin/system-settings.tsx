@@ -318,6 +318,24 @@ export function SystemSettings({ className }: SystemSettingsProps) {
                   />
                 </div>
               </div>
+              
+              <Separator />
+              <div className="space-y-2">
+                <Label>钉钉开放平台回调地址配置</Label>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800 mb-2">
+                    请在钉钉开放平台的「应用开发」-「登录与分享」中配置以下回调地址：
+                  </p>
+                  <code className="text-sm bg-blue-100 px-2 py-1 rounded text-blue-900 break-all">
+                    {formData.base_url ? `${formData.base_url}/api/v1/user/oauth/callback` : '请先配置系统基础URL'}
+                  </code>
+                  {!formData.base_url && (
+                    <p className="text-sm text-orange-600 mt-2">
+                      ⚠️ 请先在上方「基础设置」中配置系统基础URL，然后保存设置
+                    </p>
+                  )}
+                </div>
+              </div>
             </>
           )}
         </CardContent>
