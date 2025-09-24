@@ -1,10 +1,12 @@
 version: '3.8'
 
+name: whalehire-dev
+
 services:
   # PostgreSQL 数据库 - 开发环境
   whalehire-db:
     image: pgvector/pgvector:pg17
-    container_name: whalehire-postgres-dev
+    container_name: whalehire-dev-postgres
     environment:
       POSTGRES_DB: whalehire
       POSTGRES_USER: whalehire
@@ -23,16 +25,14 @@ services:
   # Redis 缓存
   whalehire-redis:
     image: redis:7-alpine
-    container_name: whalehire-redis
+    container_name: whalehire-dev-redis
     environment:
       REDIS_PASSWORD: redis123
     command: redis-server --requirepass redis123
     volumes:
-      - redis_data:/data
+      -  redis_dev_data:/data
     ports:
       - "6379:6379"
-    networks:
-      - whalehire-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
       interval: 10s
