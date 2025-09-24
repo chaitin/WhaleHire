@@ -274,6 +274,7 @@ func (d *DingtalkOAuth) From(e *types.DingtalkOAuth) *DingtalkOAuth {
 
 	d.Enable = e.Enable
 	d.ClientID = e.ClientID
+	d.ClientSecret = e.ClientSecret
 	return d
 }
 

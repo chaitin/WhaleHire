@@ -73,13 +73,19 @@ func (a *IPDB) Lookup(ip string) (*domain.IPAddress, error) {
 	}
 
 	// 使用 recover 捕获 panic，防止 slice bounds 错误导致服务崩溃
-	defer func() {
-		if r := recover(); r != nil {
-			a.logger.Error("panic occurred during ip lookup", "ip", ip, "error", r)
-		}
+	var region string
+	var err error
+	
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				a.logger.Error("panic occurred during ip lookup", "ip", ip, "error", r)
+				err = fmt.Errorf("ip lookup panic: %v", r)
+			}
+		}()
+		region, err = a.searcher.SearchByStr(ip)
 	}()
 
-	region, err := a.searcher.SearchByStr(ip)
 	if err != nil {
 		a.logger.Warn("search ip failed, using default values", "ip", ip, "error", err)
 		return &domain.IPAddress{

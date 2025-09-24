@@ -216,6 +216,15 @@ func (r *UserRepo) SaveAdminLoginHistory(ctx context.Context, adminID string, ip
 	if err != nil {
 		return err
 	}
+	// 检查 addr 是否为 nil，防止 nil pointer dereference
+	if addr == nil {
+		addr = &domain.IPAddress{
+			IP:       ip,
+			Country:  "未知",
+			Province: "未知",
+			City:     "未知",
+		}
+	}
 	_, err = r.db.AdminLoginHistory.Create().
 		SetAdminID(uid).
 		SetIP(ip).
@@ -234,6 +243,15 @@ func (r *UserRepo) SaveUserLoginHistory(ctx context.Context, userID string, ip s
 	addr, err := r.ipdb.Lookup(ip)
 	if err != nil {
 		return err
+	}
+	// 检查 addr 是否为 nil，防止 nil pointer dereference
+	if addr == nil {
+		addr = &domain.IPAddress{
+			IP:       ip,
+			Country:  "未知",
+			Province: "未知",
+			City:     "未知",
+		}
 	}
 	c := r.db.UserLoginHistory.Create().
 		SetUserID(uid).
