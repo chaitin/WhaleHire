@@ -105,11 +105,13 @@ make install-hooks
 ### 代码检查
 
 **后端**:
+
 - 使用 `go fmt` 格式化代码
 - 使用 `go vet` 进行静态分析
 - 使用 `golangci-lint` 进行代码质量检查
 
 **前端**:
+
 - 使用 ESLint 进行代码检查
 - 使用 TypeScript 严格模式
 - 遵循 Next.js 最佳实践
@@ -119,6 +121,7 @@ make install-hooks
 ### 技术栈和架构
 
 详细的技术栈信息请查看：
+
 - [项目 README - 技术架构](./README.md#🏗️-技术架构)
 - [后端技术栈](./backend/README.md#技术栈)
 - [前端技术栈](./ui/README.md#🚀-技术栈)
@@ -163,7 +166,7 @@ make install-hooks
 
 ## 📄 许可证
 
-通过贡献代码，你同意你的贡献将在 [MIT 许可证](./LICENSE) 下发布。
+通过贡献代码，你同意你的贡献将在 [AGPL-3.0 license](./LICENSE) 下发布。
 
 ## 🙏 致谢
 
