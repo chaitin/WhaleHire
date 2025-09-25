@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { oauthCallback } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -109,5 +109,32 @@ export default function OAuthCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+            <CardTitle className="text-blue-600">
+              OAuth登录处理中
+            </CardTitle>
+            <CardDescription>
+              正在处理OAuth登录...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center text-sm text-gray-500">
+            请稍候，正在验证您的身份...
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <OAuthCallbackContent />
+    </Suspense>
   );
 }
