@@ -83,3 +83,7 @@ type GetAccessTokenReq struct {
 	Code         string `json:"code"`
 	RedirectURL  string `json:"redirect_uri"`
 }
+
+type OAuthCallbackResp struct {
+	RedirectURL string `json:"redirect_url"`
+}

@@ -514,14 +514,18 @@ func (h *UserHandler) OAuthSignUpOrIn(ctx *web.Context, req domain.OAuthSignUpOr
 // OAuthCallback 用户 OAuth 回调
 //
 //	@Tags			User
-//	@Summary		用户 OAuth 回调
-//	@Description	用户 OAuth 回调
+//	@Summary		OAuth回调处理
+//	@Description	处理OAuth回调，返回重定向URL
 //	@ID				user-oauth-callback
 //	@Accept			json
 //	@Produce		json
 //	@Param			req	query		domain.OAuthCallbackReq	true	"param"
-//	@Success		200	{object}	web.Resp{data=string}
+//	@Success		200	{object}	web.Resp{data=domain.OAuthCallbackResp}
 //	@Router			/api/v1/user/oauth/callback [get]
 func (h *UserHandler) OAuthCallback(ctx *web.Context, req domain.OAuthCallbackReq) error {
-	return h.usecase.OAuthCallback(ctx, &req)
+	resp, err := h.usecase.OAuthCallback(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return ctx.Success(resp)
 }

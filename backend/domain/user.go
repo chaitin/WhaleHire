@@ -33,7 +33,7 @@ type UserUsecase interface {
 	UpdateSetting(ctx context.Context, req *UpdateSettingReq) (*Setting, error)
 	GetPermissions(ctx context.Context, id uuid.UUID) (*Permissions, error)
 	OAuthSignUpOrIn(ctx context.Context, req *OAuthSignUpOrInReq) (*OAuthURLResp, error)
-	OAuthCallback(ctx *web.Context, req *OAuthCallbackReq) error
+	OAuthCallback(ctx *web.Context, req *OAuthCallbackReq) (*OAuthCallbackResp, error)
 }
 
 type UserRepo interface {

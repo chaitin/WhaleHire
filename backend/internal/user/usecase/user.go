@@ -3,15 +3,14 @@ package usecase
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net"
-	"net/http"
 	"time"
 
 	"github.com/GoYoko/web"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 
@@ -338,7 +337,7 @@ func (u *UserUsecase) getOAuthConfig(baseURL string, setting *db.Setting, platfo
 	cfg := domain.OAuthConfig{
 		Debug:       u.cfg.Debug,
 		Platform:    platform,
-		RedirectURI: fmt.Sprintf("%s/api/v1/user/oauth/callback", baseURL),
+		RedirectURI: fmt.Sprintf("%s/oauth/callback", baseURL),
 	}
 
 	switch platform {
@@ -378,6 +377,7 @@ func (u *UserUsecase) GetSetting(ctx context.Context) (*domain.Setting, error) {
 }
 
 func (u *UserUsecase) OAuthSignUpOrIn(ctx context.Context, req *domain.OAuthSignUpOrInReq) (*domain.OAuthURLResp, error) {
+	u.logger.With("req", req).Debug("OAuthSignUpOrIn request")
 	setting, err := u.repo.GetSetting(ctx)
 	if err != nil {
 		return nil, err
@@ -386,6 +386,8 @@ func (u *UserUsecase) OAuthSignUpOrIn(ctx context.Context, req *domain.OAuthSign
 	if err != nil {
 		return nil, err
 	}
+
+	u.logger.With("cfg", cfg).Debug("OAuth config created")
 
 	oauth, err := oauth.NewOAuther(*cfg)
 	if err != nil {
@@ -440,28 +442,28 @@ func (u *UserUsecase) FetchUserInfo(ctx context.Context, req *domain.OAuthCallba
 	return userInfo, nil
 }
 
-func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq) error {
+func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq) (*domain.OAuthCallbackResp, error) {
 	ctx := c.Request().Context()
 	req.IP = c.RealIP()
 	s, err := u.GetSetting(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req.BaseURL = u.cfg.GetBaseURL(c.Request(), s)
 	b, err := u.redis.Get(ctx, fmt.Sprintf("oauth:state:%s", req.State)).Result()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var session domain.OAuthState
 	if err := json.Unmarshal([]byte(b), &session); err != nil {
-		return err
+		return nil, err
 	}
 
 	switch session.Kind {
 	case consts.OAuthKindInvite:
 		setting, err := u.repo.GetSetting(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		_, redirect, err := u.WithOAuthCallback(ctx, req, &session, func(ctx context.Context, s *domain.OAuthState, oui *domain.OAuthUserInfo) (*db.User, error) {
 			if setting.EnableAutoLogin {
@@ -470,17 +472,14 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 			return u.repo.OAuthRegister(ctx, s.Platform, s.InviteCode, oui)
 		})
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if err := c.Redirect(http.StatusFound, redirect); err != nil {
-			return err
-		}
-		return nil
+		return &domain.OAuthCallbackResp{RedirectURL: redirect}, nil
 
 	case consts.OAuthKindLogin:
 		setting, err := u.repo.GetSetting(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		user, redirect, err := u.WithOAuthCallback(ctx, req, &session, func(ctx context.Context, s *domain.OAuthState, oui *domain.OAuthUserInfo) (*db.User, error) {
 			if setting.EnableAutoLogin {
@@ -489,7 +488,7 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 			return u.repo.OAuthLogin(ctx, s.Platform, oui)
 		})
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if session.Source == consts.LoginSourceBrowser {
@@ -497,17 +496,14 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 			u.logger.With("user", resUser).With("host", c.Request().Host).DebugContext(ctx, "save user session")
 			domain := extractDomain(c.Request().Host)
 			if _, err := u.session.Save(c, consts.UserSessionName, domain, resUser); err != nil {
-				return err
+				return nil, err
 			}
 		}
 
-		if err := c.Redirect(http.StatusFound, redirect); err != nil {
-			return err
-		}
-		return nil
+		return &domain.OAuthCallbackResp{RedirectURL: redirect}, nil
 
 	default:
-		return errcode.ErrOAuthStateInvalid
+		return nil, errcode.ErrOAuthStateInvalid
 	}
 }
 
@@ -526,7 +522,14 @@ func (u *UserUsecase) WithOAuthCallback(ctx context.Context, req *domain.OAuthCa
 
 	redirect := session.RedirectURL
 
-	u.logger.With("session", session).Debug("oauth callback", "redirect", redirect)
+	// 添加详细的调试日志
+	u.logger.With("session", session).With("redirect", redirect).With("redirect_empty", redirect == "").With("redirect_length", len(redirect)).Debug("oauth callback redirect analysis")
+
+	// 如果redirect为空，记录警告
+	if redirect == "" {
+		u.logger.Warn("redirect URL is empty in OAuth callback", "session", session)
+	}
+
 	return user, redirect, nil
 }
 

@@ -44,6 +44,7 @@ func (c *CustomOAuth) GetAuthorizeURL() (string, string) {
 
 // GetUserInfo implements domain.OAuther.
 func (c *CustomOAuth) GetUserInfo(code string) (*domain.OAuthUserInfo, error) {
+	fmt.Printf("GetUserInfo code: %s\n", code)
 	info, err := c.getUserInfo(code)
 	if err != nil {
 		return nil, err
@@ -59,10 +60,12 @@ func (c *CustomOAuth) GetUserInfo(code string) (*domain.OAuthUserInfo, error) {
 type UserInfo map[string]any
 
 func (c *CustomOAuth) getUserInfo(code string) (UserInfo, error) {
+	fmt.Printf("getUserInfo code: %s\n", code)
 	token, err := c.oauth.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("getUserInfo token: %v\n", token)
 	client := c.oauth.Client(context.Background(), token)
 	res, err := client.Get(c.cfg.UserInfoURL)
 	if err != nil {
