@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"log/slog"
-	"net"
 	"time"
 
 	"github.com/GoYoko/web"
@@ -98,9 +97,9 @@ func (h *UserHandler) Login(c *web.Context, req domain.LoginReq) error {
 	if err != nil {
 		return err
 	}
+	h.logger.With("header", c.Request().Header).With("host", c.Request().Host).Info("user login", "username", resp.User.Username)
 	if req.Source == consts.LoginSourceBrowser {
-		domain := extractDomain(c.Request().Host)
-		if _, err := h.session.Save(c, consts.UserSessionName, domain, resp.User); err != nil {
+		if _, err := h.session.Save(c, consts.UserSessionName, c.Request().Host, resp.User); err != nil {
 			return err
 		}
 	}
@@ -181,21 +180,6 @@ func (h *UserHandler) DeleteAdmin(c *web.Context) error {
 	return c.Success(nil)
 }
 
-// extractDomain 从Host中提取域名，去除端口号
-func extractDomain(host string) string {
-	if host == "" {
-		return ""
-	}
-
-	// 使用net.SplitHostPort分离主机名和端口
-	hostname, _, err := net.SplitHostPort(host)
-	if err != nil {
-		// 如果没有端口号，直接返回host
-		return host
-	}
-	return hostname
-}
-
 // AdminLogin 管理员登录
 //
 //	@Tags			Admin
@@ -215,8 +199,7 @@ func (h *UserHandler) AdminLogin(c *web.Context, req domain.LoginReq) error {
 	}
 
 	h.logger.With("header", c.Request().Header).With("host", c.Request().Host).Info("admin login", "username", resp.Username)
-	domain := extractDomain(c.Request().Host)
-	if _, err := h.session.Save(c, consts.SessionName, domain, resp); err != nil {
+	if _, err := h.session.Save(c, consts.SessionName, c.Request().Host, resp); err != nil {
 		return err
 	}
 	return c.Success(resp)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net"
 	"time"
 
 	"github.com/GoYoko/web"
@@ -24,14 +23,6 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/oauth"
 	"github.com/chaitin/WhaleHire/backend/pkg/session"
 )
-
-// extractDomain removes the port number from host to create a valid cookie domain
-func extractDomain(host string) string {
-	if h, _, err := net.SplitHostPort(host); err == nil {
-		return h
-	}
-	return host
-}
 
 type UserUsecase struct {
 	cfg     *config.Config
@@ -490,12 +481,11 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 		if err != nil {
 			return nil, err
 		}
-
+		u.logger.With("session", session).With("platform", session.Source).Debug("OAuthCallback login session")
 		if session.Source == consts.LoginSourceBrowser {
 			resUser := cvt.From(user, &domain.User{})
 			u.logger.With("user", resUser).With("host", c.Request().Host).DebugContext(ctx, "save user session")
-			domain := extractDomain(c.Request().Host)
-			if _, err := u.session.Save(c, consts.UserSessionName, domain, resUser); err != nil {
+			if _, err := u.session.Save(c, consts.UserSessionName, c.Request().Host, resUser); err != nil {
 				return nil, err
 			}
 		}
