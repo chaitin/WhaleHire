@@ -128,6 +128,11 @@ export interface OAuthURLResponse {
   url: string;
 }
 
+// OAuth回调响应
+export interface OAuthCallbackResponse {
+  redirect_url?: string;
+}
+
 // OAuth回调请求参数
 export interface OAuthCallbackRequest {
   state: string;

@@ -10,8 +10,10 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     
     // 构建后端 API 地址
-    const backendHost = process.env.BACKEND_HOST || 'localhost';
-    const backendUrl = `http://${backendHost}:8888/api/v1/general-agent/generate-stream`;
+    const backendHost = process.env.BACKEND_HOST || 'http://localhost:8888';
+    // 确保 backendHost 包含协议，如果没有则添加
+    const baseUrl = backendHost.startsWith('http') ? backendHost : `http://${backendHost}`;
+    const backendUrl = `${baseUrl}/api/v1/general-agent/generate-stream`;
     
     // 转发请求到后端
     const response = await fetch(backendUrl, {

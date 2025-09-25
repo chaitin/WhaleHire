@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Image from "next/image";
-import { userLogin, adminLogin, userRegister, oauthSignUpOrIn, oauthCallback } from "@/lib/api";
+import { userLogin, adminLogin, userRegister, oauthSignUpOrIn } from "@/lib/api";
 
 // 登录表单验证模式
 const loginSchema = z.object({
@@ -172,12 +172,16 @@ export default function AuthPage() {
   const handleOAuthLogin = async (platform: 'dingtalk' | 'custom') => {
     setIsLoading(true);
     setMessage(null);
+
+    // 使用专用的OAuth回调页面
+    const callbackUrl = window.location.origin + '/oauth/callback';
+    console.log('OAuth登录，回调URL:', callbackUrl);
     
     try {
       const result = await oauthSignUpOrIn({
         platform,
         source: 'browser',
-        redirect_url: window.location.origin + '/auth/callback'
+        redirect_url: callbackUrl,
       });
       
       if (result.success && result.data?.url) {
@@ -189,40 +193,6 @@ export default function AuthPage() {
     } catch (error) {
       console.error('OAuth登录错误:', error);
       setMessage({ type: 'error', text: '网络错误，请稍后重试' });
-    }
-    
-    setIsLoading(false);
-  };
-
-  // 处理OAuth回调
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    
-    if (code && state) {
-      handleOAuthCallback(code, state);
-    }
-  }, []);
-
-  const handleOAuthCallback = async (code: string, state: string) => {
-    setIsLoading(true);
-    setMessage(null);
-    
-    try {
-      const result = await oauthCallback({ code, state });
-      
-      if (result.success) {
-        setMessage({ type: 'success', text: 'OAuth登录成功！正在跳转...' });
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1500);
-      } else {
-        setMessage({ type: 'error', text: result.message || 'OAuth登录失败' });
-      }
-    } catch (error) {
-      console.error('OAuth回调处理错误:', error);
-      setMessage({ type: 'error', text: '登录处理失败，请重试' });
     }
     
     setIsLoading(false);
@@ -325,7 +295,7 @@ export default function AuthPage() {
                       variant="outline"
                       size="icon"
                       className="w-12 h-12 rounded-full border-blue-120 hover:bg-blue-50 hover:border-blue-300 relative overflow-hidden"
-                      onClick={() => handleOAuthLogin('dingtalk')}
+                      onClick={() => handleOAuthLogin('custom')}
                       disabled={isLoading}
                       title="钉钉登录"
                     >
@@ -393,7 +363,7 @@ export default function AuthPage() {
                       variant="outline"
                       size="icon"
                       className="w-30 h-30 rounded-full border-blue-200 hover:bg-blue-50 hover:border-blue-300 relative overflow-hidden"
-                      onClick={() => handleOAuthLogin('dingtalk')}
+                      onClick={() => handleOAuthLogin('custom')}
                       disabled={isLoading}
                       title="钉钉登录"
                     >

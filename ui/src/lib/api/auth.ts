@@ -8,7 +8,8 @@ import type {
   ApiResult,
   OAuthSignUpOrInRequest,
   OAuthURLResponse,
-  OAuthCallbackRequest
+  OAuthCallbackRequest,
+  OAuthCallbackResponse
 } from './types';
 
 /**
@@ -108,6 +109,7 @@ export async function oauthSignUpOrIn(oauthData: OAuthSignUpOrInRequest): Promis
     if (oauthData.session_id) queryParams.append('session_id', oauthData.session_id);
     if (oauthData.redirect_url) queryParams.append('redirect_url', oauthData.redirect_url);
     if (oauthData.inviate_code) queryParams.append('inviate_code', oauthData.inviate_code);
+    console.log('OAuth登录，查询参数:', queryParams.toString());
     
     const response = await fetch(`/api/v1/user/oauth/signup-or-in?${queryParams.toString()}`, {
       method: 'GET',
@@ -132,7 +134,7 @@ export async function oauthSignUpOrIn(oauthData: OAuthSignUpOrInRequest): Promis
 /**
  * OAuth回调处理
  */
-export async function oauthCallback(callbackData: OAuthCallbackRequest): Promise<ApiResult<string>> {
+export async function oauthCallback(callbackData: OAuthCallbackRequest): Promise<ApiResult<OAuthCallbackResponse>> {
   try {
     const queryParams = new URLSearchParams();
     queryParams.append('state', callbackData.state);

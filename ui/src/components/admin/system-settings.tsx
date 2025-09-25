@@ -327,7 +327,7 @@ export function SystemSettings({ className }: SystemSettingsProps) {
                     请在钉钉开放平台的「应用开发」-「登录与分享」中配置以下回调地址：
                   </p>
                   <code className="text-sm bg-blue-100 px-2 py-1 rounded text-blue-900 break-all">
-                    {formData.base_url ? `${formData.base_url}/api/v1/user/oauth/callback` : '请先配置系统基础URL'}
+                    {formData.base_url ? `${formData.base_url}/oauth/callback` : '请先配置系统基础URL'}
                   </code>
                   {!formData.base_url && (
                     <p className="text-sm text-orange-600 mt-2">
