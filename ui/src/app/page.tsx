@@ -174,7 +174,7 @@ export default function AuthPage() {
     setMessage(null);
 
     // 使用专用的OAuth回调页面
-    const callbackUrl = window.location.origin + '/oauth/callback';
+    const callbackUrl = window.location.origin + '/dashboard';
     console.log('OAuth登录，回调URL:', callbackUrl);
     
     try {
@@ -289,7 +289,24 @@ export default function AuthPage() {
                     </div>
                   </div>
                   
-                  <div className="flex justify-center">
+                  <div className="flex justify-center space-x-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="w-12 h-12 rounded-full border-blue-120 hover:bg-blue-50 hover:border-blue-300 relative overflow-hidden"
+                      onClick={() => handleOAuthLogin('dingtalk')}
+                      disabled={isLoading}
+                      title="钉钉登录"
+                    >
+                      <Image 
+                        src="/dingding.svg" 
+                        alt="钉钉" 
+                        width={24}
+                        height={24} 
+                        className="object-contain p-1"
+                      />
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"
@@ -297,12 +314,13 @@ export default function AuthPage() {
                       className="w-12 h-12 rounded-full border-blue-120 hover:bg-blue-50 hover:border-blue-300 relative overflow-hidden"
                       onClick={() => handleOAuthLogin('custom')}
                       disabled={isLoading}
-                      title="钉钉登录"
+                      title="Auth登录"
                     >
                       <Image 
-                        src="/dingding.svg" 
-                        alt="钉钉" 
-                        fill
+                        src="/globe.svg" 
+                        alt="Auth" 
+                         width={24}
+                        height={24} 
                         className="object-contain p-1"
                       />
                     </Button>
@@ -345,37 +363,6 @@ export default function AuthPage() {
                     </Button>
                   </form>
                 </Form>
-
-                {/* OAuth登录按钮 */}
-                <div className="space-y-3">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator className="w-full" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-muted-foreground">或</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="w-30 h-30 rounded-full border-blue-200 hover:bg-blue-50 hover:border-blue-300 relative overflow-hidden"
-                      onClick={() => handleOAuthLogin('custom')}
-                      disabled={isLoading}
-                      title="钉钉登录"
-                    >
-                      <Image 
-                        src="/dingding.svg" 
-                        alt="钉钉" 
-                        fill
-                        className="object-contain p-2"
-                      />
-                    </Button>
-                  </div>
-                </div>
               </TabsContent>
 
               {/* 注册 */}
