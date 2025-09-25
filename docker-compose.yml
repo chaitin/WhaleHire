@@ -82,7 +82,7 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      BACKEND_HOST: whalehire-backend
+      BACKEND_HOST: http://whalehire-backend:8888
     depends_on:
       - whalehire-backend
     networks:
