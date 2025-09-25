@@ -314,6 +314,7 @@ func (c *CustomOAuth) From(e *types.CustomOAuth) *CustomOAuth {
 
 	c.Enable = e.Enable
 	c.ClientID = e.ClientID
+	c.ClientSecret = e.ClientSecret
 	c.AuthorizeURL = e.AuthorizeURL
 	c.AccessTokenURL = e.AccessTokenURL
 	c.UserInfoURL = e.UserInfoURL

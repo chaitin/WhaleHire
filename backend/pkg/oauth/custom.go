@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -67,7 +68,12 @@ func (c *CustomOAuth) getUserInfo(code string) (UserInfo, error) {
 	}
 	fmt.Printf("getUserInfo token: %v\n", token)
 	client := c.oauth.Client(context.Background(), token)
+	fmt.Printf("getUserInfo UserInfoURL: %s\n", c.cfg.UserInfoURL)
 	res, err := client.Get(c.cfg.UserInfoURL)
+	// 打印响应内容
+	body, _ := io.ReadAll(res.Body)
+	fmt.Printf("Response Body: %s\n", string(body))
+	res.Body = io.NopCloser(bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
