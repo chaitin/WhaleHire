@@ -35,7 +35,7 @@ func NewSession(cfg *config.Config) *Session {
 	}
 }
 
-func (s *Session) Save(c echo.Context, name, domain string, data any) (string, error) {
+func (s *Session) Save(c echo.Context, name string, data any) (string, error) {
 	expire := time.Duration(s.cfg.Session.ExpireDay) * 24 * time.Hour
 	id := uuid.New().String()
 	b, err := json.Marshal(data)
@@ -51,7 +51,6 @@ func (s *Session) Save(c echo.Context, name, domain string, data any) (string, e
 		Name:     name,
 		Value:    id,
 		Path:     "/",
-		Domain:   domain,
 		MaxAge:   int(s.cfg.Session.ExpireDay) * 24 * 60 * 60,
 		Secure:   false,
 		HttpOnly: true,
