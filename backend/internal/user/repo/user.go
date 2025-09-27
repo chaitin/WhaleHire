@@ -158,6 +158,28 @@ func (r *UserRepo) Update(ctx context.Context, id string, fn func(*db.Tx, *db.Us
 	return u, err
 }
 
+func (r *UserRepo) UpdateAdmin(ctx context.Context, id string, fn func(*db.Tx, *db.Admin, *db.AdminUpdateOne) error) (*db.Admin, error) {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var a *db.Admin
+	err = entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		a, err = tx.Admin.Query().Where(admin.ID(uid)).Only(ctx)
+		if err != nil {
+			return err
+		}
+		up := tx.Admin.UpdateOneID(a.ID)
+		if err = fn(tx, a, up); err != nil {
+			return err
+		}
+		a, err = up.Save(ctx)
+		return err
+	})
+	return a, err
+}
+
 func (r *UserRepo) Delete(ctx context.Context, id string) error {
 	uid, err := uuid.Parse(id)
 	if err != nil {

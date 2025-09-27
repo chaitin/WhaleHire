@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/chaitin/WhaleHire/backend/consts"
@@ -61,12 +62,12 @@ func (m *AuthMiddleware) Auth() echo.MiddlewareFunc {
 				return c.String(http.StatusUnauthorized, "Unauthorized")
 			}
 			c.Set(adminKey, &admin)
-			if permissions, err := m.usecase.GetPermissions(c.Request().Context(), admin.ID); err == nil {
+			if permissions, err := m.usecase.GetPermissions(c.Request().Context(), uuid.MustParse(admin.ID)); err == nil {
 				ctx := context.WithValue(c.Request().Context(), rule.PermissionKey{}, permissions)
 				c.SetRequest(c.Request().WithContext(ctx))
 			} else {
 				ctx := context.WithValue(c.Request().Context(), rule.PermissionKey{}, &domain.Permissions{
-					AdminID: admin.ID,
+					AdminID: uuid.MustParse(admin.ID),
 					IsAdmin: admin.IsAdmin(),
 				})
 				c.SetRequest(c.Request().WithContext(ctx))

@@ -3,8 +3,10 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { AdminProfileDialog } from '@/components/business/admin-profile-dialog'
+import { AdminDropdownMenu } from '@/components/business/admin-dropdown-menu'
 import { 
   Search, 
   Plus, 
@@ -29,6 +31,7 @@ interface ChatHistory {
 export default function AdminSettingsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [adminProfileOpen, setAdminProfileOpen] = useState(false)
   
   const [chatHistory] = useState<ChatHistory[]>([
     { 
@@ -181,19 +184,7 @@ export default function AdminSettingsPage() {
 
             {/* 底部用户信息 */}
             <div className="p-4 border-t border-gray-700">
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/avatar.svg" />
-                  <AvatarFallback className="bg-orange-600 text-white">A</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200">Admin User</p>
-                  <p className="text-xs text-gray-400">管理员</p>
-                </div>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-white">
-                  <Settings className="w-4 h-4" />
-                </Button>
-              </div>
+              <AdminDropdownMenu />
             </div>
           </>
          )}
@@ -214,9 +205,7 @@ export default function AdminSettingsPage() {
                <MessageCircle className="w-4 h-4" />
              </Button>
              <div className="flex-1"></div>
-             <Button variant="ghost" size="sm" className="w-8 h-8 p-0 text-gray-400 hover:text-white">
-               <Settings className="w-4 h-4" />
-             </Button>
+             <AdminDropdownMenu collapsed={true} />
            </div>
          )}
       </div>
@@ -225,6 +214,12 @@ export default function AdminSettingsPage() {
       <main className="flex-1 p-6 overflow-auto">
         <SystemSettings />
       </main>
+
+      {/* 管理员资料对话框 */}
+      <AdminProfileDialog 
+        open={adminProfileOpen} 
+        onOpenChange={setAdminProfileOpen} 
+      />
     </div>
   )
 }
