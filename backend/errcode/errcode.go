@@ -24,4 +24,5 @@ var (
 	ErrCustomNotEnabled    = web.NewBadRequestErr("err-custom-not-enabled")
 	ErrUserLimit           = web.NewBadRequestErr("err-user-limit")
 	ErrOnlyAdmin           = web.NewBadRequestErr("err-only-admin")
+	ErrMissKey             = web.NewBadRequestErr("err-miss-key")
 )

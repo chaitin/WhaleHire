@@ -79,6 +79,12 @@ type Config struct {
 	DataReport struct {
 		Key string `mapstructure:"key"`
 	} `mapstructure:"data_report"`
+
+	S3 struct {
+		Endpoint  string `mapstructure:"endpoint"`
+		AccessKey string `mapstructure:"access_key"`
+		SecretKey string `mapstructure:"secret_key"`
+	}
 }
 
 func (c *Config) GetBaseURL(req *http.Request, settings *domain.Setting) string {
@@ -157,6 +163,9 @@ func Init() (*Config, error) {
 
 	v.SetDefault("retriever.top_k", 3)
 	v.SetDefault("retriever.distance_threshold", 0.8)
+	v.SetDefault("s3.endpoint", "127.0.0.1:9000")
+	v.SetDefault("s3.access_key", "s3whale-hire")
+	v.SetDefault("s3.secret_key", "")
 
 	// 打印从环境变量中读取的所有配置值
 	fmt.Println("从环境变量读取的配置值:")
