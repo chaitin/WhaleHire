@@ -15,6 +15,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/logger"
 	"github.com/chaitin/WhaleHire/backend/pkg/session"
 	"github.com/chaitin/WhaleHire/backend/pkg/store"
+	"github.com/chaitin/WhaleHire/backend/pkg/store/s3"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 )
 
@@ -26,6 +27,7 @@ var Provider = wire.NewSet(
 	session.NewSession,
 	ipdb.NewIPDB,
 	version.NewVersionInfo,
+	s3.NewMinioClient,
 )
 
 func NewWeb(cfg *config.Config) *web.Web {

@@ -30,7 +30,7 @@ services:
       REDIS_PASSWORD: redis123
     command: redis-server --requirepass redis123
     volumes:
-      -  redis_dev_data:/data
+      - redis_dev_data:/data
     ports:
       - "6379:6379"
     healthcheck:
@@ -38,10 +38,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
+
+  # MinIO 对象存储
+  whalehire-minio:
+    image: minio/minio:latest
+    container_name: whalehire-dev-minio
+    environment:
+      MINIO_ROOT_USER: s3whale-hire
+      MINIO_ROOT_PASSWORD: s3whale-hire-secret
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_dev_data:/data
+    ports:
+      - "9000:9000"   # S3 API 端口
+      - "9001:9001"   # MinIO 控制台端口
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
 volumes:
   postgres_dev_data:
     driver: local
   redis_dev_data:
+    driver: local
+  minio_dev_data:
     driver: local

@@ -36,3 +36,6 @@ other = "OAuth is not enabled"
 
 [err-user-limit]
 other = "User limit reached"
+
+[err-miss-key]
+other = "file key miss"

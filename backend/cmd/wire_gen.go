@@ -7,14 +7,18 @@
 package main
 
 import (
+	"log/slog"
+
 	"github.com/GoYoko/web"
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
+	v1_3 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
+	usecase3 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	v1_2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	usecase2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
-	"github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
@@ -22,8 +26,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/logger"
 	"github.com/chaitin/WhaleHire/backend/pkg/session"
 	"github.com/chaitin/WhaleHire/backend/pkg/store"
+	"github.com/chaitin/WhaleHire/backend/pkg/store/s3"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
-	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -55,6 +59,12 @@ func newServer() (*Server, error) {
 	generalAgentRepo := repo2.NewGeneralAgentRepo(client)
 	generalAgentUsecase := usecase2.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
 	generalAgentHandler := v1_2.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
+	minioClient, err := s3.NewMinioClient(configConfig)
+	if err != nil {
+		return nil, err
+	}
+	fileUsecase := usecase3.NewFileUsecase(slogLogger, minioClient, configConfig)
+	fileHandler := v1_3.NewFileHandler(web, fileUsecase, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
 		config:         configConfig,
@@ -63,6 +73,7 @@ func newServer() (*Server, error) {
 		logger:         slogLogger,
 		userV1:         userHandler,
 		generalagentV1: generalAgentHandler,
+		fileV1:         fileHandler,
 		version:        versionInfo,
 	}
 	return server, nil
@@ -77,5 +88,6 @@ type Server struct {
 	logger         *slog.Logger
 	userV1         *v1.UserHandler
 	generalagentV1 *v1_2.GeneralAgentHandler
+	fileV1         *v1_3.FileHandler
 	version        *version.VersionInfo
 }

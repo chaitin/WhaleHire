@@ -36,3 +36,9 @@ other = "OAuth未启用"
 
 [err-user-limit]
 other = "用户数量已达上限"
+
+[err-miss-key]
+other = "缺少文件名称"
+
+[err-miss-key]
+other = "file key miss"
