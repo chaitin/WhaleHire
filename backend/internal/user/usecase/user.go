@@ -238,7 +238,7 @@ func (u *UserUsecase) CreateAdmin(ctx context.Context, req *domain.CreateAdminRe
 		return nil, err
 	}
 	return &domain.AdminUser{
-		ID:        n.ID,
+		ID:        n.ID.String(),
 		Username:  n.Username,
 		CreatedAt: n.CreatedAt.Unix(),
 	}, nil
@@ -262,6 +262,40 @@ func (u *UserUsecase) Update(ctx context.Context, req *domain.UpdateUserReq) (*d
 		return nil, err
 	}
 	return cvt.From(user, &domain.User{}), nil
+}
+
+// UpdateAdminProfile 更新管理员资料
+func (u *UserUsecase) UpdateAdminProfile(ctx context.Context, req *domain.AdminProfileUpdateReq) (*domain.AdminUser, error) {
+	fmt.Printf("req: %+v", req)
+	// 更新管理员信息
+	updatedAdmin, err := u.repo.UpdateAdmin(ctx, req.UID, func(tx *db.Tx, admin *db.Admin, update *db.AdminUpdateOne) error {
+		if req.Username != "" {
+			update.SetUsername(req.Username)
+		}
+
+		if req.Password != "" && req.OldPassword != "" {
+			// 验证旧密码
+			if err := bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(req.OldPassword)); err != nil {
+				return errcode.ErrPassword.Wrap(err)
+			}
+
+			// 生成新密码哈希
+			hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+			if err != nil {
+				return errcode.ErrPassword.Wrap(err)
+			}
+			update.SetPassword(string(hash))
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为domain对象
+	return cvt.From(updatedAdmin, &domain.AdminUser{}), nil
 }
 
 func (u *UserUsecase) Delete(ctx context.Context, id string) error {

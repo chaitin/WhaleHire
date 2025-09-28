@@ -50,6 +50,8 @@ func NewUserHandler(
 
 	admin.Use(auth.Auth(), active.Active("admin"), readonly.Guard())
 	admin.GET("/profile", web.BaseHandler(u.AdminProfile))
+	admin.PUT("/profile", web.BindHandler(u.UpdateAdminProfile))
+
 	admin.GET("/list", web.BaseHandler(u.AdminList, web.WithPage()))
 	admin.GET("/login-history", web.BaseHandler(u.AdminLoginHistory, web.WithPage()))
 	admin.POST("/create", web.BindHandler(u.CreateAdmin))
@@ -235,6 +237,28 @@ func (h *UserHandler) AdminLogout(c *web.Context) error {
 func (h *UserHandler) AdminProfile(c *web.Context) error {
 	user := middleware.GetAdmin(c)
 	return c.Success(user)
+}
+
+// UpdateAdminProfile 更新管理员资料
+//
+//	@Tags			Admin
+//	@Summary		更新管理员资料
+//	@Description	更新管理员资料
+//	@ID				update-admin-profile
+//	@Accept			json
+//	@Produce		json
+//	@Param			param	body		domain.AdminProfileUpdateReq	true	"更新参数"
+//	@Success		200		{object}	web.Resp{data=domain.AdminUser}
+//	@Router			/api/v1/admin/profile [put]
+func (h *UserHandler) UpdateAdminProfile(c *web.Context, req domain.AdminProfileUpdateReq) error {
+	req.UID = middleware.GetAdmin(c).ID
+
+	updatedAdmin, err := h.usecase.UpdateAdminProfile(c.Request().Context(), &req)
+	if err != nil {
+		return err
+	}
+
+	return c.Success(updatedAdmin)
 }
 
 // List 获取用户列表

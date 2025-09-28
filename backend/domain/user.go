@@ -34,6 +34,7 @@ type UserUsecase interface {
 	GetPermissions(ctx context.Context, id uuid.UUID) (*Permissions, error)
 	OAuthSignUpOrIn(ctx context.Context, req *OAuthSignUpOrInReq) (*OAuthURLResp, error)
 	OAuthCallback(ctx *web.Context, req *OAuthCallbackReq) (*OAuthCallbackResp, error)
+	UpdateAdminProfile(ctx context.Context, req *AdminProfileUpdateReq) (*AdminUser, error)
 }
 
 type UserRepo interface {
@@ -57,6 +58,7 @@ type UserRepo interface {
 	GetPermissions(ctx context.Context, id uuid.UUID) (*Permissions, error)
 	GetSetting(ctx context.Context) (*db.Setting, error)
 	UpdateSetting(ctx context.Context, fn func(*db.Setting, *db.SettingUpdateOne)) (*db.Setting, error)
+	UpdateAdmin(ctx context.Context, id string, fn func(*db.Tx, *db.Admin, *db.AdminUpdateOne) error) (*db.Admin, error)
 	OAuthRegister(ctx context.Context, platform consts.UserPlatform, inviteCode string, req *OAuthUserInfo) (*db.User, error)
 	OAuthLogin(ctx context.Context, platform consts.UserPlatform, req *OAuthUserInfo) (*db.User, error)
 	SignUpOrIn(ctx context.Context, platform consts.UserPlatform, req *OAuthUserInfo) (*db.User, error)
@@ -206,7 +208,7 @@ func (u *User) From(e *db.User) *User {
 }
 
 type AdminUser struct {
-	ID           uuid.UUID          `json:"id"`             // 用户ID
+	ID           string             `json:"id"`             // 用户ID
 	Username     string             `json:"username"`       // 用户名
 	LastActiveAt int64              `json:"last_active_at"` // 最后活跃时间
 	Status       consts.AdminStatus `json:"status"`         // 用户状态 active: 正常 inactive: 禁用
@@ -215,7 +217,8 @@ type AdminUser struct {
 }
 
 func (a *AdminUser) IsAdmin() bool {
-	return a.Username == "admin"
+	// 检查角色是否为超级管理员（ID为1）
+	return a.Role != nil && a.Role.ID == 1
 }
 
 func (a *AdminUser) From(e *db.Admin) *AdminUser {
@@ -223,15 +226,20 @@ func (a *AdminUser) From(e *db.Admin) *AdminUser {
 		return a
 	}
 
-	a.ID = e.ID
+	a.ID = e.ID.String()
 	a.Username = e.Username
 	a.Status = e.Status
-	if e.Username == "admin" {
+
+	// 使用数据库中实际的角色数据
+	if len(e.Edges.Roles) > 0 {
+		// 取第一个角色作为主要角色
+		role := e.Edges.Roles[0]
 		a.Role = &Role{
-			ID:   1,
-			Name: "超级管理员",
+			ID:   role.ID,
+			Name: role.Name,
 		}
 	}
+
 	a.CreatedAt = e.CreatedAt.Unix()
 
 	return a
@@ -354,4 +362,12 @@ func (s *Setting) From(e *db.Setting) *Setting {
 	s.UpdatedAt = e.UpdatedAt.Unix()
 
 	return s
+}
+
+// AdminProfileUpdateReq 管理员资料更新请求
+type AdminProfileUpdateReq struct {
+	UID         string `json:"-"`
+	Username    string `json:"username" validate:"omitempty,min=3,max=20"`
+	Password    string `json:"password" validate:"omitempty,min=6,max=20"`
+	OldPassword string `json:"old_password" validate:"omitempty,min=6,max=20"`
 }
