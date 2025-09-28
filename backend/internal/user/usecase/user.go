@@ -519,7 +519,7 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 		if session.Source == consts.LoginSourceBrowser {
 			resUser := cvt.From(user, &domain.User{})
 			u.logger.With("user", resUser).With("host", c.Request().Host).DebugContext(ctx, "save user session")
-			if _, err := u.session.Save(c, consts.UserSessionName, c.Request().Host, resUser); err != nil {
+			if _, err := u.session.Save(c, consts.UserSessionName, resUser); err != nil {
 				return nil, err
 			}
 		}

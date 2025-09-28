@@ -101,7 +101,7 @@ func (h *UserHandler) Login(c *web.Context, req domain.LoginReq) error {
 	}
 	h.logger.With("header", c.Request().Header).With("host", c.Request().Host).Info("user login", "username", resp.User.Username)
 	if req.Source == consts.LoginSourceBrowser {
-		if _, err := h.session.Save(c, consts.UserSessionName, c.Request().Host, resp.User); err != nil {
+		if _, err := h.session.Save(c, consts.UserSessionName, resp.User); err != nil {
 			return err
 		}
 	}
@@ -201,7 +201,7 @@ func (h *UserHandler) AdminLogin(c *web.Context, req domain.LoginReq) error {
 	}
 
 	h.logger.With("header", c.Request().Header).With("host", c.Request().Host).Info("admin login", "username", resp.Username)
-	if _, err := h.session.Save(c, consts.SessionName, c.Request().Host, resp); err != nil {
+	if _, err := h.session.Save(c, consts.SessionName, resp); err != nil {
 		return err
 	}
 	return c.Success(resp)
