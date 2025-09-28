@@ -217,7 +217,8 @@ type AdminUser struct {
 }
 
 func (a *AdminUser) IsAdmin() bool {
-	return a.Username == "admin"
+	// 检查角色是否为超级管理员（ID为1）
+	return a.Role != nil && a.Role.ID == 1
 }
 
 func (a *AdminUser) From(e *db.Admin) *AdminUser {
@@ -228,12 +229,17 @@ func (a *AdminUser) From(e *db.Admin) *AdminUser {
 	a.ID = e.ID.String()
 	a.Username = e.Username
 	a.Status = e.Status
-	if e.Username == "admin" {
+
+	// 使用数据库中实际的角色数据
+	if len(e.Edges.Roles) > 0 {
+		// 取第一个角色作为主要角色
+		role := e.Edges.Roles[0]
 		a.Role = &Role{
-			ID:   1,
-			Name: "超级管理员",
+			ID:   role.ID,
+			Name: role.Name,
 		}
 	}
+
 	a.CreatedAt = e.CreatedAt.Unix()
 
 	return a

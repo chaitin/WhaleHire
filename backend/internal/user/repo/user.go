@@ -80,7 +80,15 @@ func (r *UserRepo) CreateAdmin(ctx context.Context, admin *db.Admin, roleID int6
 }
 
 func (r *UserRepo) AdminByName(ctx context.Context, username string) (*db.Admin, error) {
-	return r.db.Admin.Query().Where(admin.Username(username)).Only(ctx)
+	admin, err := r.db.Admin.Query().
+		WithRoles().
+		Where(admin.Username(username)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return admin, nil
+
 }
 
 func (r *UserRepo) GetByName(ctx context.Context, username string) (*db.User, error) {
