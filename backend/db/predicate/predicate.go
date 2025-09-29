@@ -24,6 +24,21 @@ type Conversation func(*sql.Selector)
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 
+// Resume is the predicate function for resume builders.
+type Resume func(*sql.Selector)
+
+// ResumeEducation is the predicate function for resumeeducation builders.
+type ResumeEducation func(*sql.Selector)
+
+// ResumeExperience is the predicate function for resumeexperience builders.
+type ResumeExperience func(*sql.Selector)
+
+// ResumeLog is the predicate function for resumelog builders.
+type ResumeLog func(*sql.Selector)
+
+// ResumeSkill is the predicate function for resumeskill builders.
+type ResumeSkill func(*sql.Selector)
+
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
 

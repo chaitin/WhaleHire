@@ -26,6 +26,16 @@ type Tx struct {
 	Conversation *ConversationClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// Resume is the client for interacting with the Resume builders.
+	Resume *ResumeClient
+	// ResumeEducation is the client for interacting with the ResumeEducation builders.
+	ResumeEducation *ResumeEducationClient
+	// ResumeExperience is the client for interacting with the ResumeExperience builders.
+	ResumeExperience *ResumeExperienceClient
+	// ResumeLog is the client for interacting with the ResumeLog builders.
+	ResumeLog *ResumeLogClient
+	// ResumeSkill is the client for interacting with the ResumeSkill builders.
+	ResumeSkill *ResumeSkillClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// Setting is the client for interacting with the Setting builders.
@@ -173,6 +183,11 @@ func (tx *Tx) init() {
 	tx.Attachment = NewAttachmentClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
+	tx.Resume = NewResumeClient(tx.config)
+	tx.ResumeEducation = NewResumeEducationClient(tx.config)
+	tx.ResumeExperience = NewResumeExperienceClient(tx.config)
+	tx.ResumeLog = NewResumeLogClient(tx.config)
+	tx.ResumeSkill = NewResumeSkillClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
 	tx.User = NewUserClient(tx.config)

@@ -40,6 +40,8 @@ const (
 	EdgeIdentities = "identities"
 	// EdgeConversations holds the string denoting the conversations edge name in mutations.
 	EdgeConversations = "conversations"
+	// EdgeResumes holds the string denoting the resumes edge name in mutations.
+	EdgeResumes = "resumes"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// LoginHistoriesTable is the table that holds the login_histories relation/edge.
@@ -63,6 +65,13 @@ const (
 	ConversationsInverseTable = "conversations"
 	// ConversationsColumn is the table column denoting the conversations relation/edge.
 	ConversationsColumn = "user_id"
+	// ResumesTable is the table that holds the resumes relation/edge.
+	ResumesTable = "resumes"
+	// ResumesInverseTable is the table name for the Resume entity.
+	// It exists in this package in order to avoid circular dependency with the "resume" package.
+	ResumesInverseTable = "resumes"
+	// ResumesColumn is the table column denoting the resumes relation/edge.
+	ResumesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -201,6 +210,20 @@ func ByConversations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newConversationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByResumesCount orders the results by resumes count.
+func ByResumesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newResumesStep(), opts...)
+	}
+}
+
+// ByResumes orders the results by resumes terms.
+func ByResumes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newResumesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newLoginHistoriesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -220,5 +243,12 @@ func newConversationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ConversationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ConversationsTable, ConversationsColumn),
+	)
+}
+func newResumesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ResumesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResumesTable, ResumesColumn),
 	)
 }

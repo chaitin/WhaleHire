@@ -14,6 +14,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db"
 	fileV1 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
 	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
+	resumeV1 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 )
@@ -24,6 +25,7 @@ type Server struct {
 	ent            *db.Client
 	logger         *slog.Logger
 	userV1         *userV1.UserHandler
+	resumeV1       *resumeV1.ResumeHandler
 	generalagentV1 *generalagentV1.GeneralAgentHandler
 	fileV1         *fileV1.FileHandler
 	version        *version.VersionInfo

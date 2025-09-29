@@ -18,6 +18,11 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/attachment"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
+	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
@@ -89,6 +94,11 @@ func checkColumn(table, column string) error {
 			attachment.Table:        attachment.ValidColumn,
 			conversation.Table:      conversation.ValidColumn,
 			message.Table:           message.ValidColumn,
+			resume.Table:            resume.ValidColumn,
+			resumeeducation.Table:   resumeeducation.ValidColumn,
+			resumeexperience.Table:  resumeexperience.ValidColumn,
+			resumelog.Table:         resumelog.ValidColumn,
+			resumeskill.Table:       resumeskill.ValidColumn,
 			role.Table:              role.ValidColumn,
 			setting.Table:           setting.ValidColumn,
 			user.Table:              user.ValidColumn,

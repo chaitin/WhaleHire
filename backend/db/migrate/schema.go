@@ -165,6 +165,144 @@ var (
 			},
 		},
 	}
+	// ResumesColumns holds the columns for the "resumes" table.
+	ResumesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Nullable: true},
+		{Name: "gender", Type: field.TypeString, Nullable: true},
+		{Name: "birthday", Type: field.TypeTime, Nullable: true},
+		{Name: "email", Type: field.TypeString, Nullable: true},
+		{Name: "phone", Type: field.TypeString, Nullable: true},
+		{Name: "current_city", Type: field.TypeString, Nullable: true},
+		{Name: "highest_education", Type: field.TypeString, Nullable: true, Size: 50},
+		{Name: "years_experience", Type: field.TypeFloat64, Nullable: true},
+		{Name: "resume_file_url", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "parsed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// ResumesTable holds the schema information for the "resumes" table.
+	ResumesTable = &schema.Table{
+		Name:       "resumes",
+		Columns:    ResumesColumns,
+		PrimaryKey: []*schema.Column{ResumesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resumes_users_resumes",
+				Columns:    []*schema.Column{ResumesColumns[16]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ResumeEducationsColumns holds the columns for the "resume_educations" table.
+	ResumeEducationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "school", Type: field.TypeString, Nullable: true},
+		{Name: "degree", Type: field.TypeString, Nullable: true},
+		{Name: "major", Type: field.TypeString, Nullable: true},
+		{Name: "start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resume_id", Type: field.TypeUUID},
+	}
+	// ResumeEducationsTable holds the schema information for the "resume_educations" table.
+	ResumeEducationsTable = &schema.Table{
+		Name:       "resume_educations",
+		Columns:    ResumeEducationsColumns,
+		PrimaryKey: []*schema.Column{ResumeEducationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_educations_resumes_educations",
+				Columns:    []*schema.Column{ResumeEducationsColumns[9]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ResumeExperiencesColumns holds the columns for the "resume_experiences" table.
+	ResumeExperiencesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "company", Type: field.TypeString, Nullable: true},
+		{Name: "position", Type: field.TypeString, Nullable: true},
+		{Name: "title", Type: field.TypeString, Nullable: true},
+		{Name: "start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resume_id", Type: field.TypeUUID},
+	}
+	// ResumeExperiencesTable holds the schema information for the "resume_experiences" table.
+	ResumeExperiencesTable = &schema.Table{
+		Name:       "resume_experiences",
+		Columns:    ResumeExperiencesColumns,
+		PrimaryKey: []*schema.Column{ResumeExperiencesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_experiences_resumes_experiences",
+				Columns:    []*schema.Column{ResumeExperiencesColumns[10]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ResumeLogsColumns holds the columns for the "resume_logs" table.
+	ResumeLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "action", Type: field.TypeString},
+		{Name: "message", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resume_id", Type: field.TypeUUID},
+	}
+	// ResumeLogsTable holds the schema information for the "resume_logs" table.
+	ResumeLogsTable = &schema.Table{
+		Name:       "resume_logs",
+		Columns:    ResumeLogsColumns,
+		PrimaryKey: []*schema.Column{ResumeLogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_logs_resumes_logs",
+				Columns:    []*schema.Column{ResumeLogsColumns[6]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ResumeSkillsColumns holds the columns for the "resume_skills" table.
+	ResumeSkillsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "skill_name", Type: field.TypeString, Nullable: true},
+		{Name: "level", Type: field.TypeString, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resume_id", Type: field.TypeUUID},
+	}
+	// ResumeSkillsTable holds the schema information for the "resume_skills" table.
+	ResumeSkillsTable = &schema.Table{
+		Name:       "resume_skills",
+		Columns:    ResumeSkillsColumns,
+		PrimaryKey: []*schema.Column{ResumeSkillsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_skills_resumes_skills",
+				Columns:    []*schema.Column{ResumeSkillsColumns[7]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -282,6 +420,11 @@ var (
 		AttachmentsTable,
 		ConversationsTable,
 		MessagesTable,
+		ResumesTable,
+		ResumeEducationsTable,
+		ResumeExperiencesTable,
+		ResumeLogsTable,
+		ResumeSkillsTable,
 		RolesTable,
 		SettingsTable,
 		UsersTable,
@@ -314,6 +457,26 @@ func init() {
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MessagesTable.Annotation = &entsql.Annotation{
 		Table: "messages",
+	}
+	ResumesTable.ForeignKeys[0].RefTable = UsersTable
+	ResumesTable.Annotation = &entsql.Annotation{
+		Table: "resumes",
+	}
+	ResumeEducationsTable.ForeignKeys[0].RefTable = ResumesTable
+	ResumeEducationsTable.Annotation = &entsql.Annotation{
+		Table: "resume_educations",
+	}
+	ResumeExperiencesTable.ForeignKeys[0].RefTable = ResumesTable
+	ResumeExperiencesTable.Annotation = &entsql.Annotation{
+		Table: "resume_experiences",
+	}
+	ResumeLogsTable.ForeignKeys[0].RefTable = ResumesTable
+	ResumeLogsTable.Annotation = &entsql.Annotation{
+		Table: "resume_logs",
+	}
+	ResumeSkillsTable.ForeignKeys[0].RefTable = ResumesTable
+	ResumeSkillsTable.Annotation = &entsql.Annotation{
+		Table: "resume_skills",
 	}
 	RolesTable.Annotation = &entsql.Annotation{
 		Table: "roles",

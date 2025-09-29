@@ -7,18 +7,20 @@
 package main
 
 import (
-	"log/slog"
-
 	"github.com/GoYoko/web"
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
-	v1_3 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
-	usecase3 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
-	v1_2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
-	repo2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
-	usecase2 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
+	v1_4 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
+	usecase4 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
+	v1_3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
+	repo3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
+	usecase3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
-	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	v1_2 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
+	repo2 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
+	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
+	usecase2 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	"github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
@@ -28,6 +30,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/store"
 	"github.com/chaitin/WhaleHire/backend/pkg/store/s3"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
+	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -56,15 +59,20 @@ func newServer() (*Server, error) {
 	activeMiddleware := middleware.NewActiveMiddleware(redisClient, slogLogger)
 	readOnlyMiddleware := middleware.NewReadOnlyMiddleware(configConfig)
 	userHandler := v1.NewUserHandler(web, userUsecase, authMiddleware, activeMiddleware, readOnlyMiddleware, sessionSession, slogLogger, configConfig)
-	generalAgentRepo := repo2.NewGeneralAgentRepo(client)
-	generalAgentUsecase := usecase2.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
-	generalAgentHandler := v1_2.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
+	resumeRepo := repo2.NewResumeRepo(client)
+	parserService := service.NewParserService(configConfig, slogLogger)
 	minioClient, err := s3.NewMinioClient(configConfig)
 	if err != nil {
 		return nil, err
 	}
-	fileUsecase := usecase3.NewFileUsecase(slogLogger, minioClient, configConfig)
-	fileHandler := v1_3.NewFileHandler(web, fileUsecase, authMiddleware)
+	storageService := service.NewStorageService(minioClient, configConfig)
+	resumeUsecase := usecase2.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, slogLogger)
+	resumeHandler := v1_2.NewResumeHandler(web, resumeUsecase, authMiddleware, slogLogger)
+	generalAgentRepo := repo3.NewGeneralAgentRepo(client)
+	generalAgentUsecase := usecase3.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
+	generalAgentHandler := v1_3.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
+	fileUsecase := usecase4.NewFileUsecase(slogLogger, minioClient, configConfig)
+	fileHandler := v1_4.NewFileHandler(web, fileUsecase, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
 		config:         configConfig,
@@ -72,6 +80,7 @@ func newServer() (*Server, error) {
 		ent:            client,
 		logger:         slogLogger,
 		userV1:         userHandler,
+		resumeV1:       resumeHandler,
 		generalagentV1: generalAgentHandler,
 		fileV1:         fileHandler,
 		version:        versionInfo,
@@ -87,7 +96,8 @@ type Server struct {
 	ent            *db.Client
 	logger         *slog.Logger
 	userV1         *v1.UserHandler
-	generalagentV1 *v1_2.GeneralAgentHandler
-	fileV1         *v1_3.FileHandler
+	resumeV1       *v1_2.ResumeHandler
+	generalagentV1 *v1_3.GeneralAgentHandler
+	fileV1         *v1_4.FileHandler
 	version        *version.VersionInfo
 }

@@ -15,6 +15,11 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
+	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
@@ -240,6 +245,141 @@ func (f TraverseMessage) Traverse(ctx context.Context, q db.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *db.MessageQuery", q)
 }
 
+// The ResumeFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeFunc func(context.Context, *db.ResumeQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeQuery", q)
+}
+
+// The TraverseResume type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResume func(context.Context, *db.ResumeQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResume) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResume) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeQuery", q)
+}
+
+// The ResumeEducationFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeEducationFunc func(context.Context, *db.ResumeEducationQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeEducationFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeEducationQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeEducationQuery", q)
+}
+
+// The TraverseResumeEducation type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeEducation func(context.Context, *db.ResumeEducationQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeEducation) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeEducation) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeEducationQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeEducationQuery", q)
+}
+
+// The ResumeExperienceFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeExperienceFunc func(context.Context, *db.ResumeExperienceQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeExperienceFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeExperienceQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeExperienceQuery", q)
+}
+
+// The TraverseResumeExperience type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeExperience func(context.Context, *db.ResumeExperienceQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeExperience) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeExperience) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeExperienceQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeExperienceQuery", q)
+}
+
+// The ResumeLogFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeLogFunc func(context.Context, *db.ResumeLogQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeLogFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeLogQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeLogQuery", q)
+}
+
+// The TraverseResumeLog type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeLog func(context.Context, *db.ResumeLogQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeLog) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeLog) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeLogQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeLogQuery", q)
+}
+
+// The ResumeSkillFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeSkillFunc func(context.Context, *db.ResumeSkillQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeSkillFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeSkillQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeSkillQuery", q)
+}
+
+// The TraverseResumeSkill type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeSkill func(context.Context, *db.ResumeSkillQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeSkill) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeSkill) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeSkillQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeSkillQuery", q)
+}
+
 // The RoleFunc type is an adapter to allow the use of ordinary function as a Querier.
 type RoleFunc func(context.Context, *db.RoleQuery) (db.Value, error)
 
@@ -390,6 +530,16 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.ConversationQuery, predicate.Conversation, conversation.OrderOption]{typ: db.TypeConversation, tq: q}, nil
 	case *db.MessageQuery:
 		return &query[*db.MessageQuery, predicate.Message, message.OrderOption]{typ: db.TypeMessage, tq: q}, nil
+	case *db.ResumeQuery:
+		return &query[*db.ResumeQuery, predicate.Resume, resume.OrderOption]{typ: db.TypeResume, tq: q}, nil
+	case *db.ResumeEducationQuery:
+		return &query[*db.ResumeEducationQuery, predicate.ResumeEducation, resumeeducation.OrderOption]{typ: db.TypeResumeEducation, tq: q}, nil
+	case *db.ResumeExperienceQuery:
+		return &query[*db.ResumeExperienceQuery, predicate.ResumeExperience, resumeexperience.OrderOption]{typ: db.TypeResumeExperience, tq: q}, nil
+	case *db.ResumeLogQuery:
+		return &query[*db.ResumeLogQuery, predicate.ResumeLog, resumelog.OrderOption]{typ: db.TypeResumeLog, tq: q}, nil
+	case *db.ResumeSkillQuery:
+		return &query[*db.ResumeSkillQuery, predicate.ResumeSkill, resumeskill.OrderOption]{typ: db.TypeResumeSkill, tq: q}, nil
 	case *db.RoleQuery:
 		return &query[*db.RoleQuery, predicate.Role, role.OrderOption]{typ: db.TypeRole, tq: q}, nil
 	case *db.SettingQuery:

@@ -95,6 +95,76 @@ func (m *MessageQuery) Page(ctx context.Context, page, size int) ([]*Message, *P
 	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (r *ResumeQuery) Page(ctx context.Context, page, size int) ([]*Resume, *PageInfo, error) {
+	cnt, err := r.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rs, err := r.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (re *ResumeEducationQuery) Page(ctx context.Context, page, size int) ([]*ResumeEducation, *PageInfo, error) {
+	cnt, err := re.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rs, err := re.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (re *ResumeExperienceQuery) Page(ctx context.Context, page, size int) ([]*ResumeExperience, *PageInfo, error) {
+	cnt, err := re.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rs, err := re.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (rl *ResumeLogQuery) Page(ctx context.Context, page, size int) ([]*ResumeLog, *PageInfo, error) {
+	cnt, err := rl.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rs, err := rl.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (rs *ResumeSkillQuery) Page(ctx context.Context, page, size int) ([]*ResumeSkill, *PageInfo, error) {
+	cnt, err := rs.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	rsk, err := rs.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return rsk, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (r *RoleQuery) Page(ctx context.Context, page, size int) ([]*Role, *PageInfo, error) {
 	cnt, err := r.Count(ctx)
 	if err != nil {

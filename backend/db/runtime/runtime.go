@@ -11,6 +11,11 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/attachment"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
+	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
@@ -145,6 +150,123 @@ func init() {
 	messageDescID := messageFields[0].Descriptor()
 	// message.DefaultID holds the default value on creation for the id field.
 	message.DefaultID = messageDescID.Default.(func() uuid.UUID)
+	resumeMixin := schema.Resume{}.Mixin()
+	resumeMixinHooks0 := resumeMixin[0].Hooks()
+	resume.Hooks[0] = resumeMixinHooks0[0]
+	resumeMixinInters0 := resumeMixin[0].Interceptors()
+	resume.Interceptors[0] = resumeMixinInters0[0]
+	resumeFields := schema.Resume{}.Fields()
+	_ = resumeFields
+	// resumeDescHighestEducation is the schema descriptor for highest_education field.
+	resumeDescHighestEducation := resumeFields[8].Descriptor()
+	// resume.HighestEducationValidator is a validator for the "highest_education" field. It is called by the builders before save.
+	resume.HighestEducationValidator = resumeDescHighestEducation.Validators[0].(func(string) error)
+	// resumeDescStatus is the schema descriptor for status field.
+	resumeDescStatus := resumeFields[11].Descriptor()
+	// resume.DefaultStatus holds the default value on creation for the status field.
+	resume.DefaultStatus = resumeDescStatus.Default.(string)
+	// resumeDescCreatedAt is the schema descriptor for created_at field.
+	resumeDescCreatedAt := resumeFields[14].Descriptor()
+	// resume.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resume.DefaultCreatedAt = resumeDescCreatedAt.Default.(func() time.Time)
+	// resumeDescUpdatedAt is the schema descriptor for updated_at field.
+	resumeDescUpdatedAt := resumeFields[15].Descriptor()
+	// resume.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resume.DefaultUpdatedAt = resumeDescUpdatedAt.Default.(func() time.Time)
+	// resume.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resume.UpdateDefaultUpdatedAt = resumeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumeDescID is the schema descriptor for id field.
+	resumeDescID := resumeFields[0].Descriptor()
+	// resume.DefaultID holds the default value on creation for the id field.
+	resume.DefaultID = resumeDescID.Default.(func() uuid.UUID)
+	resumeeducationMixin := schema.ResumeEducation{}.Mixin()
+	resumeeducationMixinHooks0 := resumeeducationMixin[0].Hooks()
+	resumeeducation.Hooks[0] = resumeeducationMixinHooks0[0]
+	resumeeducationMixinInters0 := resumeeducationMixin[0].Interceptors()
+	resumeeducation.Interceptors[0] = resumeeducationMixinInters0[0]
+	resumeeducationFields := schema.ResumeEducation{}.Fields()
+	_ = resumeeducationFields
+	// resumeeducationDescCreatedAt is the schema descriptor for created_at field.
+	resumeeducationDescCreatedAt := resumeeducationFields[7].Descriptor()
+	// resumeeducation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumeeducation.DefaultCreatedAt = resumeeducationDescCreatedAt.Default.(func() time.Time)
+	// resumeeducationDescUpdatedAt is the schema descriptor for updated_at field.
+	resumeeducationDescUpdatedAt := resumeeducationFields[8].Descriptor()
+	// resumeeducation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumeeducation.DefaultUpdatedAt = resumeeducationDescUpdatedAt.Default.(func() time.Time)
+	// resumeeducation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumeeducation.UpdateDefaultUpdatedAt = resumeeducationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumeeducationDescID is the schema descriptor for id field.
+	resumeeducationDescID := resumeeducationFields[0].Descriptor()
+	// resumeeducation.DefaultID holds the default value on creation for the id field.
+	resumeeducation.DefaultID = resumeeducationDescID.Default.(func() uuid.UUID)
+	resumeexperienceMixin := schema.ResumeExperience{}.Mixin()
+	resumeexperienceMixinHooks0 := resumeexperienceMixin[0].Hooks()
+	resumeexperience.Hooks[0] = resumeexperienceMixinHooks0[0]
+	resumeexperienceMixinInters0 := resumeexperienceMixin[0].Interceptors()
+	resumeexperience.Interceptors[0] = resumeexperienceMixinInters0[0]
+	resumeexperienceFields := schema.ResumeExperience{}.Fields()
+	_ = resumeexperienceFields
+	// resumeexperienceDescCreatedAt is the schema descriptor for created_at field.
+	resumeexperienceDescCreatedAt := resumeexperienceFields[8].Descriptor()
+	// resumeexperience.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumeexperience.DefaultCreatedAt = resumeexperienceDescCreatedAt.Default.(func() time.Time)
+	// resumeexperienceDescUpdatedAt is the schema descriptor for updated_at field.
+	resumeexperienceDescUpdatedAt := resumeexperienceFields[9].Descriptor()
+	// resumeexperience.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumeexperience.DefaultUpdatedAt = resumeexperienceDescUpdatedAt.Default.(func() time.Time)
+	// resumeexperience.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumeexperience.UpdateDefaultUpdatedAt = resumeexperienceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumeexperienceDescID is the schema descriptor for id field.
+	resumeexperienceDescID := resumeexperienceFields[0].Descriptor()
+	// resumeexperience.DefaultID holds the default value on creation for the id field.
+	resumeexperience.DefaultID = resumeexperienceDescID.Default.(func() uuid.UUID)
+	resumelogMixin := schema.ResumeLog{}.Mixin()
+	resumelogMixinHooks0 := resumelogMixin[0].Hooks()
+	resumelog.Hooks[0] = resumelogMixinHooks0[0]
+	resumelogMixinInters0 := resumelogMixin[0].Interceptors()
+	resumelog.Interceptors[0] = resumelogMixinInters0[0]
+	resumelogFields := schema.ResumeLog{}.Fields()
+	_ = resumelogFields
+	// resumelogDescAction is the schema descriptor for action field.
+	resumelogDescAction := resumelogFields[2].Descriptor()
+	// resumelog.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	resumelog.ActionValidator = resumelogDescAction.Validators[0].(func(string) error)
+	// resumelogDescCreatedAt is the schema descriptor for created_at field.
+	resumelogDescCreatedAt := resumelogFields[4].Descriptor()
+	// resumelog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumelog.DefaultCreatedAt = resumelogDescCreatedAt.Default.(func() time.Time)
+	// resumelogDescUpdatedAt is the schema descriptor for updated_at field.
+	resumelogDescUpdatedAt := resumelogFields[5].Descriptor()
+	// resumelog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumelog.DefaultUpdatedAt = resumelogDescUpdatedAt.Default.(func() time.Time)
+	// resumelog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumelog.UpdateDefaultUpdatedAt = resumelogDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumelogDescID is the schema descriptor for id field.
+	resumelogDescID := resumelogFields[0].Descriptor()
+	// resumelog.DefaultID holds the default value on creation for the id field.
+	resumelog.DefaultID = resumelogDescID.Default.(func() uuid.UUID)
+	resumeskillMixin := schema.ResumeSkill{}.Mixin()
+	resumeskillMixinHooks0 := resumeskillMixin[0].Hooks()
+	resumeskill.Hooks[0] = resumeskillMixinHooks0[0]
+	resumeskillMixinInters0 := resumeskillMixin[0].Interceptors()
+	resumeskill.Interceptors[0] = resumeskillMixinInters0[0]
+	resumeskillFields := schema.ResumeSkill{}.Fields()
+	_ = resumeskillFields
+	// resumeskillDescCreatedAt is the schema descriptor for created_at field.
+	resumeskillDescCreatedAt := resumeskillFields[5].Descriptor()
+	// resumeskill.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumeskill.DefaultCreatedAt = resumeskillDescCreatedAt.Default.(func() time.Time)
+	// resumeskillDescUpdatedAt is the schema descriptor for updated_at field.
+	resumeskillDescUpdatedAt := resumeskillFields[6].Descriptor()
+	// resumeskill.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumeskill.DefaultUpdatedAt = resumeskillDescUpdatedAt.Default.(func() time.Time)
+	// resumeskill.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumeskill.UpdateDefaultUpdatedAt = resumeskillDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumeskillDescID is the schema descriptor for id field.
+	resumeskillDescID := resumeskillFields[0].Descriptor()
+	// resumeskill.DefaultID holds the default value on creation for the id field.
+	resumeskill.DefaultID = resumeskillDescID.Default.(func() uuid.UUID)
 	roleFields := schema.Role{}.Fields()
 	_ = roleFields
 	// roleDescCreatedAt is the schema descriptor for created_at field.
