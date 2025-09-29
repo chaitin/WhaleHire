@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
@@ -22,15 +23,17 @@ type StorageService struct {
 	bucket       string
 	maxFileSize  int64
 	allowedTypes []string
+	logger       *slog.Logger
 }
 
 // NewStorageService 创建新的存储服务实例
-func NewStorageService(minioClient *s3.MinioClient, cfg *config.Config) domain.StorageService {
+func NewStorageService(minioClient *s3.MinioClient, cfg *config.Config, logger *slog.Logger) domain.StorageService {
 	return &StorageService{
 		minioClient:  minioClient,
 		bucket:       cfg.S3.BucketName,
 		maxFileSize:  cfg.FileStorage.MaxFileSize,
 		allowedTypes: cfg.FileStorage.AllowedTypes,
+		logger:       logger,
 	}
 }
 
@@ -62,7 +65,10 @@ func (s *StorageService) Upload(ctx context.Context, file io.Reader, filename st
 	// 检查文件大小
 	if info.Size > s.maxFileSize {
 		// 删除已上传的文件
-		s.minioClient.Client.RemoveObject(ctx, s.bucket, objectName, minio.RemoveObjectOptions{})
+		if err := s.minioClient.Client.RemoveObject(ctx, s.bucket, objectName, minio.RemoveObjectOptions{}); err != nil {
+			// 记录删除失败的错误，但不影响主要错误的返回
+			s.logger.Warn("删除文件失败", "error", err, "objectName", objectName)
+		}
 		return nil, fmt.Errorf("文件大小超出限制: %d bytes", info.Size)
 	}
 

@@ -45,6 +45,7 @@ func (s *DocumentParserService) ParseDocument(ctx context.Context, filePath stri
 		if _, delErr := s.client.DeleteFile(context.Background(), uploadResp.ID); delErr != nil {
 			// 记录删除失败，但不影响主流程
 			// 这里可以根据需要添加日志记录
+			_ = delErr // 避免未使用变量警告
 		}
 	}()
 

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
@@ -395,6 +396,21 @@ func (ru *ResumeUpdate) AddLogs(r ...*ResumeLog) *ResumeUpdate {
 	return ru.AddLogIDs(ids...)
 }
 
+// AddDocumentParseIDs adds the "document_parse" edge to the ResumeDocumentParse entity by IDs.
+func (ru *ResumeUpdate) AddDocumentParseIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.AddDocumentParseIDs(ids...)
+	return ru
+}
+
+// AddDocumentParse adds the "document_parse" edges to the ResumeDocumentParse entity.
+func (ru *ResumeUpdate) AddDocumentParse(r ...*ResumeDocumentParse) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.AddDocumentParseIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (ru *ResumeUpdate) Mutation() *ResumeMutation {
 	return ru.mutation
@@ -488,6 +504,27 @@ func (ru *ResumeUpdate) RemoveLogs(r ...*ResumeLog) *ResumeUpdate {
 		ids[i] = r[i].ID
 	}
 	return ru.RemoveLogIDs(ids...)
+}
+
+// ClearDocumentParse clears all "document_parse" edges to the ResumeDocumentParse entity.
+func (ru *ResumeUpdate) ClearDocumentParse() *ResumeUpdate {
+	ru.mutation.ClearDocumentParse()
+	return ru
+}
+
+// RemoveDocumentParseIDs removes the "document_parse" edge to ResumeDocumentParse entities by IDs.
+func (ru *ResumeUpdate) RemoveDocumentParseIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.RemoveDocumentParseIDs(ids...)
+	return ru
+}
+
+// RemoveDocumentParse removes "document_parse" edges to ResumeDocumentParse entities.
+func (ru *ResumeUpdate) RemoveDocumentParse(r ...*ResumeDocumentParse) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.RemoveDocumentParseIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -849,6 +886,51 @@ func (ru *ResumeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumelog.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.DocumentParseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.DocumentParseTable,
+			Columns: []string{resume.DocumentParseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedDocumentParseIDs(); len(nodes) > 0 && !ru.mutation.DocumentParseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.DocumentParseTable,
+			Columns: []string{resume.DocumentParseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.DocumentParseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.DocumentParseTable,
+			Columns: []string{resume.DocumentParseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1238,6 +1320,21 @@ func (ruo *ResumeUpdateOne) AddLogs(r ...*ResumeLog) *ResumeUpdateOne {
 	return ruo.AddLogIDs(ids...)
 }
 
+// AddDocumentParseIDs adds the "document_parse" edge to the ResumeDocumentParse entity by IDs.
+func (ruo *ResumeUpdateOne) AddDocumentParseIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.AddDocumentParseIDs(ids...)
+	return ruo
+}
+
+// AddDocumentParse adds the "document_parse" edges to the ResumeDocumentParse entity.
+func (ruo *ResumeUpdateOne) AddDocumentParse(r ...*ResumeDocumentParse) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.AddDocumentParseIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (ruo *ResumeUpdateOne) Mutation() *ResumeMutation {
 	return ruo.mutation
@@ -1331,6 +1428,27 @@ func (ruo *ResumeUpdateOne) RemoveLogs(r ...*ResumeLog) *ResumeUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return ruo.RemoveLogIDs(ids...)
+}
+
+// ClearDocumentParse clears all "document_parse" edges to the ResumeDocumentParse entity.
+func (ruo *ResumeUpdateOne) ClearDocumentParse() *ResumeUpdateOne {
+	ruo.mutation.ClearDocumentParse()
+	return ruo
+}
+
+// RemoveDocumentParseIDs removes the "document_parse" edge to ResumeDocumentParse entities by IDs.
+func (ruo *ResumeUpdateOne) RemoveDocumentParseIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.RemoveDocumentParseIDs(ids...)
+	return ruo
+}
+
+// RemoveDocumentParse removes "document_parse" edges to ResumeDocumentParse entities.
+func (ruo *ResumeUpdateOne) RemoveDocumentParse(r ...*ResumeDocumentParse) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.RemoveDocumentParseIDs(ids...)
 }
 
 // Where appends a list predicates to the ResumeUpdate builder.
@@ -1722,6 +1840,51 @@ func (ruo *ResumeUpdateOne) sqlSave(ctx context.Context) (_node *Resume, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumelog.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.DocumentParseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.DocumentParseTable,
+			Columns: []string{resume.DocumentParseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedDocumentParseIDs(); len(nodes) > 0 && !ruo.mutation.DocumentParseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.DocumentParseTable,
+			Columns: []string{resume.DocumentParseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.DocumentParseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.DocumentParseTable,
+			Columns: []string{resume.DocumentParseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

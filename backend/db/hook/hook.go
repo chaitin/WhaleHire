@@ -93,6 +93,18 @@ func (f ResumeFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeMutation", m)
 }
 
+// The ResumeDocumentParseFunc type is an adapter to allow the use of ordinary
+// function as ResumeDocumentParse mutator.
+type ResumeDocumentParseFunc func(context.Context, *db.ResumeDocumentParseMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeDocumentParseFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeDocumentParseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeDocumentParseMutation", m)
+}
+
 // The ResumeEducationFunc type is an adapter to allow the use of ordinary
 // function as ResumeEducation mutator.
 type ResumeEducationFunc func(context.Context, *db.ResumeEducationMutation) (db.Value, error)

@@ -23,6 +23,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
@@ -55,6 +56,8 @@ type Client struct {
 	Message *MessageClient
 	// Resume is the client for interacting with the Resume builders.
 	Resume *ResumeClient
+	// ResumeDocumentParse is the client for interacting with the ResumeDocumentParse builders.
+	ResumeDocumentParse *ResumeDocumentParseClient
 	// ResumeEducation is the client for interacting with the ResumeEducation builders.
 	ResumeEducation *ResumeEducationClient
 	// ResumeExperience is the client for interacting with the ResumeExperience builders.
@@ -91,6 +94,7 @@ func (c *Client) init() {
 	c.Conversation = NewConversationClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Resume = NewResumeClient(c.config)
+	c.ResumeDocumentParse = NewResumeDocumentParseClient(c.config)
 	c.ResumeEducation = NewResumeEducationClient(c.config)
 	c.ResumeExperience = NewResumeExperienceClient(c.config)
 	c.ResumeLog = NewResumeLogClient(c.config)
@@ -190,24 +194,25 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:               ctx,
-		config:            cfg,
-		Admin:             NewAdminClient(cfg),
-		AdminLoginHistory: NewAdminLoginHistoryClient(cfg),
-		AdminRole:         NewAdminRoleClient(cfg),
-		Attachment:        NewAttachmentClient(cfg),
-		Conversation:      NewConversationClient(cfg),
-		Message:           NewMessageClient(cfg),
-		Resume:            NewResumeClient(cfg),
-		ResumeEducation:   NewResumeEducationClient(cfg),
-		ResumeExperience:  NewResumeExperienceClient(cfg),
-		ResumeLog:         NewResumeLogClient(cfg),
-		ResumeSkill:       NewResumeSkillClient(cfg),
-		Role:              NewRoleClient(cfg),
-		Setting:           NewSettingClient(cfg),
-		User:              NewUserClient(cfg),
-		UserIdentity:      NewUserIdentityClient(cfg),
-		UserLoginHistory:  NewUserLoginHistoryClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		Admin:               NewAdminClient(cfg),
+		AdminLoginHistory:   NewAdminLoginHistoryClient(cfg),
+		AdminRole:           NewAdminRoleClient(cfg),
+		Attachment:          NewAttachmentClient(cfg),
+		Conversation:        NewConversationClient(cfg),
+		Message:             NewMessageClient(cfg),
+		Resume:              NewResumeClient(cfg),
+		ResumeDocumentParse: NewResumeDocumentParseClient(cfg),
+		ResumeEducation:     NewResumeEducationClient(cfg),
+		ResumeExperience:    NewResumeExperienceClient(cfg),
+		ResumeLog:           NewResumeLogClient(cfg),
+		ResumeSkill:         NewResumeSkillClient(cfg),
+		Role:                NewRoleClient(cfg),
+		Setting:             NewSettingClient(cfg),
+		User:                NewUserClient(cfg),
+		UserIdentity:        NewUserIdentityClient(cfg),
+		UserLoginHistory:    NewUserLoginHistoryClient(cfg),
 	}, nil
 }
 
@@ -225,24 +230,25 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:               ctx,
-		config:            cfg,
-		Admin:             NewAdminClient(cfg),
-		AdminLoginHistory: NewAdminLoginHistoryClient(cfg),
-		AdminRole:         NewAdminRoleClient(cfg),
-		Attachment:        NewAttachmentClient(cfg),
-		Conversation:      NewConversationClient(cfg),
-		Message:           NewMessageClient(cfg),
-		Resume:            NewResumeClient(cfg),
-		ResumeEducation:   NewResumeEducationClient(cfg),
-		ResumeExperience:  NewResumeExperienceClient(cfg),
-		ResumeLog:         NewResumeLogClient(cfg),
-		ResumeSkill:       NewResumeSkillClient(cfg),
-		Role:              NewRoleClient(cfg),
-		Setting:           NewSettingClient(cfg),
-		User:              NewUserClient(cfg),
-		UserIdentity:      NewUserIdentityClient(cfg),
-		UserLoginHistory:  NewUserLoginHistoryClient(cfg),
+		ctx:                 ctx,
+		config:              cfg,
+		Admin:               NewAdminClient(cfg),
+		AdminLoginHistory:   NewAdminLoginHistoryClient(cfg),
+		AdminRole:           NewAdminRoleClient(cfg),
+		Attachment:          NewAttachmentClient(cfg),
+		Conversation:        NewConversationClient(cfg),
+		Message:             NewMessageClient(cfg),
+		Resume:              NewResumeClient(cfg),
+		ResumeDocumentParse: NewResumeDocumentParseClient(cfg),
+		ResumeEducation:     NewResumeEducationClient(cfg),
+		ResumeExperience:    NewResumeExperienceClient(cfg),
+		ResumeLog:           NewResumeLogClient(cfg),
+		ResumeSkill:         NewResumeSkillClient(cfg),
+		Role:                NewRoleClient(cfg),
+		Setting:             NewSettingClient(cfg),
+		User:                NewUserClient(cfg),
+		UserIdentity:        NewUserIdentityClient(cfg),
+		UserLoginHistory:    NewUserLoginHistoryClient(cfg),
 	}, nil
 }
 
@@ -273,8 +279,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Admin, c.AdminLoginHistory, c.AdminRole, c.Attachment, c.Conversation,
-		c.Message, c.Resume, c.ResumeEducation, c.ResumeExperience, c.ResumeLog,
-		c.ResumeSkill, c.Role, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
+		c.ResumeExperience, c.ResumeLog, c.ResumeSkill, c.Role, c.Setting, c.User,
+		c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Use(hooks...)
 	}
@@ -285,8 +292,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Admin, c.AdminLoginHistory, c.AdminRole, c.Attachment, c.Conversation,
-		c.Message, c.Resume, c.ResumeEducation, c.ResumeExperience, c.ResumeLog,
-		c.ResumeSkill, c.Role, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
+		c.ResumeExperience, c.ResumeLog, c.ResumeSkill, c.Role, c.Setting, c.User,
+		c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -309,6 +317,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Message.mutate(ctx, m)
 	case *ResumeMutation:
 		return c.Resume.mutate(ctx, m)
+	case *ResumeDocumentParseMutation:
+		return c.ResumeDocumentParse.mutate(ctx, m)
 	case *ResumeEducationMutation:
 		return c.ResumeEducation.mutate(ctx, m)
 	case *ResumeExperienceMutation:
@@ -1500,6 +1510,22 @@ func (c *ResumeClient) QueryLogs(r *Resume) *ResumeLogQuery {
 	return query
 }
 
+// QueryDocumentParse queries the document_parse edge of a Resume.
+func (c *ResumeClient) QueryDocumentParse(r *Resume) *ResumeDocumentParseQuery {
+	query := (&ResumeDocumentParseClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, id),
+			sqlgraph.To(resumedocumentparse.Table, resumedocumentparse.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.DocumentParseTable, resume.DocumentParseColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ResumeClient) Hooks() []Hook {
 	hooks := c.hooks.Resume
@@ -1524,6 +1550,157 @@ func (c *ResumeClient) mutate(ctx context.Context, m *ResumeMutation) (Value, er
 		return (&ResumeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("db: unknown Resume mutation op: %q", m.Op())
+	}
+}
+
+// ResumeDocumentParseClient is a client for the ResumeDocumentParse schema.
+type ResumeDocumentParseClient struct {
+	config
+}
+
+// NewResumeDocumentParseClient returns a client for the ResumeDocumentParse from the given config.
+func NewResumeDocumentParseClient(c config) *ResumeDocumentParseClient {
+	return &ResumeDocumentParseClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resumedocumentparse.Hooks(f(g(h())))`.
+func (c *ResumeDocumentParseClient) Use(hooks ...Hook) {
+	c.hooks.ResumeDocumentParse = append(c.hooks.ResumeDocumentParse, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `resumedocumentparse.Intercept(f(g(h())))`.
+func (c *ResumeDocumentParseClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ResumeDocumentParse = append(c.inters.ResumeDocumentParse, interceptors...)
+}
+
+// Create returns a builder for creating a ResumeDocumentParse entity.
+func (c *ResumeDocumentParseClient) Create() *ResumeDocumentParseCreate {
+	mutation := newResumeDocumentParseMutation(c.config, OpCreate)
+	return &ResumeDocumentParseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ResumeDocumentParse entities.
+func (c *ResumeDocumentParseClient) CreateBulk(builders ...*ResumeDocumentParseCreate) *ResumeDocumentParseCreateBulk {
+	return &ResumeDocumentParseCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ResumeDocumentParseClient) MapCreateBulk(slice any, setFunc func(*ResumeDocumentParseCreate, int)) *ResumeDocumentParseCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ResumeDocumentParseCreateBulk{err: fmt.Errorf("calling to ResumeDocumentParseClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ResumeDocumentParseCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ResumeDocumentParseCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ResumeDocumentParse.
+func (c *ResumeDocumentParseClient) Update() *ResumeDocumentParseUpdate {
+	mutation := newResumeDocumentParseMutation(c.config, OpUpdate)
+	return &ResumeDocumentParseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResumeDocumentParseClient) UpdateOne(rdp *ResumeDocumentParse) *ResumeDocumentParseUpdateOne {
+	mutation := newResumeDocumentParseMutation(c.config, OpUpdateOne, withResumeDocumentParse(rdp))
+	return &ResumeDocumentParseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResumeDocumentParseClient) UpdateOneID(id uuid.UUID) *ResumeDocumentParseUpdateOne {
+	mutation := newResumeDocumentParseMutation(c.config, OpUpdateOne, withResumeDocumentParseID(id))
+	return &ResumeDocumentParseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResumeDocumentParse.
+func (c *ResumeDocumentParseClient) Delete() *ResumeDocumentParseDelete {
+	mutation := newResumeDocumentParseMutation(c.config, OpDelete)
+	return &ResumeDocumentParseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ResumeDocumentParseClient) DeleteOne(rdp *ResumeDocumentParse) *ResumeDocumentParseDeleteOne {
+	return c.DeleteOneID(rdp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ResumeDocumentParseClient) DeleteOneID(id uuid.UUID) *ResumeDocumentParseDeleteOne {
+	builder := c.Delete().Where(resumedocumentparse.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResumeDocumentParseDeleteOne{builder}
+}
+
+// Query returns a query builder for ResumeDocumentParse.
+func (c *ResumeDocumentParseClient) Query() *ResumeDocumentParseQuery {
+	return &ResumeDocumentParseQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeResumeDocumentParse},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ResumeDocumentParse entity by its id.
+func (c *ResumeDocumentParseClient) Get(ctx context.Context, id uuid.UUID) (*ResumeDocumentParse, error) {
+	return c.Query().Where(resumedocumentparse.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResumeDocumentParseClient) GetX(ctx context.Context, id uuid.UUID) *ResumeDocumentParse {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryResume queries the resume edge of a ResumeDocumentParse.
+func (c *ResumeDocumentParseClient) QueryResume(rdp *ResumeDocumentParse) *ResumeQuery {
+	query := (&ResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rdp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumedocumentparse.Table, resumedocumentparse.FieldID, id),
+			sqlgraph.To(resume.Table, resume.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, resumedocumentparse.ResumeTable, resumedocumentparse.ResumeColumn),
+		)
+		fromV = sqlgraph.Neighbors(rdp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ResumeDocumentParseClient) Hooks() []Hook {
+	hooks := c.hooks.ResumeDocumentParse
+	return append(hooks[:len(hooks):len(hooks)], resumedocumentparse.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ResumeDocumentParseClient) Interceptors() []Interceptor {
+	inters := c.inters.ResumeDocumentParse
+	return append(inters[:len(inters):len(inters)], resumedocumentparse.Interceptors[:]...)
+}
+
+func (c *ResumeDocumentParseClient) mutate(ctx context.Context, m *ResumeDocumentParseMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ResumeDocumentParseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ResumeDocumentParseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ResumeDocumentParseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ResumeDocumentParseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ResumeDocumentParse mutation op: %q", m.Op())
 	}
 }
 
@@ -2932,13 +3109,13 @@ func (c *UserLoginHistoryClient) mutate(ctx context.Context, m *UserLoginHistory
 type (
 	hooks struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Message, Resume,
-		ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill, Role, Setting, User,
-		UserIdentity, UserLoginHistory []ent.Hook
+		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill,
+		Role, Setting, User, UserIdentity, UserLoginHistory []ent.Hook
 	}
 	inters struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Message, Resume,
-		ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill, Role, Setting, User,
-		UserIdentity, UserLoginHistory []ent.Interceptor
+		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill,
+		Role, Setting, User, UserIdentity, UserLoginHistory []ent.Interceptor
 	}
 )
 

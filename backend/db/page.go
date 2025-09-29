@@ -17,12 +17,12 @@ func (a *AdminQuery) Page(ctx context.Context, page, size int) ([]*Admin, *PageI
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := a.Offset(offset).Limit(size).All(ctx)
+	items, err := a.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (alh *AdminLoginHistoryQuery) Page(ctx context.Context, page, size int) ([]*AdminLoginHistory, *PageInfo, error) {
@@ -31,12 +31,12 @@ func (alh *AdminLoginHistoryQuery) Page(ctx context.Context, page, size int) ([]
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := alh.Offset(offset).Limit(size).All(ctx)
+	items, err := alh.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (ar *AdminRoleQuery) Page(ctx context.Context, page, size int) ([]*AdminRole, *PageInfo, error) {
@@ -45,12 +45,12 @@ func (ar *AdminRoleQuery) Page(ctx context.Context, page, size int) ([]*AdminRol
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := ar.Offset(offset).Limit(size).All(ctx)
+	items, err := ar.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (a *AttachmentQuery) Page(ctx context.Context, page, size int) ([]*Attachment, *PageInfo, error) {
@@ -59,12 +59,12 @@ func (a *AttachmentQuery) Page(ctx context.Context, page, size int) ([]*Attachme
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := a.Offset(offset).Limit(size).All(ctx)
+	items, err := a.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (c *ConversationQuery) Page(ctx context.Context, page, size int) ([]*Conversation, *PageInfo, error) {
@@ -73,12 +73,12 @@ func (c *ConversationQuery) Page(ctx context.Context, page, size int) ([]*Conver
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := c.Offset(offset).Limit(size).All(ctx)
+	items, err := c.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (m *MessageQuery) Page(ctx context.Context, page, size int) ([]*Message, *PageInfo, error) {
@@ -87,12 +87,12 @@ func (m *MessageQuery) Page(ctx context.Context, page, size int) ([]*Message, *P
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := m.Offset(offset).Limit(size).All(ctx)
+	items, err := m.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (r *ResumeQuery) Page(ctx context.Context, page, size int) ([]*Resume, *PageInfo, error) {
@@ -101,12 +101,26 @@ func (r *ResumeQuery) Page(ctx context.Context, page, size int) ([]*Resume, *Pag
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := r.Offset(offset).Limit(size).All(ctx)
+	items, err := r.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (rdp *ResumeDocumentParseQuery) Page(ctx context.Context, page, size int) ([]*ResumeDocumentParse, *PageInfo, error) {
+	cnt, err := rdp.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := rdp.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (re *ResumeEducationQuery) Page(ctx context.Context, page, size int) ([]*ResumeEducation, *PageInfo, error) {
@@ -115,12 +129,12 @@ func (re *ResumeEducationQuery) Page(ctx context.Context, page, size int) ([]*Re
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := re.Offset(offset).Limit(size).All(ctx)
+	items, err := re.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (re *ResumeExperienceQuery) Page(ctx context.Context, page, size int) ([]*ResumeExperience, *PageInfo, error) {
@@ -129,12 +143,12 @@ func (re *ResumeExperienceQuery) Page(ctx context.Context, page, size int) ([]*R
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := re.Offset(offset).Limit(size).All(ctx)
+	items, err := re.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (rl *ResumeLogQuery) Page(ctx context.Context, page, size int) ([]*ResumeLog, *PageInfo, error) {
@@ -143,12 +157,12 @@ func (rl *ResumeLogQuery) Page(ctx context.Context, page, size int) ([]*ResumeLo
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := rl.Offset(offset).Limit(size).All(ctx)
+	items, err := rl.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (rs *ResumeSkillQuery) Page(ctx context.Context, page, size int) ([]*ResumeSkill, *PageInfo, error) {
@@ -157,12 +171,12 @@ func (rs *ResumeSkillQuery) Page(ctx context.Context, page, size int) ([]*Resume
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rsk, err := rs.Offset(offset).Limit(size).All(ctx)
+	items, err := rs.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rsk, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (r *RoleQuery) Page(ctx context.Context, page, size int) ([]*Role, *PageInfo, error) {
@@ -171,12 +185,12 @@ func (r *RoleQuery) Page(ctx context.Context, page, size int) ([]*Role, *PageInf
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := r.Offset(offset).Limit(size).All(ctx)
+	items, err := r.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (s *SettingQuery) Page(ctx context.Context, page, size int) ([]*Setting, *PageInfo, error) {
@@ -185,12 +199,12 @@ func (s *SettingQuery) Page(ctx context.Context, page, size int) ([]*Setting, *P
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := s.Offset(offset).Limit(size).All(ctx)
+	items, err := s.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (u *UserQuery) Page(ctx context.Context, page, size int) ([]*User, *PageInfo, error) {
@@ -199,12 +213,12 @@ func (u *UserQuery) Page(ctx context.Context, page, size int) ([]*User, *PageInf
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := u.Offset(offset).Limit(size).All(ctx)
+	items, err := u.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (ui *UserIdentityQuery) Page(ctx context.Context, page, size int) ([]*UserIdentity, *PageInfo, error) {
@@ -213,12 +227,12 @@ func (ui *UserIdentityQuery) Page(ctx context.Context, page, size int) ([]*UserI
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := ui.Offset(offset).Limit(size).All(ctx)
+	items, err := ui.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
 func (ulh *UserLoginHistoryQuery) Page(ctx context.Context, page, size int) ([]*UserLoginHistory, *PageInfo, error) {
@@ -227,10 +241,10 @@ func (ulh *UserLoginHistoryQuery) Page(ctx context.Context, page, size int) ([]*
 		return nil, nil, err
 	}
 	offset := size * (page - 1)
-	rs, err := ulh.Offset(offset).Limit(size).All(ctx)
+	items, err := ulh.Offset(offset).Limit(size).All(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	has := (page * size) < cnt
-	return rs, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }

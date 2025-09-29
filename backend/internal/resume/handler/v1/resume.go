@@ -181,12 +181,12 @@ func (h *ResumeHandler) Search(c *web.Context, req domain.SearchResumeReq) error
 //
 //	@Tags			Resume
 //	@Summary		更新简历
-//	@Description	更新简历信息
+//	@Description	更新简历信息，支持更新基本信息、教育经历、工作经历和技能
 //	@ID				update-resume
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string					true	"简历ID"
-//	@Param			param	body		domain.UpdateResumeReq	true	"更新参数"
+//	@Param			param	body		domain.UpdateResumeReq	true	"更新参数，支持更新基本信息和子表数据（教育经历、工作经历、技能）"
 //	@Success		200		{object}	web.Resp{data=domain.Resume}
 //	@Router			/api/v1/resume/{id} [put]
 func (h *ResumeHandler) Update(c *web.Context, req domain.UpdateResumeReq) error {

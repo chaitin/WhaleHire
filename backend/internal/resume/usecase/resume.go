@@ -160,6 +160,7 @@ func (u *ResumeUsecase) Search(ctx context.Context, req *domain.SearchResumeReq)
 // Update 更新简历
 func (u *ResumeUsecase) Update(ctx context.Context, req *domain.UpdateResumeReq) (*domain.Resume, error) {
 	updatedResume, err := u.repo.Update(ctx, req.ID, func(tx *db.Tx, resume *db.Resume, updateOne *db.ResumeUpdateOne) error {
+		// 更新简历主表字段
 		if req.Name != nil {
 			updateOne.SetName(*req.Name)
 		}
@@ -185,6 +186,28 @@ func (u *ResumeUsecase) Update(ctx context.Context, req *domain.UpdateResumeReq)
 			updateOne.SetYearsExperience(*req.YearsExperience)
 		}
 		updateOne.SetUpdatedAt(time.Now())
+
+		// 处理教育经历更新
+		if req.Educations != nil {
+			if err := u.updateEducations(ctx, tx, resume.ID, req.Educations); err != nil {
+				return fmt.Errorf("failed to update educations: %w", err)
+			}
+		}
+
+		// 处理工作经历更新
+		if req.Experiences != nil {
+			if err := u.updateExperiences(ctx, tx, resume.ID, req.Experiences); err != nil {
+				return fmt.Errorf("failed to update experiences: %w", err)
+			}
+		}
+
+		// 处理技能更新
+		if req.Skills != nil {
+			if err := u.updateSkills(ctx, tx, resume.ID, req.Skills); err != nil {
+				return fmt.Errorf("failed to update skills: %w", err)
+			}
+		}
+
 		return nil
 	})
 
@@ -301,7 +324,7 @@ func (u *ResumeUsecase) parseResumeAsync(ctx context.Context, resumeID string) {
 	}
 
 	// 调用LLM解析服务
-	parsedData, err := u.parserService.ParseResume(ctx, resume.ResumeFileURL, "pdf")
+	parsedData, err := u.parserService.ParseResume(ctx, resumeID, resume.ResumeFileURL, "pdf")
 	if err != nil {
 		u.logger.Error("Failed to parse resume", "error", err, "resume_id", resumeID)
 		u.updateParseError(ctx, resumeID, fmt.Sprintf("解析失败: %v", err))
@@ -507,4 +530,241 @@ func (u *ResumeUsecase) getLogsByResumeID(ctx context.Context, resumeID string) 
 	}
 
 	return logs, nil
+}
+
+// updateEducations 更新教育经历
+func (u *ResumeUsecase) updateEducations(ctx context.Context, tx *db.Tx, resumeID uuid.UUID, educations []*domain.UpdateResumeEducation) error {
+	// 删除需要删除的教育经历
+	for _, education := range educations {
+		if education.Action == "delete" && education.ID != nil {
+			educationID, err := uuid.Parse(*education.ID)
+			if err != nil {
+				return fmt.Errorf("invalid education ID: %w", err)
+			}
+			if err := tx.ResumeEducation.DeleteOneID(educationID).Exec(ctx); err != nil {
+				return fmt.Errorf("failed to delete education: %w", err)
+			}
+		}
+	}
+
+	// 更新或创建教育经历
+	for _, education := range educations {
+		if education.Action == "delete" {
+			continue
+		}
+
+		if education.Action == "update" && education.ID != nil {
+			// 更新现有教育经历
+			educationID, err := uuid.Parse(*education.ID)
+			if err != nil {
+				return fmt.Errorf("invalid education ID: %w", err)
+			}
+
+			updater := tx.ResumeEducation.UpdateOneID(educationID)
+			if education.School != nil {
+				updater.SetSchool(*education.School)
+			}
+			if education.Degree != nil {
+				updater.SetDegree(*education.Degree)
+			}
+			if education.Major != nil {
+				updater.SetMajor(*education.Major)
+			}
+			if education.StartDate != nil {
+				updater.SetStartDate(*education.StartDate)
+			}
+			if education.EndDate != nil {
+				updater.SetEndDate(*education.EndDate)
+			}
+			updater.SetUpdatedAt(time.Now())
+
+			if _, err := updater.Save(ctx); err != nil {
+				return fmt.Errorf("failed to update education: %w", err)
+			}
+		} else if education.Action == "create" {
+			// 创建新教育经历
+			creator := tx.ResumeEducation.Create().
+				SetResumeID(resumeID).
+				SetCreatedAt(time.Now()).
+				SetUpdatedAt(time.Now())
+
+			if education.School != nil {
+				creator.SetSchool(*education.School)
+			}
+			if education.Degree != nil {
+				creator.SetDegree(*education.Degree)
+			}
+			if education.Major != nil {
+				creator.SetMajor(*education.Major)
+			}
+			if education.StartDate != nil {
+				creator.SetStartDate(*education.StartDate)
+			}
+			if education.EndDate != nil {
+				creator.SetEndDate(*education.EndDate)
+			}
+
+			if _, err := creator.Save(ctx); err != nil {
+				return fmt.Errorf("failed to create education: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// updateExperiences 更新工作经历
+func (u *ResumeUsecase) updateExperiences(ctx context.Context, tx *db.Tx, resumeID uuid.UUID, experiences []*domain.UpdateResumeExperience) error {
+	// 删除需要删除的工作经历
+	for _, experience := range experiences {
+		if experience.Action == "delete" && experience.ID != nil {
+			experienceID, err := uuid.Parse(*experience.ID)
+			if err != nil {
+				return fmt.Errorf("invalid experience ID: %w", err)
+			}
+			if err := tx.ResumeExperience.DeleteOneID(experienceID).Exec(ctx); err != nil {
+				return fmt.Errorf("failed to delete experience: %w", err)
+			}
+		}
+	}
+
+	// 更新或创建工作经历
+	for _, experience := range experiences {
+		if experience.Action == "delete" {
+			continue
+		}
+
+		if experience.Action == "update" && experience.ID != nil {
+			// 更新现有工作经历
+			experienceID, err := uuid.Parse(*experience.ID)
+			if err != nil {
+				return fmt.Errorf("invalid experience ID: %w", err)
+			}
+
+			updater := tx.ResumeExperience.UpdateOneID(experienceID)
+			if experience.Company != nil {
+				updater.SetCompany(*experience.Company)
+			}
+			if experience.Position != nil {
+				updater.SetPosition(*experience.Position)
+			}
+			if experience.Title != nil {
+				updater.SetTitle(*experience.Title)
+			}
+			if experience.StartDate != nil {
+				updater.SetStartDate(*experience.StartDate)
+			}
+			if experience.EndDate != nil {
+				updater.SetEndDate(*experience.EndDate)
+			}
+			if experience.Description != nil {
+				updater.SetDescription(*experience.Description)
+			}
+			updater.SetUpdatedAt(time.Now())
+
+			if _, err := updater.Save(ctx); err != nil {
+				return fmt.Errorf("failed to update experience: %w", err)
+			}
+		} else if experience.Action == "create" {
+			// 创建新工作经历
+			creator := tx.ResumeExperience.Create().
+				SetResumeID(resumeID).
+				SetCreatedAt(time.Now()).
+				SetUpdatedAt(time.Now())
+
+			if experience.Company != nil {
+				creator.SetCompany(*experience.Company)
+			}
+			if experience.Position != nil {
+				creator.SetPosition(*experience.Position)
+			}
+			if experience.Title != nil {
+				creator.SetTitle(*experience.Title)
+			}
+			if experience.StartDate != nil {
+				creator.SetStartDate(*experience.StartDate)
+			}
+			if experience.EndDate != nil {
+				creator.SetEndDate(*experience.EndDate)
+			}
+			if experience.Description != nil {
+				creator.SetDescription(*experience.Description)
+			}
+
+			if _, err := creator.Save(ctx); err != nil {
+				return fmt.Errorf("failed to create experience: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// updateSkills 更新技能
+func (u *ResumeUsecase) updateSkills(ctx context.Context, tx *db.Tx, resumeID uuid.UUID, skills []*domain.UpdateResumeSkill) error {
+	// 删除需要删除的技能
+	for _, skill := range skills {
+		if skill.Action == "delete" && skill.ID != nil {
+			skillID, err := uuid.Parse(*skill.ID)
+			if err != nil {
+				return fmt.Errorf("invalid skill ID: %w", err)
+			}
+			if err := tx.ResumeSkill.DeleteOneID(skillID).Exec(ctx); err != nil {
+				return fmt.Errorf("failed to delete skill: %w", err)
+			}
+		}
+	}
+
+	// 更新或创建技能
+	for _, skill := range skills {
+		if skill.Action == "delete" {
+			continue
+		}
+
+		if skill.Action == "update" && skill.ID != nil {
+			// 更新现有技能
+			skillID, err := uuid.Parse(*skill.ID)
+			if err != nil {
+				return fmt.Errorf("invalid skill ID: %w", err)
+			}
+
+			updater := tx.ResumeSkill.UpdateOneID(skillID)
+			if skill.SkillName != nil {
+				updater.SetSkillName(*skill.SkillName)
+			}
+			if skill.Level != nil {
+				updater.SetLevel(*skill.Level)
+			}
+			if skill.Description != nil {
+				updater.SetDescription(*skill.Description)
+			}
+			updater.SetUpdatedAt(time.Now())
+
+			if _, err := updater.Save(ctx); err != nil {
+				return fmt.Errorf("failed to update skill: %w", err)
+			}
+		} else if skill.Action == "create" {
+			// 创建新技能
+			creator := tx.ResumeSkill.Create().
+				SetResumeID(resumeID).
+				SetCreatedAt(time.Now()).
+				SetUpdatedAt(time.Now())
+
+			if skill.SkillName != nil {
+				creator.SetSkillName(*skill.SkillName)
+			}
+			if skill.Level != nil {
+				creator.SetLevel(*skill.Level)
+			}
+			if skill.Description != nil {
+				creator.SetDescription(*skill.Description)
+			}
+
+			if _, err := creator.Save(ctx); err != nil {
+				return fmt.Errorf("failed to create skill: %w", err)
+			}
+		}
+	}
+
+	return nil
 }

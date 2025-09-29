@@ -58,6 +58,8 @@ const (
 	EdgeSkills = "skills"
 	// EdgeLogs holds the string denoting the logs edge name in mutations.
 	EdgeLogs = "logs"
+	// EdgeDocumentParse holds the string denoting the document_parse edge name in mutations.
+	EdgeDocumentParse = "document_parse"
 	// Table holds the table name of the resume in the database.
 	Table = "resumes"
 	// UserTable is the table that holds the user relation/edge.
@@ -95,6 +97,13 @@ const (
 	LogsInverseTable = "resume_logs"
 	// LogsColumn is the table column denoting the logs relation/edge.
 	LogsColumn = "resume_id"
+	// DocumentParseTable is the table that holds the document_parse relation/edge.
+	DocumentParseTable = "resume_document_parses"
+	// DocumentParseInverseTable is the table name for the ResumeDocumentParse entity.
+	// It exists in this package in order to avoid circular dependency with the "resumedocumentparse" package.
+	DocumentParseInverseTable = "resume_document_parses"
+	// DocumentParseColumn is the table column denoting the document_parse relation/edge.
+	DocumentParseColumn = "resume_id"
 )
 
 // Columns holds all SQL columns for resume fields.
@@ -300,6 +309,20 @@ func ByLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByDocumentParseCount orders the results by document_parse count.
+func ByDocumentParseCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDocumentParseStep(), opts...)
+	}
+}
+
+// ByDocumentParse orders the results by document_parse terms.
+func ByDocumentParse(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDocumentParseStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -333,5 +356,12 @@ func newLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LogsTable, LogsColumn),
+	)
+}
+func newDocumentParseStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DocumentParseInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DocumentParseTable, DocumentParseColumn),
 	)
 }

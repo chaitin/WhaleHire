@@ -10,6 +10,7 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
@@ -136,6 +137,13 @@ func (r *ResumeRepo) Delete(ctx context.Context, id string) error {
 			return fmt.Errorf("failed to delete resume logs: %w", err)
 		}
 
+		// 删除简历文档解析记录
+		if _, err := tx.ResumeDocumentParse.Delete().Where(
+			resumedocumentparse.ResumeID(resumeID),
+		).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete resume document parses: %w", err)
+		}
+
 		// 最后删除简历主记录
 		if err := tx.Resume.DeleteOneID(resumeID).Exec(ctx); err != nil {
 			return fmt.Errorf("failed to delete resume: %w", err)
@@ -245,8 +253,11 @@ func (r *ResumeRepo) Search(ctx context.Context, req *domain.SearchResumeReq) ([
 
 	// 年龄范围（基于生日计算）
 	if req.AgeFrom != nil || req.AgeTo != nil {
+		// TODO: 实现基于生日的年龄范围查询
 		// 这里需要根据生日计算年龄，暂时跳过复杂的SQL计算
 		// 可以在业务层进行过滤
+		_ = req.AgeFrom // 避免未使用变量警告
+		_ = req.AgeTo   // 避免未使用变量警告
 	}
 
 	// 排序
@@ -386,4 +397,38 @@ func (r *ResumeRepo) GetLogsByResumeID(ctx context.Context, resumeID string) ([]
 		Where(resumelog.ResumeIDEQ(resumeUUID)).
 		Order(resumelog.ByCreatedAt(sql.OrderDesc())).
 		All(ctx)
+}
+
+// CreateDocumentParse 创建文档解析记录
+func (r *ResumeRepo) CreateDocumentParse(ctx context.Context, documentParse *db.ResumeDocumentParse) (*db.ResumeDocumentParse, error) {
+	creator := r.db.ResumeDocumentParse.Create().
+		SetResumeID(documentParse.ResumeID).
+		SetFileID(documentParse.FileID).
+		SetContent(documentParse.Content).
+		SetFileType(documentParse.FileType).
+		SetFilename(documentParse.Filename).
+		SetTitle(documentParse.Title).
+		SetStatus(documentParse.Status)
+
+	if !documentParse.UploadAt.IsZero() {
+		creator = creator.SetUploadAt(documentParse.UploadAt)
+	}
+	if documentParse.ErrorMessage != "" {
+		creator = creator.SetErrorMessage(documentParse.ErrorMessage)
+	}
+
+	return creator.Save(ctx)
+}
+
+// GetDocumentParseByResumeID 根据简历ID获取文档解析记录
+func (r *ResumeRepo) GetDocumentParseByResumeID(ctx context.Context, resumeID string) (*db.ResumeDocumentParse, error) {
+	resumeUUID, err := uuid.Parse(resumeID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid resume ID: %w", err)
+	}
+
+	return r.db.ResumeDocumentParse.Query().
+		Where(resumedocumentparse.ResumeIDEQ(resumeUUID)).
+		Order(resumedocumentparse.ByCreatedAt(sql.OrderDesc())).
+		First(ctx)
 }

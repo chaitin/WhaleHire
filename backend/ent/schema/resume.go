@@ -62,5 +62,6 @@ func (Resume) Edges() []ent.Edge {
 		edge.To("experiences", ResumeExperience.Type),
 		edge.To("skills", ResumeSkill.Type),
 		edge.To("logs", ResumeLog.Type),
+		edge.To("document_parse", ResumeDocumentParse.Type),
 	}
 }

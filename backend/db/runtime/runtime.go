@@ -12,6 +12,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
@@ -179,6 +180,31 @@ func init() {
 	resumeDescID := resumeFields[0].Descriptor()
 	// resume.DefaultID holds the default value on creation for the id field.
 	resume.DefaultID = resumeDescID.Default.(func() uuid.UUID)
+	resumedocumentparseMixin := schema.ResumeDocumentParse{}.Mixin()
+	resumedocumentparseMixinHooks0 := resumedocumentparseMixin[0].Hooks()
+	resumedocumentparse.Hooks[0] = resumedocumentparseMixinHooks0[0]
+	resumedocumentparseMixinInters0 := resumedocumentparseMixin[0].Interceptors()
+	resumedocumentparse.Interceptors[0] = resumedocumentparseMixinInters0[0]
+	resumedocumentparseFields := schema.ResumeDocumentParse{}.Fields()
+	_ = resumedocumentparseFields
+	// resumedocumentparseDescStatus is the schema descriptor for status field.
+	resumedocumentparseDescStatus := resumedocumentparseFields[8].Descriptor()
+	// resumedocumentparse.DefaultStatus holds the default value on creation for the status field.
+	resumedocumentparse.DefaultStatus = resumedocumentparseDescStatus.Default.(string)
+	// resumedocumentparseDescCreatedAt is the schema descriptor for created_at field.
+	resumedocumentparseDescCreatedAt := resumedocumentparseFields[10].Descriptor()
+	// resumedocumentparse.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumedocumentparse.DefaultCreatedAt = resumedocumentparseDescCreatedAt.Default.(func() time.Time)
+	// resumedocumentparseDescUpdatedAt is the schema descriptor for updated_at field.
+	resumedocumentparseDescUpdatedAt := resumedocumentparseFields[11].Descriptor()
+	// resumedocumentparse.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumedocumentparse.DefaultUpdatedAt = resumedocumentparseDescUpdatedAt.Default.(func() time.Time)
+	// resumedocumentparse.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumedocumentparse.UpdateDefaultUpdatedAt = resumedocumentparseDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumedocumentparseDescID is the schema descriptor for id field.
+	resumedocumentparseDescID := resumedocumentparseFields[0].Descriptor()
+	// resumedocumentparse.DefaultID holds the default value on creation for the id field.
+	resumedocumentparse.DefaultID = resumedocumentparseDescID.Default.(func() uuid.UUID)
 	resumeeducationMixin := schema.ResumeEducation{}.Mixin()
 	resumeeducationMixinHooks0 := resumeeducationMixin[0].Hooks()
 	resumeeducation.Hooks[0] = resumeeducationMixinHooks0[0]

@@ -27,6 +27,9 @@ type Message func(*sql.Selector)
 // Resume is the predicate function for resume builders.
 type Resume func(*sql.Selector)
 
+// ResumeDocumentParse is the predicate function for resumedocumentparse builders.
+type ResumeDocumentParse func(*sql.Selector)
+
 // ResumeEducation is the predicate function for resumeeducation builders.
 type ResumeEducation func(*sql.Selector)
 

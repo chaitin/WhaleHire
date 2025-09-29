@@ -20,6 +20,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
@@ -42,22 +43,23 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeAdmin             = "Admin"
-	TypeAdminLoginHistory = "AdminLoginHistory"
-	TypeAdminRole         = "AdminRole"
-	TypeAttachment        = "Attachment"
-	TypeConversation      = "Conversation"
-	TypeMessage           = "Message"
-	TypeResume            = "Resume"
-	TypeResumeEducation   = "ResumeEducation"
-	TypeResumeExperience  = "ResumeExperience"
-	TypeResumeLog         = "ResumeLog"
-	TypeResumeSkill       = "ResumeSkill"
-	TypeRole              = "Role"
-	TypeSetting           = "Setting"
-	TypeUser              = "User"
-	TypeUserIdentity      = "UserIdentity"
-	TypeUserLoginHistory  = "UserLoginHistory"
+	TypeAdmin               = "Admin"
+	TypeAdminLoginHistory   = "AdminLoginHistory"
+	TypeAdminRole           = "AdminRole"
+	TypeAttachment          = "Attachment"
+	TypeConversation        = "Conversation"
+	TypeMessage             = "Message"
+	TypeResume              = "Resume"
+	TypeResumeDocumentParse = "ResumeDocumentParse"
+	TypeResumeEducation     = "ResumeEducation"
+	TypeResumeExperience    = "ResumeExperience"
+	TypeResumeLog           = "ResumeLog"
+	TypeResumeSkill         = "ResumeSkill"
+	TypeRole                = "Role"
+	TypeSetting             = "Setting"
+	TypeUser                = "User"
+	TypeUserIdentity        = "UserIdentity"
+	TypeUserLoginHistory    = "UserLoginHistory"
 )
 
 // AdminMutation represents an operation that mutates the Admin nodes in the graph.
@@ -5128,43 +5130,46 @@ func (m *MessageMutation) ResetEdge(name string) error {
 // ResumeMutation represents an operation that mutates the Resume nodes in the graph.
 type ResumeMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *uuid.UUID
-	deleted_at          *time.Time
-	name                *string
-	gender              *string
-	birthday            *time.Time
-	email               *string
-	phone               *string
-	current_city        *string
-	highest_education   *string
-	years_experience    *float64
-	addyears_experience *float64
-	resume_file_url     *string
-	status              *string
-	error_message       *string
-	parsed_at           *time.Time
-	created_at          *time.Time
-	updated_at          *time.Time
-	clearedFields       map[string]struct{}
-	user                *uuid.UUID
-	cleareduser         bool
-	educations          map[uuid.UUID]struct{}
-	removededucations   map[uuid.UUID]struct{}
-	clearededucations   bool
-	experiences         map[uuid.UUID]struct{}
-	removedexperiences  map[uuid.UUID]struct{}
-	clearedexperiences  bool
-	skills              map[uuid.UUID]struct{}
-	removedskills       map[uuid.UUID]struct{}
-	clearedskills       bool
-	logs                map[uuid.UUID]struct{}
-	removedlogs         map[uuid.UUID]struct{}
-	clearedlogs         bool
-	done                bool
-	oldValue            func(context.Context) (*Resume, error)
-	predicates          []predicate.Resume
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	deleted_at            *time.Time
+	name                  *string
+	gender                *string
+	birthday              *time.Time
+	email                 *string
+	phone                 *string
+	current_city          *string
+	highest_education     *string
+	years_experience      *float64
+	addyears_experience   *float64
+	resume_file_url       *string
+	status                *string
+	error_message         *string
+	parsed_at             *time.Time
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	user                  *uuid.UUID
+	cleareduser           bool
+	educations            map[uuid.UUID]struct{}
+	removededucations     map[uuid.UUID]struct{}
+	clearededucations     bool
+	experiences           map[uuid.UUID]struct{}
+	removedexperiences    map[uuid.UUID]struct{}
+	clearedexperiences    bool
+	skills                map[uuid.UUID]struct{}
+	removedskills         map[uuid.UUID]struct{}
+	clearedskills         bool
+	logs                  map[uuid.UUID]struct{}
+	removedlogs           map[uuid.UUID]struct{}
+	clearedlogs           bool
+	document_parse        map[uuid.UUID]struct{}
+	removeddocument_parse map[uuid.UUID]struct{}
+	cleareddocument_parse bool
+	done                  bool
+	oldValue              func(context.Context) (*Resume, error)
+	predicates            []predicate.Resume
 }
 
 var _ ent.Mutation = (*ResumeMutation)(nil)
@@ -6267,6 +6272,60 @@ func (m *ResumeMutation) ResetLogs() {
 	m.removedlogs = nil
 }
 
+// AddDocumentParseIDs adds the "document_parse" edge to the ResumeDocumentParse entity by ids.
+func (m *ResumeMutation) AddDocumentParseIDs(ids ...uuid.UUID) {
+	if m.document_parse == nil {
+		m.document_parse = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.document_parse[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDocumentParse clears the "document_parse" edge to the ResumeDocumentParse entity.
+func (m *ResumeMutation) ClearDocumentParse() {
+	m.cleareddocument_parse = true
+}
+
+// DocumentParseCleared reports if the "document_parse" edge to the ResumeDocumentParse entity was cleared.
+func (m *ResumeMutation) DocumentParseCleared() bool {
+	return m.cleareddocument_parse
+}
+
+// RemoveDocumentParseIDs removes the "document_parse" edge to the ResumeDocumentParse entity by IDs.
+func (m *ResumeMutation) RemoveDocumentParseIDs(ids ...uuid.UUID) {
+	if m.removeddocument_parse == nil {
+		m.removeddocument_parse = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.document_parse, ids[i])
+		m.removeddocument_parse[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDocumentParse returns the removed IDs of the "document_parse" edge to the ResumeDocumentParse entity.
+func (m *ResumeMutation) RemovedDocumentParseIDs() (ids []uuid.UUID) {
+	for id := range m.removeddocument_parse {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DocumentParseIDs returns the "document_parse" edge IDs in the mutation.
+func (m *ResumeMutation) DocumentParseIDs() (ids []uuid.UUID) {
+	for id := range m.document_parse {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDocumentParse resets all changes to the "document_parse" edge.
+func (m *ResumeMutation) ResetDocumentParse() {
+	m.document_parse = nil
+	m.cleareddocument_parse = false
+	m.removeddocument_parse = nil
+}
+
 // Where appends a list predicates to the ResumeMutation builder.
 func (m *ResumeMutation) Where(ps ...predicate.Resume) {
 	m.predicates = append(m.predicates, ps...)
@@ -6745,7 +6804,7 @@ func (m *ResumeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ResumeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.user != nil {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -6760,6 +6819,9 @@ func (m *ResumeMutation) AddedEdges() []string {
 	}
 	if m.logs != nil {
 		edges = append(edges, resume.EdgeLogs)
+	}
+	if m.document_parse != nil {
+		edges = append(edges, resume.EdgeDocumentParse)
 	}
 	return edges
 }
@@ -6796,13 +6858,19 @@ func (m *ResumeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeDocumentParse:
+		ids := make([]ent.Value, 0, len(m.document_parse))
+		for id := range m.document_parse {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ResumeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removededucations != nil {
 		edges = append(edges, resume.EdgeEducations)
 	}
@@ -6814,6 +6882,9 @@ func (m *ResumeMutation) RemovedEdges() []string {
 	}
 	if m.removedlogs != nil {
 		edges = append(edges, resume.EdgeLogs)
+	}
+	if m.removeddocument_parse != nil {
+		edges = append(edges, resume.EdgeDocumentParse)
 	}
 	return edges
 }
@@ -6846,13 +6917,19 @@ func (m *ResumeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeDocumentParse:
+		ids := make([]ent.Value, 0, len(m.removeddocument_parse))
+		for id := range m.removeddocument_parse {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ResumeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.cleareduser {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -6867,6 +6944,9 @@ func (m *ResumeMutation) ClearedEdges() []string {
 	}
 	if m.clearedlogs {
 		edges = append(edges, resume.EdgeLogs)
+	}
+	if m.cleareddocument_parse {
+		edges = append(edges, resume.EdgeDocumentParse)
 	}
 	return edges
 }
@@ -6885,6 +6965,8 @@ func (m *ResumeMutation) EdgeCleared(name string) bool {
 		return m.clearedskills
 	case resume.EdgeLogs:
 		return m.clearedlogs
+	case resume.EdgeDocumentParse:
+		return m.cleareddocument_parse
 	}
 	return false
 }
@@ -6919,8 +7001,1146 @@ func (m *ResumeMutation) ResetEdge(name string) error {
 	case resume.EdgeLogs:
 		m.ResetLogs()
 		return nil
+	case resume.EdgeDocumentParse:
+		m.ResetDocumentParse()
+		return nil
 	}
 	return fmt.Errorf("unknown Resume edge %s", name)
+}
+
+// ResumeDocumentParseMutation represents an operation that mutates the ResumeDocumentParse nodes in the graph.
+type ResumeDocumentParseMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	deleted_at    *time.Time
+	file_id       *string
+	content       *string
+	file_type     *string
+	filename      *string
+	title         *string
+	upload_at     *time.Time
+	status        *string
+	error_message *string
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	resume        *uuid.UUID
+	clearedresume bool
+	done          bool
+	oldValue      func(context.Context) (*ResumeDocumentParse, error)
+	predicates    []predicate.ResumeDocumentParse
+}
+
+var _ ent.Mutation = (*ResumeDocumentParseMutation)(nil)
+
+// resumedocumentparseOption allows management of the mutation configuration using functional options.
+type resumedocumentparseOption func(*ResumeDocumentParseMutation)
+
+// newResumeDocumentParseMutation creates new mutation for the ResumeDocumentParse entity.
+func newResumeDocumentParseMutation(c config, op Op, opts ...resumedocumentparseOption) *ResumeDocumentParseMutation {
+	m := &ResumeDocumentParseMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeResumeDocumentParse,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withResumeDocumentParseID sets the ID field of the mutation.
+func withResumeDocumentParseID(id uuid.UUID) resumedocumentparseOption {
+	return func(m *ResumeDocumentParseMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ResumeDocumentParse
+		)
+		m.oldValue = func(ctx context.Context) (*ResumeDocumentParse, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ResumeDocumentParse.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withResumeDocumentParse sets the old ResumeDocumentParse of the mutation.
+func withResumeDocumentParse(node *ResumeDocumentParse) resumedocumentparseOption {
+	return func(m *ResumeDocumentParseMutation) {
+		m.oldValue = func(context.Context) (*ResumeDocumentParse, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ResumeDocumentParseMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ResumeDocumentParseMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ResumeDocumentParse entities.
+func (m *ResumeDocumentParseMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ResumeDocumentParseMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ResumeDocumentParseMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ResumeDocumentParse.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ResumeDocumentParseMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ResumeDocumentParseMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ResumeDocumentParseMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[resumedocumentparse.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ResumeDocumentParseMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, resumedocumentparse.FieldDeletedAt)
+}
+
+// SetResumeID sets the "resume_id" field.
+func (m *ResumeDocumentParseMutation) SetResumeID(u uuid.UUID) {
+	m.resume = &u
+}
+
+// ResumeID returns the value of the "resume_id" field in the mutation.
+func (m *ResumeDocumentParseMutation) ResumeID() (r uuid.UUID, exists bool) {
+	v := m.resume
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeID returns the old "resume_id" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldResumeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeID: %w", err)
+	}
+	return oldValue.ResumeID, nil
+}
+
+// ResetResumeID resets all changes to the "resume_id" field.
+func (m *ResumeDocumentParseMutation) ResetResumeID() {
+	m.resume = nil
+}
+
+// SetFileID sets the "file_id" field.
+func (m *ResumeDocumentParseMutation) SetFileID(s string) {
+	m.file_id = &s
+}
+
+// FileID returns the value of the "file_id" field in the mutation.
+func (m *ResumeDocumentParseMutation) FileID() (r string, exists bool) {
+	v := m.file_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFileID returns the old "file_id" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldFileID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFileID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFileID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFileID: %w", err)
+	}
+	return oldValue.FileID, nil
+}
+
+// ClearFileID clears the value of the "file_id" field.
+func (m *ResumeDocumentParseMutation) ClearFileID() {
+	m.file_id = nil
+	m.clearedFields[resumedocumentparse.FieldFileID] = struct{}{}
+}
+
+// FileIDCleared returns if the "file_id" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) FileIDCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldFileID]
+	return ok
+}
+
+// ResetFileID resets all changes to the "file_id" field.
+func (m *ResumeDocumentParseMutation) ResetFileID() {
+	m.file_id = nil
+	delete(m.clearedFields, resumedocumentparse.FieldFileID)
+}
+
+// SetContent sets the "content" field.
+func (m *ResumeDocumentParseMutation) SetContent(s string) {
+	m.content = &s
+}
+
+// Content returns the value of the "content" field in the mutation.
+func (m *ResumeDocumentParseMutation) Content() (r string, exists bool) {
+	v := m.content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContent returns the old "content" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldContent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContent: %w", err)
+	}
+	return oldValue.Content, nil
+}
+
+// ClearContent clears the value of the "content" field.
+func (m *ResumeDocumentParseMutation) ClearContent() {
+	m.content = nil
+	m.clearedFields[resumedocumentparse.FieldContent] = struct{}{}
+}
+
+// ContentCleared returns if the "content" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) ContentCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldContent]
+	return ok
+}
+
+// ResetContent resets all changes to the "content" field.
+func (m *ResumeDocumentParseMutation) ResetContent() {
+	m.content = nil
+	delete(m.clearedFields, resumedocumentparse.FieldContent)
+}
+
+// SetFileType sets the "file_type" field.
+func (m *ResumeDocumentParseMutation) SetFileType(s string) {
+	m.file_type = &s
+}
+
+// FileType returns the value of the "file_type" field in the mutation.
+func (m *ResumeDocumentParseMutation) FileType() (r string, exists bool) {
+	v := m.file_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFileType returns the old "file_type" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldFileType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFileType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFileType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFileType: %w", err)
+	}
+	return oldValue.FileType, nil
+}
+
+// ClearFileType clears the value of the "file_type" field.
+func (m *ResumeDocumentParseMutation) ClearFileType() {
+	m.file_type = nil
+	m.clearedFields[resumedocumentparse.FieldFileType] = struct{}{}
+}
+
+// FileTypeCleared returns if the "file_type" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) FileTypeCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldFileType]
+	return ok
+}
+
+// ResetFileType resets all changes to the "file_type" field.
+func (m *ResumeDocumentParseMutation) ResetFileType() {
+	m.file_type = nil
+	delete(m.clearedFields, resumedocumentparse.FieldFileType)
+}
+
+// SetFilename sets the "filename" field.
+func (m *ResumeDocumentParseMutation) SetFilename(s string) {
+	m.filename = &s
+}
+
+// Filename returns the value of the "filename" field in the mutation.
+func (m *ResumeDocumentParseMutation) Filename() (r string, exists bool) {
+	v := m.filename
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFilename returns the old "filename" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldFilename(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFilename is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFilename requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFilename: %w", err)
+	}
+	return oldValue.Filename, nil
+}
+
+// ClearFilename clears the value of the "filename" field.
+func (m *ResumeDocumentParseMutation) ClearFilename() {
+	m.filename = nil
+	m.clearedFields[resumedocumentparse.FieldFilename] = struct{}{}
+}
+
+// FilenameCleared returns if the "filename" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) FilenameCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldFilename]
+	return ok
+}
+
+// ResetFilename resets all changes to the "filename" field.
+func (m *ResumeDocumentParseMutation) ResetFilename() {
+	m.filename = nil
+	delete(m.clearedFields, resumedocumentparse.FieldFilename)
+}
+
+// SetTitle sets the "title" field.
+func (m *ResumeDocumentParseMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *ResumeDocumentParseMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ClearTitle clears the value of the "title" field.
+func (m *ResumeDocumentParseMutation) ClearTitle() {
+	m.title = nil
+	m.clearedFields[resumedocumentparse.FieldTitle] = struct{}{}
+}
+
+// TitleCleared returns if the "title" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) TitleCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldTitle]
+	return ok
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *ResumeDocumentParseMutation) ResetTitle() {
+	m.title = nil
+	delete(m.clearedFields, resumedocumentparse.FieldTitle)
+}
+
+// SetUploadAt sets the "upload_at" field.
+func (m *ResumeDocumentParseMutation) SetUploadAt(t time.Time) {
+	m.upload_at = &t
+}
+
+// UploadAt returns the value of the "upload_at" field in the mutation.
+func (m *ResumeDocumentParseMutation) UploadAt() (r time.Time, exists bool) {
+	v := m.upload_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUploadAt returns the old "upload_at" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldUploadAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUploadAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUploadAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUploadAt: %w", err)
+	}
+	return oldValue.UploadAt, nil
+}
+
+// ClearUploadAt clears the value of the "upload_at" field.
+func (m *ResumeDocumentParseMutation) ClearUploadAt() {
+	m.upload_at = nil
+	m.clearedFields[resumedocumentparse.FieldUploadAt] = struct{}{}
+}
+
+// UploadAtCleared returns if the "upload_at" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) UploadAtCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldUploadAt]
+	return ok
+}
+
+// ResetUploadAt resets all changes to the "upload_at" field.
+func (m *ResumeDocumentParseMutation) ResetUploadAt() {
+	m.upload_at = nil
+	delete(m.clearedFields, resumedocumentparse.FieldUploadAt)
+}
+
+// SetStatus sets the "status" field.
+func (m *ResumeDocumentParseMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ResumeDocumentParseMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ResumeDocumentParseMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *ResumeDocumentParseMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *ResumeDocumentParseMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldErrorMessage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (m *ResumeDocumentParseMutation) ClearErrorMessage() {
+	m.error_message = nil
+	m.clearedFields[resumedocumentparse.FieldErrorMessage] = struct{}{}
+}
+
+// ErrorMessageCleared returns if the "error_message" field was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) ErrorMessageCleared() bool {
+	_, ok := m.clearedFields[resumedocumentparse.FieldErrorMessage]
+	return ok
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *ResumeDocumentParseMutation) ResetErrorMessage() {
+	m.error_message = nil
+	delete(m.clearedFields, resumedocumentparse.FieldErrorMessage)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ResumeDocumentParseMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ResumeDocumentParseMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ResumeDocumentParseMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ResumeDocumentParseMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ResumeDocumentParseMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ResumeDocumentParse entity.
+// If the ResumeDocumentParse object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeDocumentParseMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ResumeDocumentParseMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearResume clears the "resume" edge to the Resume entity.
+func (m *ResumeDocumentParseMutation) ClearResume() {
+	m.clearedresume = true
+	m.clearedFields[resumedocumentparse.FieldResumeID] = struct{}{}
+}
+
+// ResumeCleared reports if the "resume" edge to the Resume entity was cleared.
+func (m *ResumeDocumentParseMutation) ResumeCleared() bool {
+	return m.clearedresume
+}
+
+// ResumeIDs returns the "resume" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ResumeID instead. It exists only for internal usage by the builders.
+func (m *ResumeDocumentParseMutation) ResumeIDs() (ids []uuid.UUID) {
+	if id := m.resume; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetResume resets all changes to the "resume" edge.
+func (m *ResumeDocumentParseMutation) ResetResume() {
+	m.resume = nil
+	m.clearedresume = false
+}
+
+// Where appends a list predicates to the ResumeDocumentParseMutation builder.
+func (m *ResumeDocumentParseMutation) Where(ps ...predicate.ResumeDocumentParse) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ResumeDocumentParseMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ResumeDocumentParseMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ResumeDocumentParse, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ResumeDocumentParseMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ResumeDocumentParseMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ResumeDocumentParse).
+func (m *ResumeDocumentParseMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ResumeDocumentParseMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.deleted_at != nil {
+		fields = append(fields, resumedocumentparse.FieldDeletedAt)
+	}
+	if m.resume != nil {
+		fields = append(fields, resumedocumentparse.FieldResumeID)
+	}
+	if m.file_id != nil {
+		fields = append(fields, resumedocumentparse.FieldFileID)
+	}
+	if m.content != nil {
+		fields = append(fields, resumedocumentparse.FieldContent)
+	}
+	if m.file_type != nil {
+		fields = append(fields, resumedocumentparse.FieldFileType)
+	}
+	if m.filename != nil {
+		fields = append(fields, resumedocumentparse.FieldFilename)
+	}
+	if m.title != nil {
+		fields = append(fields, resumedocumentparse.FieldTitle)
+	}
+	if m.upload_at != nil {
+		fields = append(fields, resumedocumentparse.FieldUploadAt)
+	}
+	if m.status != nil {
+		fields = append(fields, resumedocumentparse.FieldStatus)
+	}
+	if m.error_message != nil {
+		fields = append(fields, resumedocumentparse.FieldErrorMessage)
+	}
+	if m.created_at != nil {
+		fields = append(fields, resumedocumentparse.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, resumedocumentparse.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ResumeDocumentParseMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case resumedocumentparse.FieldDeletedAt:
+		return m.DeletedAt()
+	case resumedocumentparse.FieldResumeID:
+		return m.ResumeID()
+	case resumedocumentparse.FieldFileID:
+		return m.FileID()
+	case resumedocumentparse.FieldContent:
+		return m.Content()
+	case resumedocumentparse.FieldFileType:
+		return m.FileType()
+	case resumedocumentparse.FieldFilename:
+		return m.Filename()
+	case resumedocumentparse.FieldTitle:
+		return m.Title()
+	case resumedocumentparse.FieldUploadAt:
+		return m.UploadAt()
+	case resumedocumentparse.FieldStatus:
+		return m.Status()
+	case resumedocumentparse.FieldErrorMessage:
+		return m.ErrorMessage()
+	case resumedocumentparse.FieldCreatedAt:
+		return m.CreatedAt()
+	case resumedocumentparse.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ResumeDocumentParseMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case resumedocumentparse.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case resumedocumentparse.FieldResumeID:
+		return m.OldResumeID(ctx)
+	case resumedocumentparse.FieldFileID:
+		return m.OldFileID(ctx)
+	case resumedocumentparse.FieldContent:
+		return m.OldContent(ctx)
+	case resumedocumentparse.FieldFileType:
+		return m.OldFileType(ctx)
+	case resumedocumentparse.FieldFilename:
+		return m.OldFilename(ctx)
+	case resumedocumentparse.FieldTitle:
+		return m.OldTitle(ctx)
+	case resumedocumentparse.FieldUploadAt:
+		return m.OldUploadAt(ctx)
+	case resumedocumentparse.FieldStatus:
+		return m.OldStatus(ctx)
+	case resumedocumentparse.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
+	case resumedocumentparse.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case resumedocumentparse.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ResumeDocumentParse field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeDocumentParseMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case resumedocumentparse.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case resumedocumentparse.FieldResumeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeID(v)
+		return nil
+	case resumedocumentparse.FieldFileID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFileID(v)
+		return nil
+	case resumedocumentparse.FieldContent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContent(v)
+		return nil
+	case resumedocumentparse.FieldFileType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFileType(v)
+		return nil
+	case resumedocumentparse.FieldFilename:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFilename(v)
+		return nil
+	case resumedocumentparse.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
+	case resumedocumentparse.FieldUploadAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUploadAt(v)
+		return nil
+	case resumedocumentparse.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case resumedocumentparse.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
+		return nil
+	case resumedocumentparse.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case resumedocumentparse.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeDocumentParse field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ResumeDocumentParseMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ResumeDocumentParseMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeDocumentParseMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ResumeDocumentParse numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ResumeDocumentParseMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(resumedocumentparse.FieldDeletedAt) {
+		fields = append(fields, resumedocumentparse.FieldDeletedAt)
+	}
+	if m.FieldCleared(resumedocumentparse.FieldFileID) {
+		fields = append(fields, resumedocumentparse.FieldFileID)
+	}
+	if m.FieldCleared(resumedocumentparse.FieldContent) {
+		fields = append(fields, resumedocumentparse.FieldContent)
+	}
+	if m.FieldCleared(resumedocumentparse.FieldFileType) {
+		fields = append(fields, resumedocumentparse.FieldFileType)
+	}
+	if m.FieldCleared(resumedocumentparse.FieldFilename) {
+		fields = append(fields, resumedocumentparse.FieldFilename)
+	}
+	if m.FieldCleared(resumedocumentparse.FieldTitle) {
+		fields = append(fields, resumedocumentparse.FieldTitle)
+	}
+	if m.FieldCleared(resumedocumentparse.FieldUploadAt) {
+		fields = append(fields, resumedocumentparse.FieldUploadAt)
+	}
+	if m.FieldCleared(resumedocumentparse.FieldErrorMessage) {
+		fields = append(fields, resumedocumentparse.FieldErrorMessage)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ResumeDocumentParseMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ResumeDocumentParseMutation) ClearField(name string) error {
+	switch name {
+	case resumedocumentparse.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case resumedocumentparse.FieldFileID:
+		m.ClearFileID()
+		return nil
+	case resumedocumentparse.FieldContent:
+		m.ClearContent()
+		return nil
+	case resumedocumentparse.FieldFileType:
+		m.ClearFileType()
+		return nil
+	case resumedocumentparse.FieldFilename:
+		m.ClearFilename()
+		return nil
+	case resumedocumentparse.FieldTitle:
+		m.ClearTitle()
+		return nil
+	case resumedocumentparse.FieldUploadAt:
+		m.ClearUploadAt()
+		return nil
+	case resumedocumentparse.FieldErrorMessage:
+		m.ClearErrorMessage()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeDocumentParse nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ResumeDocumentParseMutation) ResetField(name string) error {
+	switch name {
+	case resumedocumentparse.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case resumedocumentparse.FieldResumeID:
+		m.ResetResumeID()
+		return nil
+	case resumedocumentparse.FieldFileID:
+		m.ResetFileID()
+		return nil
+	case resumedocumentparse.FieldContent:
+		m.ResetContent()
+		return nil
+	case resumedocumentparse.FieldFileType:
+		m.ResetFileType()
+		return nil
+	case resumedocumentparse.FieldFilename:
+		m.ResetFilename()
+		return nil
+	case resumedocumentparse.FieldTitle:
+		m.ResetTitle()
+		return nil
+	case resumedocumentparse.FieldUploadAt:
+		m.ResetUploadAt()
+		return nil
+	case resumedocumentparse.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case resumedocumentparse.FieldErrorMessage:
+		m.ResetErrorMessage()
+		return nil
+	case resumedocumentparse.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case resumedocumentparse.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeDocumentParse field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ResumeDocumentParseMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.resume != nil {
+		edges = append(edges, resumedocumentparse.EdgeResume)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ResumeDocumentParseMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case resumedocumentparse.EdgeResume:
+		if id := m.resume; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ResumeDocumentParseMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ResumeDocumentParseMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ResumeDocumentParseMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedresume {
+		edges = append(edges, resumedocumentparse.EdgeResume)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ResumeDocumentParseMutation) EdgeCleared(name string) bool {
+	switch name {
+	case resumedocumentparse.EdgeResume:
+		return m.clearedresume
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ResumeDocumentParseMutation) ClearEdge(name string) error {
+	switch name {
+	case resumedocumentparse.EdgeResume:
+		m.ClearResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeDocumentParse unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ResumeDocumentParseMutation) ResetEdge(name string) error {
+	switch name {
+	case resumedocumentparse.EdgeResume:
+		m.ResetResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeDocumentParse edge %s", name)
 }
 
 // ResumeEducationMutation represents an operation that mutates the ResumeEducation nodes in the graph.

@@ -19,6 +19,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
@@ -88,22 +89,23 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			admin.Table:             admin.ValidColumn,
-			adminloginhistory.Table: adminloginhistory.ValidColumn,
-			adminrole.Table:         adminrole.ValidColumn,
-			attachment.Table:        attachment.ValidColumn,
-			conversation.Table:      conversation.ValidColumn,
-			message.Table:           message.ValidColumn,
-			resume.Table:            resume.ValidColumn,
-			resumeeducation.Table:   resumeeducation.ValidColumn,
-			resumeexperience.Table:  resumeexperience.ValidColumn,
-			resumelog.Table:         resumelog.ValidColumn,
-			resumeskill.Table:       resumeskill.ValidColumn,
-			role.Table:              role.ValidColumn,
-			setting.Table:           setting.ValidColumn,
-			user.Table:              user.ValidColumn,
-			useridentity.Table:      useridentity.ValidColumn,
-			userloginhistory.Table:  userloginhistory.ValidColumn,
+			admin.Table:               admin.ValidColumn,
+			adminloginhistory.Table:   adminloginhistory.ValidColumn,
+			adminrole.Table:           adminrole.ValidColumn,
+			attachment.Table:          attachment.ValidColumn,
+			conversation.Table:        conversation.ValidColumn,
+			message.Table:             message.ValidColumn,
+			resume.Table:              resume.ValidColumn,
+			resumedocumentparse.Table: resumedocumentparse.ValidColumn,
+			resumeeducation.Table:     resumeeducation.ValidColumn,
+			resumeexperience.Table:    resumeexperience.ValidColumn,
+			resumelog.Table:           resumelog.ValidColumn,
+			resumeskill.Table:         resumeskill.ValidColumn,
+			role.Table:                role.ValidColumn,
+			setting.Table:             setting.ValidColumn,
+			user.Table:                user.ValidColumn,
+			useridentity.Table:        useridentity.ValidColumn,
+			userloginhistory.Table:    userloginhistory.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

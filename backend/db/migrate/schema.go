@@ -199,6 +199,36 @@ var (
 			},
 		},
 	}
+	// ResumeDocumentParsesColumns holds the columns for the "resume_document_parses" table.
+	ResumeDocumentParsesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "file_id", Type: field.TypeString, Nullable: true},
+		{Name: "content", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "file_type", Type: field.TypeString, Nullable: true},
+		{Name: "filename", Type: field.TypeString, Nullable: true},
+		{Name: "title", Type: field.TypeString, Nullable: true},
+		{Name: "upload_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resume_id", Type: field.TypeUUID},
+	}
+	// ResumeDocumentParsesTable holds the schema information for the "resume_document_parses" table.
+	ResumeDocumentParsesTable = &schema.Table{
+		Name:       "resume_document_parses",
+		Columns:    ResumeDocumentParsesColumns,
+		PrimaryKey: []*schema.Column{ResumeDocumentParsesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_document_parses_resumes_document_parse",
+				Columns:    []*schema.Column{ResumeDocumentParsesColumns[12]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// ResumeEducationsColumns holds the columns for the "resume_educations" table.
 	ResumeEducationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -421,6 +451,7 @@ var (
 		ConversationsTable,
 		MessagesTable,
 		ResumesTable,
+		ResumeDocumentParsesTable,
 		ResumeEducationsTable,
 		ResumeExperiencesTable,
 		ResumeLogsTable,
@@ -461,6 +492,10 @@ func init() {
 	ResumesTable.ForeignKeys[0].RefTable = UsersTable
 	ResumesTable.Annotation = &entsql.Annotation{
 		Table: "resumes",
+	}
+	ResumeDocumentParsesTable.ForeignKeys[0].RefTable = ResumesTable
+	ResumeDocumentParsesTable.Annotation = &entsql.Annotation{
+		Table: "resume_document_parses",
 	}
 	ResumeEducationsTable.ForeignKeys[0].RefTable = ResumesTable
 	ResumeEducationsTable.Annotation = &entsql.Annotation{

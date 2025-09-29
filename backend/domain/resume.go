@@ -60,6 +60,10 @@ type ResumeRepo interface {
 	// 日志记录
 	CreateLog(ctx context.Context, log *db.ResumeLog) (*db.ResumeLog, error)
 
+	// 文档解析结果
+	CreateDocumentParse(ctx context.Context, docParse *db.ResumeDocumentParse) (*db.ResumeDocumentParse, error)
+	GetDocumentParseByResumeID(ctx context.Context, resumeID string) (*db.ResumeDocumentParse, error)
+
 	// 状态更新
 	UpdateStatus(ctx context.Context, id string, status ResumeStatus) error
 	UpdateErrorMessage(ctx context.Context, id string, errorMsg string) error
@@ -67,7 +71,7 @@ type ResumeRepo interface {
 
 // ParserService LLM解析服务接口
 type ParserService interface {
-	ParseResume(ctx context.Context, fileURL string, fileType string) (*ParsedResumeData, error)
+	ParseResume(ctx context.Context, resumeID string, fileURL string, fileType string) (*ParsedResumeData, error)
 }
 
 // StorageService 文件存储服务接口
@@ -127,15 +131,50 @@ type SearchResumeReq struct {
 
 // UpdateResumeReq 更新简历请求
 type UpdateResumeReq struct {
-	ID               string     `json:"id" validate:"required"`
-	Name             *string    `json:"name,omitempty"`
-	Gender           *string    `json:"gender,omitempty"`
-	Birthday         *time.Time `json:"birthday,omitempty"`
-	Email            *string    `json:"email,omitempty"`
-	Phone            *string    `json:"phone,omitempty"`
-	CurrentCity      *string    `json:"current_city,omitempty"`
-	HighestEducation *string    `json:"highest_education,omitempty"`
-	YearsExperience  *float64   `json:"years_experience,omitempty"`
+	ID               string                    `json:"-"`
+	Name             *string                   `json:"name,omitempty"`
+	Gender           *string                   `json:"gender,omitempty"`
+	Birthday         *time.Time                `json:"birthday,omitempty"`
+	Email            *string                   `json:"email,omitempty"`
+	Phone            *string                   `json:"phone,omitempty"`
+	CurrentCity      *string                   `json:"current_city,omitempty"`
+	HighestEducation *string                   `json:"highest_education,omitempty"`
+	YearsExperience  *float64                  `json:"years_experience,omitempty"`
+	Educations       []*UpdateResumeEducation  `json:"educations,omitempty"`
+	Experiences      []*UpdateResumeExperience `json:"experiences,omitempty"`
+	Skills           []*UpdateResumeSkill      `json:"skills,omitempty"`
+}
+
+// UpdateResumeEducation 更新教育经历请求
+type UpdateResumeEducation struct {
+	ID        *string    `json:"id,omitempty"`         // 教育经历ID，更新时必填
+	Action    string     `json:"action"`               // 操作类型：create, update, delete
+	School    *string    `json:"school,omitempty"`     // 学校
+	Degree    *string    `json:"degree,omitempty"`     // 学位
+	Major     *string    `json:"major,omitempty"`      // 专业
+	StartDate *time.Time `json:"start_date,omitempty"` // 开始时间
+	EndDate   *time.Time `json:"end_date,omitempty"`   // 结束时间
+}
+
+// UpdateResumeExperience 更新工作经历请求
+type UpdateResumeExperience struct {
+	ID          *string    `json:"id,omitempty"`          // 工作经历ID，更新时必填
+	Action      string     `json:"action"`                // 操作类型：create, update, delete
+	Company     *string    `json:"company,omitempty"`     // 公司
+	Position    *string    `json:"position,omitempty"`    // 职位
+	Title       *string    `json:"title,omitempty"`       // 担任岗位
+	StartDate   *time.Time `json:"start_date,omitempty"`  // 开始时间
+	EndDate     *time.Time `json:"end_date,omitempty"`    // 结束时间
+	Description *string    `json:"description,omitempty"` // 工作描述
+}
+
+// UpdateResumeSkill 更新技能请求
+type UpdateResumeSkill struct {
+	ID          *string `json:"id,omitempty"`          // 技能ID，更新时必填
+	Action      string  `json:"action"`                // 操作类型：create, update, delete
+	SkillName   *string `json:"skill_name,omitempty"`  // 技能名称
+	Level       *string `json:"level,omitempty"`       // 技能水平
+	Description *string `json:"description,omitempty"` // 技能描述
 }
 
 // Resume 简历信息
@@ -388,4 +427,37 @@ type ResumeParseProgress struct {
 	ErrorMessage string       `json:"error_message"` // 错误信息（如果有）
 	StartedAt    *time.Time   `json:"started_at"`    // 开始解析时间
 	CompletedAt  *time.Time   `json:"completed_at"`  // 完成解析时间
+}
+
+// ResumeDocumentParse 文档解析结果
+type ResumeDocumentParse struct {
+	ID        string    `json:"id"`
+	ResumeID  string    `json:"resume_id"`
+	FileID    string    `json:"file_id"`
+	Content   string    `json:"content"`
+	FileType  string    `json:"file_type"`
+	Filename  string    `json:"filename"`
+	Title     string    `json:"title"`
+	UploadAt  time.Time `json:"upload_at"`
+	Status    string    `json:"status"`
+	CreatedAt int64     `json:"created_at"`
+	UpdatedAt int64     `json:"updated_at"`
+}
+
+func (d *ResumeDocumentParse) From(entity *db.ResumeDocumentParse) *ResumeDocumentParse {
+	if entity == nil {
+		return d
+	}
+	d.ID = entity.ID.String()
+	d.ResumeID = entity.ResumeID.String()
+	d.FileID = entity.FileID
+	d.Content = entity.Content
+	d.FileType = entity.FileType
+	d.Filename = entity.Filename
+	d.Title = entity.Title
+	d.UploadAt = entity.UploadAt
+	d.Status = entity.Status
+	d.CreatedAt = entity.CreatedAt.Unix()
+	d.UpdatedAt = entity.UpdatedAt.Unix()
+	return d
 }

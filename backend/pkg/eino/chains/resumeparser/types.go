@@ -1,8 +1,8 @@
 package resumeparser
 
 import (
-	"github.com/cloudwego/eino/schema"
 	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/cloudwego/eino/schema"
 )
 
 type ResumeParseInput struct {

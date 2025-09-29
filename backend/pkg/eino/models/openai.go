@@ -46,9 +46,9 @@ func (m *OpenAIModelManager) Initialize(ctx context.Context) error {
 	}
 
 	chatModel, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
-		BaseURL: m.config.BaseURL,
-		Model:   m.config.Model,
-		APIKey:  m.config.APIKey,
+		BaseURL:        m.config.BaseURL,
+		Model:          m.config.Model,
+		APIKey:         m.config.APIKey,
 		ResponseFormat: m.getResponseFormat(),
 	})
 	if err != nil {

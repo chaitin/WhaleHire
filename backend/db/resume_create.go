@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
@@ -324,6 +325,21 @@ func (rc *ResumeCreate) AddLogs(r ...*ResumeLog) *ResumeCreate {
 	return rc.AddLogIDs(ids...)
 }
 
+// AddDocumentParseIDs adds the "document_parse" edge to the ResumeDocumentParse entity by IDs.
+func (rc *ResumeCreate) AddDocumentParseIDs(ids ...uuid.UUID) *ResumeCreate {
+	rc.mutation.AddDocumentParseIDs(ids...)
+	return rc
+}
+
+// AddDocumentParse adds the "document_parse" edges to the ResumeDocumentParse entity.
+func (rc *ResumeCreate) AddDocumentParse(r ...*ResumeDocumentParse) *ResumeCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return rc.AddDocumentParseIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (rc *ResumeCreate) Mutation() *ResumeMutation {
 	return rc.mutation
@@ -581,6 +597,22 @@ func (rc *ResumeCreate) createSpec() (*Resume, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumelog.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.DocumentParseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.DocumentParseTable,
+			Columns: []string{resume.DocumentParseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

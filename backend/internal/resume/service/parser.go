@@ -14,10 +14,12 @@ import (
 	"time"
 
 	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/pkg/docparser"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/resumeparser"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
+	"github.com/google/uuid"
 )
 
 type ParserService struct {
@@ -25,10 +27,11 @@ type ParserService struct {
 	config         *config.Config
 	logger         *slog.Logger
 	documentParser *docparser.DocumentParserService
+	resumeRepo     domain.ResumeRepo
 }
 
 // NewParserService 创建解析服务
-func NewParserService(config *config.Config, logger *slog.Logger) domain.ParserService {
+func NewParserService(config *config.Config, logger *slog.Logger, resumeRepo domain.ResumeRepo) domain.ParserService {
 	factory := models.NewModelFactory()
 
 	// 注册OpenAI模型
@@ -52,6 +55,7 @@ func NewParserService(config *config.Config, logger *slog.Logger) domain.ParserS
 		config:         config,
 		logger:         logger,
 		documentParser: documentParser,
+		resumeRepo:     resumeRepo,
 	}
 }
 
@@ -167,7 +171,7 @@ func (s *ParserService) downloadFile(ctx context.Context, fileURL string, fileTy
 }
 
 // ParseResume 解析简历内容
-func (s *ParserService) ParseResume(ctx context.Context, fileURL string, fileType string) (*domain.ParsedResumeData, error) {
+func (s *ParserService) ParseResume(ctx context.Context, resumeID string, fileURL string, fileType string) (*domain.ParsedResumeData, error) {
 	// 获取模型
 	chatModel, err := s.modelFactory.GetModel(ctx, models.ModelTypeOpenAI, s.config.GeneralAgent.LLM.ModelName)
 	if err != nil {
@@ -216,6 +220,12 @@ func (s *ParserService) ParseResume(ctx context.Context, fileURL string, fileTyp
 
 		resumeContent = parseResult.Content
 		s.logger.Info("文档解析成功", "fileURL", fileURL, "contentLength", len(resumeContent))
+
+		// 保存docparser的解析结果到数据库
+		if err = s.saveDocumentParseResult(ctx, resumeID, parseResult); err != nil {
+			s.logger.Error("保存文档解析结果失败", "error", err, "resumeID", resumeID)
+			// 这里不返回错误，因为主要的解析流程应该继续
+		}
 	} else {
 		// 如果没有配置文档解析服务，直接返回错误
 		s.logger.Error("文档解析服务未配置，无法解析简历文件", "fileURL", fileURL)
@@ -235,4 +245,28 @@ func (s *ParserService) ParseResume(ctx context.Context, fileURL string, fileTyp
 
 	s.logger.Info("resume parsed successfully", "fileURL", fileURL, "name", result.BasicInfo.Name)
 	return result, nil
+}
+
+// saveDocumentParseResult 保存文档解析结果到数据库
+func (s *ParserService) saveDocumentParseResult(ctx context.Context, resumeID string, parseResult *docparser.ParseDocumentResult) error {
+	// 将docparser结果转换为数据库实体
+	docParse := &db.ResumeDocumentParse{
+		ResumeID: uuid.MustParse(resumeID),
+		FileID:   parseResult.FileID,
+		Content:  parseResult.Content,
+		FileType: parseResult.FileType,
+		Filename: parseResult.Filename,
+		Title:    parseResult.Title,
+		UploadAt: parseResult.UploadAt,
+		Status:   "success",
+	}
+
+	// 保存到数据库
+	_, err := s.resumeRepo.CreateDocumentParse(ctx, docParse)
+	if err != nil {
+		return fmt.Errorf("创建文档解析记录失败: %w", err)
+	}
+
+	s.logger.Info("文档解析结果已保存", "resumeID", resumeID, "fileID", parseResult.FileID)
+	return nil
 }
