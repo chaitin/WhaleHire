@@ -164,6 +164,8 @@ func (h *ResumeHandler) Search(c *web.Context, req domain.SearchResumeReq) error
 		return errcode.ErrPermission
 	}
 
+	// 设置用户ID过滤
+	req.UserID = &user.ID
 	// 设置分页参数
 	req.Page = c.Page().Page
 	req.Size = c.Page().Size

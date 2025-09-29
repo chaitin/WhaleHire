@@ -119,6 +119,7 @@ type ListResumeReq struct {
 type SearchResumeReq struct {
 	web.Pagination
 
+	UserID          *string  `json:"user_id,omitempty" query:"user_id"`
 	Keywords        *string  `json:"keywords,omitempty" query:"keywords"`
 	Skills          []string `json:"skills,omitempty" query:"skills"`
 	Education       *string  `json:"education,omitempty" query:"education"`

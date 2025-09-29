@@ -200,6 +200,15 @@ func (r *ResumeRepo) List(ctx context.Context, req *domain.ListResumeReq) ([]*db
 func (r *ResumeRepo) Search(ctx context.Context, req *domain.SearchResumeReq) ([]*db.Resume, *db.PageInfo, error) {
 	query := r.db.Resume.Query()
 
+	// 用户ID过滤
+	if req.UserID != nil {
+		userID, err := uuid.Parse(*req.UserID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid user ID: %w", err)
+		}
+		query = query.Where(resume.UserID(userID))
+	}
+
 	// 关键词搜索
 	if req.Keywords != nil && *req.Keywords != "" {
 		keywords := strings.Fields(*req.Keywords)
