@@ -71,3 +71,20 @@ CREATE TABLE "resume_skills" (
     PRIMARY KEY ("id"),
     CONSTRAINT "resume_skills_resumes_skills" FOREIGN KEY ("resume_id") REFERENCES "resumes" ("id") ON DELETE NO ACTION
 );
+CREATE TABLE "resume_document_parses" (
+    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "deleted_at" timestamptz NULL,
+    "file_id" character varying NULL,
+    "content" text NULL,
+    "file_type" character varying NULL,
+    "filename" character varying NULL,
+    "title" character varying NULL,
+    "upload_at" timestamptz NULL,
+    "status" character varying NOT NULL DEFAULT 'pending',
+    "error_message" character varying NULL,
+    "created_at" timestamptz NOT NULL,
+    "updated_at" timestamptz NOT NULL,
+    "resume_id" uuid NOT NULL,
+    PRIMARY KEY ("id"),
+    CONSTRAINT "resume_document_parses_resumes_document_parse" FOREIGN KEY ("resume_id") REFERENCES "resumes" ("id") ON DELETE NO ACTION
+);
