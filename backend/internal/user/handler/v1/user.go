@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -333,7 +334,7 @@ func (h *UserHandler) Register(c *web.Context, req domain.RegisterReq) error {
 func (h *UserHandler) CreateAdmin(c *web.Context, req domain.CreateAdminReq) error {
 	user := middleware.GetAdmin(c)
 	if user.Username != "admin" {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("only admin can create admin"))
 	}
 	resp, err := h.usecase.CreateAdmin(c.Request().Context(), &req)
 	if err != nil {

@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/GoYoko/web"
@@ -58,7 +59,7 @@ func (h *ResumeHandler) Upload(c *web.Context) error {
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
 	}
 
 	// 获取上传的文件
@@ -128,7 +129,7 @@ func (h *ResumeHandler) List(c *web.Context, req domain.ListResumeReq) error {
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
 	}
 
 	// 设置用户ID
@@ -161,7 +162,7 @@ func (h *ResumeHandler) Search(c *web.Context, req domain.SearchResumeReq) error
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
 	}
 
 	// 设置用户ID过滤
@@ -200,7 +201,7 @@ func (h *ResumeHandler) Update(c *web.Context, req domain.UpdateResumeReq) error
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
 	}
 
 	req.ID = id
@@ -235,7 +236,7 @@ func (h *ResumeHandler) Delete(c *web.Context) error {
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
 	}
 
 	err := h.usecase.Delete(c.Request().Context(), id)
@@ -268,7 +269,7 @@ func (h *ResumeHandler) Reparse(c *web.Context) error {
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
 	}
 
 	err := h.usecase.Reparse(c.Request().Context(), id)
@@ -301,7 +302,7 @@ func (h *ResumeHandler) GetParseProgress(c *web.Context) error {
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
 	}
 
 	progress, err := h.usecase.GetParseProgress(c.Request().Context(), id)

@@ -41,9 +41,6 @@ func newInputLambda(ctx context.Context, input *ResumeParseInput, opts ...any) (
 
 // 输出处理，将模型输出解析为结构化结果
 func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*ResumeParseResult, error) {
-	if msg != nil {
-		fmt.Printf("msg=%v\n", msg.Content)
-	}
 
 	if msg == nil || msg.Content == "" {
 		return nil, fmt.Errorf("empty model output")

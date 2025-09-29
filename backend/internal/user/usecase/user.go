@@ -189,7 +189,7 @@ func (u *UserUsecase) Login(ctx context.Context, req *domain.LoginReq) (*domain.
 		return nil, errcode.ErrUserNotFound.Wrap(err)
 	}
 	if user.Status != consts.UserStatusActive {
-		return nil, errcode.ErrUserLock
+		return nil, errcode.ErrUserLock.Wrap(fmt.Errorf("user is locked"))
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		return nil, errcode.ErrPassword.Wrap(err)
@@ -368,13 +368,13 @@ func (u *UserUsecase) getOAuthConfig(baseURL string, setting *db.Setting, platfo
 	switch platform {
 	case consts.UserPlatformDingTalk:
 		if setting.DingtalkOauth == nil || !setting.DingtalkOauth.Enable {
-			return nil, errcode.ErrDingtalkNotEnabled
+			return nil, errcode.ErrDingtalkNotEnabled.Wrap(fmt.Errorf("dingtalk oauth not enabled"))
 		}
 		cfg.ClientID = setting.DingtalkOauth.ClientID
 		cfg.ClientSecret = setting.DingtalkOauth.ClientSecret
 	case consts.UserPlatformCustom:
 		if setting.CustomOauth == nil || !setting.CustomOauth.Enable {
-			return nil, errcode.ErrCustomNotEnabled
+			return nil, errcode.ErrCustomNotEnabled.Wrap(fmt.Errorf("custom oauth not enabled"))
 		}
 		cfg.ClientID = setting.CustomOauth.ClientID
 		cfg.ClientSecret = setting.CustomOauth.ClientSecret
@@ -387,7 +387,7 @@ func (u *UserUsecase) getOAuthConfig(baseURL string, setting *db.Setting, platfo
 		cfg.AvatarField = setting.CustomOauth.AvatarField
 		cfg.EmailField = setting.CustomOauth.EmailField
 	default:
-		return nil, errcode.ErrUnsupportedPlatform
+		return nil, errcode.ErrUnsupportedPlatform.Wrap(fmt.Errorf("unsupported platform"))
 	}
 
 	return &cfg, nil
@@ -527,7 +527,7 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 		return &domain.OAuthCallbackResp{RedirectURL: redirect}, nil
 
 	default:
-		return nil, errcode.ErrOAuthStateInvalid
+		return nil, errcode.ErrOAuthStateInvalid.Wrap(fmt.Errorf("invalid oauth state"))
 	}
 }
 

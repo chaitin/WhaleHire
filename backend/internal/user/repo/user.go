@@ -424,7 +424,7 @@ func (r *UserRepo) SignUpOrIn(ctx context.Context, platform consts.UserPlatform,
 		if err == nil {
 			u = ui.Edges.User
 			if u.Status != consts.UserStatusActive {
-				return errcode.ErrUserLock
+				return errcode.ErrUserLock.Wrap(fmt.Errorf("user is locked"))
 			}
 			if ui.Nickname != req.Name {
 				if err = r.updateUsername(ctx, tx, ui, req.Name); err != nil {
@@ -479,7 +479,7 @@ func (r *UserRepo) OAuthLogin(ctx context.Context, platform consts.UserPlatform,
 		return nil, errcode.ErrNotInvited.Wrap(err)
 	}
 	if ui.Edges.User.Status != consts.UserStatusActive {
-		return nil, errcode.ErrUserLock
+		return nil, errcode.ErrUserLock.Wrap(fmt.Errorf("user is locked"))
 	}
 	if ui.Nickname != req.Name {
 		if err = entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
