@@ -12,8 +12,14 @@ COPY package*.json ./
 # 安装依赖（包括开发依赖，构建时需要）
 RUN npm ci --silent
 
+# 复制环境变量文件（如果存在）
+COPY .env.production* ./
+
 # 复制源代码
 COPY . .
+
+# 设置生产环境模式，确保 Vite 读取 .env.production 文件
+ENV NODE_ENV=production
 
 # 构建应用
 RUN npm run build
