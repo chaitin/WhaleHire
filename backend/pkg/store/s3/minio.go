@@ -9,7 +9,6 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"github.com/chaitin/WhaleHire/backend/config"
-	"github.com/chaitin/WhaleHire/backend/domain"
 )
 
 type MinioClient struct {
@@ -30,7 +29,7 @@ func NewMinioClient(config *config.Config) (*MinioClient, error) {
 		return nil, err
 	}
 	// check bucket
-	bucket := domain.Bucket
+	bucket := config.S3.BucketName
 	exists, err := minioClient.BucketExists(context.Background(), bucket)
 	if err != nil {
 		return nil, err

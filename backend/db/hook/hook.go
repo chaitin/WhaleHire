@@ -81,6 +81,78 @@ func (f MessageFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.MessageMutation", m)
 }
 
+// The ResumeFunc type is an adapter to allow the use of ordinary
+// function as Resume mutator.
+type ResumeFunc func(context.Context, *db.ResumeMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeMutation", m)
+}
+
+// The ResumeDocumentParseFunc type is an adapter to allow the use of ordinary
+// function as ResumeDocumentParse mutator.
+type ResumeDocumentParseFunc func(context.Context, *db.ResumeDocumentParseMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeDocumentParseFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeDocumentParseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeDocumentParseMutation", m)
+}
+
+// The ResumeEducationFunc type is an adapter to allow the use of ordinary
+// function as ResumeEducation mutator.
+type ResumeEducationFunc func(context.Context, *db.ResumeEducationMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeEducationFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeEducationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeEducationMutation", m)
+}
+
+// The ResumeExperienceFunc type is an adapter to allow the use of ordinary
+// function as ResumeExperience mutator.
+type ResumeExperienceFunc func(context.Context, *db.ResumeExperienceMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeExperienceFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeExperienceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeExperienceMutation", m)
+}
+
+// The ResumeLogFunc type is an adapter to allow the use of ordinary
+// function as ResumeLog mutator.
+type ResumeLogFunc func(context.Context, *db.ResumeLogMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeLogFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeLogMutation", m)
+}
+
+// The ResumeSkillFunc type is an adapter to allow the use of ordinary
+// function as ResumeSkill mutator.
+type ResumeSkillFunc func(context.Context, *db.ResumeSkillMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeSkillFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeSkillMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeSkillMutation", m)
+}
+
 // The RoleFunc type is an adapter to allow the use of ordinary
 // function as Role mutator.
 type RoleFunc func(context.Context, *db.RoleMutation) (db.Value, error)

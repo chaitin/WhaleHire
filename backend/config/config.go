@@ -81,10 +81,26 @@ type Config struct {
 	} `mapstructure:"data_report"`
 
 	S3 struct {
-		Endpoint  string `mapstructure:"endpoint"`
-		AccessKey string `mapstructure:"access_key"`
-		SecretKey string `mapstructure:"secret_key"`
+		Endpoint   string `mapstructure:"endpoint"`
+		AccessKey  string `mapstructure:"access_key"`
+		SecretKey  string `mapstructure:"secret_key"`
+		BucketName string `mapstructure:"bucket_name"`
 	}
+
+	// 文件存储配置
+	FileStorage struct {
+		LocalPath    string   `mapstructure:"local_path"`
+		MaxFileSize  int64    `mapstructure:"max_file_size"`
+		AllowedTypes []string `mapstructure:"allowed_types"`
+	} `mapstructure:"file_storage"`
+
+	// DocumentParser 文档解析配置
+	DocumentParser struct {
+		APIKey     string `mapstructure:"api_key" json:"api_key"`
+		BaseURL    string `mapstructure:"base_url" json:"base_url"`
+		Timeout    int    `mapstructure:"timeout" json:"timeout"`
+		MaxRetries int    `mapstructure:"max_retries" json:"max_retries"`
+	} `mapstructure:"document_parser" json:"document_parser"`
 }
 
 func (c *Config) GetBaseURL(req *http.Request, settings *domain.Setting) string {
@@ -163,15 +179,28 @@ func Init() (*Config, error) {
 
 	v.SetDefault("retriever.top_k", 3)
 	v.SetDefault("retriever.distance_threshold", 0.8)
-	v.SetDefault("s3.endpoint", "127.0.0.1:9000")
+	v.SetDefault("s3.endpoint", "  whalehire-minio:9000")
 	v.SetDefault("s3.access_key", "s3whale-hire")
 	v.SetDefault("s3.secret_key", "")
+	v.SetDefault("s3.bucket_name", "static-file")
+
+	// 文件存储默认配置
+	v.SetDefault("file_storage.local_path", "./uploads")
+	v.SetDefault("file_storage.max_file_size", 10485760) // 10MB
+	v.SetDefault("file_storage.allowed_types", []string{".pdf", ".docx", ".doc"})
+
+	// 文件内容提取默认配置
+	v.SetDefault("document_parser.api_key", "")
+	v.SetDefault("document_parser.base_url", "https://api.moonshot.cn/v1")
+	v.SetDefault("document_parser.timeout", 30)
+	v.SetDefault("document_parser.max_retries", 3)
 
 	// 打印从环境变量中读取的所有配置值
 	fmt.Println("从环境变量读取的配置值:")
 	fmt.Println("Database Master:", v.GetString("database.master"))
 	fmt.Println("Database Slave:", v.GetString("database.slave"))
 	fmt.Println("Embedding API Key:", v.GetString("embedding.api_key"))
+	fmt.Println("Document Parser API Key:", v.GetString("document_parser.api_key"))
 
 	c := Config{}
 	if err := v.Unmarshal(&c); err != nil {

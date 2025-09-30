@@ -51,9 +51,11 @@ type UserEdges struct {
 	Identities []*UserIdentity `json:"identities,omitempty"`
 	// Conversations holds the value of the conversations edge.
 	Conversations []*Conversation `json:"conversations,omitempty"`
+	// Resumes holds the value of the resumes edge.
+	Resumes []*Resume `json:"resumes,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // LoginHistoriesOrErr returns the LoginHistories value or an error if the edge
@@ -81,6 +83,15 @@ func (e UserEdges) ConversationsOrErr() ([]*Conversation, error) {
 		return e.Conversations, nil
 	}
 	return nil, &NotLoadedError{edge: "conversations"}
+}
+
+// ResumesOrErr returns the Resumes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ResumesOrErr() ([]*Resume, error) {
+	if e.loadedTypes[3] {
+		return e.Resumes, nil
+	}
+	return nil, &NotLoadedError{edge: "resumes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -195,6 +206,11 @@ func (u *User) QueryIdentities() *UserIdentityQuery {
 // QueryConversations queries the "conversations" edge of the User entity.
 func (u *User) QueryConversations() *ConversationQuery {
 	return NewUserClient(u.config).QueryConversations(u)
+}
+
+// QueryResumes queries the "resumes" edge of the User entity.
+func (u *User) QueryResumes() *ResumeQuery {
+	return NewUserClient(u.config).QueryResumes(u)
 }
 
 // Update returns a builder for updating this User.

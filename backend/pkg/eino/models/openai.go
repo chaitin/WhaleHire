@@ -11,9 +11,10 @@ import (
 
 // OpenAIConfig OpenAI 模型配置
 type OpenAIConfig struct {
-	APIKey  string `json:"api_key" yaml:"api_key"`
-	BaseURL string `json:"base_url" yaml:"base_url"`
-	Model   string `json:"model" yaml:"model"`
+	APIKey         string `json:"api_key" yaml:"api_key"`
+	BaseURL        string `json:"base_url" yaml:"base_url"`
+	Model          string `json:"model" yaml:"model"`
+	ResponseFormat string `json:"response_format" yaml:"response_format"` // 输出格式: "json_object", "text", ""(默认)
 }
 
 // OpenAIModelManager OpenAI模型管理器
@@ -45,9 +46,10 @@ func (m *OpenAIModelManager) Initialize(ctx context.Context) error {
 	}
 
 	chatModel, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
-		BaseURL: m.config.BaseURL,
-		Model:   m.config.Model,
-		APIKey:  m.config.APIKey,
+		BaseURL:        m.config.BaseURL,
+		Model:          m.config.Model,
+		APIKey:         m.config.APIKey,
+		ResponseFormat: m.getResponseFormat(),
 	})
 	if err != nil {
 		return err
@@ -75,4 +77,21 @@ func (m *OpenAIModelManager) IsInitialized() bool {
 func (m *OpenAIModelManager) Close() error {
 	// OpenAI SDK 一般不需要关闭，这里预留
 	return nil
+}
+
+// getResponseFormat 根据配置获取响应格式
+func (m *OpenAIModelManager) getResponseFormat() *openai.ChatCompletionResponseFormat {
+	switch m.config.ResponseFormat {
+	case "json_object":
+		return &openai.ChatCompletionResponseFormat{
+			Type: openai.ChatCompletionResponseFormatTypeJSONObject,
+		}
+	case "text":
+		return &openai.ChatCompletionResponseFormat{
+			Type: openai.ChatCompletionResponseFormatTypeText,
+		}
+	default:
+		// 默认不设置响应格式，让 OpenAI 自动选择
+		return nil
+	}
 }

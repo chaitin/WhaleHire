@@ -771,6 +771,29 @@ func HasConversationsWith(preds ...predicate.Conversation) predicate.User {
 	})
 }
 
+// HasResumes applies the HasEdge predicate on the "resumes" edge.
+func HasResumes() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ResumesTable, ResumesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasResumesWith applies the HasEdge predicate on the "resumes" edge with a given conditions (other predicates).
+func HasResumesWith(preds ...predicate.Resume) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newResumesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))
