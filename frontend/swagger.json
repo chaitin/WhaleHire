@@ -1,0 +1,3189 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "WhaleHire API",
+        "title": "WhaleHire API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/v1/admin/create": {
+            "post": {
+                "description": "创建管理员",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "创建管理员",
+                "operationId": "create-admin",
+                "parameters": [
+                    {
+                        "description": "创建管理员参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateAdminReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AdminUser"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delete": {
+            "delete": {
+                "description": "删除管理员",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "删除管理员",
+                "operationId": "delete-admin",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "管理员ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/list": {
+            "get": {
+                "description": "获取管理员用户列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "获取管理员用户列表",
+                "operationId": "list-admin-user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "下一页标识",
+                        "name": "next_token",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "分页",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页多少条记录",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListAdminUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/login": {
+            "post": {
+                "description": "管理员登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "管理员登录",
+                "operationId": "admin-login",
+                "parameters": [
+                    {
+                        "description": "登录参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.LoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AdminUser"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/login-history": {
+            "get": {
+                "description": "获取管理员登录历史",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "获取管理员登录历史",
+                "operationId": "admin-login-history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "下一页标识",
+                        "name": "next_token",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "分页",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页多少条记录",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListAdminLoginHistoryResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/logout": {
+            "post": {
+                "description": "管理员登出",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "管理员登出",
+                "operationId": "admin-logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/profile": {
+            "get": {
+                "description": "管理员信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "管理员信息",
+                "operationId": "admin-profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AdminUser"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新管理员资料",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "更新管理员资料",
+                "operationId": "update-admin-profile",
+                "parameters": [
+                    {
+                        "description": "更新参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.AdminProfileUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AdminUser"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/role": {
+            "get": {
+                "description": "获取角色列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "获取角色列表",
+                "operationId": "list-role",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.Role"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "授权角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "授权角色",
+                "operationId": "grant-role",
+                "parameters": [
+                    {
+                        "description": "授权角色参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GrantRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/setting": {
+            "get": {
+                "description": "获取系统设置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "获取系统设置",
+                "operationId": "get-setting",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.Setting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新为增量更新，只传需要更新的字段",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "更新系统设置",
+                "operationId": "update-setting",
+                "parameters": [
+                    {
+                        "description": "更新系统设置参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateSettingReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.Setting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/file/download": {
+            "get": {
+                "description": "Get presigned download URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "File"
+                ],
+                "summary": "Download File",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "File Key",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ObjectDownloadResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/file/upload": {
+            "post": {
+                "description": "Upload File",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "tags": [
+                    "File"
+                ],
+                "summary": "Upload File",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Knowledge Base ID",
+                        "name": "kb_id",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ObjectUploadResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/general-agent/conversations": {
+            "get": {
+                "description": "分页获取当前用户的所有对话会话列表，支持按标题搜索和分页查询。返回对话的基本信息包括ID、标题、状态、创建时间等。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "General Agent"
+                ],
+                "summary": "分页获取用户对话列表",
+                "operationId": "list-conversations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认10",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词，按对话标题模糊匹配",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListConversationsResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "为当前用户创建一个新的对话会话，用于管理和组织AI对话历史。每个对话会话都有唯一的ID和标题，可以包含多条消息记录。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "General Agent"
+                ],
+                "summary": "创建新对话会话",
+                "operationId": "create-conversation",
+                "parameters": [
+                    {
+                        "description": "创建对话请求参数，包含title(对话标题，必填，最大256字符)",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateConversationReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.Conversation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据对话ID删除指定的对话会话及其所有相关的消息记录和附件。此操作不可逆，请谨慎使用。只有对话的创建者才能删除该对话。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "General Agent"
+                ],
+                "summary": "删除指定对话",
+                "operationId": "delete-conversation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对话ID，要删除的对话的唯一标识符",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/general-agent/conversations/history": {
+            "post": {
+                "description": "根据对话ID获取指定对话的完整历史记录，包括所有消息内容、附件信息、消息类型等详细信息。用于恢复和查看完整的对话上下文。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "General Agent"
+                ],
+                "summary": "获取对话历史记录",
+                "operationId": "get-conversation-history",
+                "parameters": [
+                    {
+                        "description": "获取对话历史请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GetConversationHistoryReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.Conversation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/general-agent/conversations/{id}/addmessage": {
+            "post": {
+                "description": "向指定的对话会话中添加新的消息记录。支持多种消息类型(文本、图片、音频、视频、文件)和角色(用户、助手、系统、智能体)。可以包含附件和元数据信息。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "General Agent"
+                ],
+                "summary": "向对话添加新消息",
+                "operationId": "add-message-to-conversation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对话ID，要添加消息的目标对话的唯一标识符",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "添加消息请求参数，包含conversation_id(对话ID)和message(消息对象，包含角色、内容、类型等信息)",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.AddMessageToConversationReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/general-agent/generate": {
+            "post": {
+                "description": "根据用户输入的提示词和可选的历史对话记录，生成AI智能体的回复内容。支持传入历史消息以保持对话上下文连贯性。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "General Agent"
+                ],
+                "summary": "生成AI回复",
+                "operationId": "generate",
+                "parameters": [
+                    {
+                        "description": "生成请求参数，包含prompt(提示词，必填)和history(历史消息数组，可选)",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GenerateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.GenerateResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/general-agent/generate-stream": {
+            "post": {
+                "description": "以Server-Sent Events(SSE)方式流式生成AI回复，实时返回生成的内容片段。客户端可以实时接收并显示生成过程，提供更好的用户体验。支持超时控制和错误处理。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "General Agent"
+                ],
+                "summary": "流式生成AI回复",
+                "operationId": "generate-stream",
+                "parameters": [
+                    {
+                        "description": "生成请求参数，包含prompt(提示词，必填)和history(历史消息数组，可选)",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GenerateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.StreamChunk"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/list": {
+            "get": {
+                "description": "获取简历列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "获取简历列表",
+                "operationId": "list-resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "下一页标识",
+                        "name": "next_token",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "分页",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页多少条记录",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListResumeResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/search": {
+            "get": {
+                "description": "根据关键词搜索简历",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "搜索简历",
+                "operationId": "search-resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "keywords",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "下一页标识",
+                        "name": "next_token",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "分页",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页多少条记录",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.SearchResumeResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/upload": {
+            "post": {
+                "description": "上传简历文件并进行解析",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "上传简历",
+                "operationId": "upload-resume",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "简历文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.Resume"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/{id}": {
+            "get": {
+                "description": "根据ID获取简历详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "获取简历详情",
+                "operationId": "get-resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "简历ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新简历信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "更新简历",
+                "operationId": "update-resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "简历ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateResumeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.Resume"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除简历",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "删除简历",
+                "operationId": "delete-resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "简历ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/{id}/progress": {
+            "get": {
+                "description": "获取简历解析进度信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "获取简历解析进度",
+                "operationId": "get-resume-progress",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "简历ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeParseProgress"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/{id}/reparse": {
+            "post": {
+                "description": "重新解析简历内容",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "重新解析简历",
+                "operationId": "reparse-resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "简历ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/delete": {
+            "delete": {
+                "description": "删除用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "删除用户",
+                "operationId": "delete-user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/list": {
+            "get": {
+                "description": "获取用户列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取用户列表",
+                "operationId": "list-user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "下一页标识",
+                        "name": "next_token",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "分页",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页多少条记录",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/login": {
+            "post": {
+                "description": "用户登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "用户登录",
+                "operationId": "login",
+                "parameters": [
+                    {
+                        "description": "登录参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.LoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.LoginResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/login-history": {
+            "get": {
+                "description": "获取用户登录历史",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取用户登录历史",
+                "operationId": "login-history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "下一页标识",
+                        "name": "next_token",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "分页",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页多少条记录",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListLoginHistoryResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/logout": {
+            "post": {
+                "description": "用户登出",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "用户登出",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/oauth/callback": {
+            "get": {
+                "description": "处理OAuth回调，返回重定向URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "OAuth回调处理",
+                "operationId": "user-oauth-callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.OAuthCallbackResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/oauth/signup-or-in": {
+            "get": {
+                "description": "用户 OAuth 登录或注册",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "用户 OAuth 登录或注册",
+                "operationId": "user-oauth-signup-or-in",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邀请码",
+                        "name": "inviate_code",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "email",
+                            "dingtalk",
+                            "custom"
+                        ],
+                        "type": "string",
+                        "x-enum-varnames": [
+                            "UserPlatformEmail",
+                            "UserPlatformDingTalk",
+                            "UserPlatformCustom"
+                        ],
+                        "description": "第三方平台 dingtalk",
+                        "name": "platform",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "登录成功后跳转的 URL",
+                        "name": "redirect_url",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "会话ID",
+                        "name": "session_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "plugin",
+                            "browser"
+                        ],
+                        "type": "string",
+                        "default": "plugin",
+                        "x-enum-varnames": [
+                            "LoginSourcePlugin",
+                            "LoginSourceBrowser"
+                        ],
+                        "description": "登录来源 plugin: 插件 browser: 浏览器; 默认为 plugin",
+                        "name": "source",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.OAuthURLResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/profile": {
+            "get": {
+                "description": "获取用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Manage"
+                ],
+                "summary": "获取用户信息",
+                "operationId": "user-profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Manage"
+                ],
+                "summary": "更新用户信息",
+                "operationId": "user-update-profile",
+                "parameters": [
+                    {
+                        "description": "param",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ProfileUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/register": {
+            "post": {
+                "description": "注册用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "注册用户",
+                "operationId": "register",
+                "parameters": [
+                    {
+                        "description": "注册参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.RegisterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/update": {
+            "put": {
+                "description": "更新用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "更新用户",
+                "operationId": "update-user",
+                "parameters": [
+                    {
+                        "description": "更新用户参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "consts.AdminStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "inactive"
+            ],
+            "x-enum-varnames": [
+                "AdminStatusActive",
+                "AdminStatusInactive"
+            ]
+        },
+        "consts.LoginSource": {
+            "type": "string",
+            "enum": [
+                "plugin",
+                "browser"
+            ],
+            "x-enum-varnames": [
+                "LoginSourcePlugin",
+                "LoginSourceBrowser"
+            ]
+        },
+        "consts.UserPlatform": {
+            "type": "string",
+            "enum": [
+                "email",
+                "dingtalk",
+                "custom"
+            ],
+            "x-enum-varnames": [
+                "UserPlatformEmail",
+                "UserPlatformDingTalk",
+                "UserPlatformCustom"
+            ]
+        },
+        "consts.UserStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "inactive",
+                "locked"
+            ],
+            "x-enum-varnames": [
+                "UserStatusActive",
+                "UserStatusInactive",
+                "UserStatusLocked"
+            ]
+        },
+        "domain.AddMessageToConversationReq": {
+            "type": "object",
+            "required": [
+                "conversation_id",
+                "message"
+            ],
+            "properties": {
+                "conversation_id": {
+                    "type": "string"
+                },
+                "message": {
+                    "$ref": "#/definitions/domain.Message"
+                }
+            }
+        },
+        "domain.AdminLoginHistory": {
+            "type": "object",
+            "properties": {
+                "client_version": {
+                    "description": "客户端版本",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "登录时间",
+                    "type": "integer"
+                },
+                "device": {
+                    "description": "设备信息",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "用户信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AdminUser"
+                        }
+                    ]
+                }
+            }
+        },
+        "domain.AdminProfileUpdateReq": {
+            "type": "object",
+            "properties": {
+                "old_password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 6
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 6
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
+        "domain.AdminUser": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "用户ID",
+                    "type": "string"
+                },
+                "last_active_at": {
+                    "description": "最后活跃时间",
+                    "type": "integer"
+                },
+                "role": {
+                    "description": "角色",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Role"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "用户状态 active: 正常 inactive: 禁用",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.AdminStatus"
+                        }
+                    ]
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Attachment": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "file_type": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message_id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Conversation": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Message"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ConversationSummary": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.CreateAdminReq": {
+            "type": "object",
+            "required": [
+                "password",
+                "role_id",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "role_id": {
+                    "description": "角色ID",
+                    "type": "integer"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.CreateConversationReq": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "agent_name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 256
+                }
+            }
+        },
+        "domain.CustomOAuth": {
+            "type": "object",
+            "properties": {
+                "access_token_url": {
+                    "description": "自定义OAuth访问令牌URL",
+                    "type": "string"
+                },
+                "authorize_url": {
+                    "description": "自定义OAuth授权URL",
+                    "type": "string"
+                },
+                "avatar_field": {
+                    "description": "用户信息回包中的头像URL字段名",
+                    "type": "string"
+                },
+                "client_id": {
+                    "description": "自定义客户端ID",
+                    "type": "string"
+                },
+                "client_secret": {
+                    "description": "自定义客户端密钥",
+                    "type": "string"
+                },
+                "email_field": {
+                    "description": "用户信息回包中的邮箱字段名",
+                    "type": "string"
+                },
+                "enable": {
+                    "description": "自定义OAuth开关",
+                    "type": "boolean"
+                },
+                "id_field": {
+                    "description": "用户信息回包中的ID字段名",
+                    "type": "string"
+                },
+                "name_field": {
+                    "description": "用户信息回包中的用户名字段名",
+                    "type": "string"
+                },
+                "scopes": {
+                    "description": "自定义OAuth Scope列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "userinfo_url": {
+                    "description": "自定义OAuth用户信息URL",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.CustomOAuthReq": {
+            "type": "object",
+            "properties": {
+                "access_token_url": {
+                    "description": "自定义OAuth访问令牌URL",
+                    "type": "string"
+                },
+                "authorize_url": {
+                    "description": "自定义OAuth授权URL",
+                    "type": "string"
+                },
+                "avatar_field": {
+                    "description": "用户信息回包中的头像URL字段名",
+                    "type": "string"
+                },
+                "client_id": {
+                    "description": "自定义客户端ID",
+                    "type": "string"
+                },
+                "client_secret": {
+                    "description": "自定义客户端密钥",
+                    "type": "string"
+                },
+                "email_field": {
+                    "description": "用户信息回包中的邮箱字段名",
+                    "type": "string"
+                },
+                "enable": {
+                    "description": "自定义OAuth开关",
+                    "type": "boolean"
+                },
+                "id_field": {
+                    "description": "用户信息回包中的ID字段名",
+                    "type": "string"
+                },
+                "name_field": {
+                    "description": "用户信息回包中的用户名字段名",
+                    "type": "string"
+                },
+                "scopes": {
+                    "description": "自定义OAuth Scope列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "userinfo_url": {
+                    "description": "自定义OAuth用户信息URL",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.DingtalkOAuth": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "description": "钉钉客户端ID",
+                    "type": "string"
+                },
+                "client_secret": {
+                    "description": "钉钉客户端密钥",
+                    "type": "string"
+                },
+                "enable": {
+                    "description": "钉钉OAuth开关",
+                    "type": "boolean"
+                }
+            }
+        },
+        "domain.DingtalkOAuthReq": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "description": "钉钉客户端ID",
+                    "type": "string"
+                },
+                "client_secret": {
+                    "description": "钉钉客户端密钥",
+                    "type": "string"
+                },
+                "enable": {
+                    "description": "钉钉OAuth开关",
+                    "type": "boolean"
+                }
+            }
+        },
+        "domain.GenerateReq": {
+            "type": "object",
+            "properties": {
+                "conversation_id": {
+                    "type": "string"
+                },
+                "history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Message"
+                    }
+                },
+                "prompt": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GenerateResp": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GetConversationHistoryReq": {
+            "type": "object",
+            "required": [
+                "conversation_id"
+            ],
+            "properties": {
+                "conversation_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.GrantRoleReq": {
+            "type": "object",
+            "properties": {
+                "admin_id": {
+                    "description": "管理员ID",
+                    "type": "string"
+                },
+                "role_ids": {
+                    "description": "角色ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "domain.ListAdminLoginHistoryResp": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "login_histories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.AdminLoginHistory"
+                    }
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ListAdminUserResp": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.AdminUser"
+                    }
+                }
+            }
+        },
+        "domain.ListConversationsResp": {
+            "type": "object",
+            "properties": {
+                "conversations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ConversationSummary"
+                    }
+                },
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ListLoginHistoryResp": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "login_histories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.UserLoginHistory"
+                    }
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ListResumeResp": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "resumes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Resume"
+                    }
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ListUserResp": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.User"
+                    }
+                }
+            }
+        },
+        "domain.LoginReq": {
+            "type": "object",
+            "required": [
+                "source"
+            ],
+            "properties": {
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "session_id": {
+                    "description": "会话Id插件登录时必填",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "登录来源 browser: 浏览器;",
+                    "default": "browser",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.LoginSource"
+                        }
+                    ]
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.LoginResp": {
+            "type": "object",
+            "properties": {
+                "redirect_url": {
+                    "description": "重定向URL",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "用户信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "domain.Message": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string"
+                },
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Attachment"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "conversation_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "media_url": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "role": {
+                    "description": "\"user\", \"assistant\", \"system\", \"agent\"",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"text\", \"image\", \"audio\", \"video\", \"file\"",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.OAuthCallbackResp": {
+            "type": "object",
+            "properties": {
+                "redirect_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.OAuthURLResp": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ObjectDownloadResp": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ObjectUploadResp": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ProfileUpdateReq": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "头像",
+                    "type": "string"
+                },
+                "old_password": {
+                    "description": "旧密码",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.RegisterReq": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "description": "邮箱",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Resume": {
+            "type": "object",
+            "properties": {
+                "birthday": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "current_city": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "highest_education": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parsed_at": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "resume_file_url": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.ResumeStatus"
+                },
+                "updated_at": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "years_experience": {
+                    "type": "number"
+                }
+            }
+        },
+        "domain.ResumeDetail": {
+            "type": "object",
+            "properties": {
+                "birthday": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "current_city": {
+                    "type": "string"
+                },
+                "educations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ResumeEducation"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "experiences": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ResumeExperience"
+                    }
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "highest_education": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ResumeLog"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parsed_at": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "resume_file_url": {
+                    "type": "string"
+                },
+                "skills": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ResumeSkill"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.ResumeStatus"
+                },
+                "updated_at": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "years_experience": {
+                    "type": "number"
+                }
+            }
+        },
+        "domain.ResumeEducation": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "integer"
+                },
+                "degree": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "major": {
+                    "type": "string"
+                },
+                "resume_id": {
+                    "type": "string"
+                },
+                "school": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ResumeExperience": {
+            "type": "object",
+            "properties": {
+                "company": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "resume_id": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ResumeLog": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "resume_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ResumeParseProgress": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "description": "完成解析时间",
+                    "type": "string"
+                },
+                "error_message": {
+                    "description": "错误信息（如果有）",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "当前状态描述",
+                    "type": "string"
+                },
+                "progress": {
+                    "description": "解析进度百分比 0-100",
+                    "type": "integer"
+                },
+                "resume_id": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "description": "开始解析时间",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.ResumeStatus"
+                }
+            }
+        },
+        "domain.ResumeSkill": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                },
+                "resume_id": {
+                    "type": "string"
+                },
+                "skill_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ResumeStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "processing",
+                "completed",
+                "failed",
+                "archived"
+            ],
+            "x-enum-comments": {
+                "ResumeStatusArchived": "已归档",
+                "ResumeStatusCompleted": "解析完成",
+                "ResumeStatusFailed": "解析失败",
+                "ResumeStatusPending": "已上传，等待解析",
+                "ResumeStatusProcessing": "正在解析中"
+            },
+            "x-enum-varnames": [
+                "ResumeStatusPending",
+                "ResumeStatusProcessing",
+                "ResumeStatusCompleted",
+                "ResumeStatusFailed",
+                "ResumeStatusArchived"
+            ]
+        },
+        "domain.Role": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.SearchResumeResp": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "resumes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Resume"
+                    }
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.Setting": {
+            "type": "object",
+            "properties": {
+                "base_url": {
+                    "description": "base url 配置，为了支持前置代理",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "integer"
+                },
+                "custom_oauth": {
+                    "description": "自定义OAuth接入",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.CustomOAuth"
+                        }
+                    ]
+                },
+                "dingtalk_oauth": {
+                    "description": "钉钉OAuth接入",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.DingtalkOAuth"
+                        }
+                    ]
+                },
+                "disable_password_login": {
+                    "description": "是否禁用密码登录",
+                    "type": "boolean"
+                },
+                "enable_auto_login": {
+                    "description": "是否开启自动登录",
+                    "type": "boolean"
+                },
+                "enable_sso": {
+                    "description": "是否开启SSO",
+                    "type": "boolean"
+                },
+                "force_two_factor_auth": {
+                    "description": "是否强制两步验证",
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.StreamChunk": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "done": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "domain.UpdateResumeReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "birthday": {
+                    "type": "string"
+                },
+                "current_city": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "highest_education": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "years_experience": {
+                    "type": "number"
+                }
+            }
+        },
+        "domain.UpdateSettingReq": {
+            "type": "object",
+            "properties": {
+                "base_url": {
+                    "description": "base url 配置，为了支持前置代理",
+                    "type": "string"
+                },
+                "custom_oauth": {
+                    "description": "自定义OAuth配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.CustomOAuthReq"
+                        }
+                    ]
+                },
+                "dingtalk_oauth": {
+                    "description": "钉钉OAuth配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.DingtalkOAuthReq"
+                        }
+                    ]
+                },
+                "disable_password_login": {
+                    "description": "是否禁用密码登录",
+                    "type": "boolean"
+                },
+                "enable_auto_login": {
+                    "description": "是否开启自动登录",
+                    "type": "boolean"
+                },
+                "enable_sso": {
+                    "description": "是否开启SSO",
+                    "type": "boolean"
+                },
+                "force_two_factor_auth": {
+                    "description": "是否强制两步验证",
+                    "type": "boolean"
+                }
+            }
+        },
+        "domain.UpdateUserReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "description": "用户ID",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "重置密码",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "用户状态 active: 正常 locked: 锁定 inactive: 禁用",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.UserStatus"
+                        }
+                    ]
+                }
+            }
+        },
+        "domain.User": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "description": "头像URL",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "integer"
+                },
+                "email": {
+                    "description": "邮箱",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "用户ID",
+                    "type": "string"
+                },
+                "is_deleted": {
+                    "description": "是否删除",
+                    "type": "boolean"
+                },
+                "last_active_at": {
+                    "description": "最后活跃时间",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "用户状态 active: 正常 locked: 锁定 inactive: 禁用",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.UserStatus"
+                        }
+                    ]
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UserLoginHistory": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "description": "插件ID vscode",
+                    "type": "string"
+                },
+                "client_version": {
+                    "description": "客户端版本",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "登录时间",
+                    "type": "integer"
+                },
+                "device": {
+                    "description": "设备信息",
+                    "type": "string"
+                },
+                "hostname": {
+                    "description": "主机名",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "用户信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "web.Resp": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,84 @@
+# =============================================================================
+# Docker 构建忽略文件 - DevOps 优化版本
+# =============================================================================
+
+# 依赖目录（在容器内重新安装）
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 构建输出（在容器内重新构建）
+dist
+build
+out
+
+# 开发工具和配置
+.git
+.gitignore
+README*.md
+CHANGELOG*.md
+.env*
+!.env.example
+
+# IDE 和编辑器文件
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+logs
+*.log
+
+# 运行时文件
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 覆盖率报告
+coverage
+.nyc_output
+
+# 测试文件
+test
+tests
+**/*.test.js
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.js
+**/*.spec.ts
+**/*.spec.tsx
+
+# Docker 相关文件
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# 文档文件
+*.md
+docs
+
+# 临时文件
+tmp
+temp
+
+# 缓存文件
+.cache
+.parcel-cache
+
+# ESLint 缓存
+.eslintcache
+
+# Prettier 缓存
+.prettiercache
+
+# TypeScript 缓存
+*.tsbuildinfo

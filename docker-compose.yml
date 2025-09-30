@@ -76,10 +76,10 @@ services:
 
   # 前端服务
   whalehire-frontend:
-    image: portus.in.chaitin.net/whalehire/ui:latest
+    image: portus.in.chaitin.net/whalehire/frontend:v0.0.3
     container_name: whalehire-frontend
     ports:
-      - "3000:3000"
+      - "3000:80"
     environment:
       NODE_ENV: production
       BACKEND_HOST: http://whalehire-backend:8888
@@ -88,7 +88,9 @@ services:
     networks:
       - whalehire-network
     restart: unless-stopped
-
+    volumes:
+      - ${PWD}/nginx.conf:/etc/nginx/nginx.conf:ro
+      
   # MinIO 对象存储
   whalehire-minio:
     image: portus.in.chaitin.net/whalehire/minio:RELEASE.2025-09-07T16-13-09Z
