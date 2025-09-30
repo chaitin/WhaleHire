@@ -1,7 +1,6 @@
-// 认证状态管理Hook - Cookie 认证版本
+// 认证状态管理Hook - 纯Cookie认证版本
 import React, { useState, useEffect, useContext, createContext, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserInfo, setUserInfo, clearUserInfo } from '@/lib/api';
 import { UserInfo, logout as logoutApi, getCurrentUser } from '@/services/auth';
 
 // 认证状态枚举
@@ -39,44 +38,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isLoading = authStatus === AuthStatus.LOADING;
   const isAuthenticated = authStatus === AuthStatus.AUTHENTICATED;
 
-  // 刷新认证状态 - Cookie 认证版本
+  // 刷新认证状态 - 纯Cookie认证版本
   const refreshAuth = useCallback(async () => {
     console.log('🔐 刷新认证状态...');
-    const userInfo = getUserInfo();
     
-    console.log('🔐 本地存储状态:', { hasUserInfo: !!userInfo });
-
-    // 如果有本地用户信息，先设置为已认证状态
-    if (userInfo) {
-      console.log('🔐 使用本地存储的用户信息');
-      setUser(userInfo);
-      setAuthStatus(AuthStatus.AUTHENTICATED);
-      
-      // 在后台验证 Cookie 认证状态
-      try {
-        const fetchedUser = await getCurrentUser();
-        console.log('🔐 Cookie 认证验证成功，更新用户信息:', fetchedUser);
-        setUser(fetchedUser);
-        setUserInfo(fetchedUser as unknown as Record<string, unknown>); // 更新本地存储
-      } catch (error) {
-        console.warn('🔐 Cookie 认证验证失败，清理认证信息:', error);
-        clearUserInfo();
-        setUser(null);
-        setAuthStatus(AuthStatus.UNAUTHENTICATED);
-      }
-      return;
-    }
-
-    // 如果没有本地用户信息，直接验证服务器认证状态
-    console.log('🔐 没有本地用户信息，检查服务器认证状态...');
     try {
       const fetchedUser = await getCurrentUser();
-      console.log('🔐 服务器认证验证成功，获取用户信息:', fetchedUser);
+      console.log('🔐 Cookie认证验证成功，获取用户信息:', fetchedUser);
       setUser(fetchedUser);
-      setUserInfo(fetchedUser as unknown as Record<string, unknown>); // 保存到本地存储
       setAuthStatus(AuthStatus.AUTHENTICATED);
     } catch (error) {
-      console.log('🔐 服务器认证验证失败，设置为未认证状态:', error);
+      console.log('🔐 Cookie认证验证失败，设置为未认证状态:', error);
       setUser(null);
       setAuthStatus(AuthStatus.UNAUTHENTICATED);
     }
@@ -106,7 +78,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = (userInfo: UserInfo) => {
     console.log('🔐 useAuth.login 被调用，用户信息:', userInfo);
     setUser(userInfo);
-    setUserInfo(userInfo as unknown as Record<string, unknown>); // 保存到本地存储
     setAuthStatus(AuthStatus.AUTHENTICATED);
     console.log('🔐 useAuth 状态已更新，isAuthenticated 将变为:', true);
   };
@@ -120,7 +91,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('🔐 退出登录失败:', error);
     } finally {
       // 清除本地状态
-      clearUserInfo();
       setUser(null);
       setAuthStatus(AuthStatus.UNAUTHENTICATED);
       navigate('/login');
@@ -133,7 +103,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (user) {
       const newUser = { ...user, ...updatedUser };
       setUser(newUser);
-      setUserInfo(newUser as unknown as Record<string, unknown>); // 更新本地存储
       console.log('🔐 用户信息已更新:', newUser);
     }
   };

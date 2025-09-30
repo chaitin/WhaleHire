@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { handleOAuthCallback } from '@/services/auth';
+import { handleOAuthCallback, getCurrentUser } from '@/services/auth';
 import { ApiError } from '@/lib/api';
 
 export default function OAuthCallbackPage() {
@@ -10,10 +10,22 @@ export default function OAuthCallbackPage() {
   const { login } = useAuth();
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(true);
+  
+  // 使用 ref 防止 React.StrictMode 导致的重复执行
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
+    // 如果已经处理过，直接返回
+    if (hasProcessedRef.current) {
+      console.log('OAuth回调已处理过，跳过重复执行');
+      return;
+    }
+
     const processCallback = async () => {
       try {
+        // 标记为已处理，防止重复执行
+        hasProcessedRef.current = true;
+        
         // 从URL参数中获取code和state
         const code = searchParams.get('code');
         const state = searchParams.get('state');
@@ -35,19 +47,26 @@ export default function OAuthCallbackPage() {
 
         console.log('处理OAuth回调，code:', code, 'state:', state);
 
-        // 调用后端API处理回调
+        // 调用后端API处理回调 - 后端只返回 redirect_url
         const response = await handleOAuthCallback(code, state);
         console.log('OAuth回调处理成功:', response);
 
+        // 由于后端OAuth回调只返回redirect_url，需要单独获取用户信息
+        const userInfo = await getCurrentUser();
+        console.log('获取到用户信息:', userInfo);
+
         // 更新认证状态
-        // login(response.user);
-        // console.log('已更新认证状态，用户信息:', response.user);
+        login(userInfo);
+        console.log('已更新认证状态，用户信息:', userInfo);
 
         // 跳转到简历管理页面
         navigate('/resume-management', { replace: true });
 
       } catch (error) {
         console.error('OAuth回调处理失败:', error);
+        // 处理失败时重置标记，允许重试
+        hasProcessedRef.current = false;
+        
         if (error instanceof ApiError) {
           setError(error.message);
         } else {

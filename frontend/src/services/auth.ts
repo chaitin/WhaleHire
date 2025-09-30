@@ -1,5 +1,5 @@
-// 认证相关API服务 - Cookie 认证版本
-import { apiPost, apiGet, setUserInfo, clearUserInfo, debugLog } from '@/lib/api';
+// 认证相关API服务 - 纯Cookie认证版本
+import { apiPost, apiGet, debugLog } from '@/lib/api';
 
 // 登录请求参数 - 根据swagger定义
 export interface LoginRequest {
@@ -47,10 +47,7 @@ export const login = async (credentials: LoginFormData): Promise<LoginResponse> 
     debugLog('🔐 发送登录请求到后端...');
     const response = await apiPost<LoginResponse>('/v1/user/login', loginData as unknown as Record<string, unknown>);
 
-    // 保存用户信息到 sessionStorage（Cookie 认证不需要区分 rememberMe）
-    setUserInfo(response.user as unknown as Record<string, unknown>);
-    debugLog('🔐 登录成功，用户信息已保存');
-
+    debugLog('🔐 登录成功，Cookie已设置');
     return response;
   } catch (error) {
     // 登录失败时直接抛出错误，不使用mock数据
@@ -65,13 +62,9 @@ export const logout = async (): Promise<void> => {
     debugLog('🔐 调用后端登出接口...');
     // 调用后端退出登录接口，服务器会清除 session/cookie
     await apiPost('/v1/user/logout');
-    debugLog('🔐 后端登出成功');
+    debugLog('🔐 后端登出成功，Cookie已清除');
   } catch (error) {
     console.warn('🔐 后端登出失败:', error);
-  } finally {
-    // 清除本地存储的用户信息
-    clearUserInfo();
-    debugLog('🔐 本地用户信息已清除');
   }
 };
 
@@ -80,8 +73,6 @@ export const getCurrentUser = async (): Promise<UserInfo> => {
   debugLog('🔐 获取当前用户信息...');
   try {
     const response = await apiGet<UserInfo>('/v1/user/profile');
-    // 更新本地存储的用户信息
-    setUserInfo(response as unknown as Record<string, unknown>);
     debugLog('🔐 用户信息获取成功:', response);
     return response;
   } catch (error) {
@@ -149,8 +140,6 @@ export const updateProfile = async (data: UpdateProfileRequest): Promise<UserInf
   debugLog('🔐 更新用户资料...');
   try {
     const response = await apiPost<UserInfo>('/v1/user/profile', data as unknown as Record<string, unknown>);
-    // 更新本地存储的用户信息
-    setUserInfo(response as unknown as Record<string, unknown>);
     debugLog('🔐 用户资料更新成功:', response);
     return response;
   } catch (error) {

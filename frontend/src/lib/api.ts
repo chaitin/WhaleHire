@@ -124,37 +124,6 @@ export class ApiError<T = unknown> extends Error {
   }
 }
 
-// 获取用户信息（仅从内存或 sessionStorage 获取，不依赖 token）
-export const getUserInfo = () => {
-  try {
-    const userInfo = sessionStorage.getItem('user_info');
-    return userInfo ? JSON.parse(userInfo) : null;
-  } catch (error) {
-    console.error('获取用户信息失败:', error);
-    return null;
-  }
-};
-
-// 设置用户信息（仅存储到 sessionStorage）
-export const setUserInfo = (userInfo: Record<string, unknown>): void => {
-  try {
-    sessionStorage.setItem('user_info', JSON.stringify(userInfo));
-    console.log('🔐 User info saved to sessionStorage');
-  } catch (error) {
-    console.error('设置用户信息失败:', error);
-  }
-};
-
-// 清除用户信息
-export const clearUserInfo = (): void => {
-  try {
-    sessionStorage.removeItem('user_info');
-    console.log('🔐 User info cleared from sessionStorage');
-  } catch (error) {
-    console.error('清除用户信息失败:', error);
-  }
-};
-
 // 基础请求函数
 export async function apiRequest<T = unknown>(
   endpoint: string,
@@ -188,9 +157,8 @@ export async function apiRequest<T = unknown>(
     // 处理HTTP错误状态
     if (!response.ok) {
       if (response.status === 401) {
-        // 未授权，清除本地用户信息
-        clearUserInfo();
-        debugLog('🔐 401 Unauthorized - cleared user info');
+        // 未授权，Cookie已失效
+        debugLog('🔐 401 Unauthorized - Cookie已失效');
         
         // 只有在不是登录页面时才跳转到登录页
         if (!window.location.pathname.includes('/login')) {
