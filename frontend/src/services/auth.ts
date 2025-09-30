@@ -98,14 +98,14 @@ export interface OAuthUrlResponse {
 // 获取OAuth认证地址
 export const getOAuthUrl = async (): Promise<string> => {
   debugLog('🔐 获取OAuth认证地址...');
-  debugLog('🔐 使用固定OAuth回调地址:', "https://hire.chaitin.net//resume-management");
+  debugLog('🔐 使用固定OAuth回调地址:', "https://hire.chaitin.net/resume-management");
   
   try {
     // 传递固定的回调地址给后端
     const response = await apiGet<OAuthUrlResponse>('/v1/user/oauth/signup-or-in', {
       platform: 'custom',
       source: 'browser',
-      redirect_url: "https://hire.chaitin.net//resume-management"
+      redirect_url: "https://hire.chaitin.net/resume-management"
     });
     debugLog('🔐 OAuth认证地址获取成功:', response.url);
     return response.url;
