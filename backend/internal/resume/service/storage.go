@@ -24,16 +24,18 @@ type StorageService struct {
 	maxFileSize  int64
 	allowedTypes []string
 	logger       *slog.Logger
+	userRepo     domain.UserRepo
 }
 
 // NewStorageService 创建新的存储服务实例
-func NewStorageService(minioClient *s3.MinioClient, cfg *config.Config, logger *slog.Logger) domain.StorageService {
+func NewStorageService(minioClient *s3.MinioClient, cfg *config.Config, logger *slog.Logger, userRepo domain.UserRepo) domain.StorageService {
 	return &StorageService{
 		minioClient:  minioClient,
 		bucket:       cfg.S3.BucketName,
 		maxFileSize:  cfg.FileStorage.MaxFileSize,
 		allowedTypes: cfg.FileStorage.AllowedTypes,
 		logger:       logger,
+		userRepo:     userRepo,
 	}
 }
 
@@ -73,7 +75,10 @@ func (s *StorageService) Upload(ctx context.Context, file io.Reader, filename st
 	}
 
 	// 生成访问URL
-	fileURL := s.generateFileURL(objectName)
+	fileURL, err := s.generateFileURL(objectName)
+	if err != nil {
+		return nil, fmt.Errorf("生成文件URL失败: %w", err)
+	}
 
 	return &domain.FileInfo{
 		OriginalName: filename,
@@ -159,18 +164,22 @@ func (s *StorageService) generateFilename(originalName string) string {
 }
 
 // generateFileURL 生成文件访问URL
-func (s *StorageService) generateFileURL(objectName string) string {
-	// 使用MinIO客户端生成预签名URL，有效期为24小时
+func (s *StorageService) generateFileURL(objectName string) (string, error) {
+	// 获取系统设置中的BaseURL
 	ctx := context.Background()
-	expires := 24 * time.Hour
-
-	url, err := s.minioClient.SignURL(ctx, s.bucket, objectName, expires)
+	setting, err := s.userRepo.GetSetting(ctx)
 	if err != nil {
-		// 如果生成预签名URL失败，回退到公共访问URL
-		return fmt.Sprintf("http://%s/%s/%s", s.minioClient.Client.EndpointURL().Host, s.bucket, objectName)
+		return "", fmt.Errorf("获取系统设置失败: %w", err)
 	}
 
-	return url
+	// 如果BaseURL为空，使用MinIO的默认endpoint
+	if setting.BaseURL == "" {
+		return fmt.Sprintf("http://%s/%s/%s", s.minioClient.Client.EndpointURL().Host, s.bucket, objectName), nil
+	}
+
+	// 使用BaseURL生成直接访问URL
+	baseURL := strings.TrimRight(setting.BaseURL, "/")
+	return fmt.Sprintf("%s/%s/%s", baseURL, s.bucket, objectName), nil
 }
 
 // getContentType 根据文件扩展名获取内容类型

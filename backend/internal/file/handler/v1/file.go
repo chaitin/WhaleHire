@@ -2,6 +2,9 @@ package v1
 
 import (
 	"fmt"
+	"io"
+	"net/url"
+	"strconv"
 
 	"github.com/GoYoko/web"
 	"github.com/google/uuid"
@@ -25,7 +28,8 @@ func NewFileHandler(
 	g := w.Group("/api/v1/file")
 	g.Use(auth.UserAuth())
 	g.POST("/upload", web.BaseHandler(h.Upload))
-	g.GET("/download", web.BaseHandler(h.Download))
+	g.GET("/downloadurl", web.BaseHandler(h.GetDownloadURL))
+	g.GET("/stream/:key", web.BaseHandler(h.StreamDownload))
 	return h
 }
 
@@ -56,9 +60,9 @@ func (h *FileHandler) Upload(c *web.Context) error {
 	return c.Success(domain.ObjectUploadResp{Key: key})
 }
 
-// Download
+// GetDownloadURL 获取文件下载链接
 //
-//	@Summary		Download File
+//	@Summary		Get Download URL
 //	@Description	Get presigned download URL
 //	@Tags			File
 //	@Accept			json
@@ -66,7 +70,7 @@ func (h *FileHandler) Upload(c *web.Context) error {
 //	@Param			key	query		string	true	"File Key"
 //	@Success		200	{object}	domain.ObjectDownloadResp
 //	@Router			/api/v1/file/download [get]
-func (h *FileHandler) Download(c *web.Context) error {
+func (h *FileHandler) GetDownloadURL(c *web.Context) error {
 	ctx := c.Request().Context()
 	key := c.QueryParam("key")
 	if key == "" {
@@ -77,4 +81,50 @@ func (h *FileHandler) Download(c *web.Context) error {
 		return err
 	}
 	return c.Success(domain.ObjectDownloadResp{URL: url})
+}
+
+// StreamDownload 流式下载文件
+//
+//	@Summary		Stream Download File
+//	@Description	Stream download file by key
+//	@Tags			File
+//	@Accept			json
+//	@Produce		application/octet-stream
+//	@Param			key	path	string	true	"File Key (URL encoded)"
+//	@Success		200	{file}	binary
+//	@Router			/api/v1/file/proxy/{key} [get]
+func (h *FileHandler) StreamDownload(c *web.Context) error {
+	ctx := c.Request().Context()
+
+	// 获取URL编码的key参数
+	encodedKey := c.Param("key")
+	if encodedKey == "" {
+		return errcode.ErrMissKey.Wrap(fmt.Errorf("missing key"))
+	}
+
+	// URL解码
+	key, err := url.QueryUnescape(encodedKey)
+	if err != nil {
+		return errcode.ErrMissKey.Wrap(fmt.Errorf("invalid key format: %w", err))
+	}
+
+	// 下载文件
+	reader, fileInfo, err := h.usecase.DownloadFile(ctx, key)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	// 设置响应头
+	c.Response().Header().Set("Content-Type", fileInfo.ContentType)
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileInfo.OriginalName))
+	c.Response().Header().Set("Content-Length", strconv.FormatInt(fileInfo.Size, 10))
+
+	// 流式传输文件内容
+	_, err = io.Copy(c.Response(), reader)
+	if err != nil {
+		return fmt.Errorf("failed to stream file: %w", err)
+	}
+
+	return nil
 }

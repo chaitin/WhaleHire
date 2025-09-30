@@ -66,7 +66,7 @@ func newServer() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	storageService := service.NewStorageService(minioClient, configConfig, slogLogger)
+	storageService := service.NewStorageService(minioClient, configConfig, slogLogger, userRepo)
 	resumeUsecase := usecase2.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, slogLogger)
 	resumeHandler := v1_2.NewResumeHandler(web, resumeUsecase, authMiddleware, slogLogger)
 	generalAgentRepo := repo3.NewGeneralAgentRepo(client)

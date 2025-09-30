@@ -16,6 +16,8 @@ services:
       - postgres_dev_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - whalehire-dev-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U whalehire -d whalehire"]
       interval: 10s
@@ -33,6 +35,8 @@ services:
       - redis_dev_data:/data
     ports:
       - "6379:6379"
+    networks:
+      - whalehire-dev-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
       interval: 10s
@@ -50,13 +54,29 @@ services:
     volumes:
       - minio_dev_data:/data
     ports:
-      - "9000:9000"   # S3 API 端口
+      - "9000:9000"   # MinIO API端口
       - "9001:9001"   # MinIO 控制台端口
+    networks:
+      - whalehire-dev-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
+
+  # Nginx 反向代理 - 仅代理MinIO文件下载
+  whalehire-nginx:
+    image: nginx:1.29.1
+    container_name: whalehire-dev-nginx
+    ports:
+      - "5200:5200"
+    volumes:
+      - ./nginx/nginx-dev.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - whalehire-dev-network
+    depends_on:
+      - whalehire-minio
+    restart: unless-stopped
 
 volumes:
   postgres_dev_data:
@@ -65,3 +85,7 @@ volumes:
     driver: local
   minio_dev_data:
     driver: local
+
+networks:
+  whalehire-dev-network:
+    driver: bridge

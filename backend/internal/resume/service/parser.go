@@ -61,10 +61,25 @@ func NewParserService(config *config.Config, logger *slog.Logger, resumeRepo dom
 
 // downloadFile 下载文件到临时目录
 func (s *ParserService) downloadFile(ctx context.Context, fileURL string, fileType string) (string, error) {
-	// 创建HTTP请求
-	req, err := http.NewRequestWithContext(ctx, "GET", fileURL, nil)
+	// 解析原始URL
+	parsedURL, err := url.Parse(fileURL)
 	if err != nil {
-		return "", fmt.Errorf("创建HTTP请求失败: %w", err)
+		return "", fmt.Errorf("解析URL失败: %w", err)
+	}
+
+	// 使用MinIO配置的endpoint替换URL中的host
+	minioEndpoint := s.config.S3.Endpoint
+	if !strings.HasPrefix(minioEndpoint, "http://") && !strings.HasPrefix(minioEndpoint, "https://") {
+		minioEndpoint = "http://" + minioEndpoint
+	}
+
+	// 构建新的URL，使用MinIO的endpoint但保持原有的路径
+	actualURL := minioEndpoint + parsedURL.Path
+
+	// 创建HTTP请求
+	req, createErr := http.NewRequestWithContext(ctx, "GET", actualURL, nil)
+	if createErr != nil {
+		return "", fmt.Errorf("创建HTTP请求失败: %w", createErr)
 	}
 
 	// 发送请求
@@ -80,7 +95,7 @@ func (s *ParserService) downloadFile(ctx context.Context, fileURL string, fileTy
 	}
 
 	// 从URL中提取文件名，去除查询参数
-	parsedURL, err := url.Parse(fileURL)
+	parsedURL, err = url.Parse(fileURL)
 	if err != nil {
 		return "", fmt.Errorf("解析URL失败: %w", err)
 	}

@@ -147,3 +147,34 @@ func (u *FileUsecase) UploadFileFromReader(
 func (u *FileUsecase) GenerateDownloadURL(ctx context.Context, key string) (string, error) {
 	return u.s3Client.SignURL(ctx, domain.Bucket, key, time.Hour)
 }
+
+// DownloadFile 直接下载文件流
+func (u *FileUsecase) DownloadFile(ctx context.Context, key string) (io.ReadCloser, *domain.FileInfo, error) {
+	// 获取对象信息
+	objInfo, err := u.s3Client.Client.StatObject(ctx, domain.Bucket, key, minio.StatObjectOptions{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get object info: %w", err)
+	}
+
+	// 获取文件流
+	object, err := u.s3Client.Client.GetObject(ctx, domain.Bucket, key, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get object: %w", err)
+	}
+
+	// 构造文件信息
+	fileInfo := &domain.FileInfo{
+		OriginalName: objInfo.UserMetadata["originalname"],
+		StoredName:   filepath.Base(key),
+		FilePath:     key,
+		Size:         objInfo.Size,
+		ContentType:  objInfo.ContentType,
+	}
+
+	// 如果没有原始文件名，使用存储的文件名
+	if fileInfo.OriginalName == "" {
+		fileInfo.OriginalName = fileInfo.StoredName
+	}
+
+	return object, fileInfo, nil
+}
