@@ -93,20 +93,26 @@ export const useResumeList = (initialParams: ResumeListParams = {}) => {
         const response: ResumeListResponse = await getResumeList(mergedParams);
         console.log('简历列表响应:', response);
 
-        // 更新简历列表数据
-        setResumes(response.resumes);
+        // 确保响应数据结构正确
+        if (!response || typeof response !== 'object') {
+          throw new Error('API 响应格式错误');
+        }
+
+        // 更新简历列表数据 - 如果 resumes 为空数组，这是正常情况，不应该报错
+        setResumes(response.resumes || []);
         
         // 更新分页信息
         setPagination({
           current: mergedParams.page || 1,
           pageSize: mergedParams.size || 10,
-          total: response.total_count,
-          hasNextPage: response.has_next_page,
-          nextToken: response.next_token,
+          total: response.total_count || 0,
+          hasNextPage: response.has_next_page || false,
+          nextToken: response.next_token || '',
         });
 
         // 检查是否有状态变化的简历
-        const processingCount = response.resumes.filter(resume => 
+        const resumes = response.resumes || [];
+        const processingCount = resumes.filter(resume => 
           resume.status === 'pending' || resume.status === 'processing'
         ).length;
         
