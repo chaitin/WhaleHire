@@ -86,4 +86,5 @@ type GetAccessTokenReq struct {
 
 type OAuthCallbackResp struct {
 	RedirectURL string `json:"redirect_url"`
+	User        *User  `json:"user,omitempty"` // 用户信息
 }

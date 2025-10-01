@@ -44,15 +44,26 @@ func newServer() (*Server, error) {
 	web := pkg.NewWeb(configConfig)
 	loggerConfig := configConfig.Logger
 	slogLogger := logger.NewLogger(loggerConfig)
+
+	slogLogger.Info("开始初始化服务组件")
+
 	client, err := store.NewEntDB(configConfig, slogLogger)
 	if err != nil {
+		slogLogger.Error("数据库连接失败", "error", err)
 		return nil, err
 	}
+	slogLogger.Info("数据库连接成功")
+
 	redisClient := store.NewRedisCli(configConfig)
+	slogLogger.Info("Redis 连接成功")
+
 	ipdbIPDB, err := ipdb.NewIPDB(slogLogger)
 	if err != nil {
+		slogLogger.Error("IPDB 初始化失败", "error", err)
 		return nil, err
 	}
+	slogLogger.Info("IPDB 初始化成功")
+
 	userRepo := repo.NewUserRepo(client, ipdbIPDB, redisClient, configConfig)
 	sessionSession := session.NewSession(configConfig)
 	userUsecase := usecase.NewUserUsecase(configConfig, redisClient, userRepo, slogLogger, sessionSession)
@@ -60,20 +71,36 @@ func newServer() (*Server, error) {
 	activeMiddleware := middleware.NewActiveMiddleware(redisClient, slogLogger)
 	readOnlyMiddleware := middleware.NewReadOnlyMiddleware(configConfig)
 	userHandler := v1.NewUserHandler(web, userUsecase, authMiddleware, activeMiddleware, readOnlyMiddleware, sessionSession, slogLogger, configConfig)
+	slogLogger.Info("用户服务初始化成功")
+
 	resumeRepo := repo2.NewResumeRepo(client)
 	parserService := service.NewParserService(configConfig, slogLogger, resumeRepo)
+	slogLogger.Info("简历解析服务初始化成功",
+		"parser_base_url", configConfig.DocumentParser.BaseURL)
+
 	minioClient, err := s3.NewMinioClient(configConfig)
 	if err != nil {
+		slogLogger.Error("MinIO 客户端初始化失败", "error", err)
 		return nil, err
 	}
+	slogLogger.Info("MinIO 客户端初始化成功")
+
 	storageService := service.NewStorageService(minioClient, configConfig, slogLogger, userRepo)
 	resumeUsecase := usecase2.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, slogLogger)
 	resumeHandler := v1_2.NewResumeHandler(web, resumeUsecase, authMiddleware, slogLogger)
+	slogLogger.Info("简历服务初始化成功")
+
 	generalAgentRepo := repo3.NewGeneralAgentRepo(client)
 	generalAgentUsecase := usecase3.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
 	generalAgentHandler := v1_3.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
+	slogLogger.Info("通用代理服务初始化成功",
+		"llm_base_url", configConfig.GeneralAgent.LLM.BaseURL,
+		"llm_model", configConfig.GeneralAgent.LLM.ModelName)
+
 	fileUsecase := usecase4.NewFileUsecase(slogLogger, minioClient, configConfig)
 	fileHandler := v1_4.NewFileHandler(web, fileUsecase, authMiddleware)
+	slogLogger.Info("文件服务初始化成功")
+
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
 		config:         configConfig,
@@ -86,6 +113,8 @@ func newServer() (*Server, error) {
 		fileV1:         fileHandler,
 		version:        versionInfo,
 	}
+
+	slogLogger.Info("所有服务组件初始化完成")
 	return server, nil
 }
 

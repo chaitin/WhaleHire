@@ -67,6 +67,8 @@ services:
         condition: service_healthy
       whalehire-redis:
         condition: service_healthy
+      whalehire-minio:
+        condition: service_healthy
     networks:
       - whalehire-network
     volumes:
