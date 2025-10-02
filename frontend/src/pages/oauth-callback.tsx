@@ -55,6 +55,12 @@ export default function OAuthCallbackPage() {
         login(response.user);
         console.log('已更新认证状态，用户信息:', response.user);
 
+        // 等待浏览器处理Set-Cookie头并验证认证状态
+        // 这个延迟确保浏览器有足够时间处理后端返回的Set-Cookie头
+        // 避免在Cookie还未设置完成时就跳转到下一个页面导致401错误
+        console.log('等待Cookie处理完成...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // 跳转到简历管理页面
         navigate('/resume-management', { replace: true });
 
