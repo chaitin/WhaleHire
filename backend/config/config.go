@@ -179,7 +179,7 @@ func Init() (*Config, error) {
 
 	v.SetDefault("retriever.top_k", 3)
 	v.SetDefault("retriever.distance_threshold", 0.8)
-	v.SetDefault("s3.endpoint", "  whalehire-minio:9000")
+	v.SetDefault("s3.endpoint", "whalehire-minio:9000")
 	v.SetDefault("s3.access_key", "s3whale-hire")
 	v.SetDefault("s3.secret_key", "")
 	v.SetDefault("s3.bucket_name", "static-file")

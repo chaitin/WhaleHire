@@ -34,6 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [authStatus, setAuthStatus] = useState<AuthStatus>(AuthStatus.LOADING);
   const navigate = useNavigate();
+  
 
   const isLoading = authStatus === AuthStatus.LOADING;
   const isAuthenticated = authStatus === AuthStatus.AUTHENTICATED;
@@ -60,6 +61,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const initAuth = async () => {
       console.log('🔐 开始初始化认证状态...');
+      
+      // 如果当前在OAuth回调页面，跳过初始化认证检查，等待OAuth流程完成
+      if (window.location.pathname === '/oauth/callback') {
+        console.log('🔐 当前在OAuth回调页面，跳过初始化认证检查');
+        return;
+      }
+      
       await refreshAuth();
       
       if (isMounted) {
@@ -77,6 +85,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 登录
   const login = (userInfo: UserInfo) => {
     console.log('🔐 useAuth.login 被调用，用户信息:', userInfo);
+    
     setUser(userInfo);
     setAuthStatus(AuthStatus.AUTHENTICATED);
     console.log('🔐 useAuth 状态已更新，isAuthenticated 将变为:', true);

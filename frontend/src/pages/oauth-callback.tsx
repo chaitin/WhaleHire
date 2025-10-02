@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { handleOAuthCallback, getCurrentUser } from '@/services/auth';
+import { handleOAuthCallback} from '@/services/auth';
 import { ApiError } from '@/lib/api';
 
 export default function OAuthCallbackPage() {
@@ -51,13 +51,15 @@ export default function OAuthCallbackPage() {
         const response = await handleOAuthCallback(code, state);
         console.log('OAuth回调处理成功:', response);
 
-        // 由于后端OAuth回调只返回redirect_url，需要单独获取用户信息
-        const userInfo = await getCurrentUser();
-        console.log('获取到用户信息:', userInfo);
-
         // 更新认证状态
-        login(userInfo);
-        console.log('已更新认证状态，用户信息:', userInfo);
+        login(response.user);
+        console.log('已更新认证状态，用户信息:', response.user);
+
+        // 等待浏览器处理Set-Cookie头并验证认证状态
+        // 这个延迟确保浏览器有足够时间处理后端返回的Set-Cookie头
+        // 避免在Cookie还未设置完成时就跳转到下一个页面导致401错误
+        console.log('等待Cookie处理完成...');
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // 跳转到简历管理页面
         navigate('/resume-management', { replace: true });

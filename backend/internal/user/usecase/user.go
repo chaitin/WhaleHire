@@ -516,15 +516,15 @@ func (u *UserUsecase) OAuthCallback(c *web.Context, req *domain.OAuthCallbackReq
 			return nil, err
 		}
 		u.logger.With("session", session).With("platform", session.Source).Debug("OAuthCallback login session")
+		resUser := cvt.From(user, &domain.User{})
 		if session.Source == consts.LoginSourceBrowser {
-			resUser := cvt.From(user, &domain.User{})
 			u.logger.With("user", resUser).With("host", c.Request().Host).DebugContext(ctx, "save user session")
 			if _, err := u.session.Save(c, consts.UserSessionName, resUser); err != nil {
 				return nil, err
 			}
 		}
 
-		return &domain.OAuthCallbackResp{RedirectURL: redirect}, nil
+		return &domain.OAuthCallbackResp{RedirectURL: redirect, User: resUser}, nil
 
 	default:
 		return nil, errcode.ErrOAuthStateInvalid.Wrap(fmt.Errorf("invalid oauth state"))
