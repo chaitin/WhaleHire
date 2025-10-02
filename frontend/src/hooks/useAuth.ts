@@ -35,8 +35,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>(AuthStatus.LOADING);
   const navigate = useNavigate();
   
-  // 添加标记，避免在OAuth登录后重复调用refreshAuth
-  const [skipInitialRefresh, setSkipInitialRefresh] = useState(false);
 
   const isLoading = authStatus === AuthStatus.LOADING;
   const isAuthenticated = authStatus === AuthStatus.AUTHENTICATED;
@@ -64,14 +62,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initAuth = async () => {
       console.log('🔐 开始初始化认证状态...');
       
-      // 如果已经通过OAuth登录设置了用户信息，跳过初始化认证检查
-      if (skipInitialRefresh) {
-        console.log('🔐 跳过初始化认证检查，用户已通过OAuth登录');
-        return;
-      }
-      
       // 如果当前在OAuth回调页面，跳过初始化认证检查，等待OAuth流程完成
-      if (window.location.pathname === '/oauth-callback') {
+      if (window.location.pathname === '/oauth/callback') {
         console.log('🔐 当前在OAuth回调页面，跳过初始化认证检查');
         return;
       }
@@ -88,14 +80,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       isMounted = false;
     };
-  }, [refreshAuth, skipInitialRefresh]);
+  }, [refreshAuth]);
 
   // 登录
   const login = (userInfo: UserInfo) => {
     console.log('🔐 useAuth.login 被调用，用户信息:', userInfo);
-    
-    // 先设置标记，防止后续的useEffect触发refreshAuth
-    setSkipInitialRefresh(true);
     
     setUser(userInfo);
     setAuthStatus(AuthStatus.AUTHENTICATED);
@@ -113,7 +102,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // 清除本地状态
       setUser(null);
       setAuthStatus(AuthStatus.UNAUTHENTICATED);
-      setSkipInitialRefresh(false); // 重置标记，下次登录时需要重新检查认证状态
       navigate('/login');
       console.log('🔐 登出完成，已跳转到登录页');
     }
