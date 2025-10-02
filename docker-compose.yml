@@ -43,7 +43,7 @@ services:
 
   # 后端服务
   whalehire-backend:
-    image: portus.in.chaitin.net/whalehire/backend:latest
+    image: portus.in.chaitin.net/whalehire/backend:v0.1.1
     container_name: whalehire-backend
     environment:
       WHALEHIRE_DATABASE_MASTER: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@whalehire-db:5432/${POSTGRES_DB}?sslmode=disable&timezone=Asia/Shanghai"
@@ -56,6 +56,11 @@ services:
       WHALEHIRE_GENERAL_AGENT_LLM_MODEL_NAME: ${WHALEHIRE_GENERAL_AGENT_LLM_MODEL_NAME}
       WHALEHIRE_GENERAL_AGENT_LLM_BASE_URL: ${WHALEHIRE_GENERAL_AGENT_LLM_BASE_URL}
       WHALEHIRE_GENERAL_AGENT_LLM_API_KEY: ${WHALEHIRE_GENERAL_AGENT_LLM_API_KEY}
+      WHALEHIRE_S3_SECRET_KEY: ${WHALEHIRE_S3_SECRET_KEY}
+      WHALEHIRE_MINIO_ROOT_USER: ${WHALEHIRE_MINIO_ROOT_USER}
+      WHALEHIRE_MINIO_ROOT_PASSWORD: ${WHALEHIRE_MINIO_ROOT_PASSWORD}
+      WHALEHIRE_DOCUMENT_PARSER_API_KEY: ${WHALEHIRE_DOCUMENT_PARSER_API_KEY}
+      WHALEHIRE_DOCUMENT_PARSER_BASE_URL: ${WHALEHIRE_DOCUMENT_PARSER_BASE_URL}
       # 代理配置
       https_proxy: ${https_proxy:-}
       http_proxy: ${http_proxy:-}
@@ -78,7 +83,7 @@ services:
 
   # 前端服务
   whalehire-frontend:
-    image: portus.in.chaitin.net/whalehire/frontend:v0.0.3
+    image: portus.in.chaitin.net/whalehire/frontend:v0.1.1
     container_name: whalehire-frontend
     ports:
       - "3000:80"
