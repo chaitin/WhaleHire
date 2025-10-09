@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/department"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
 	"github.com/chaitin/WhaleHire/backend/db/jobexperiencerequirement"
@@ -19,6 +20,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
 
@@ -80,6 +82,40 @@ func (jpu *JobPositionUpdate) SetDepartmentID(u uuid.UUID) *JobPositionUpdate {
 func (jpu *JobPositionUpdate) SetNillableDepartmentID(u *uuid.UUID) *JobPositionUpdate {
 	if u != nil {
 		jpu.SetDepartmentID(*u)
+	}
+	return jpu
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (jpu *JobPositionUpdate) SetCreatedBy(u uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.SetCreatedBy(u)
+	return jpu
+}
+
+// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
+func (jpu *JobPositionUpdate) SetNillableCreatedBy(u *uuid.UUID) *JobPositionUpdate {
+	if u != nil {
+		jpu.SetCreatedBy(*u)
+	}
+	return jpu
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (jpu *JobPositionUpdate) ClearCreatedBy() *JobPositionUpdate {
+	jpu.mutation.ClearCreatedBy()
+	return jpu
+}
+
+// SetStatus sets the "status" field.
+func (jpu *JobPositionUpdate) SetStatus(cps consts.JobPositionStatus) *JobPositionUpdate {
+	jpu.mutation.SetStatus(cps)
+	return jpu
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (jpu *JobPositionUpdate) SetNillableStatus(cps *consts.JobPositionStatus) *JobPositionUpdate {
+	if cps != nil {
+		jpu.SetStatus(*cps)
 	}
 	return jpu
 }
@@ -189,6 +225,25 @@ func (jpu *JobPositionUpdate) SetDepartment(d *Department) *JobPositionUpdate {
 	return jpu.SetDepartmentID(d.ID)
 }
 
+// SetCreatorID sets the "creator" edge to the User entity by ID.
+func (jpu *JobPositionUpdate) SetCreatorID(id uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.SetCreatorID(id)
+	return jpu
+}
+
+// SetNillableCreatorID sets the "creator" edge to the User entity by ID if the given value is not nil.
+func (jpu *JobPositionUpdate) SetNillableCreatorID(id *uuid.UUID) *JobPositionUpdate {
+	if id != nil {
+		jpu = jpu.SetCreatorID(*id)
+	}
+	return jpu
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (jpu *JobPositionUpdate) SetCreator(u *User) *JobPositionUpdate {
+	return jpu.SetCreatorID(u.ID)
+}
+
 // AddResponsibilityIDs adds the "responsibilities" edge to the JobResponsibility entity by IDs.
 func (jpu *JobPositionUpdate) AddResponsibilityIDs(ids ...uuid.UUID) *JobPositionUpdate {
 	jpu.mutation.AddResponsibilityIDs(ids...)
@@ -272,6 +327,12 @@ func (jpu *JobPositionUpdate) Mutation() *JobPositionMutation {
 // ClearDepartment clears the "department" edge to the Department entity.
 func (jpu *JobPositionUpdate) ClearDepartment() *JobPositionUpdate {
 	jpu.mutation.ClearDepartment()
+	return jpu
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (jpu *JobPositionUpdate) ClearCreator() *JobPositionUpdate {
+	jpu.mutation.ClearCreator()
 	return jpu
 }
 
@@ -467,6 +528,9 @@ func (jpu *JobPositionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := jpu.mutation.Name(); ok {
 		_spec.SetField(jobposition.FieldName, field.TypeString, value)
 	}
+	if value, ok := jpu.mutation.Status(); ok {
+		_spec.SetField(jobposition.FieldStatus, field.TypeString, value)
+	}
 	if value, ok := jpu.mutation.Location(); ok {
 		_spec.SetField(jobposition.FieldLocation, field.TypeString, value)
 	}
@@ -522,6 +586,35 @@ func (jpu *JobPositionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if jpu.mutation.CreatorCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   jobposition.CreatorTable,
+			Columns: []string{jobposition.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpu.mutation.CreatorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   jobposition.CreatorTable,
+			Columns: []string{jobposition.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -824,6 +917,40 @@ func (jpuo *JobPositionUpdateOne) SetNillableDepartmentID(u *uuid.UUID) *JobPosi
 	return jpuo
 }
 
+// SetCreatedBy sets the "created_by" field.
+func (jpuo *JobPositionUpdateOne) SetCreatedBy(u uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.SetCreatedBy(u)
+	return jpuo
+}
+
+// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
+func (jpuo *JobPositionUpdateOne) SetNillableCreatedBy(u *uuid.UUID) *JobPositionUpdateOne {
+	if u != nil {
+		jpuo.SetCreatedBy(*u)
+	}
+	return jpuo
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (jpuo *JobPositionUpdateOne) ClearCreatedBy() *JobPositionUpdateOne {
+	jpuo.mutation.ClearCreatedBy()
+	return jpuo
+}
+
+// SetStatus sets the "status" field.
+func (jpuo *JobPositionUpdateOne) SetStatus(cps consts.JobPositionStatus) *JobPositionUpdateOne {
+	jpuo.mutation.SetStatus(cps)
+	return jpuo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (jpuo *JobPositionUpdateOne) SetNillableStatus(cps *consts.JobPositionStatus) *JobPositionUpdateOne {
+	if cps != nil {
+		jpuo.SetStatus(*cps)
+	}
+	return jpuo
+}
+
 // SetLocation sets the "location" field.
 func (jpuo *JobPositionUpdateOne) SetLocation(s string) *JobPositionUpdateOne {
 	jpuo.mutation.SetLocation(s)
@@ -929,6 +1056,25 @@ func (jpuo *JobPositionUpdateOne) SetDepartment(d *Department) *JobPositionUpdat
 	return jpuo.SetDepartmentID(d.ID)
 }
 
+// SetCreatorID sets the "creator" edge to the User entity by ID.
+func (jpuo *JobPositionUpdateOne) SetCreatorID(id uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.SetCreatorID(id)
+	return jpuo
+}
+
+// SetNillableCreatorID sets the "creator" edge to the User entity by ID if the given value is not nil.
+func (jpuo *JobPositionUpdateOne) SetNillableCreatorID(id *uuid.UUID) *JobPositionUpdateOne {
+	if id != nil {
+		jpuo = jpuo.SetCreatorID(*id)
+	}
+	return jpuo
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (jpuo *JobPositionUpdateOne) SetCreator(u *User) *JobPositionUpdateOne {
+	return jpuo.SetCreatorID(u.ID)
+}
+
 // AddResponsibilityIDs adds the "responsibilities" edge to the JobResponsibility entity by IDs.
 func (jpuo *JobPositionUpdateOne) AddResponsibilityIDs(ids ...uuid.UUID) *JobPositionUpdateOne {
 	jpuo.mutation.AddResponsibilityIDs(ids...)
@@ -1012,6 +1158,12 @@ func (jpuo *JobPositionUpdateOne) Mutation() *JobPositionMutation {
 // ClearDepartment clears the "department" edge to the Department entity.
 func (jpuo *JobPositionUpdateOne) ClearDepartment() *JobPositionUpdateOne {
 	jpuo.mutation.ClearDepartment()
+	return jpuo
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (jpuo *JobPositionUpdateOne) ClearCreator() *JobPositionUpdateOne {
+	jpuo.mutation.ClearCreator()
 	return jpuo
 }
 
@@ -1237,6 +1389,9 @@ func (jpuo *JobPositionUpdateOne) sqlSave(ctx context.Context) (_node *JobPositi
 	if value, ok := jpuo.mutation.Name(); ok {
 		_spec.SetField(jobposition.FieldName, field.TypeString, value)
 	}
+	if value, ok := jpuo.mutation.Status(); ok {
+		_spec.SetField(jobposition.FieldStatus, field.TypeString, value)
+	}
 	if value, ok := jpuo.mutation.Location(); ok {
 		_spec.SetField(jobposition.FieldLocation, field.TypeString, value)
 	}
@@ -1292,6 +1447,35 @@ func (jpuo *JobPositionUpdateOne) sqlSave(ctx context.Context) (_node *JobPositi
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if jpuo.mutation.CreatorCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   jobposition.CreatorTable,
+			Columns: []string{jobposition.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpuo.mutation.CreatorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   jobposition.CreatorTable,
+			Columns: []string{jobposition.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

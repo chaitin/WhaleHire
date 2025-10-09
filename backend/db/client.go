@@ -1951,6 +1951,22 @@ func (c *JobPositionClient) QueryDepartment(jp *JobPosition) *DepartmentQuery {
 	return query
 }
 
+// QueryCreator queries the creator edge of a JobPosition.
+func (c *JobPositionClient) QueryCreator(jp *JobPosition) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobposition.CreatorTable, jobposition.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryResponsibilities queries the responsibilities edge of a JobPosition.
 func (c *JobPositionClient) QueryResponsibilities(jp *JobPosition) *JobResponsibilityQuery {
 	query := (&JobResponsibilityClient{config: c.config}).Query()
@@ -4143,6 +4159,22 @@ func (c *UserClient) QueryResumes(u *User) *ResumeQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(resume.Table, resume.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.ResumesTable, user.ResumesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCreatedPositions queries the created_positions edge of a User.
+func (c *UserClient) QueryCreatedPositions(u *User) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CreatedPositionsTable, user.CreatedPositionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

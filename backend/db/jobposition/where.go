@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -69,6 +70,17 @@ func Name(v string) predicate.JobPosition {
 // DepartmentID applies equality check predicate on the "department_id" field. It's identical to DepartmentIDEQ.
 func DepartmentID(v uuid.UUID) predicate.JobPosition {
 	return predicate.JobPosition(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// CreatedBy applies equality check predicate on the "created_by" field. It's identical to CreatedByEQ.
+func CreatedBy(v uuid.UUID) predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldEQ(FieldCreatedBy, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldEQ(FieldStatus, vc))
 }
 
 // Location applies equality check predicate on the "location" field. It's identical to LocationEQ.
@@ -234,6 +246,120 @@ func DepartmentIDIn(vs ...uuid.UUID) predicate.JobPosition {
 // DepartmentIDNotIn applies the NotIn predicate on the "department_id" field.
 func DepartmentIDNotIn(vs ...uuid.UUID) predicate.JobPosition {
 	return predicate.JobPosition(sql.FieldNotIn(FieldDepartmentID, vs...))
+}
+
+// CreatedByEQ applies the EQ predicate on the "created_by" field.
+func CreatedByEQ(v uuid.UUID) predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldEQ(FieldCreatedBy, v))
+}
+
+// CreatedByNEQ applies the NEQ predicate on the "created_by" field.
+func CreatedByNEQ(v uuid.UUID) predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldNEQ(FieldCreatedBy, v))
+}
+
+// CreatedByIn applies the In predicate on the "created_by" field.
+func CreatedByIn(vs ...uuid.UUID) predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldIn(FieldCreatedBy, vs...))
+}
+
+// CreatedByNotIn applies the NotIn predicate on the "created_by" field.
+func CreatedByNotIn(vs ...uuid.UUID) predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldNotIn(FieldCreatedBy, vs...))
+}
+
+// CreatedByIsNil applies the IsNil predicate on the "created_by" field.
+func CreatedByIsNil() predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldIsNull(FieldCreatedBy))
+}
+
+// CreatedByNotNil applies the NotNil predicate on the "created_by" field.
+func CreatedByNotNil() predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldNotNull(FieldCreatedBy))
+}
+
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldEQ(FieldStatus, vc))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldNEQ(FieldStatus, vc))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...consts.JobPositionStatus) predicate.JobPosition {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobPosition(sql.FieldIn(FieldStatus, v...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...consts.JobPositionStatus) predicate.JobPosition {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobPosition(sql.FieldNotIn(FieldStatus, v...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldGT(FieldStatus, vc))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldGTE(FieldStatus, vc))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldLT(FieldStatus, vc))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldLTE(FieldStatus, vc))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldContains(FieldStatus, vc))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldHasPrefix(FieldStatus, vc))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldHasSuffix(FieldStatus, vc))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldEqualFold(FieldStatus, vc))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v consts.JobPositionStatus) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldContainsFold(FieldStatus, vc))
 }
 
 // LocationEQ applies the EQ predicate on the "location" field.
@@ -581,6 +707,29 @@ func HasDepartment() predicate.JobPosition {
 func HasDepartmentWith(preds ...predicate.Department) predicate.JobPosition {
 	return predicate.JobPosition(func(s *sql.Selector) {
 		step := newDepartmentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCreator applies the HasEdge predicate on the "creator" edge.
+func HasCreator() predicate.JobPosition {
+	return predicate.JobPosition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, CreatorTable, CreatorColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCreatorWith applies the HasEdge predicate on the "creator" edge with a given conditions (other predicates).
+func HasCreatorWith(preds ...predicate.User) predicate.JobPosition {
+	return predicate.JobPosition(func(s *sql.Selector) {
+		step := newCreatorStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

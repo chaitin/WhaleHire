@@ -7169,6 +7169,7 @@ type JobPositionMutation struct {
 	id                             *uuid.UUID
 	deleted_at                     *time.Time
 	name                           *string
+	status                         *consts.JobPositionStatus
 	location                       *string
 	salary_min                     *float64
 	addsalary_min                  *float64
@@ -7180,6 +7181,8 @@ type JobPositionMutation struct {
 	clearedFields                  map[string]struct{}
 	department                     *uuid.UUID
 	cleareddepartment              bool
+	creator                        *uuid.UUID
+	clearedcreator                 bool
 	responsibilities               map[uuid.UUID]struct{}
 	removedresponsibilities        map[uuid.UUID]struct{}
 	clearedresponsibilities        bool
@@ -7423,6 +7426,91 @@ func (m *JobPositionMutation) OldDepartmentID(ctx context.Context) (v uuid.UUID,
 // ResetDepartmentID resets all changes to the "department_id" field.
 func (m *JobPositionMutation) ResetDepartmentID() {
 	m.department = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *JobPositionMutation) SetCreatedBy(u uuid.UUID) {
+	m.creator = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *JobPositionMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the JobPosition entity.
+// If the JobPosition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobPositionMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *JobPositionMutation) ClearCreatedBy() {
+	m.creator = nil
+	m.clearedFields[jobposition.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *JobPositionMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[jobposition.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *JobPositionMutation) ResetCreatedBy() {
+	m.creator = nil
+	delete(m.clearedFields, jobposition.FieldCreatedBy)
+}
+
+// SetStatus sets the "status" field.
+func (m *JobPositionMutation) SetStatus(cps consts.JobPositionStatus) {
+	m.status = &cps
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *JobPositionMutation) Status() (r consts.JobPositionStatus, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the JobPosition entity.
+// If the JobPosition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobPositionMutation) OldStatus(ctx context.Context) (v consts.JobPositionStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *JobPositionMutation) ResetStatus() {
+	m.status = nil
 }
 
 // SetLocation sets the "location" field.
@@ -7762,6 +7850,46 @@ func (m *JobPositionMutation) ResetDepartment() {
 	m.cleareddepartment = false
 }
 
+// SetCreatorID sets the "creator" edge to the User entity by id.
+func (m *JobPositionMutation) SetCreatorID(id uuid.UUID) {
+	m.creator = &id
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (m *JobPositionMutation) ClearCreator() {
+	m.clearedcreator = true
+	m.clearedFields[jobposition.FieldCreatedBy] = struct{}{}
+}
+
+// CreatorCleared reports if the "creator" edge to the User entity was cleared.
+func (m *JobPositionMutation) CreatorCleared() bool {
+	return m.CreatedByCleared() || m.clearedcreator
+}
+
+// CreatorID returns the "creator" edge ID in the mutation.
+func (m *JobPositionMutation) CreatorID() (id uuid.UUID, exists bool) {
+	if m.creator != nil {
+		return *m.creator, true
+	}
+	return
+}
+
+// CreatorIDs returns the "creator" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CreatorID instead. It exists only for internal usage by the builders.
+func (m *JobPositionMutation) CreatorIDs() (ids []uuid.UUID) {
+	if id := m.creator; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCreator resets all changes to the "creator" edge.
+func (m *JobPositionMutation) ResetCreator() {
+	m.creator = nil
+	m.clearedcreator = false
+}
+
 // AddResponsibilityIDs adds the "responsibilities" edge to the JobResponsibility entity by ids.
 func (m *JobPositionMutation) AddResponsibilityIDs(ids ...uuid.UUID) {
 	if m.responsibilities == nil {
@@ -8066,7 +8194,7 @@ func (m *JobPositionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *JobPositionMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 11)
 	if m.deleted_at != nil {
 		fields = append(fields, jobposition.FieldDeletedAt)
 	}
@@ -8075,6 +8203,12 @@ func (m *JobPositionMutation) Fields() []string {
 	}
 	if m.department != nil {
 		fields = append(fields, jobposition.FieldDepartmentID)
+	}
+	if m.creator != nil {
+		fields = append(fields, jobposition.FieldCreatedBy)
+	}
+	if m.status != nil {
+		fields = append(fields, jobposition.FieldStatus)
 	}
 	if m.location != nil {
 		fields = append(fields, jobposition.FieldLocation)
@@ -8108,6 +8242,10 @@ func (m *JobPositionMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case jobposition.FieldDepartmentID:
 		return m.DepartmentID()
+	case jobposition.FieldCreatedBy:
+		return m.CreatedBy()
+	case jobposition.FieldStatus:
+		return m.Status()
 	case jobposition.FieldLocation:
 		return m.Location()
 	case jobposition.FieldSalaryMin:
@@ -8135,6 +8273,10 @@ func (m *JobPositionMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldName(ctx)
 	case jobposition.FieldDepartmentID:
 		return m.OldDepartmentID(ctx)
+	case jobposition.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case jobposition.FieldStatus:
+		return m.OldStatus(ctx)
 	case jobposition.FieldLocation:
 		return m.OldLocation(ctx)
 	case jobposition.FieldSalaryMin:
@@ -8176,6 +8318,20 @@ func (m *JobPositionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDepartmentID(v)
+		return nil
+	case jobposition.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case jobposition.FieldStatus:
+		v, ok := value.(consts.JobPositionStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
 		return nil
 	case jobposition.FieldLocation:
 		v, ok := value.(string)
@@ -8279,6 +8435,9 @@ func (m *JobPositionMutation) ClearedFields() []string {
 	if m.FieldCleared(jobposition.FieldDeletedAt) {
 		fields = append(fields, jobposition.FieldDeletedAt)
 	}
+	if m.FieldCleared(jobposition.FieldCreatedBy) {
+		fields = append(fields, jobposition.FieldCreatedBy)
+	}
 	if m.FieldCleared(jobposition.FieldLocation) {
 		fields = append(fields, jobposition.FieldLocation)
 	}
@@ -8307,6 +8466,9 @@ func (m *JobPositionMutation) ClearField(name string) error {
 	switch name {
 	case jobposition.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case jobposition.FieldCreatedBy:
+		m.ClearCreatedBy()
 		return nil
 	case jobposition.FieldLocation:
 		m.ClearLocation()
@@ -8337,6 +8499,12 @@ func (m *JobPositionMutation) ResetField(name string) error {
 	case jobposition.FieldDepartmentID:
 		m.ResetDepartmentID()
 		return nil
+	case jobposition.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case jobposition.FieldStatus:
+		m.ResetStatus()
+		return nil
 	case jobposition.FieldLocation:
 		m.ResetLocation()
 		return nil
@@ -8361,9 +8529,12 @@ func (m *JobPositionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *JobPositionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.department != nil {
 		edges = append(edges, jobposition.EdgeDepartment)
+	}
+	if m.creator != nil {
+		edges = append(edges, jobposition.EdgeCreator)
 	}
 	if m.responsibilities != nil {
 		edges = append(edges, jobposition.EdgeResponsibilities)
@@ -8389,6 +8560,10 @@ func (m *JobPositionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case jobposition.EdgeDepartment:
 		if id := m.department; id != nil {
+			return []ent.Value{*id}
+		}
+	case jobposition.EdgeCreator:
+		if id := m.creator; id != nil {
 			return []ent.Value{*id}
 		}
 	case jobposition.EdgeResponsibilities:
@@ -8427,7 +8602,7 @@ func (m *JobPositionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *JobPositionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedresponsibilities != nil {
 		edges = append(edges, jobposition.EdgeResponsibilities)
 	}
@@ -8486,9 +8661,12 @@ func (m *JobPositionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *JobPositionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.cleareddepartment {
 		edges = append(edges, jobposition.EdgeDepartment)
+	}
+	if m.clearedcreator {
+		edges = append(edges, jobposition.EdgeCreator)
 	}
 	if m.clearedresponsibilities {
 		edges = append(edges, jobposition.EdgeResponsibilities)
@@ -8514,6 +8692,8 @@ func (m *JobPositionMutation) EdgeCleared(name string) bool {
 	switch name {
 	case jobposition.EdgeDepartment:
 		return m.cleareddepartment
+	case jobposition.EdgeCreator:
+		return m.clearedcreator
 	case jobposition.EdgeResponsibilities:
 		return m.clearedresponsibilities
 	case jobposition.EdgeSkills:
@@ -8535,6 +8715,9 @@ func (m *JobPositionMutation) ClearEdge(name string) error {
 	case jobposition.EdgeDepartment:
 		m.ClearDepartment()
 		return nil
+	case jobposition.EdgeCreator:
+		m.ClearCreator()
+		return nil
 	}
 	return fmt.Errorf("unknown JobPosition unique edge %s", name)
 }
@@ -8545,6 +8728,9 @@ func (m *JobPositionMutation) ResetEdge(name string) error {
 	switch name {
 	case jobposition.EdgeDepartment:
 		m.ResetDepartment()
+		return nil
+	case jobposition.EdgeCreator:
+		m.ResetCreator()
 		return nil
 	case jobposition.EdgeResponsibilities:
 		m.ResetResponsibilities()
@@ -19662,34 +19848,37 @@ func (m *SettingMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uuid.UUID
-	deleted_at             *time.Time
-	username               *string
-	password               *string
-	email                  *string
-	avatar_url             *string
-	platform               *consts.UserPlatform
-	status                 *consts.UserStatus
-	created_at             *time.Time
-	updated_at             *time.Time
-	clearedFields          map[string]struct{}
-	login_histories        map[uuid.UUID]struct{}
-	removedlogin_histories map[uuid.UUID]struct{}
-	clearedlogin_histories bool
-	identities             map[uuid.UUID]struct{}
-	removedidentities      map[uuid.UUID]struct{}
-	clearedidentities      bool
-	conversations          map[uuid.UUID]struct{}
-	removedconversations   map[uuid.UUID]struct{}
-	clearedconversations   bool
-	resumes                map[uuid.UUID]struct{}
-	removedresumes         map[uuid.UUID]struct{}
-	clearedresumes         bool
-	done                   bool
-	oldValue               func(context.Context) (*User, error)
-	predicates             []predicate.User
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	deleted_at               *time.Time
+	username                 *string
+	password                 *string
+	email                    *string
+	avatar_url               *string
+	platform                 *consts.UserPlatform
+	status                   *consts.UserStatus
+	created_at               *time.Time
+	updated_at               *time.Time
+	clearedFields            map[string]struct{}
+	login_histories          map[uuid.UUID]struct{}
+	removedlogin_histories   map[uuid.UUID]struct{}
+	clearedlogin_histories   bool
+	identities               map[uuid.UUID]struct{}
+	removedidentities        map[uuid.UUID]struct{}
+	clearedidentities        bool
+	conversations            map[uuid.UUID]struct{}
+	removedconversations     map[uuid.UUID]struct{}
+	clearedconversations     bool
+	resumes                  map[uuid.UUID]struct{}
+	removedresumes           map[uuid.UUID]struct{}
+	clearedresumes           bool
+	created_positions        map[uuid.UUID]struct{}
+	removedcreated_positions map[uuid.UUID]struct{}
+	clearedcreated_positions bool
+	done                     bool
+	oldValue                 func(context.Context) (*User, error)
+	predicates               []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -20401,6 +20590,60 @@ func (m *UserMutation) ResetResumes() {
 	m.removedresumes = nil
 }
 
+// AddCreatedPositionIDs adds the "created_positions" edge to the JobPosition entity by ids.
+func (m *UserMutation) AddCreatedPositionIDs(ids ...uuid.UUID) {
+	if m.created_positions == nil {
+		m.created_positions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.created_positions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCreatedPositions clears the "created_positions" edge to the JobPosition entity.
+func (m *UserMutation) ClearCreatedPositions() {
+	m.clearedcreated_positions = true
+}
+
+// CreatedPositionsCleared reports if the "created_positions" edge to the JobPosition entity was cleared.
+func (m *UserMutation) CreatedPositionsCleared() bool {
+	return m.clearedcreated_positions
+}
+
+// RemoveCreatedPositionIDs removes the "created_positions" edge to the JobPosition entity by IDs.
+func (m *UserMutation) RemoveCreatedPositionIDs(ids ...uuid.UUID) {
+	if m.removedcreated_positions == nil {
+		m.removedcreated_positions = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.created_positions, ids[i])
+		m.removedcreated_positions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCreatedPositions returns the removed IDs of the "created_positions" edge to the JobPosition entity.
+func (m *UserMutation) RemovedCreatedPositionsIDs() (ids []uuid.UUID) {
+	for id := range m.removedcreated_positions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CreatedPositionsIDs returns the "created_positions" edge IDs in the mutation.
+func (m *UserMutation) CreatedPositionsIDs() (ids []uuid.UUID) {
+	for id := range m.created_positions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCreatedPositions resets all changes to the "created_positions" edge.
+func (m *UserMutation) ResetCreatedPositions() {
+	m.created_positions = nil
+	m.clearedcreated_positions = false
+	m.removedcreated_positions = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -20703,7 +20946,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.login_histories != nil {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -20715,6 +20958,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.resumes != nil {
 		edges = append(edges, user.EdgeResumes)
+	}
+	if m.created_positions != nil {
+		edges = append(edges, user.EdgeCreatedPositions)
 	}
 	return edges
 }
@@ -20747,13 +20993,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCreatedPositions:
+		ids := make([]ent.Value, 0, len(m.created_positions))
+		for id := range m.created_positions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedlogin_histories != nil {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -20765,6 +21017,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedresumes != nil {
 		edges = append(edges, user.EdgeResumes)
+	}
+	if m.removedcreated_positions != nil {
+		edges = append(edges, user.EdgeCreatedPositions)
 	}
 	return edges
 }
@@ -20797,13 +21052,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCreatedPositions:
+		ids := make([]ent.Value, 0, len(m.removedcreated_positions))
+		for id := range m.removedcreated_positions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedlogin_histories {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -20815,6 +21076,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedresumes {
 		edges = append(edges, user.EdgeResumes)
+	}
+	if m.clearedcreated_positions {
+		edges = append(edges, user.EdgeCreatedPositions)
 	}
 	return edges
 }
@@ -20831,6 +21095,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedconversations
 	case user.EdgeResumes:
 		return m.clearedresumes
+	case user.EdgeCreatedPositions:
+		return m.clearedcreated_positions
 	}
 	return false
 }
@@ -20858,6 +21124,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeResumes:
 		m.ResetResumes()
+		return nil
+	case user.EdgeCreatedPositions:
+		m.ResetCreatedPositions()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

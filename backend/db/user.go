@@ -53,9 +53,11 @@ type UserEdges struct {
 	Conversations []*Conversation `json:"conversations,omitempty"`
 	// Resumes holds the value of the resumes edge.
 	Resumes []*Resume `json:"resumes,omitempty"`
+	// CreatedPositions holds the value of the created_positions edge.
+	CreatedPositions []*JobPosition `json:"created_positions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // LoginHistoriesOrErr returns the LoginHistories value or an error if the edge
@@ -92,6 +94,15 @@ func (e UserEdges) ResumesOrErr() ([]*Resume, error) {
 		return e.Resumes, nil
 	}
 	return nil, &NotLoadedError{edge: "resumes"}
+}
+
+// CreatedPositionsOrErr returns the CreatedPositions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CreatedPositionsOrErr() ([]*JobPosition, error) {
+	if e.loadedTypes[4] {
+		return e.CreatedPositions, nil
+	}
+	return nil, &NotLoadedError{edge: "created_positions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -211,6 +222,11 @@ func (u *User) QueryConversations() *ConversationQuery {
 // QueryResumes queries the "resumes" edge of the User entity.
 func (u *User) QueryResumes() *ResumeQuery {
 	return NewUserClient(u.config).QueryResumes(u)
+}
+
+// QueryCreatedPositions queries the "created_positions" edge of the User entity.
+func (u *User) QueryCreatedPositions() *JobPositionQuery {
+	return NewUserClient(u.config).QueryCreatedPositions(u)
 }
 
 // Update returns a builder for updating this User.

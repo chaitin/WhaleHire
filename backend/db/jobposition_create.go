@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/department"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
 	"github.com/chaitin/WhaleHire/backend/db/jobexperiencerequirement"
@@ -19,6 +20,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
+	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
 
@@ -53,6 +55,34 @@ func (jpc *JobPositionCreate) SetName(s string) *JobPositionCreate {
 // SetDepartmentID sets the "department_id" field.
 func (jpc *JobPositionCreate) SetDepartmentID(u uuid.UUID) *JobPositionCreate {
 	jpc.mutation.SetDepartmentID(u)
+	return jpc
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (jpc *JobPositionCreate) SetCreatedBy(u uuid.UUID) *JobPositionCreate {
+	jpc.mutation.SetCreatedBy(u)
+	return jpc
+}
+
+// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
+func (jpc *JobPositionCreate) SetNillableCreatedBy(u *uuid.UUID) *JobPositionCreate {
+	if u != nil {
+		jpc.SetCreatedBy(*u)
+	}
+	return jpc
+}
+
+// SetStatus sets the "status" field.
+func (jpc *JobPositionCreate) SetStatus(cps consts.JobPositionStatus) *JobPositionCreate {
+	jpc.mutation.SetStatus(cps)
+	return jpc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (jpc *JobPositionCreate) SetNillableStatus(cps *consts.JobPositionStatus) *JobPositionCreate {
+	if cps != nil {
+		jpc.SetStatus(*cps)
+	}
 	return jpc
 }
 
@@ -157,6 +187,25 @@ func (jpc *JobPositionCreate) SetNillableID(u *uuid.UUID) *JobPositionCreate {
 // SetDepartment sets the "department" edge to the Department entity.
 func (jpc *JobPositionCreate) SetDepartment(d *Department) *JobPositionCreate {
 	return jpc.SetDepartmentID(d.ID)
+}
+
+// SetCreatorID sets the "creator" edge to the User entity by ID.
+func (jpc *JobPositionCreate) SetCreatorID(id uuid.UUID) *JobPositionCreate {
+	jpc.mutation.SetCreatorID(id)
+	return jpc
+}
+
+// SetNillableCreatorID sets the "creator" edge to the User entity by ID if the given value is not nil.
+func (jpc *JobPositionCreate) SetNillableCreatorID(id *uuid.UUID) *JobPositionCreate {
+	if id != nil {
+		jpc = jpc.SetCreatorID(*id)
+	}
+	return jpc
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (jpc *JobPositionCreate) SetCreator(u *User) *JobPositionCreate {
+	return jpc.SetCreatorID(u.ID)
 }
 
 // AddResponsibilityIDs adds the "responsibilities" edge to the JobResponsibility entity by IDs.
@@ -271,6 +320,10 @@ func (jpc *JobPositionCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (jpc *JobPositionCreate) defaults() error {
+	if _, ok := jpc.mutation.Status(); !ok {
+		v := jobposition.DefaultStatus
+		jpc.mutation.SetStatus(v)
+	}
 	if _, ok := jpc.mutation.CreatedAt(); !ok {
 		if jobposition.DefaultCreatedAt == nil {
 			return fmt.Errorf("db: uninitialized jobposition.DefaultCreatedAt (forgotten import db/runtime?)")
@@ -307,6 +360,9 @@ func (jpc *JobPositionCreate) check() error {
 	}
 	if _, ok := jpc.mutation.DepartmentID(); !ok {
 		return &ValidationError{Name: "department_id", err: errors.New(`db: missing required field "JobPosition.department_id"`)}
+	}
+	if _, ok := jpc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`db: missing required field "JobPosition.status"`)}
 	}
 	if v, ok := jpc.mutation.Location(); ok {
 		if err := jobposition.LocationValidator(v); err != nil {
@@ -366,6 +422,10 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 		_spec.SetField(jobposition.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
+	if value, ok := jpc.mutation.Status(); ok {
+		_spec.SetField(jobposition.FieldStatus, field.TypeString, value)
+		_node.Status = value
+	}
 	if value, ok := jpc.mutation.Location(); ok {
 		_spec.SetField(jobposition.FieldLocation, field.TypeString, value)
 		_node.Location = &value
@@ -405,6 +465,23 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.DepartmentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := jpc.mutation.CreatorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   jobposition.CreatorTable,
+			Columns: []string{jobposition.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CreatedBy = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := jpc.mutation.ResponsibilitiesIDs(); len(nodes) > 0 {
@@ -578,6 +655,36 @@ func (u *JobPositionUpsert) SetDepartmentID(v uuid.UUID) *JobPositionUpsert {
 // UpdateDepartmentID sets the "department_id" field to the value that was provided on create.
 func (u *JobPositionUpsert) UpdateDepartmentID() *JobPositionUpsert {
 	u.SetExcluded(jobposition.FieldDepartmentID)
+	return u
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (u *JobPositionUpsert) SetCreatedBy(v uuid.UUID) *JobPositionUpsert {
+	u.Set(jobposition.FieldCreatedBy, v)
+	return u
+}
+
+// UpdateCreatedBy sets the "created_by" field to the value that was provided on create.
+func (u *JobPositionUpsert) UpdateCreatedBy() *JobPositionUpsert {
+	u.SetExcluded(jobposition.FieldCreatedBy)
+	return u
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (u *JobPositionUpsert) ClearCreatedBy() *JobPositionUpsert {
+	u.SetNull(jobposition.FieldCreatedBy)
+	return u
+}
+
+// SetStatus sets the "status" field.
+func (u *JobPositionUpsert) SetStatus(v consts.JobPositionStatus) *JobPositionUpsert {
+	u.Set(jobposition.FieldStatus, v)
+	return u
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *JobPositionUpsert) UpdateStatus() *JobPositionUpsert {
+	u.SetExcluded(jobposition.FieldStatus)
 	return u
 }
 
@@ -774,6 +881,41 @@ func (u *JobPositionUpsertOne) SetDepartmentID(v uuid.UUID) *JobPositionUpsertOn
 func (u *JobPositionUpsertOne) UpdateDepartmentID() *JobPositionUpsertOne {
 	return u.Update(func(s *JobPositionUpsert) {
 		s.UpdateDepartmentID()
+	})
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (u *JobPositionUpsertOne) SetCreatedBy(v uuid.UUID) *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetCreatedBy(v)
+	})
+}
+
+// UpdateCreatedBy sets the "created_by" field to the value that was provided on create.
+func (u *JobPositionUpsertOne) UpdateCreatedBy() *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateCreatedBy()
+	})
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (u *JobPositionUpsertOne) ClearCreatedBy() *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.ClearCreatedBy()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *JobPositionUpsertOne) SetStatus(v consts.JobPositionStatus) *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *JobPositionUpsertOne) UpdateStatus() *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateStatus()
 	})
 }
 
@@ -1153,6 +1295,41 @@ func (u *JobPositionUpsertBulk) SetDepartmentID(v uuid.UUID) *JobPositionUpsertB
 func (u *JobPositionUpsertBulk) UpdateDepartmentID() *JobPositionUpsertBulk {
 	return u.Update(func(s *JobPositionUpsert) {
 		s.UpdateDepartmentID()
+	})
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (u *JobPositionUpsertBulk) SetCreatedBy(v uuid.UUID) *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetCreatedBy(v)
+	})
+}
+
+// UpdateCreatedBy sets the "created_by" field to the value that was provided on create.
+func (u *JobPositionUpsertBulk) UpdateCreatedBy() *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateCreatedBy()
+	})
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (u *JobPositionUpsertBulk) ClearCreatedBy() *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.ClearCreatedBy()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *JobPositionUpsertBulk) SetStatus(v consts.JobPositionStatus) *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *JobPositionUpsertBulk) UpdateStatus() *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateStatus()
 	})
 }
 

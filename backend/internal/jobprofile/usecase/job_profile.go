@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
 	"github.com/chaitin/WhaleHire/backend/db/jobexperiencerequirement"
@@ -60,6 +61,22 @@ func (u *JobProfileUsecase) Create(ctx context.Context, req *domain.CreateJobPro
 	job.SalaryMin = req.SalaryMin
 	job.SalaryMax = req.SalaryMax
 	job.Description = safeTrimPtr(req.Description)
+	
+	// 设置创建者ID，需要转换为UUID
+	if req.CreatedBy != nil && *req.CreatedBy != "" {
+		createdByUUID, err := uuid.Parse(*req.CreatedBy)
+		if err != nil {
+			return nil, fmt.Errorf("invalid created_by id: %w", err)
+		}
+		job.CreatedBy = &createdByUUID
+	}
+	
+	// 设置状态，如果未提供则使用默认值
+	if req.Status != nil && *req.Status != "" {
+		job.Status = consts.JobPositionStatus(*req.Status)
+	} else {
+		job.Status = consts.JobPositionStatusDraft
+	}
 
 	related, err := u.buildRelatedEntities(req.Skills, req.Responsibilities, req.EducationRequirements, req.ExperienceRequirements, req.IndustryRequirements)
 	if err != nil {
@@ -111,6 +128,24 @@ func (u *JobProfileUsecase) Update(ctx context.Context, req *domain.UpdateJobPro
 			} else {
 				updater.ClearDescription()
 			}
+		}
+
+		// 更新创建者ID
+		if req.CreatedBy != nil {
+			if *req.CreatedBy != "" {
+				createdByUUID, err := uuid.Parse(*req.CreatedBy)
+				if err != nil {
+					return fmt.Errorf("invalid created_by id: %w", err)
+				}
+				updater.SetCreatedBy(createdByUUID)
+			} else {
+				updater.ClearCreatedBy()
+			}
+		}
+
+		// 更新状态
+		if req.Status != nil && *req.Status != "" {
+			updater.SetStatus(consts.JobPositionStatus(*req.Status))
 		}
 
 		updater.SetUpdatedAt(time.Now())
@@ -183,6 +218,23 @@ func (u *JobProfileUsecase) List(ctx context.Context, req *domain.ListJobProfile
 	}
 
 	return &domain.ListJobProfileResp{
+		Items:    profiles,
+		PageInfo: pageInfo,
+	}, nil
+}
+
+func (u *JobProfileUsecase) Search(ctx context.Context, req *domain.SearchJobProfileReq) (*domain.SearchJobProfileResp, error) {
+	items, pageInfo, err := u.repo.Search(ctx, &domain.SearchJobProfileRepoReq{SearchJobProfileReq: req})
+	if err != nil {
+		return nil, fmt.Errorf("failed to search job profiles: %w", err)
+	}
+
+	profiles := make([]*domain.JobProfile, 0, len(items))
+	for _, item := range items {
+		profiles = append(profiles, (&domain.JobProfile{}).From(item))
+	}
+
+	return &domain.SearchJobProfileResp{
 		Items:    profiles,
 		PageInfo: pageInfo,
 	}, nil

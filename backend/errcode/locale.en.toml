@@ -45,3 +45,6 @@ other = "Department ID is required"
 
 [err-jobprofile-required]
 other = " Jobprofile ID is required"
+
+[err-jobskillmeta-required]
+other = " JobSkillMeta ID is required"

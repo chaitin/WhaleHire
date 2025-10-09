@@ -232,6 +232,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "status", Type: field.TypeString, Default: "draft"},
 		{Name: "location", Type: field.TypeString, Nullable: true, Size: 200},
 		{Name: "salary_min", Type: field.TypeFloat64, Nullable: true},
 		{Name: "salary_max", Type: field.TypeFloat64, Nullable: true},
@@ -239,6 +240,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "department_id", Type: field.TypeUUID},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
 	}
 	// JobPositionTable holds the schema information for the "job_position" table.
 	JobPositionTable = &schema.Table{
@@ -248,9 +250,15 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "job_position_department_positions",
-				Columns:    []*schema.Column{JobPositionColumns[9]},
+				Columns:    []*schema.Column{JobPositionColumns[10]},
 				RefColumns: []*schema.Column{DepartmentColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "job_position_users_created_positions",
+				Columns:    []*schema.Column{JobPositionColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -709,6 +717,7 @@ func init() {
 		Table: "job_industry_requirement",
 	}
 	JobPositionTable.ForeignKeys[0].RefTable = DepartmentTable
+	JobPositionTable.ForeignKeys[1].RefTable = UsersTable
 	JobPositionTable.Annotation = &entsql.Annotation{
 		Table: "job_position",
 	}

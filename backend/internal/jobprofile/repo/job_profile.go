@@ -41,7 +41,9 @@ func (r *JobProfileRepo) Create(ctx context.Context, job *db.JobPosition, relate
 			SetNillableLocation(job.Location).
 			SetNillableSalaryMin(job.SalaryMin).
 			SetNillableSalaryMax(job.SalaryMax).
-			SetNillableDescription(job.Description)
+			SetNillableDescription(job.Description).
+			SetNillableCreatedBy(job.CreatedBy).
+			SetStatus(job.Status)
 
 		created, err := creator.Save(ctx)
 		if err != nil {
@@ -71,6 +73,7 @@ func (r *JobProfileRepo) Create(ctx context.Context, job *db.JobPosition, relate
 		result, err = tx.JobPosition.Query().
 			Where(jobposition.ID(jobID)).
 			WithDepartment().
+			WithCreator().
 			WithResponsibilities().
 			WithSkills(func(q *db.JobSkillQuery) {
 				q.WithSkill()
@@ -196,6 +199,7 @@ func (r *JobProfileRepo) GetByID(ctx context.Context, id string) (*db.JobPositio
 		WithDepartment(func(q *db.DepartmentQuery) {
 			q.Where(department.DeletedAtIsNil())
 		}).
+		WithCreator().
 		WithResponsibilities(func(q *db.JobResponsibilityQuery) {
 			q.Where(jobresponsibility.DeletedAtIsNil())
 		}).
@@ -219,7 +223,8 @@ func (r *JobProfileRepo) List(ctx context.Context, req *domain.ListJobProfileRep
 		Where(jobposition.DeletedAtIsNil()).
 		WithDepartment(func(q *db.DepartmentQuery) {
 			q.Where(department.DeletedAtIsNil())
-		})
+		}).
+		WithCreator()
 
 	if req != nil && req.ListJobProfileReq != nil {
 		filters := req.ListJobProfileReq
@@ -279,6 +284,87 @@ func (r *JobProfileRepo) List(ctx context.Context, req *domain.ListJobProfileRep
 	query = query.Order(jobposition.ByUpdatedAt(sql.OrderDesc()))
 
 	return query.Page(ctx, req.ListJobProfileReq.Pagination.Page, req.ListJobProfileReq.Pagination.Size)
+}
+
+func (r *JobProfileRepo) Search(ctx context.Context, req *domain.SearchJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error) {
+	query := r.db.JobPosition.Query().
+		Where(jobposition.DeletedAtIsNil()).
+		WithDepartment(func(q *db.DepartmentQuery) {
+			q.Where(department.DeletedAtIsNil())
+		}).
+		WithCreator()
+
+	if req != nil && req.SearchJobProfileReq != nil {
+		filters := req.SearchJobProfileReq
+
+		// 部门过滤
+		if filters.DepartmentID != nil && *filters.DepartmentID != "" {
+			departmentID, err := uuid.Parse(*filters.DepartmentID)
+			if err != nil {
+				return nil, nil, fmt.Errorf("invalid department ID: %w", err)
+			}
+			query = query.Where(jobposition.DepartmentID(departmentID))
+		}
+
+		// 关键词模糊搜索 - 支持多个关键词
+		if filters.Keyword != nil && *filters.Keyword != "" {
+			terms := strings.Fields(*filters.Keyword)
+			for _, term := range terms {
+				query = query.Where(jobposition.Or(
+					jobposition.NameContainsFold(term),
+					jobposition.DescriptionContainsFold(term),
+					jobposition.LocationContainsFold(term),
+					jobposition.HasDepartmentWith(department.NameContainsFold(term)),
+				))
+			}
+		}
+
+		// 技能过滤
+		if len(filters.SkillIDs) > 0 {
+			skillUUIDs := make([]uuid.UUID, 0, len(filters.SkillIDs))
+			for _, id := range filters.SkillIDs {
+				if id == "" {
+					continue
+				}
+				skillID, err := uuid.Parse(id)
+				if err != nil {
+					return nil, nil, fmt.Errorf("invalid skill ID: %w", err)
+				}
+				skillUUIDs = append(skillUUIDs, skillID)
+			}
+			if len(skillUUIDs) > 0 {
+				query = query.Where(jobposition.HasSkillsWith(jobskill.SkillIDIn(skillUUIDs...)))
+			}
+		}
+
+		// 地点过滤
+		if len(filters.Locations) > 0 {
+			var locations []string
+			for _, loc := range filters.Locations {
+				trimmed := strings.TrimSpace(loc)
+				if trimmed == "" {
+					continue
+				}
+				locations = append(locations, trimmed)
+			}
+			if len(locations) > 0 {
+				query = query.Where(jobposition.LocationIn(locations...))
+			}
+		}
+
+		// 薪资范围过滤
+		if filters.SalaryMin != nil && *filters.SalaryMin > 0 {
+			query = query.Where(jobposition.SalaryMaxGTE(*filters.SalaryMin))
+		}
+		if filters.SalaryMax != nil && *filters.SalaryMax > 0 {
+			query = query.Where(jobposition.SalaryMinLTE(*filters.SalaryMax))
+		}
+	}
+
+	// 按更新时间倒序排列
+	query = query.Order(jobposition.ByUpdatedAt(sql.OrderDesc()))
+
+	return query.Page(ctx, req.SearchJobProfileReq.Pagination.Page, req.SearchJobProfileReq.Pagination.Size)
 }
 
 func createResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, items []*db.JobResponsibility) error {

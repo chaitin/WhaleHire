@@ -1,5 +1,17 @@
 -- Migration: add_job_profile_tables
 
+-- Drop indexes first
+DROP INDEX IF EXISTS "idx_job_position_status";
+DROP INDEX IF EXISTS "idx_job_position_created_by";
+
+-- Drop constraints
+ALTER TABLE "job_position" DROP CONSTRAINT IF EXISTS "job_position_status_check";
+ALTER TABLE "job_position" DROP CONSTRAINT IF EXISTS "job_position_created_by_fk";
+
+-- Drop columns
+ALTER TABLE "job_position" DROP COLUMN IF EXISTS "status";
+ALTER TABLE "job_position" DROP COLUMN IF EXISTS "created_by";
+
 -- Drop triggers
 DROP TRIGGER IF EXISTS update_job_skill_updated_at ON job_skill;
 DROP TRIGGER IF EXISTS update_job_responsibility_updated_at ON job_responsibility;

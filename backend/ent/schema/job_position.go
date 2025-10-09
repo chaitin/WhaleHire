@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
@@ -33,6 +34,8 @@ func (JobPosition) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("name").MaxLen(100),
 		field.UUID("department_id", uuid.UUID{}),
+		field.UUID("created_by", uuid.UUID{}).Optional().Nillable(),
+		field.String("status").GoType(consts.JobPositionStatus("")).Default(string(consts.JobPositionStatusDraft)),
 		field.String("location").Optional().Nillable().MaxLen(200),
 		field.Float("salary_min").Optional().Nillable(),
 		field.Float("salary_max").Optional().Nillable(),
@@ -49,6 +52,10 @@ func (JobPosition) Edges() []ent.Edge {
 			Field("department_id").
 			Unique().
 			Required(),
+		edge.From("creator", User.Type).
+			Ref("created_positions").
+			Field("created_by").
+			Unique(),
 		edge.To("responsibilities", JobResponsibility.Type),
 		edge.To("skills", JobSkill.Type),
 		edge.To("education_requirements", JobEducationRequirement.Type),

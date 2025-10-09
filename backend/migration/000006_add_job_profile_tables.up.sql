@@ -17,11 +17,15 @@ CREATE TABLE "job_position" (
     "salary_min" double precision NULL,
     "salary_max" double precision NULL,
     "description" text NULL,
+    "created_by" uuid NULL,
+    "status" character varying(20) NOT NULL DEFAULT 'draft',
     "created_at" timestamptz NOT NULL DEFAULT now(),
     "updated_at" timestamptz NOT NULL DEFAULT now(),
     "deleted_at" timestamptz NULL,
     PRIMARY KEY ("id"),
-    CONSTRAINT "job_position_department_fk" FOREIGN KEY ("department_id") REFERENCES "department" ("id") ON DELETE NO ACTION
+    CONSTRAINT "job_position_department_fk" FOREIGN KEY ("department_id") REFERENCES "department" ("id") ON DELETE NO ACTION,
+    CONSTRAINT "job_position_created_by_fk" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON DELETE SET NULL,
+    CONSTRAINT "job_position_status_check" CHECK ("status" IN ('draft', 'published'))
 );
 
 CREATE TABLE "job_responsibility" (
@@ -114,6 +118,10 @@ CREATE INDEX "idx_job_skill_deleted_at" ON "job_skill" ("deleted_at");
 CREATE INDEX "idx_job_responsibility_deleted_at" ON "job_responsibility" ("deleted_at");
 CREATE INDEX "idx_job_experience_requirement_deleted_at" ON "job_experience_requirement" ("deleted_at");
 CREATE INDEX "idx_job_education_requirement_deleted_at" ON "job_education_requirement" ("deleted_at");
+
+-- Create indexes for job_position created_by and status columns
+CREATE INDEX "idx_job_position_created_by" ON "job_position" ("created_by");
+CREATE INDEX "idx_job_position_status" ON "job_position" ("status");
 
 -- Create triggers to automatically update updated_at columns
 CREATE OR REPLACE FUNCTION update_updated_at_column()

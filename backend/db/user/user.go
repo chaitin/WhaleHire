@@ -42,6 +42,8 @@ const (
 	EdgeConversations = "conversations"
 	// EdgeResumes holds the string denoting the resumes edge name in mutations.
 	EdgeResumes = "resumes"
+	// EdgeCreatedPositions holds the string denoting the created_positions edge name in mutations.
+	EdgeCreatedPositions = "created_positions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// LoginHistoriesTable is the table that holds the login_histories relation/edge.
@@ -72,6 +74,13 @@ const (
 	ResumesInverseTable = "resumes"
 	// ResumesColumn is the table column denoting the resumes relation/edge.
 	ResumesColumn = "user_id"
+	// CreatedPositionsTable is the table that holds the created_positions relation/edge.
+	CreatedPositionsTable = "job_position"
+	// CreatedPositionsInverseTable is the table name for the JobPosition entity.
+	// It exists in this package in order to avoid circular dependency with the "jobposition" package.
+	CreatedPositionsInverseTable = "job_position"
+	// CreatedPositionsColumn is the table column denoting the created_positions relation/edge.
+	CreatedPositionsColumn = "created_by"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -224,6 +233,20 @@ func ByResumes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newResumesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCreatedPositionsCount orders the results by created_positions count.
+func ByCreatedPositionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCreatedPositionsStep(), opts...)
+	}
+}
+
+// ByCreatedPositions orders the results by created_positions terms.
+func ByCreatedPositions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCreatedPositionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newLoginHistoriesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -250,5 +273,12 @@ func newResumesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ResumesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ResumesTable, ResumesColumn),
+	)
+}
+func newCreatedPositionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CreatedPositionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CreatedPositionsTable, CreatedPositionsColumn),
 	)
 }

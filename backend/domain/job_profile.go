@@ -23,6 +23,7 @@ type JobProfileUsecase interface {
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*JobProfileDetail, error)
 	List(ctx context.Context, req *ListJobProfileReq) (*ListJobProfileResp, error)
+	Search(ctx context.Context, req *SearchJobProfileReq) (*SearchJobProfileResp, error)
 
 	CreateSkillMeta(ctx context.Context, req *CreateSkillMetaReq) (*JobSkillMeta, error)
 	ListSkillMeta(ctx context.Context, req *ListSkillMetaReq) (*ListSkillMetaResp, error)
@@ -36,6 +37,7 @@ type JobProfileRepo interface {
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*db.JobPosition, error)
 	List(ctx context.Context, req *ListJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error)
+	Search(ctx context.Context, req *SearchJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error)
 }
 
 // JobSkillMetaRepo manages job skill dictionary persistence.
@@ -56,6 +58,9 @@ type JobProfile struct {
 	SalaryMin     *float64 `json:"salary_min,omitempty"`
 	SalaryMax     *float64 `json:"salary_max,omitempty"`
 	Description   *string  `json:"description,omitempty"`
+	CreatedBy     *string  `json:"created_by,omitempty"`
+	CreatorName   *string  `json:"creator_name,omitempty"`
+	Status        string   `json:"status"`
 	CreatedAtUnix int64    `json:"created_at"`
 	UpdatedAtUnix int64    `json:"updated_at"`
 }
@@ -83,6 +88,13 @@ func (jp *JobProfile) From(entity *db.JobPosition) *JobProfile {
 	if entity.Description != nil {
 		jp.Description = ptrString(*entity.Description)
 	}
+	if entity.CreatedBy != nil {
+		jp.CreatedBy = ptrString(entity.CreatedBy.String())
+	}
+	if entity.Edges.Creator != nil {
+		jp.CreatorName = ptrString(entity.Edges.Creator.Username)
+	}
+	jp.Status = string(entity.Status)
 	jp.CreatedAtUnix = entity.CreatedAt.Unix()
 	jp.UpdatedAtUnix = entity.UpdatedAt.Unix()
 	return jp
@@ -170,6 +182,8 @@ type CreateJobProfileReq struct {
 	SalaryMin              *float64                         `json:"salary_min,omitempty"`
 	SalaryMax              *float64                         `json:"salary_max,omitempty"`
 	Description            *string                          `json:"description,omitempty"`
+	CreatedBy              *string                          `json:"created_by,omitempty"`
+	Status                 *string                          `json:"status,omitempty"`
 	Responsibilities       []*JobResponsibilityInput        `json:"responsibilities"`
 	Skills                 []*JobSkillInput                 `json:"skills"`
 	EducationRequirements  []*JobEducationRequirementInput  `json:"education_requirements"`
@@ -186,6 +200,8 @@ type UpdateJobProfileReq struct {
 	SalaryMin              *float64                         `json:"salary_min,omitempty"`
 	SalaryMax              *float64                         `json:"salary_max,omitempty"`
 	Description            *string                          `json:"description,omitempty"`
+	CreatedBy              *string                          `json:"created_by,omitempty"`
+	Status                 *string                          `json:"status,omitempty"`
 	Responsibilities       []*JobResponsibilityInput        `json:"responsibilities"`
 	Skills                 []*JobSkillInput                 `json:"skills"`
 	EducationRequirements  []*JobEducationRequirementInput  `json:"education_requirements"`
@@ -252,8 +268,28 @@ type ListJobProfileResp struct {
 	PageInfo *db.PageInfo  `json:"page_info"`
 }
 
-// SearchJobProfileReq aliases List request for explicit search endpoints.
-type SearchJobProfileReq = ListJobProfileReq
+// SearchJobProfileReq defines search filters for job profiles.
+type SearchJobProfileReq struct {
+	web.Pagination
+
+	Keyword      *string  `json:"keyword,omitempty" query:"keyword"`
+	DepartmentID *string  `json:"department_id,omitempty" query:"department_id"`
+	SkillIDs     []string `json:"skill_ids,omitempty" query:"skill_ids"`
+	Locations    []string `json:"locations,omitempty" query:"locations"`
+	SalaryMin    *float64 `json:"salary_min,omitempty" query:"salary_min"`
+	SalaryMax    *float64 `json:"salary_max,omitempty" query:"salary_max"`
+}
+
+// SearchJobProfileRepoReq is used by repository to translate search filters.
+type SearchJobProfileRepoReq struct {
+	*SearchJobProfileReq
+}
+
+// SearchJobProfileResp contains search results for job profiles.
+type SearchJobProfileResp struct {
+	Items    []*JobProfile `json:"items"`
+	PageInfo *db.PageInfo  `json:"page_info"`
+}
 
 // CreateSkillMetaReq defines payload for skill meta creation.
 type CreateSkillMetaReq struct {

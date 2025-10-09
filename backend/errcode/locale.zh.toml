@@ -45,3 +45,6 @@ other = "缺少部门ID"
 
 [err-jobprofile-required]
 other = "缺少岗位画像ID"
+
+[err-jobskillmeta-required]
+other = " 缺少技能ID"

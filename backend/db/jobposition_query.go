@@ -21,6 +21,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
 
@@ -32,6 +33,7 @@ type JobPositionQuery struct {
 	inters                     []Interceptor
 	predicates                 []predicate.JobPosition
 	withDepartment             *DepartmentQuery
+	withCreator                *UserQuery
 	withResponsibilities       *JobResponsibilityQuery
 	withSkills                 *JobSkillQuery
 	withEducationRequirements  *JobEducationRequirementQuery
@@ -89,6 +91,28 @@ func (jpq *JobPositionQuery) QueryDepartment() *DepartmentQuery {
 			sqlgraph.From(jobposition.Table, jobposition.FieldID, selector),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, jobposition.DepartmentTable, jobposition.DepartmentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(jpq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCreator chains the current query on the "creator" edge.
+func (jpq *JobPositionQuery) QueryCreator() *UserQuery {
+	query := (&UserClient{config: jpq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := jpq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := jpq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobposition.CreatorTable, jobposition.CreatorColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(jpq.driver.Dialect(), step)
 		return fromU, nil
@@ -399,6 +423,7 @@ func (jpq *JobPositionQuery) Clone() *JobPositionQuery {
 		inters:                     append([]Interceptor{}, jpq.inters...),
 		predicates:                 append([]predicate.JobPosition{}, jpq.predicates...),
 		withDepartment:             jpq.withDepartment.Clone(),
+		withCreator:                jpq.withCreator.Clone(),
 		withResponsibilities:       jpq.withResponsibilities.Clone(),
 		withSkills:                 jpq.withSkills.Clone(),
 		withEducationRequirements:  jpq.withEducationRequirements.Clone(),
@@ -419,6 +444,17 @@ func (jpq *JobPositionQuery) WithDepartment(opts ...func(*DepartmentQuery)) *Job
 		opt(query)
 	}
 	jpq.withDepartment = query
+	return jpq
+}
+
+// WithCreator tells the query-builder to eager-load the nodes that are connected to
+// the "creator" edge. The optional arguments are used to configure the query builder of the edge.
+func (jpq *JobPositionQuery) WithCreator(opts ...func(*UserQuery)) *JobPositionQuery {
+	query := (&UserClient{config: jpq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	jpq.withCreator = query
 	return jpq
 }
 
@@ -555,8 +591,9 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*JobPosition{}
 		_spec       = jpq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			jpq.withDepartment != nil,
+			jpq.withCreator != nil,
 			jpq.withResponsibilities != nil,
 			jpq.withSkills != nil,
 			jpq.withEducationRequirements != nil,
@@ -588,6 +625,12 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if query := jpq.withDepartment; query != nil {
 		if err := jpq.loadDepartment(ctx, query, nodes, nil,
 			func(n *JobPosition, e *Department) { n.Edges.Department = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := jpq.withCreator; query != nil {
+		if err := jpq.loadCreator(ctx, query, nodes, nil,
+			func(n *JobPosition, e *User) { n.Edges.Creator = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -659,6 +702,38 @@ func (jpq *JobPositionQuery) loadDepartment(ctx context.Context, query *Departme
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "department_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (jpq *JobPositionQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*JobPosition, init func(*JobPosition), assign func(*JobPosition, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*JobPosition)
+	for i := range nodes {
+		if nodes[i].CreatedBy == nil {
+			continue
+		}
+		fk := *nodes[i].CreatedBy
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "created_by" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -847,6 +922,9 @@ func (jpq *JobPositionQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if jpq.withDepartment != nil {
 			_spec.Node.AddColumnOnce(jobposition.FieldDepartmentID)
+		}
+		if jpq.withCreator != nil {
+			_spec.Node.AddColumnOnce(jobposition.FieldCreatedBy)
 		}
 	}
 	if ps := jpq.predicates; len(ps) > 0 {

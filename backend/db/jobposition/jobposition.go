@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/google/uuid"
 )
 
@@ -22,6 +23,10 @@ const (
 	FieldName = "name"
 	// FieldDepartmentID holds the string denoting the department_id field in the database.
 	FieldDepartmentID = "department_id"
+	// FieldCreatedBy holds the string denoting the created_by field in the database.
+	FieldCreatedBy = "created_by"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// FieldLocation holds the string denoting the location field in the database.
 	FieldLocation = "location"
 	// FieldSalaryMin holds the string denoting the salary_min field in the database.
@@ -36,6 +41,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeDepartment holds the string denoting the department edge name in mutations.
 	EdgeDepartment = "department"
+	// EdgeCreator holds the string denoting the creator edge name in mutations.
+	EdgeCreator = "creator"
 	// EdgeResponsibilities holds the string denoting the responsibilities edge name in mutations.
 	EdgeResponsibilities = "responsibilities"
 	// EdgeSkills holds the string denoting the skills edge name in mutations.
@@ -55,6 +62,13 @@ const (
 	DepartmentInverseTable = "department"
 	// DepartmentColumn is the table column denoting the department relation/edge.
 	DepartmentColumn = "department_id"
+	// CreatorTable is the table that holds the creator relation/edge.
+	CreatorTable = "job_position"
+	// CreatorInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	CreatorInverseTable = "users"
+	// CreatorColumn is the table column denoting the creator relation/edge.
+	CreatorColumn = "created_by"
 	// ResponsibilitiesTable is the table that holds the responsibilities relation/edge.
 	ResponsibilitiesTable = "job_responsibility"
 	// ResponsibilitiesInverseTable is the table name for the JobResponsibility entity.
@@ -98,6 +112,8 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldName,
 	FieldDepartmentID,
+	FieldCreatedBy,
+	FieldStatus,
 	FieldLocation,
 	FieldSalaryMin,
 	FieldSalaryMax,
@@ -126,6 +142,8 @@ var (
 	Interceptors [1]ent.Interceptor
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus consts.JobPositionStatus
 	// LocationValidator is a validator for the "location" field. It is called by the builders before save.
 	LocationValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -159,6 +177,16 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByDepartmentID orders the results by the department_id field.
 func ByDepartmentID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDepartmentID, opts...).ToFunc()
+}
+
+// ByCreatedBy orders the results by the created_by field.
+func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedBy, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
 // ByLocation orders the results by the location field.
@@ -195,6 +223,13 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByCreatorField orders the results by creator field.
+func ByCreatorField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCreatorStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -272,6 +307,13 @@ func newDepartmentStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DepartmentInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+	)
+}
+func newCreatorStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CreatorInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CreatorTable, CreatorColumn),
 	)
 }
 func newResponsibilitiesStep() *sqlgraph.Step {

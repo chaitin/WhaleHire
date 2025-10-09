@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/GoYoko/web"
@@ -30,6 +31,7 @@ func NewJobProfileHandler(
 	g.Use(auth.UserAuth())
 	g.POST("", web.BindHandler(h.Create))
 	g.GET("", web.BindHandler(h.List, web.WithPage()))
+	g.GET("/search", web.BindHandler(h.Search, web.WithPage()))
 	g.GET("/:id", web.BaseHandler(h.Get))
 	g.PUT("/:id", web.BindHandler(h.Update))
 	g.DELETE("/:id", web.BaseHandler(h.Delete))
@@ -55,6 +57,15 @@ func NewJobProfileHandler(
 //	@Success		200		{object}	web.Resp{data=domain.JobProfileDetail}
 //	@Router			/api/v1/job-profiles [post]
 func (h *JobProfileHandler) Create(c *web.Context, req domain.CreateJobProfileReq) error {
+	// 获取当前用户
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
+	}
+
+	// 设置创建者ID
+	req.CreatedBy = &user.ID
+
 	profile, err := h.usecase.Create(c.Request().Context(), &req)
 	if err != nil {
 		h.logger.Error("failed to create job profile", "error", err)
@@ -78,7 +89,7 @@ func (h *JobProfileHandler) Create(c *web.Context, req domain.CreateJobProfileRe
 func (h *JobProfileHandler) Update(c *web.Context, req domain.UpdateJobProfileReq) error {
 	req.ID = c.Param("id")
 	if req.ID == "" {
-		return web.NewBadRequestErr("job profile id is required")
+		return errcode.ErrJobProfileRequired
 	}
 
 	profile, err := h.usecase.Update(c.Request().Context(), &req)
@@ -113,6 +124,36 @@ func (h *JobProfileHandler) Delete(c *web.Context) error {
 	}
 
 	return c.Success(nil)
+}
+
+// Search 搜索岗位画像
+//
+//	@Tags			JobProfile
+//	@Summary		搜索岗位画像
+//	@Description	根据关键词和条件搜索岗位画像，支持模糊搜索
+//	@ID				search-job-profiles
+//	@Accept			json
+//	@Produce		json
+//	@Param			page			query		web.Pagination	true	"分页参数"
+//	@Param			keyword			query		string			false	"关键词"
+//	@Param			department_id	query		string			false	"部门ID"
+//	@Param			skill_ids		query		[]string		false	"技能ID列表"
+//	@Param			locations		query		[]string		false	"工作地点列表"
+//	@Param			salary_min		query		number			false	"最低薪资"
+//	@Param			salary_max		query		number			false	"最高薪资"
+//	@Success		200				{object}	web.Resp{data=domain.SearchJobProfileResp}
+//	@Router			/api/v1/job-profiles/search [get]
+func (h *JobProfileHandler) Search(c *web.Context, req domain.SearchJobProfileReq) error {
+	req.Page = c.Page().Page
+	req.Size = c.Page().Size
+
+	profiles, err := h.usecase.Search(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.Error("failed to search job profiles", "error", err)
+		return err
+	}
+
+	return c.Success(profiles)
 }
 
 // Get 获取岗位画像详情
@@ -229,7 +270,7 @@ func (h *JobProfileHandler) ListSkillMeta(c *web.Context, req domain.ListSkillMe
 func (h *JobProfileHandler) DeleteSkillMeta(c *web.Context) error {
 	id := c.Param("id")
 	if id == "" {
-		return web.NewBadRequestErr("skill meta id is required")
+		return errcode.ErrJobSkillMetaRequired
 	}
 
 	err := h.usecase.DeleteSkillMeta(c.Request().Context(), id)

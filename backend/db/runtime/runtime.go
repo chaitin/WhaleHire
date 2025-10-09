@@ -265,16 +265,20 @@ func init() {
 	jobpositionDescName := jobpositionFields[1].Descriptor()
 	// jobposition.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	jobposition.NameValidator = jobpositionDescName.Validators[0].(func(string) error)
+	// jobpositionDescStatus is the schema descriptor for status field.
+	jobpositionDescStatus := jobpositionFields[4].Descriptor()
+	// jobposition.DefaultStatus holds the default value on creation for the status field.
+	jobposition.DefaultStatus = consts.JobPositionStatus(jobpositionDescStatus.Default.(string))
 	// jobpositionDescLocation is the schema descriptor for location field.
-	jobpositionDescLocation := jobpositionFields[3].Descriptor()
+	jobpositionDescLocation := jobpositionFields[5].Descriptor()
 	// jobposition.LocationValidator is a validator for the "location" field. It is called by the builders before save.
 	jobposition.LocationValidator = jobpositionDescLocation.Validators[0].(func(string) error)
 	// jobpositionDescCreatedAt is the schema descriptor for created_at field.
-	jobpositionDescCreatedAt := jobpositionFields[7].Descriptor()
+	jobpositionDescCreatedAt := jobpositionFields[9].Descriptor()
 	// jobposition.DefaultCreatedAt holds the default value on creation for the created_at field.
 	jobposition.DefaultCreatedAt = jobpositionDescCreatedAt.Default.(func() time.Time)
 	// jobpositionDescUpdatedAt is the schema descriptor for updated_at field.
-	jobpositionDescUpdatedAt := jobpositionFields[8].Descriptor()
+	jobpositionDescUpdatedAt := jobpositionFields[10].Descriptor()
 	// jobposition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	jobposition.DefaultUpdatedAt = jobpositionDescUpdatedAt.Default.(func() time.Time)
 	// jobposition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

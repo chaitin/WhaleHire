@@ -9,8 +9,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/department"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
+	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
 
@@ -25,6 +27,10 @@ type JobPosition struct {
 	Name string `json:"name,omitempty"`
 	// DepartmentID holds the value of the "department_id" field.
 	DepartmentID uuid.UUID `json:"department_id,omitempty"`
+	// CreatedBy holds the value of the "created_by" field.
+	CreatedBy *uuid.UUID `json:"created_by,omitempty"`
+	// Status holds the value of the "status" field.
+	Status consts.JobPositionStatus `json:"status,omitempty"`
 	// Location holds the value of the "location" field.
 	Location *string `json:"location,omitempty"`
 	// SalaryMin holds the value of the "salary_min" field.
@@ -47,6 +53,8 @@ type JobPosition struct {
 type JobPositionEdges struct {
 	// Department holds the value of the department edge.
 	Department *Department `json:"department,omitempty"`
+	// Creator holds the value of the creator edge.
+	Creator *User `json:"creator,omitempty"`
 	// Responsibilities holds the value of the responsibilities edge.
 	Responsibilities []*JobResponsibility `json:"responsibilities,omitempty"`
 	// Skills holds the value of the skills edge.
@@ -59,7 +67,7 @@ type JobPositionEdges struct {
 	IndustryRequirements []*JobIndustryRequirement `json:"industry_requirements,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // DepartmentOrErr returns the Department value or an error if the edge
@@ -73,10 +81,21 @@ func (e JobPositionEdges) DepartmentOrErr() (*Department, error) {
 	return nil, &NotLoadedError{edge: "department"}
 }
 
+// CreatorOrErr returns the Creator value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e JobPositionEdges) CreatorOrErr() (*User, error) {
+	if e.Creator != nil {
+		return e.Creator, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "creator"}
+}
+
 // ResponsibilitiesOrErr returns the Responsibilities value or an error if the edge
 // was not loaded in eager-loading.
 func (e JobPositionEdges) ResponsibilitiesOrErr() ([]*JobResponsibility, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.Responsibilities, nil
 	}
 	return nil, &NotLoadedError{edge: "responsibilities"}
@@ -85,7 +104,7 @@ func (e JobPositionEdges) ResponsibilitiesOrErr() ([]*JobResponsibility, error) 
 // SkillsOrErr returns the Skills value or an error if the edge
 // was not loaded in eager-loading.
 func (e JobPositionEdges) SkillsOrErr() ([]*JobSkill, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Skills, nil
 	}
 	return nil, &NotLoadedError{edge: "skills"}
@@ -94,7 +113,7 @@ func (e JobPositionEdges) SkillsOrErr() ([]*JobSkill, error) {
 // EducationRequirementsOrErr returns the EducationRequirements value or an error if the edge
 // was not loaded in eager-loading.
 func (e JobPositionEdges) EducationRequirementsOrErr() ([]*JobEducationRequirement, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.EducationRequirements, nil
 	}
 	return nil, &NotLoadedError{edge: "education_requirements"}
@@ -103,7 +122,7 @@ func (e JobPositionEdges) EducationRequirementsOrErr() ([]*JobEducationRequireme
 // ExperienceRequirementsOrErr returns the ExperienceRequirements value or an error if the edge
 // was not loaded in eager-loading.
 func (e JobPositionEdges) ExperienceRequirementsOrErr() ([]*JobExperienceRequirement, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.ExperienceRequirements, nil
 	}
 	return nil, &NotLoadedError{edge: "experience_requirements"}
@@ -112,7 +131,7 @@ func (e JobPositionEdges) ExperienceRequirementsOrErr() ([]*JobExperienceRequire
 // IndustryRequirementsOrErr returns the IndustryRequirements value or an error if the edge
 // was not loaded in eager-loading.
 func (e JobPositionEdges) IndustryRequirementsOrErr() ([]*JobIndustryRequirement, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.IndustryRequirements, nil
 	}
 	return nil, &NotLoadedError{edge: "industry_requirements"}
@@ -123,9 +142,11 @@ func (*JobPosition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case jobposition.FieldCreatedBy:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case jobposition.FieldSalaryMin, jobposition.FieldSalaryMax:
 			values[i] = new(sql.NullFloat64)
-		case jobposition.FieldName, jobposition.FieldLocation, jobposition.FieldDescription:
+		case jobposition.FieldName, jobposition.FieldStatus, jobposition.FieldLocation, jobposition.FieldDescription:
 			values[i] = new(sql.NullString)
 		case jobposition.FieldDeletedAt, jobposition.FieldCreatedAt, jobposition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -169,6 +190,19 @@ func (jp *JobPosition) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field department_id", values[i])
 			} else if value != nil {
 				jp.DepartmentID = *value
+			}
+		case jobposition.FieldCreatedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field created_by", values[i])
+			} else if value.Valid {
+				jp.CreatedBy = new(uuid.UUID)
+				*jp.CreatedBy = *value.S.(*uuid.UUID)
+			}
+		case jobposition.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				jp.Status = consts.JobPositionStatus(value.String)
 			}
 		case jobposition.FieldLocation:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -228,6 +262,11 @@ func (jp *JobPosition) QueryDepartment() *DepartmentQuery {
 	return NewJobPositionClient(jp.config).QueryDepartment(jp)
 }
 
+// QueryCreator queries the "creator" edge of the JobPosition entity.
+func (jp *JobPosition) QueryCreator() *UserQuery {
+	return NewJobPositionClient(jp.config).QueryCreator(jp)
+}
+
 // QueryResponsibilities queries the "responsibilities" edge of the JobPosition entity.
 func (jp *JobPosition) QueryResponsibilities() *JobResponsibilityQuery {
 	return NewJobPositionClient(jp.config).QueryResponsibilities(jp)
@@ -284,6 +323,14 @@ func (jp *JobPosition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("department_id=")
 	builder.WriteString(fmt.Sprintf("%v", jp.DepartmentID))
+	builder.WriteString(", ")
+	if v := jp.CreatedBy; v != nil {
+		builder.WriteString("created_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", jp.Status))
 	builder.WriteString(", ")
 	if v := jp.Location; v != nil {
 		builder.WriteString("location=")
