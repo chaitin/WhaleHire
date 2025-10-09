@@ -29,6 +29,7 @@ export interface Resume {
   parsed_at?: string;
   error_message?: string;
   uploader_id: string;
+  uploader_name?: string; // 上传人姓名
   created_at: number;
   updated_at: number;
 }

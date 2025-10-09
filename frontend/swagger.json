@@ -3937,6 +3937,9 @@
                 "uploader_id": {
                     "type": "string"
                 },
+                "uploader_name": {
+                    "type": "string"
+                },
                 "years_experience": {
                     "type": "number"
                 }
@@ -4012,6 +4015,9 @@
                     "type": "integer"
                 },
                 "uploader_id": {
+                    "type": "string"
+                },
+                "uploader_name": {
                     "type": "string"
                 },
                 "years_experience": {
