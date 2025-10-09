@@ -61,7 +61,7 @@ func (u *JobProfileUsecase) Create(ctx context.Context, req *domain.CreateJobPro
 	job.SalaryMin = req.SalaryMin
 	job.SalaryMax = req.SalaryMax
 	job.Description = safeTrimPtr(req.Description)
-	
+
 	// 设置创建者ID，需要转换为UUID
 	if req.CreatedBy != nil && *req.CreatedBy != "" {
 		createdByUUID, err := uuid.Parse(*req.CreatedBy)
@@ -70,7 +70,7 @@ func (u *JobProfileUsecase) Create(ctx context.Context, req *domain.CreateJobPro
 		}
 		job.CreatedBy = &createdByUUID
 	}
-	
+
 	// 设置状态，如果未提供则使用默认值
 	if req.Status != nil && *req.Status != "" {
 		job.Status = consts.JobPositionStatus(*req.Status)
