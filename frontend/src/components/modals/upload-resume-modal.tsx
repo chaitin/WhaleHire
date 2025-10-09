@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, Upload, Link, ArrowRight, FileText, User, Mail, Phone, MapPin, GraduationCap, Briefcase, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -9,10 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useResumeUpload, useResumeProgress } from '@/hooks/useResume';
-import { Resume } from '@/types/resume';
+import { useResumeUpload } from '@/hooks/useResume';
+import { useResumePollingManager } from '@/hooks/useResumePollingManager';
+import { Resume, ResumeParseProgress, ResumeDetail } from '@/types/resume';
 import { formatDate } from '@/lib/utils';
 import { ResumeParseProgressComponent } from '@/components/ui/resume-parse-progress';
+import { getResumeProgress, getResumeDetail } from '@/services/resume';
 
 interface UploadResumeModalProps {
   open: boolean;
@@ -26,27 +27,11 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
   const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'complete'>("upload");
   const [uploadedResume, setUploadedResume] = useState<Resume | null>(null);
   const [showContentTip, setShowContentTip] = useState(false);
-  const { uploadFile, uploading, uploadProgress, error } = useResumeUpload();
+  const [progress, setProgress] = useState<ResumeParseProgress | null>(null);
+  const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
   
-  // 使用进度轮询hook
-  const { 
-    progress,
-    resumeDetail,
-    stopPolling 
-  } = useResumeProgress(uploadedResume?.id, {
-    autoPolling: true,
-    pollingInterval: 2000,
-    onComplete: (progress, resumeDetail) => {
-      console.log('简历解析完成:', progress, resumeDetail);
-      // 解析完成后自动进入第三步
-      if (progress.status === 'completed') {
-        setCurrentStep('complete');
-      }
-    },
-    onError: (error) => {
-      console.error('简历解析失败:', error);
-    }
-  });
+  const { uploadFile, uploading, uploadProgress, error } = useResumeUpload();
+  const { startPolling, stopPolling } = useResumePollingManager();
 
   useEffect(() => {
     if (!open) {
@@ -62,6 +47,35 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
       }
     }
   }, [open, stopPolling, currentStep]);
+
+  // 监听简历上传成功后的状态变化，手动启动轮询
+  useEffect(() => {
+    if (uploadedResume && currentStep === 'preview') {
+      // 如果简历状态需要轮询，则启动轮询
+      if (uploadedResume.status === 'pending' || uploadedResume.status === 'processing') {
+        console.log('启动简历解析进度轮询:', uploadedResume.id);
+        startPolling(uploadedResume.id, async (newProgress) => {
+          setProgress(newProgress);
+          
+          // 解析完成后获取详细信息并进入完成步骤
+          if (newProgress.status === 'completed') {
+            try {
+              const detail = await getResumeDetail(uploadedResume.id);
+              setResumeDetail(detail);
+              setCurrentStep('complete');
+            } catch (error) {
+              console.error('获取简历详情失败:', error);
+            }
+          } else if (newProgress.status === 'failed') {
+            console.error('简历解析失败:', newProgress);
+          }
+        });
+      } else {
+        // 获取初始进度状态
+        getResumeProgress(uploadedResume.id).then(setProgress).catch(console.error);
+      }
+    }
+  }, [uploadedResume, currentStep, startPolling]);
 
   const handleFileUpload = () => {
     // 创建文件输入元素
