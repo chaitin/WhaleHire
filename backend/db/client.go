@@ -1349,12 +1349,14 @@ func (c *DepartmentClient) QueryPositions(d *Department) *JobPositionQuery {
 
 // Hooks returns the client hooks.
 func (c *DepartmentClient) Hooks() []Hook {
-	return c.hooks.Department
+	hooks := c.hooks.Department
+	return append(hooks[:len(hooks):len(hooks)], department.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *DepartmentClient) Interceptors() []Interceptor {
-	return c.inters.Department
+	inters := c.inters.Department
+	return append(inters[:len(inters):len(inters)], department.Interceptors[:]...)
 }
 
 func (c *DepartmentClient) mutate(ctx context.Context, m *DepartmentMutation) (Value, error) {
@@ -1498,12 +1500,14 @@ func (c *JobEducationRequirementClient) QueryJob(jer *JobEducationRequirement) *
 
 // Hooks returns the client hooks.
 func (c *JobEducationRequirementClient) Hooks() []Hook {
-	return c.hooks.JobEducationRequirement
+	hooks := c.hooks.JobEducationRequirement
+	return append(hooks[:len(hooks):len(hooks)], jobeducationrequirement.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *JobEducationRequirementClient) Interceptors() []Interceptor {
-	return c.inters.JobEducationRequirement
+	inters := c.inters.JobEducationRequirement
+	return append(inters[:len(inters):len(inters)], jobeducationrequirement.Interceptors[:]...)
 }
 
 func (c *JobEducationRequirementClient) mutate(ctx context.Context, m *JobEducationRequirementMutation) (Value, error) {
@@ -1647,12 +1651,14 @@ func (c *JobExperienceRequirementClient) QueryJob(jer *JobExperienceRequirement)
 
 // Hooks returns the client hooks.
 func (c *JobExperienceRequirementClient) Hooks() []Hook {
-	return c.hooks.JobExperienceRequirement
+	hooks := c.hooks.JobExperienceRequirement
+	return append(hooks[:len(hooks):len(hooks)], jobexperiencerequirement.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *JobExperienceRequirementClient) Interceptors() []Interceptor {
-	return c.inters.JobExperienceRequirement
+	inters := c.inters.JobExperienceRequirement
+	return append(inters[:len(inters):len(inters)], jobexperiencerequirement.Interceptors[:]...)
 }
 
 func (c *JobExperienceRequirementClient) mutate(ctx context.Context, m *JobExperienceRequirementMutation) (Value, error) {
@@ -1796,12 +1802,14 @@ func (c *JobIndustryRequirementClient) QueryJob(jir *JobIndustryRequirement) *Jo
 
 // Hooks returns the client hooks.
 func (c *JobIndustryRequirementClient) Hooks() []Hook {
-	return c.hooks.JobIndustryRequirement
+	hooks := c.hooks.JobIndustryRequirement
+	return append(hooks[:len(hooks):len(hooks)], jobindustryrequirement.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *JobIndustryRequirementClient) Interceptors() []Interceptor {
-	return c.inters.JobIndustryRequirement
+	inters := c.inters.JobIndustryRequirement
+	return append(inters[:len(inters):len(inters)], jobindustryrequirement.Interceptors[:]...)
 }
 
 func (c *JobIndustryRequirementClient) mutate(ctx context.Context, m *JobIndustryRequirementMutation) (Value, error) {
@@ -2025,12 +2033,14 @@ func (c *JobPositionClient) QueryIndustryRequirements(jp *JobPosition) *JobIndus
 
 // Hooks returns the client hooks.
 func (c *JobPositionClient) Hooks() []Hook {
-	return c.hooks.JobPosition
+	hooks := c.hooks.JobPosition
+	return append(hooks[:len(hooks):len(hooks)], jobposition.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *JobPositionClient) Interceptors() []Interceptor {
-	return c.inters.JobPosition
+	inters := c.inters.JobPosition
+	return append(inters[:len(inters):len(inters)], jobposition.Interceptors[:]...)
 }
 
 func (c *JobPositionClient) mutate(ctx context.Context, m *JobPositionMutation) (Value, error) {
@@ -2174,12 +2184,14 @@ func (c *JobResponsibilityClient) QueryJob(jr *JobResponsibility) *JobPositionQu
 
 // Hooks returns the client hooks.
 func (c *JobResponsibilityClient) Hooks() []Hook {
-	return c.hooks.JobResponsibility
+	hooks := c.hooks.JobResponsibility
+	return append(hooks[:len(hooks):len(hooks)], jobresponsibility.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *JobResponsibilityClient) Interceptors() []Interceptor {
-	return c.inters.JobResponsibility
+	inters := c.inters.JobResponsibility
+	return append(inters[:len(inters):len(inters)], jobresponsibility.Interceptors[:]...)
 }
 
 func (c *JobResponsibilityClient) mutate(ctx context.Context, m *JobResponsibilityMutation) (Value, error) {
@@ -2339,12 +2351,14 @@ func (c *JobSkillClient) QuerySkill(js *JobSkill) *JobSkillMetaQuery {
 
 // Hooks returns the client hooks.
 func (c *JobSkillClient) Hooks() []Hook {
-	return c.hooks.JobSkill
+	hooks := c.hooks.JobSkill
+	return append(hooks[:len(hooks):len(hooks)], jobskill.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *JobSkillClient) Interceptors() []Interceptor {
-	return c.inters.JobSkill
+	inters := c.inters.JobSkill
+	return append(inters[:len(inters):len(inters)], jobskill.Interceptors[:]...)
 }
 
 func (c *JobSkillClient) mutate(ctx context.Context, m *JobSkillMutation) (Value, error) {
@@ -2488,12 +2502,14 @@ func (c *JobSkillMetaClient) QueryJobLinks(jsm *JobSkillMeta) *JobSkillQuery {
 
 // Hooks returns the client hooks.
 func (c *JobSkillMetaClient) Hooks() []Hook {
-	return c.hooks.JobSkillMeta
+	hooks := c.hooks.JobSkillMeta
+	return append(hooks[:len(hooks):len(hooks)], jobskillmeta.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *JobSkillMetaClient) Interceptors() []Interceptor {
-	return c.inters.JobSkillMeta
+	inters := c.inters.JobSkillMeta
+	return append(inters[:len(inters):len(inters)], jobskillmeta.Interceptors[:]...)
 }
 
 func (c *JobSkillMetaClient) mutate(ctx context.Context, m *JobSkillMetaMutation) (Value, error) {

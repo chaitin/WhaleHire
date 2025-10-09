@@ -126,6 +126,11 @@ func init() {
 	conversationDescID := conversationFields[0].Descriptor()
 	// conversation.DefaultID holds the default value on creation for the id field.
 	conversation.DefaultID = conversationDescID.Default.(func() uuid.UUID)
+	departmentMixin := schema.Department{}.Mixin()
+	departmentMixinHooks0 := departmentMixin[0].Hooks()
+	department.Hooks[0] = departmentMixinHooks0[0]
+	departmentMixinInters0 := departmentMixin[0].Interceptors()
+	department.Interceptors[0] = departmentMixinInters0[0]
 	departmentFields := schema.Department{}.Fields()
 	_ = departmentFields
 	// departmentDescName is the schema descriptor for name field.
@@ -150,6 +155,11 @@ func init() {
 	departmentDescID := departmentFields[0].Descriptor()
 	// department.DefaultID holds the default value on creation for the id field.
 	department.DefaultID = departmentDescID.Default.(func() uuid.UUID)
+	jobeducationrequirementMixin := schema.JobEducationRequirement{}.Mixin()
+	jobeducationrequirementMixinHooks0 := jobeducationrequirementMixin[0].Hooks()
+	jobeducationrequirement.Hooks[0] = jobeducationrequirementMixinHooks0[0]
+	jobeducationrequirementMixinInters0 := jobeducationrequirementMixin[0].Interceptors()
+	jobeducationrequirement.Interceptors[0] = jobeducationrequirementMixinInters0[0]
 	jobeducationrequirementFields := schema.JobEducationRequirement{}.Fields()
 	_ = jobeducationrequirementFields
 	// jobeducationrequirementDescMinDegree is the schema descriptor for min_degree field.
@@ -174,6 +184,11 @@ func init() {
 	jobeducationrequirementDescID := jobeducationrequirementFields[0].Descriptor()
 	// jobeducationrequirement.DefaultID holds the default value on creation for the id field.
 	jobeducationrequirement.DefaultID = jobeducationrequirementDescID.Default.(func() uuid.UUID)
+	jobexperiencerequirementMixin := schema.JobExperienceRequirement{}.Mixin()
+	jobexperiencerequirementMixinHooks0 := jobexperiencerequirementMixin[0].Hooks()
+	jobexperiencerequirement.Hooks[0] = jobexperiencerequirementMixinHooks0[0]
+	jobexperiencerequirementMixinInters0 := jobexperiencerequirementMixin[0].Interceptors()
+	jobexperiencerequirement.Interceptors[0] = jobexperiencerequirementMixinInters0[0]
 	jobexperiencerequirementFields := schema.JobExperienceRequirement{}.Fields()
 	_ = jobexperiencerequirementFields
 	// jobexperiencerequirementDescMinYears is the schema descriptor for min_years field.
@@ -206,6 +221,11 @@ func init() {
 	jobexperiencerequirementDescID := jobexperiencerequirementFields[0].Descriptor()
 	// jobexperiencerequirement.DefaultID holds the default value on creation for the id field.
 	jobexperiencerequirement.DefaultID = jobexperiencerequirementDescID.Default.(func() uuid.UUID)
+	jobindustryrequirementMixin := schema.JobIndustryRequirement{}.Mixin()
+	jobindustryrequirementMixinHooks0 := jobindustryrequirementMixin[0].Hooks()
+	jobindustryrequirement.Hooks[0] = jobindustryrequirementMixinHooks0[0]
+	jobindustryrequirementMixinInters0 := jobindustryrequirementMixin[0].Interceptors()
+	jobindustryrequirement.Interceptors[0] = jobindustryrequirementMixinInters0[0]
 	jobindustryrequirementFields := schema.JobIndustryRequirement{}.Fields()
 	_ = jobindustryrequirementFields
 	// jobindustryrequirementDescIndustry is the schema descriptor for industry field.
@@ -234,6 +254,11 @@ func init() {
 	jobindustryrequirementDescID := jobindustryrequirementFields[0].Descriptor()
 	// jobindustryrequirement.DefaultID holds the default value on creation for the id field.
 	jobindustryrequirement.DefaultID = jobindustryrequirementDescID.Default.(func() uuid.UUID)
+	jobpositionMixin := schema.JobPosition{}.Mixin()
+	jobpositionMixinHooks0 := jobpositionMixin[0].Hooks()
+	jobposition.Hooks[0] = jobpositionMixinHooks0[0]
+	jobpositionMixinInters0 := jobpositionMixin[0].Interceptors()
+	jobposition.Interceptors[0] = jobpositionMixinInters0[0]
 	jobpositionFields := schema.JobPosition{}.Fields()
 	_ = jobpositionFields
 	// jobpositionDescName is the schema descriptor for name field.
@@ -258,6 +283,11 @@ func init() {
 	jobpositionDescID := jobpositionFields[0].Descriptor()
 	// jobposition.DefaultID holds the default value on creation for the id field.
 	jobposition.DefaultID = jobpositionDescID.Default.(func() uuid.UUID)
+	jobresponsibilityMixin := schema.JobResponsibility{}.Mixin()
+	jobresponsibilityMixinHooks0 := jobresponsibilityMixin[0].Hooks()
+	jobresponsibility.Hooks[0] = jobresponsibilityMixinHooks0[0]
+	jobresponsibilityMixinInters0 := jobresponsibilityMixin[0].Interceptors()
+	jobresponsibility.Interceptors[0] = jobresponsibilityMixinInters0[0]
 	jobresponsibilityFields := schema.JobResponsibility{}.Fields()
 	_ = jobresponsibilityFields
 	// jobresponsibilityDescSortOrder is the schema descriptor for sort_order field.
@@ -278,6 +308,11 @@ func init() {
 	jobresponsibilityDescID := jobresponsibilityFields[0].Descriptor()
 	// jobresponsibility.DefaultID holds the default value on creation for the id field.
 	jobresponsibility.DefaultID = jobresponsibilityDescID.Default.(func() uuid.UUID)
+	jobskillMixin := schema.JobSkill{}.Mixin()
+	jobskillMixinHooks0 := jobskillMixin[0].Hooks()
+	jobskill.Hooks[0] = jobskillMixinHooks0[0]
+	jobskillMixinInters0 := jobskillMixin[0].Interceptors()
+	jobskill.Interceptors[0] = jobskillMixinInters0[0]
 	jobskillFields := schema.JobSkill{}.Fields()
 	_ = jobskillFields
 	// jobskillDescWeight is the schema descriptor for weight field.
@@ -298,6 +333,11 @@ func init() {
 	jobskillDescID := jobskillFields[0].Descriptor()
 	// jobskill.DefaultID holds the default value on creation for the id field.
 	jobskill.DefaultID = jobskillDescID.Default.(func() uuid.UUID)
+	jobskillmetaMixin := schema.JobSkillMeta{}.Mixin()
+	jobskillmetaMixinHooks0 := jobskillmetaMixin[0].Hooks()
+	jobskillmeta.Hooks[0] = jobskillmetaMixinHooks0[0]
+	jobskillmetaMixinInters0 := jobskillmetaMixin[0].Interceptors()
+	jobskillmeta.Interceptors[0] = jobskillmetaMixinInters0[0]
 	jobskillmetaFields := schema.JobSkillMeta{}.Fields()
 	_ = jobskillmetaFields
 	// jobskillmetaDescName is the schema descriptor for name field.

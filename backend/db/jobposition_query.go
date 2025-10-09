@@ -483,12 +483,12 @@ func (jpq *JobPositionQuery) WithIndustryRequirements(opts ...func(*JobIndustryR
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.JobPosition.Query().
-//		GroupBy(jobposition.FieldName).
+//		GroupBy(jobposition.FieldDeletedAt).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 func (jpq *JobPositionQuery) GroupBy(field string, fields ...string) *JobPositionGroupBy {
@@ -506,11 +506,11 @@ func (jpq *JobPositionQuery) GroupBy(field string, fields ...string) *JobPositio
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.JobPosition.Query().
-//		Select(jobposition.FieldName).
+//		Select(jobposition.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (jpq *JobPositionQuery) Select(fields ...string) *JobPositionSelect {
 	jpq.ctx.Fields = append(jpq.ctx.Fields, fields...)

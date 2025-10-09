@@ -303,12 +303,12 @@ func (jsmq *JobSkillMetaQuery) WithJobLinks(opts ...func(*JobSkillQuery)) *JobSk
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.JobSkillMeta.Query().
-//		GroupBy(jobskillmeta.FieldName).
+//		GroupBy(jobskillmeta.FieldDeletedAt).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 func (jsmq *JobSkillMetaQuery) GroupBy(field string, fields ...string) *JobSkillMetaGroupBy {
@@ -326,11 +326,11 @@ func (jsmq *JobSkillMetaQuery) GroupBy(field string, fields ...string) *JobSkill
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.JobSkillMeta.Query().
-//		Select(jobskillmeta.FieldName).
+//		Select(jobskillmeta.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (jsmq *JobSkillMetaQuery) Select(fields ...string) *JobSkillMetaSelect {
 	jsmq.ctx.Fields = append(jsmq.ctx.Fields, fields...)

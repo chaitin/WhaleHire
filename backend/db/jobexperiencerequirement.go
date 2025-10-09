@@ -19,6 +19,8 @@ type JobExperienceRequirement struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
 	// MinYears holds the value of the "min_years" field.
@@ -31,8 +33,6 @@ type JobExperienceRequirement struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JobExperienceRequirementQuery when eager-loading is set.
 	Edges        JobExperienceRequirementEdges `json:"edges"`
@@ -66,7 +66,7 @@ func (*JobExperienceRequirement) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case jobexperiencerequirement.FieldMinYears, jobexperiencerequirement.FieldIdealYears, jobexperiencerequirement.FieldWeight:
 			values[i] = new(sql.NullInt64)
-		case jobexperiencerequirement.FieldCreatedAt, jobexperiencerequirement.FieldUpdatedAt, jobexperiencerequirement.FieldDeletedAt:
+		case jobexperiencerequirement.FieldDeletedAt, jobexperiencerequirement.FieldCreatedAt, jobexperiencerequirement.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case jobexperiencerequirement.FieldID, jobexperiencerequirement.FieldJobID:
 			values[i] = new(uuid.UUID)
@@ -90,6 +90,12 @@ func (jer *JobExperienceRequirement) assignValues(columns []string, values []any
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				jer.ID = *value
+			}
+		case jobexperiencerequirement.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				jer.DeletedAt = value.Time
 			}
 		case jobexperiencerequirement.FieldJobID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -126,13 +132,6 @@ func (jer *JobExperienceRequirement) assignValues(columns []string, values []any
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				jer.UpdatedAt = value.Time
-			}
-		case jobexperiencerequirement.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				jer.DeletedAt = new(time.Time)
-				*jer.DeletedAt = value.Time
 			}
 		default:
 			jer.selectValues.Set(columns[i], values[i])
@@ -175,6 +174,9 @@ func (jer *JobExperienceRequirement) String() string {
 	var builder strings.Builder
 	builder.WriteString("JobExperienceRequirement(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", jer.ID))
+	builder.WriteString("deleted_at=")
+	builder.WriteString(jer.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", jer.JobID))
 	builder.WriteString(", ")
@@ -192,11 +194,6 @@ func (jer *JobExperienceRequirement) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(jer.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := jer.DeletedAt; v != nil {
-		builder.WriteString("deleted_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -302,12 +302,12 @@ func (jirq *JobIndustryRequirementQuery) WithJob(opts ...func(*JobPositionQuery)
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.JobIndustryRequirement.Query().
-//		GroupBy(jobindustryrequirement.FieldJobID).
+//		GroupBy(jobindustryrequirement.FieldDeletedAt).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 func (jirq *JobIndustryRequirementQuery) GroupBy(field string, fields ...string) *JobIndustryRequirementGroupBy {
@@ -325,11 +325,11 @@ func (jirq *JobIndustryRequirementQuery) GroupBy(field string, fields ...string)
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.JobIndustryRequirement.Query().
-//		Select(jobindustryrequirement.FieldJobID).
+//		Select(jobindustryrequirement.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (jirq *JobIndustryRequirementQuery) Select(fields ...string) *JobIndustryRequirementSelect {
 	jirq.ctx.Fields = append(jirq.ctx.Fields, fields...)

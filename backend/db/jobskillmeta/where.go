@@ -56,6 +56,11 @@ func IDLTE(id uuid.UUID) predicate.JobSkillMeta {
 	return predicate.JobSkillMeta(sql.FieldLTE(FieldID, id))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.JobSkillMeta {
 	return predicate.JobSkillMeta(sql.FieldEQ(FieldName, v))
@@ -71,9 +76,54 @@ func CreatedAt(v time.Time) predicate.JobSkillMeta {
 	return predicate.JobSkillMeta(sql.FieldEQ(FieldCreatedAt, v))
 }
 
-// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
-func DeletedAt(v time.Time) predicate.JobSkillMeta {
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.JobSkillMeta {
 	return predicate.JobSkillMeta(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.JobSkillMeta {
+	return predicate.JobSkillMeta(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -219,56 +269,6 @@ func CreatedAtLT(v time.Time) predicate.JobSkillMeta {
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
 func CreatedAtLTE(v time.Time) predicate.JobSkillMeta {
 	return predicate.JobSkillMeta(sql.FieldLTE(FieldCreatedAt, v))
-}
-
-// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
-func DeletedAtEQ(v time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldEQ(FieldDeletedAt, v))
-}
-
-// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
-func DeletedAtNEQ(v time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldNEQ(FieldDeletedAt, v))
-}
-
-// DeletedAtIn applies the In predicate on the "deleted_at" field.
-func DeletedAtIn(vs ...time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldIn(FieldDeletedAt, vs...))
-}
-
-// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
-func DeletedAtNotIn(vs ...time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldNotIn(FieldDeletedAt, vs...))
-}
-
-// DeletedAtGT applies the GT predicate on the "deleted_at" field.
-func DeletedAtGT(v time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldGT(FieldDeletedAt, v))
-}
-
-// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
-func DeletedAtGTE(v time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldGTE(FieldDeletedAt, v))
-}
-
-// DeletedAtLT applies the LT predicate on the "deleted_at" field.
-func DeletedAtLT(v time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldLT(FieldDeletedAt, v))
-}
-
-// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
-func DeletedAtLTE(v time.Time) predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldLTE(FieldDeletedAt, v))
-}
-
-// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
-func DeletedAtIsNil() predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldIsNull(FieldDeletedAt))
-}
-
-// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
-func DeletedAtNotNil() predicate.JobSkillMeta {
-	return predicate.JobSkillMeta(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // HasJobLinks applies the HasEdge predicate on the "job_links" edge.

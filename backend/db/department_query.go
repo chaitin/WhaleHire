@@ -303,12 +303,12 @@ func (dq *DepartmentQuery) WithPositions(opts ...func(*JobPositionQuery)) *Depar
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Department.Query().
-//		GroupBy(department.FieldName).
+//		GroupBy(department.FieldDeletedAt).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 func (dq *DepartmentQuery) GroupBy(field string, fields ...string) *DepartmentGroupBy {
@@ -326,11 +326,11 @@ func (dq *DepartmentQuery) GroupBy(field string, fields ...string) *DepartmentGr
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.Department.Query().
-//		Select(department.FieldName).
+//		Select(department.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (dq *DepartmentQuery) Select(fields ...string) *DepartmentSelect {
 	dq.ctx.Fields = append(dq.ctx.Fields, fields...)

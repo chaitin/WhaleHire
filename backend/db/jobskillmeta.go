@@ -18,14 +18,14 @@ type JobSkillMeta struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JobSkillMetaQuery when eager-loading is set.
 	Edges        JobSkillMetaEdges `json:"edges"`
@@ -57,7 +57,7 @@ func (*JobSkillMeta) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case jobskillmeta.FieldName:
 			values[i] = new(sql.NullString)
-		case jobskillmeta.FieldUpdatedAt, jobskillmeta.FieldCreatedAt, jobskillmeta.FieldDeletedAt:
+		case jobskillmeta.FieldDeletedAt, jobskillmeta.FieldUpdatedAt, jobskillmeta.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case jobskillmeta.FieldID:
 			values[i] = new(uuid.UUID)
@@ -82,6 +82,12 @@ func (jsm *JobSkillMeta) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				jsm.ID = *value
 			}
+		case jobskillmeta.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				jsm.DeletedAt = value.Time
+			}
 		case jobskillmeta.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -99,13 +105,6 @@ func (jsm *JobSkillMeta) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				jsm.CreatedAt = value.Time
-			}
-		case jobskillmeta.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				jsm.DeletedAt = new(time.Time)
-				*jsm.DeletedAt = value.Time
 			}
 		default:
 			jsm.selectValues.Set(columns[i], values[i])
@@ -148,6 +147,9 @@ func (jsm *JobSkillMeta) String() string {
 	var builder strings.Builder
 	builder.WriteString("JobSkillMeta(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", jsm.ID))
+	builder.WriteString("deleted_at=")
+	builder.WriteString(jsm.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(jsm.Name)
 	builder.WriteString(", ")
@@ -156,11 +158,6 @@ func (jsm *JobSkillMeta) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(jsm.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := jsm.DeletedAt; v != nil {
-		builder.WriteString("deleted_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteByte(')')
 	return builder.String()
 }

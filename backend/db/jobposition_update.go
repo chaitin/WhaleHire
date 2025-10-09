@@ -36,6 +36,26 @@ func (jpu *JobPositionUpdate) Where(ps ...predicate.JobPosition) *JobPositionUpd
 	return jpu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jpu *JobPositionUpdate) SetDeletedAt(t time.Time) *JobPositionUpdate {
+	jpu.mutation.SetDeletedAt(t)
+	return jpu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jpu *JobPositionUpdate) SetNillableDeletedAt(t *time.Time) *JobPositionUpdate {
+	if t != nil {
+		jpu.SetDeletedAt(*t)
+	}
+	return jpu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jpu *JobPositionUpdate) ClearDeletedAt() *JobPositionUpdate {
+	jpu.mutation.ClearDeletedAt()
+	return jpu
+}
+
 // SetName sets the "name" field.
 func (jpu *JobPositionUpdate) SetName(s string) *JobPositionUpdate {
 	jpu.mutation.SetName(s)
@@ -161,26 +181,6 @@ func (jpu *JobPositionUpdate) ClearDescription() *JobPositionUpdate {
 // SetUpdatedAt sets the "updated_at" field.
 func (jpu *JobPositionUpdate) SetUpdatedAt(t time.Time) *JobPositionUpdate {
 	jpu.mutation.SetUpdatedAt(t)
-	return jpu
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (jpu *JobPositionUpdate) SetDeletedAt(t time.Time) *JobPositionUpdate {
-	jpu.mutation.SetDeletedAt(t)
-	return jpu
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jpu *JobPositionUpdate) SetNillableDeletedAt(t *time.Time) *JobPositionUpdate {
-	if t != nil {
-		jpu.SetDeletedAt(*t)
-	}
-	return jpu
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jpu *JobPositionUpdate) ClearDeletedAt() *JobPositionUpdate {
-	jpu.mutation.ClearDeletedAt()
 	return jpu
 }
 
@@ -382,7 +382,9 @@ func (jpu *JobPositionUpdate) RemoveIndustryRequirements(j ...*JobIndustryRequir
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (jpu *JobPositionUpdate) Save(ctx context.Context) (int, error) {
-	jpu.defaults()
+	if err := jpu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, jpu.sqlSave, jpu.mutation, jpu.hooks)
 }
 
@@ -409,11 +411,15 @@ func (jpu *JobPositionUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jpu *JobPositionUpdate) defaults() {
+func (jpu *JobPositionUpdate) defaults() error {
 	if _, ok := jpu.mutation.UpdatedAt(); !ok {
+		if jobposition.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobposition.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobposition.UpdateDefaultUpdatedAt()
 		jpu.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -452,6 +458,12 @@ func (jpu *JobPositionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := jpu.mutation.DeletedAt(); ok {
+		_spec.SetField(jobposition.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jpu.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobposition.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jpu.mutation.Name(); ok {
 		_spec.SetField(jobposition.FieldName, field.TypeString, value)
 	}
@@ -487,12 +499,6 @@ func (jpu *JobPositionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := jpu.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobposition.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jpu.mutation.DeletedAt(); ok {
-		_spec.SetField(jobposition.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jpu.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobposition.FieldDeletedAt, field.TypeTime)
 	}
 	if jpu.mutation.DepartmentCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -770,6 +776,26 @@ type JobPositionUpdateOne struct {
 	modifiers []func(*sql.UpdateBuilder)
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jpuo *JobPositionUpdateOne) SetDeletedAt(t time.Time) *JobPositionUpdateOne {
+	jpuo.mutation.SetDeletedAt(t)
+	return jpuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jpuo *JobPositionUpdateOne) SetNillableDeletedAt(t *time.Time) *JobPositionUpdateOne {
+	if t != nil {
+		jpuo.SetDeletedAt(*t)
+	}
+	return jpuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jpuo *JobPositionUpdateOne) ClearDeletedAt() *JobPositionUpdateOne {
+	jpuo.mutation.ClearDeletedAt()
+	return jpuo
+}
+
 // SetName sets the "name" field.
 func (jpuo *JobPositionUpdateOne) SetName(s string) *JobPositionUpdateOne {
 	jpuo.mutation.SetName(s)
@@ -895,26 +921,6 @@ func (jpuo *JobPositionUpdateOne) ClearDescription() *JobPositionUpdateOne {
 // SetUpdatedAt sets the "updated_at" field.
 func (jpuo *JobPositionUpdateOne) SetUpdatedAt(t time.Time) *JobPositionUpdateOne {
 	jpuo.mutation.SetUpdatedAt(t)
-	return jpuo
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (jpuo *JobPositionUpdateOne) SetDeletedAt(t time.Time) *JobPositionUpdateOne {
-	jpuo.mutation.SetDeletedAt(t)
-	return jpuo
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jpuo *JobPositionUpdateOne) SetNillableDeletedAt(t *time.Time) *JobPositionUpdateOne {
-	if t != nil {
-		jpuo.SetDeletedAt(*t)
-	}
-	return jpuo
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jpuo *JobPositionUpdateOne) ClearDeletedAt() *JobPositionUpdateOne {
-	jpuo.mutation.ClearDeletedAt()
 	return jpuo
 }
 
@@ -1129,7 +1135,9 @@ func (jpuo *JobPositionUpdateOne) Select(field string, fields ...string) *JobPos
 
 // Save executes the query and returns the updated JobPosition entity.
 func (jpuo *JobPositionUpdateOne) Save(ctx context.Context) (*JobPosition, error) {
-	jpuo.defaults()
+	if err := jpuo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jpuo.sqlSave, jpuo.mutation, jpuo.hooks)
 }
 
@@ -1156,11 +1164,15 @@ func (jpuo *JobPositionUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jpuo *JobPositionUpdateOne) defaults() {
+func (jpuo *JobPositionUpdateOne) defaults() error {
 	if _, ok := jpuo.mutation.UpdatedAt(); !ok {
+		if jobposition.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobposition.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobposition.UpdateDefaultUpdatedAt()
 		jpuo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -1216,6 +1228,12 @@ func (jpuo *JobPositionUpdateOne) sqlSave(ctx context.Context) (_node *JobPositi
 			}
 		}
 	}
+	if value, ok := jpuo.mutation.DeletedAt(); ok {
+		_spec.SetField(jobposition.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jpuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobposition.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jpuo.mutation.Name(); ok {
 		_spec.SetField(jobposition.FieldName, field.TypeString, value)
 	}
@@ -1251,12 +1269,6 @@ func (jpuo *JobPositionUpdateOne) sqlSave(ctx context.Context) (_node *JobPositi
 	}
 	if value, ok := jpuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobposition.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jpuo.mutation.DeletedAt(); ok {
-		_spec.SetField(jobposition.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jpuo.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobposition.FieldDeletedAt, field.TypeTime)
 	}
 	if jpuo.mutation.DepartmentCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -19,6 +19,8 @@ type JobIndustryRequirement struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
 	// Industry holds the value of the "industry" field.
@@ -31,8 +33,6 @@ type JobIndustryRequirement struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JobIndustryRequirementQuery when eager-loading is set.
 	Edges        JobIndustryRequirementEdges `json:"edges"`
@@ -68,7 +68,7 @@ func (*JobIndustryRequirement) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case jobindustryrequirement.FieldIndustry, jobindustryrequirement.FieldCompanyName:
 			values[i] = new(sql.NullString)
-		case jobindustryrequirement.FieldCreatedAt, jobindustryrequirement.FieldUpdatedAt, jobindustryrequirement.FieldDeletedAt:
+		case jobindustryrequirement.FieldDeletedAt, jobindustryrequirement.FieldCreatedAt, jobindustryrequirement.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case jobindustryrequirement.FieldID, jobindustryrequirement.FieldJobID:
 			values[i] = new(uuid.UUID)
@@ -92,6 +92,12 @@ func (jir *JobIndustryRequirement) assignValues(columns []string, values []any) 
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				jir.ID = *value
+			}
+		case jobindustryrequirement.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				jir.DeletedAt = value.Time
 			}
 		case jobindustryrequirement.FieldJobID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -129,13 +135,6 @@ func (jir *JobIndustryRequirement) assignValues(columns []string, values []any) 
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				jir.UpdatedAt = value.Time
-			}
-		case jobindustryrequirement.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				jir.DeletedAt = new(time.Time)
-				*jir.DeletedAt = value.Time
 			}
 		default:
 			jir.selectValues.Set(columns[i], values[i])
@@ -178,6 +177,9 @@ func (jir *JobIndustryRequirement) String() string {
 	var builder strings.Builder
 	builder.WriteString("JobIndustryRequirement(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", jir.ID))
+	builder.WriteString("deleted_at=")
+	builder.WriteString(jir.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", jir.JobID))
 	builder.WriteString(", ")
@@ -197,11 +199,6 @@ func (jir *JobIndustryRequirement) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(jir.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := jir.DeletedAt; v != nil {
-		builder.WriteString("deleted_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteByte(')')
 	return builder.String()
 }

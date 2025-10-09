@@ -32,6 +32,26 @@ func (jsu *JobSkillUpdate) Where(ps ...predicate.JobSkill) *JobSkillUpdate {
 	return jsu
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jsu *JobSkillUpdate) SetDeletedAt(t time.Time) *JobSkillUpdate {
+	jsu.mutation.SetDeletedAt(t)
+	return jsu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jsu *JobSkillUpdate) SetNillableDeletedAt(t *time.Time) *JobSkillUpdate {
+	if t != nil {
+		jsu.SetDeletedAt(*t)
+	}
+	return jsu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jsu *JobSkillUpdate) ClearDeletedAt() *JobSkillUpdate {
+	jsu.mutation.ClearDeletedAt()
+	return jsu
+}
+
 // SetJobID sets the "job_id" field.
 func (jsu *JobSkillUpdate) SetJobID(u uuid.UUID) *JobSkillUpdate {
 	jsu.mutation.SetJobID(u)
@@ -101,26 +121,6 @@ func (jsu *JobSkillUpdate) SetUpdatedAt(t time.Time) *JobSkillUpdate {
 	return jsu
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jsu *JobSkillUpdate) SetDeletedAt(t time.Time) *JobSkillUpdate {
-	jsu.mutation.SetDeletedAt(t)
-	return jsu
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jsu *JobSkillUpdate) SetNillableDeletedAt(t *time.Time) *JobSkillUpdate {
-	if t != nil {
-		jsu.SetDeletedAt(*t)
-	}
-	return jsu
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jsu *JobSkillUpdate) ClearDeletedAt() *JobSkillUpdate {
-	jsu.mutation.ClearDeletedAt()
-	return jsu
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jsu *JobSkillUpdate) SetJob(j *JobPosition) *JobSkillUpdate {
 	return jsu.SetJobID(j.ID)
@@ -150,7 +150,9 @@ func (jsu *JobSkillUpdate) ClearSkill() *JobSkillUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (jsu *JobSkillUpdate) Save(ctx context.Context) (int, error) {
-	jsu.defaults()
+	if err := jsu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, jsu.sqlSave, jsu.mutation, jsu.hooks)
 }
 
@@ -177,11 +179,15 @@ func (jsu *JobSkillUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jsu *JobSkillUpdate) defaults() {
+func (jsu *JobSkillUpdate) defaults() error {
 	if _, ok := jsu.mutation.UpdatedAt(); !ok {
+		if jobskill.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskill.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskill.UpdateDefaultUpdatedAt()
 		jsu.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -223,6 +229,12 @@ func (jsu *JobSkillUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := jsu.mutation.DeletedAt(); ok {
+		_spec.SetField(jobskill.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jsu.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobskill.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jsu.mutation.GetType(); ok {
 		_spec.SetField(jobskill.FieldType, field.TypeEnum, value)
 	}
@@ -234,12 +246,6 @@ func (jsu *JobSkillUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := jsu.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobskill.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jsu.mutation.DeletedAt(); ok {
-		_spec.SetField(jobskill.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jsu.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobskill.FieldDeletedAt, field.TypeTime)
 	}
 	if jsu.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -321,6 +327,26 @@ type JobSkillUpdateOne struct {
 	modifiers []func(*sql.UpdateBuilder)
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jsuo *JobSkillUpdateOne) SetDeletedAt(t time.Time) *JobSkillUpdateOne {
+	jsuo.mutation.SetDeletedAt(t)
+	return jsuo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jsuo *JobSkillUpdateOne) SetNillableDeletedAt(t *time.Time) *JobSkillUpdateOne {
+	if t != nil {
+		jsuo.SetDeletedAt(*t)
+	}
+	return jsuo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jsuo *JobSkillUpdateOne) ClearDeletedAt() *JobSkillUpdateOne {
+	jsuo.mutation.ClearDeletedAt()
+	return jsuo
+}
+
 // SetJobID sets the "job_id" field.
 func (jsuo *JobSkillUpdateOne) SetJobID(u uuid.UUID) *JobSkillUpdateOne {
 	jsuo.mutation.SetJobID(u)
@@ -390,26 +416,6 @@ func (jsuo *JobSkillUpdateOne) SetUpdatedAt(t time.Time) *JobSkillUpdateOne {
 	return jsuo
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jsuo *JobSkillUpdateOne) SetDeletedAt(t time.Time) *JobSkillUpdateOne {
-	jsuo.mutation.SetDeletedAt(t)
-	return jsuo
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jsuo *JobSkillUpdateOne) SetNillableDeletedAt(t *time.Time) *JobSkillUpdateOne {
-	if t != nil {
-		jsuo.SetDeletedAt(*t)
-	}
-	return jsuo
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jsuo *JobSkillUpdateOne) ClearDeletedAt() *JobSkillUpdateOne {
-	jsuo.mutation.ClearDeletedAt()
-	return jsuo
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jsuo *JobSkillUpdateOne) SetJob(j *JobPosition) *JobSkillUpdateOne {
 	return jsuo.SetJobID(j.ID)
@@ -452,7 +458,9 @@ func (jsuo *JobSkillUpdateOne) Select(field string, fields ...string) *JobSkillU
 
 // Save executes the query and returns the updated JobSkill entity.
 func (jsuo *JobSkillUpdateOne) Save(ctx context.Context) (*JobSkill, error) {
-	jsuo.defaults()
+	if err := jsuo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jsuo.sqlSave, jsuo.mutation, jsuo.hooks)
 }
 
@@ -479,11 +487,15 @@ func (jsuo *JobSkillUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jsuo *JobSkillUpdateOne) defaults() {
+func (jsuo *JobSkillUpdateOne) defaults() error {
 	if _, ok := jsuo.mutation.UpdatedAt(); !ok {
+		if jobskill.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskill.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskill.UpdateDefaultUpdatedAt()
 		jsuo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -542,6 +554,12 @@ func (jsuo *JobSkillUpdateOne) sqlSave(ctx context.Context) (_node *JobSkill, er
 			}
 		}
 	}
+	if value, ok := jsuo.mutation.DeletedAt(); ok {
+		_spec.SetField(jobskill.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jsuo.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobskill.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jsuo.mutation.GetType(); ok {
 		_spec.SetField(jobskill.FieldType, field.TypeEnum, value)
 	}
@@ -553,12 +571,6 @@ func (jsuo *JobSkillUpdateOne) sqlSave(ctx context.Context) (_node *JobSkill, er
 	}
 	if value, ok := jsuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobskill.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jsuo.mutation.DeletedAt(); ok {
-		_spec.SetField(jobskill.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jsuo.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobskill.FieldDeletedAt, field.TypeTime)
 	}
 	if jsuo.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -19,6 +19,8 @@ type JobPosition struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// DepartmentID holds the value of the "department_id" field.
@@ -35,8 +37,6 @@ type JobPosition struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JobPositionQuery when eager-loading is set.
 	Edges        JobPositionEdges `json:"edges"`
@@ -127,7 +127,7 @@ func (*JobPosition) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case jobposition.FieldName, jobposition.FieldLocation, jobposition.FieldDescription:
 			values[i] = new(sql.NullString)
-		case jobposition.FieldCreatedAt, jobposition.FieldUpdatedAt, jobposition.FieldDeletedAt:
+		case jobposition.FieldDeletedAt, jobposition.FieldCreatedAt, jobposition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case jobposition.FieldID, jobposition.FieldDepartmentID:
 			values[i] = new(uuid.UUID)
@@ -151,6 +151,12 @@ func (jp *JobPosition) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				jp.ID = *value
+			}
+		case jobposition.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				jp.DeletedAt = value.Time
 			}
 		case jobposition.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -203,13 +209,6 @@ func (jp *JobPosition) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				jp.UpdatedAt = value.Time
-			}
-		case jobposition.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				jp.DeletedAt = new(time.Time)
-				*jp.DeletedAt = value.Time
 			}
 		default:
 			jp.selectValues.Set(columns[i], values[i])
@@ -277,6 +276,9 @@ func (jp *JobPosition) String() string {
 	var builder strings.Builder
 	builder.WriteString("JobPosition(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", jp.ID))
+	builder.WriteString("deleted_at=")
+	builder.WriteString(jp.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(jp.Name)
 	builder.WriteString(", ")
@@ -308,11 +310,6 @@ func (jp *JobPosition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(jp.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := jp.DeletedAt; v != nil {
-		builder.WriteString("deleted_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteByte(')')
 	return builder.String()
 }

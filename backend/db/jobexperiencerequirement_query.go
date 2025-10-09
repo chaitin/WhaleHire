@@ -302,12 +302,12 @@ func (jerq *JobExperienceRequirementQuery) WithJob(opts ...func(*JobPositionQuer
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.JobExperienceRequirement.Query().
-//		GroupBy(jobexperiencerequirement.FieldJobID).
+//		GroupBy(jobexperiencerequirement.FieldDeletedAt).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 func (jerq *JobExperienceRequirementQuery) GroupBy(field string, fields ...string) *JobExperienceRequirementGroupBy {
@@ -325,11 +325,11 @@ func (jerq *JobExperienceRequirementQuery) GroupBy(field string, fields ...strin
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.JobExperienceRequirement.Query().
-//		Select(jobexperiencerequirement.FieldJobID).
+//		Select(jobexperiencerequirement.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (jerq *JobExperienceRequirementQuery) Select(fields ...string) *JobExperienceRequirementSelect {
 	jerq.ctx.Fields = append(jerq.ctx.Fields, fields...)

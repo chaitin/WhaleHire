@@ -10,6 +10,8 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 type JobPosition struct{ ent.Schema }
@@ -17,6 +19,12 @@ type JobPosition struct{ ent.Schema }
 func (JobPosition) Annotations() []entschema.Annotation {
 	return []entschema.Annotation{
 		entsql.Annotation{Table: "job_position"},
+	}
+}
+
+func (JobPosition) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		entx.SoftDeleteMixin{},
 	}
 }
 
@@ -31,7 +39,6 @@ func (JobPosition) Fields() []ent.Field {
 		field.String("description").Optional().Nillable(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-		field.Time("deleted_at").Optional().Nillable(),
 	}
 }
 

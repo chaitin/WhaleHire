@@ -25,6 +25,20 @@ type JobExperienceRequirementCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jerc *JobExperienceRequirementCreate) SetDeletedAt(t time.Time) *JobExperienceRequirementCreate {
+	jerc.mutation.SetDeletedAt(t)
+	return jerc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jerc *JobExperienceRequirementCreate) SetNillableDeletedAt(t *time.Time) *JobExperienceRequirementCreate {
+	if t != nil {
+		jerc.SetDeletedAt(*t)
+	}
+	return jerc
+}
+
 // SetJobID sets the "job_id" field.
 func (jerc *JobExperienceRequirementCreate) SetJobID(u uuid.UUID) *JobExperienceRequirementCreate {
 	jerc.mutation.SetJobID(u)
@@ -93,20 +107,6 @@ func (jerc *JobExperienceRequirementCreate) SetNillableUpdatedAt(t *time.Time) *
 	return jerc
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jerc *JobExperienceRequirementCreate) SetDeletedAt(t time.Time) *JobExperienceRequirementCreate {
-	jerc.mutation.SetDeletedAt(t)
-	return jerc
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jerc *JobExperienceRequirementCreate) SetNillableDeletedAt(t *time.Time) *JobExperienceRequirementCreate {
-	if t != nil {
-		jerc.SetDeletedAt(*t)
-	}
-	return jerc
-}
-
 // SetID sets the "id" field.
 func (jerc *JobExperienceRequirementCreate) SetID(u uuid.UUID) *JobExperienceRequirementCreate {
 	jerc.mutation.SetID(u)
@@ -133,7 +133,9 @@ func (jerc *JobExperienceRequirementCreate) Mutation() *JobExperienceRequirement
 
 // Save creates the JobExperienceRequirement in the database.
 func (jerc *JobExperienceRequirementCreate) Save(ctx context.Context) (*JobExperienceRequirement, error) {
-	jerc.defaults()
+	if err := jerc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jerc.sqlSave, jerc.mutation, jerc.hooks)
 }
 
@@ -160,7 +162,7 @@ func (jerc *JobExperienceRequirementCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jerc *JobExperienceRequirementCreate) defaults() {
+func (jerc *JobExperienceRequirementCreate) defaults() error {
 	if _, ok := jerc.mutation.MinYears(); !ok {
 		v := jobexperiencerequirement.DefaultMinYears
 		jerc.mutation.SetMinYears(v)
@@ -170,17 +172,27 @@ func (jerc *JobExperienceRequirementCreate) defaults() {
 		jerc.mutation.SetIdealYears(v)
 	}
 	if _, ok := jerc.mutation.CreatedAt(); !ok {
+		if jobexperiencerequirement.DefaultCreatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobexperiencerequirement.DefaultCreatedAt (forgotten import db/runtime?)")
+		}
 		v := jobexperiencerequirement.DefaultCreatedAt()
 		jerc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := jerc.mutation.UpdatedAt(); !ok {
+		if jobexperiencerequirement.DefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobexperiencerequirement.DefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobexperiencerequirement.DefaultUpdatedAt()
 		jerc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := jerc.mutation.ID(); !ok {
+		if jobexperiencerequirement.DefaultID == nil {
+			return fmt.Errorf("db: uninitialized jobexperiencerequirement.DefaultID (forgotten import db/runtime?)")
+		}
 		v := jobexperiencerequirement.DefaultID()
 		jerc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -257,6 +269,10 @@ func (jerc *JobExperienceRequirementCreate) createSpec() (*JobExperienceRequirem
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := jerc.mutation.DeletedAt(); ok {
+		_spec.SetField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := jerc.mutation.MinYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldMinYears, field.TypeInt, value)
 		_node.MinYears = value
@@ -276,10 +292,6 @@ func (jerc *JobExperienceRequirementCreate) createSpec() (*JobExperienceRequirem
 	if value, ok := jerc.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if value, ok := jerc.mutation.DeletedAt(); ok {
-		_spec.SetField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = &value
 	}
 	if nodes := jerc.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -305,7 +317,7 @@ func (jerc *JobExperienceRequirementCreate) createSpec() (*JobExperienceRequirem
 // of the `INSERT` statement. For example:
 //
 //	client.JobExperienceRequirement.Create().
-//		SetJobID(v).
+//		SetDeletedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -314,7 +326,7 @@ func (jerc *JobExperienceRequirementCreate) createSpec() (*JobExperienceRequirem
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobExperienceRequirementUpsert) {
-//			SetJobID(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jerc *JobExperienceRequirementCreate) OnConflict(opts ...sql.ConflictOption) *JobExperienceRequirementUpsertOne {
@@ -349,6 +361,24 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobExperienceRequirementUpsert) SetDeletedAt(v time.Time) *JobExperienceRequirementUpsert {
+	u.Set(jobexperiencerequirement.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobExperienceRequirementUpsert) UpdateDeletedAt() *JobExperienceRequirementUpsert {
+	u.SetExcluded(jobexperiencerequirement.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobExperienceRequirementUpsert) ClearDeletedAt() *JobExperienceRequirementUpsert {
+	u.SetNull(jobexperiencerequirement.FieldDeletedAt)
+	return u
+}
 
 // SetJobID sets the "job_id" field.
 func (u *JobExperienceRequirementUpsert) SetJobID(v uuid.UUID) *JobExperienceRequirementUpsert {
@@ -428,24 +458,6 @@ func (u *JobExperienceRequirementUpsert) UpdateUpdatedAt() *JobExperienceRequire
 	return u
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobExperienceRequirementUpsert) SetDeletedAt(v time.Time) *JobExperienceRequirementUpsert {
-	u.Set(jobexperiencerequirement.FieldDeletedAt, v)
-	return u
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobExperienceRequirementUpsert) UpdateDeletedAt() *JobExperienceRequirementUpsert {
-	u.SetExcluded(jobexperiencerequirement.FieldDeletedAt)
-	return u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobExperienceRequirementUpsert) ClearDeletedAt() *JobExperienceRequirementUpsert {
-	u.SetNull(jobexperiencerequirement.FieldDeletedAt)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -495,6 +507,27 @@ func (u *JobExperienceRequirementUpsertOne) Update(set func(*JobExperienceRequir
 		set(&JobExperienceRequirementUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobExperienceRequirementUpsertOne) SetDeletedAt(v time.Time) *JobExperienceRequirementUpsertOne {
+	return u.Update(func(s *JobExperienceRequirementUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobExperienceRequirementUpsertOne) UpdateDeletedAt() *JobExperienceRequirementUpsertOne {
+	return u.Update(func(s *JobExperienceRequirementUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobExperienceRequirementUpsertOne) ClearDeletedAt() *JobExperienceRequirementUpsertOne {
+	return u.Update(func(s *JobExperienceRequirementUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetJobID sets the "job_id" field.
@@ -585,27 +618,6 @@ func (u *JobExperienceRequirementUpsertOne) SetUpdatedAt(v time.Time) *JobExperi
 func (u *JobExperienceRequirementUpsertOne) UpdateUpdatedAt() *JobExperienceRequirementUpsertOne {
 	return u.Update(func(s *JobExperienceRequirementUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobExperienceRequirementUpsertOne) SetDeletedAt(v time.Time) *JobExperienceRequirementUpsertOne {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobExperienceRequirementUpsertOne) UpdateDeletedAt() *JobExperienceRequirementUpsertOne {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobExperienceRequirementUpsertOne) ClearDeletedAt() *JobExperienceRequirementUpsertOne {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 
@@ -745,7 +757,7 @@ func (jercb *JobExperienceRequirementCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobExperienceRequirementUpsert) {
-//			SetJobID(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jercb *JobExperienceRequirementCreateBulk) OnConflict(opts ...sql.ConflictOption) *JobExperienceRequirementUpsertBulk {
@@ -825,6 +837,27 @@ func (u *JobExperienceRequirementUpsertBulk) Update(set func(*JobExperienceRequi
 		set(&JobExperienceRequirementUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobExperienceRequirementUpsertBulk) SetDeletedAt(v time.Time) *JobExperienceRequirementUpsertBulk {
+	return u.Update(func(s *JobExperienceRequirementUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobExperienceRequirementUpsertBulk) UpdateDeletedAt() *JobExperienceRequirementUpsertBulk {
+	return u.Update(func(s *JobExperienceRequirementUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobExperienceRequirementUpsertBulk) ClearDeletedAt() *JobExperienceRequirementUpsertBulk {
+	return u.Update(func(s *JobExperienceRequirementUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetJobID sets the "job_id" field.
@@ -915,27 +948,6 @@ func (u *JobExperienceRequirementUpsertBulk) SetUpdatedAt(v time.Time) *JobExper
 func (u *JobExperienceRequirementUpsertBulk) UpdateUpdatedAt() *JobExperienceRequirementUpsertBulk {
 	return u.Update(func(s *JobExperienceRequirementUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobExperienceRequirementUpsertBulk) SetDeletedAt(v time.Time) *JobExperienceRequirementUpsertBulk {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobExperienceRequirementUpsertBulk) UpdateDeletedAt() *JobExperienceRequirementUpsertBulk {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobExperienceRequirementUpsertBulk) ClearDeletedAt() *JobExperienceRequirementUpsertBulk {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 

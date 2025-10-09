@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
@@ -82,10 +81,7 @@ func (r *DepartmentRepo) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("invalid department ID: %w", err)
 	}
 
-	now := time.Now()
-	return r.db.Department.UpdateOneID(departmentID).
-		SetDeletedAt(now).
-		Exec(ctx)
+	return r.db.Department.DeleteOneID(departmentID).Exec(ctx)
 }
 
 // HardDelete 硬删除部门（物理删除）
@@ -95,6 +91,8 @@ func (r *DepartmentRepo) HardDelete(ctx context.Context, id string) error {
 		return fmt.Errorf("invalid department ID: %w", err)
 	}
 
+	// 使用 SkipSoftDelete 上下文跳过软删除逻辑，执行真正的物理删除
+	ctx = entx.SkipSoftDelete(ctx)
 	return r.db.Department.DeleteOneID(departmentID).Exec(ctx)
 }
 
@@ -151,10 +149,13 @@ func (r *DepartmentRepo) List(ctx context.Context, req *domain.ListDepartmentRep
 
 func (r *DepartmentRepo) HasChildren(ctx context.Context, id uuid.UUID) (bool, error) {
 	return r.db.Department.Query().
-		Where(department.ParentID(id), department.DeletedAtIsNil()).
+		Where(department.ParentID(id)).
 		Exist(ctx)
 }
 
 func (r *DepartmentRepo) HasPositions(ctx context.Context, id uuid.UUID) (bool, error) {
-	return r.db.JobPosition.Query().Where(jobposition.DepartmentID(id)).Exist(ctx)
+	return r.db.JobPosition.Query().Where(
+		jobposition.DepartmentID(id),
+		jobposition.DeletedAtIsNil(),
+	).Exist(ctx)
 }

@@ -31,6 +31,26 @@ func (jeru *JobExperienceRequirementUpdate) Where(ps ...predicate.JobExperienceR
 	return jeru
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jeru *JobExperienceRequirementUpdate) SetDeletedAt(t time.Time) *JobExperienceRequirementUpdate {
+	jeru.mutation.SetDeletedAt(t)
+	return jeru
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jeru *JobExperienceRequirementUpdate) SetNillableDeletedAt(t *time.Time) *JobExperienceRequirementUpdate {
+	if t != nil {
+		jeru.SetDeletedAt(*t)
+	}
+	return jeru
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jeru *JobExperienceRequirementUpdate) ClearDeletedAt() *JobExperienceRequirementUpdate {
+	jeru.mutation.ClearDeletedAt()
+	return jeru
+}
+
 // SetJobID sets the "job_id" field.
 func (jeru *JobExperienceRequirementUpdate) SetJobID(u uuid.UUID) *JobExperienceRequirementUpdate {
 	jeru.mutation.SetJobID(u)
@@ -114,26 +134,6 @@ func (jeru *JobExperienceRequirementUpdate) SetUpdatedAt(t time.Time) *JobExperi
 	return jeru
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jeru *JobExperienceRequirementUpdate) SetDeletedAt(t time.Time) *JobExperienceRequirementUpdate {
-	jeru.mutation.SetDeletedAt(t)
-	return jeru
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jeru *JobExperienceRequirementUpdate) SetNillableDeletedAt(t *time.Time) *JobExperienceRequirementUpdate {
-	if t != nil {
-		jeru.SetDeletedAt(*t)
-	}
-	return jeru
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jeru *JobExperienceRequirementUpdate) ClearDeletedAt() *JobExperienceRequirementUpdate {
-	jeru.mutation.ClearDeletedAt()
-	return jeru
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jeru *JobExperienceRequirementUpdate) SetJob(j *JobPosition) *JobExperienceRequirementUpdate {
 	return jeru.SetJobID(j.ID)
@@ -152,7 +152,9 @@ func (jeru *JobExperienceRequirementUpdate) ClearJob() *JobExperienceRequirement
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (jeru *JobExperienceRequirementUpdate) Save(ctx context.Context) (int, error) {
-	jeru.defaults()
+	if err := jeru.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, jeru.sqlSave, jeru.mutation, jeru.hooks)
 }
 
@@ -179,11 +181,15 @@ func (jeru *JobExperienceRequirementUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jeru *JobExperienceRequirementUpdate) defaults() {
+func (jeru *JobExperienceRequirementUpdate) defaults() error {
 	if _, ok := jeru.mutation.UpdatedAt(); !ok {
+		if jobexperiencerequirement.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobexperiencerequirement.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobexperiencerequirement.UpdateDefaultUpdatedAt()
 		jeru.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -227,6 +233,12 @@ func (jeru *JobExperienceRequirementUpdate) sqlSave(ctx context.Context) (n int,
 			}
 		}
 	}
+	if value, ok := jeru.mutation.DeletedAt(); ok {
+		_spec.SetField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jeru.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jeru.mutation.MinYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldMinYears, field.TypeInt, value)
 	}
@@ -247,12 +259,6 @@ func (jeru *JobExperienceRequirementUpdate) sqlSave(ctx context.Context) (n int,
 	}
 	if value, ok := jeru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jeru.mutation.DeletedAt(); ok {
-		_spec.SetField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jeru.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime)
 	}
 	if jeru.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -303,6 +309,26 @@ type JobExperienceRequirementUpdateOne struct {
 	hooks     []Hook
 	mutation  *JobExperienceRequirementMutation
 	modifiers []func(*sql.UpdateBuilder)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (jeruo *JobExperienceRequirementUpdateOne) SetDeletedAt(t time.Time) *JobExperienceRequirementUpdateOne {
+	jeruo.mutation.SetDeletedAt(t)
+	return jeruo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jeruo *JobExperienceRequirementUpdateOne) SetNillableDeletedAt(t *time.Time) *JobExperienceRequirementUpdateOne {
+	if t != nil {
+		jeruo.SetDeletedAt(*t)
+	}
+	return jeruo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jeruo *JobExperienceRequirementUpdateOne) ClearDeletedAt() *JobExperienceRequirementUpdateOne {
+	jeruo.mutation.ClearDeletedAt()
+	return jeruo
 }
 
 // SetJobID sets the "job_id" field.
@@ -388,26 +414,6 @@ func (jeruo *JobExperienceRequirementUpdateOne) SetUpdatedAt(t time.Time) *JobEx
 	return jeruo
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jeruo *JobExperienceRequirementUpdateOne) SetDeletedAt(t time.Time) *JobExperienceRequirementUpdateOne {
-	jeruo.mutation.SetDeletedAt(t)
-	return jeruo
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jeruo *JobExperienceRequirementUpdateOne) SetNillableDeletedAt(t *time.Time) *JobExperienceRequirementUpdateOne {
-	if t != nil {
-		jeruo.SetDeletedAt(*t)
-	}
-	return jeruo
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jeruo *JobExperienceRequirementUpdateOne) ClearDeletedAt() *JobExperienceRequirementUpdateOne {
-	jeruo.mutation.ClearDeletedAt()
-	return jeruo
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jeruo *JobExperienceRequirementUpdateOne) SetJob(j *JobPosition) *JobExperienceRequirementUpdateOne {
 	return jeruo.SetJobID(j.ID)
@@ -439,7 +445,9 @@ func (jeruo *JobExperienceRequirementUpdateOne) Select(field string, fields ...s
 
 // Save executes the query and returns the updated JobExperienceRequirement entity.
 func (jeruo *JobExperienceRequirementUpdateOne) Save(ctx context.Context) (*JobExperienceRequirement, error) {
-	jeruo.defaults()
+	if err := jeruo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jeruo.sqlSave, jeruo.mutation, jeruo.hooks)
 }
 
@@ -466,11 +474,15 @@ func (jeruo *JobExperienceRequirementUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jeruo *JobExperienceRequirementUpdateOne) defaults() {
+func (jeruo *JobExperienceRequirementUpdateOne) defaults() error {
 	if _, ok := jeruo.mutation.UpdatedAt(); !ok {
+		if jobexperiencerequirement.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobexperiencerequirement.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobexperiencerequirement.UpdateDefaultUpdatedAt()
 		jeruo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -531,6 +543,12 @@ func (jeruo *JobExperienceRequirementUpdateOne) sqlSave(ctx context.Context) (_n
 			}
 		}
 	}
+	if value, ok := jeruo.mutation.DeletedAt(); ok {
+		_spec.SetField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jeruo.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jeruo.mutation.MinYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldMinYears, field.TypeInt, value)
 	}
@@ -551,12 +569,6 @@ func (jeruo *JobExperienceRequirementUpdateOne) sqlSave(ctx context.Context) (_n
 	}
 	if value, ok := jeruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jeruo.mutation.DeletedAt(); ok {
-		_spec.SetField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jeruo.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime)
 	}
 	if jeruo.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{

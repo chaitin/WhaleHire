@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 type JobSkill struct{ ent.Schema }
@@ -18,6 +20,12 @@ type JobSkill struct{ ent.Schema }
 func (JobSkill) Annotations() []entschema.Annotation {
 	return []entschema.Annotation{
 		entsql.Annotation{Table: "job_skill"},
+	}
+}
+
+func (JobSkill) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		entx.SoftDeleteMixin{},
 	}
 }
 
@@ -30,7 +38,6 @@ func (JobSkill) Fields() []ent.Field {
 		field.Int("weight").Range(0, 100),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-		field.Time("deleted_at").Optional().Nillable(),
 	}
 }
 

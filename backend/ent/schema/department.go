@@ -9,6 +9,8 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 type Department struct{ ent.Schema }
@@ -16,6 +18,12 @@ type Department struct{ ent.Schema }
 func (Department) Annotations() []entschema.Annotation {
 	return []entschema.Annotation{
 		entsql.Annotation{Table: "department"},
+	}
+}
+
+func (Department) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		entx.SoftDeleteMixin{},
 	}
 }
 
@@ -27,7 +35,6 @@ func (Department) Fields() []ent.Field {
 		field.UUID("parent_id", uuid.UUID{}).Optional(),    // 上级部门ID，可选
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-		field.Time("deleted_at").Optional().Nillable(), // 软删除时间戳，可选
 	}
 }
 

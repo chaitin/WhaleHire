@@ -10,6 +10,8 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 type JobExperienceRequirement struct{ ent.Schema }
@@ -17,6 +19,12 @@ type JobExperienceRequirement struct{ ent.Schema }
 func (JobExperienceRequirement) Annotations() []entschema.Annotation {
 	return []entschema.Annotation{
 		entsql.Annotation{Table: "job_experience_requirement"},
+	}
+}
+
+func (JobExperienceRequirement) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		entx.SoftDeleteMixin{},
 	}
 }
 
@@ -29,7 +37,6 @@ func (JobExperienceRequirement) Fields() []ent.Field {
 		field.Int("weight").Range(0, 100),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-		field.Time("deleted_at").Optional().Nillable(),
 	}
 }
 

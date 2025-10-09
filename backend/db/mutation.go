@@ -4077,12 +4077,12 @@ type DepartmentMutation struct {
 	op               Op
 	typ              string
 	id               *uuid.UUID
+	deleted_at       *time.Time
 	name             *string
 	description      *string
 	parent_id        *uuid.UUID
 	created_at       *time.Time
 	updated_at       *time.Time
-	deleted_at       *time.Time
 	clearedFields    map[string]struct{}
 	positions        map[uuid.UUID]struct{}
 	removedpositions map[uuid.UUID]struct{}
@@ -4194,6 +4194,55 @@ func (m *DepartmentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *DepartmentMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *DepartmentMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Department entity.
+// If the Department object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DepartmentMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *DepartmentMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[department.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *DepartmentMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[department.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *DepartmentMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, department.FieldDeletedAt)
 }
 
 // SetName sets the "name" field.
@@ -4402,55 +4451,6 @@ func (m *DepartmentMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *DepartmentMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *DepartmentMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the Department entity.
-// If the Department object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DepartmentMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *DepartmentMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[department.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *DepartmentMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[department.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *DepartmentMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, department.FieldDeletedAt)
-}
-
 // AddPositionIDs adds the "positions" edge to the JobPosition entity by ids.
 func (m *DepartmentMutation) AddPositionIDs(ids ...uuid.UUID) {
 	if m.positions == nil {
@@ -4540,6 +4540,9 @@ func (m *DepartmentMutation) Type() string {
 // AddedFields().
 func (m *DepartmentMutation) Fields() []string {
 	fields := make([]string, 0, 6)
+	if m.deleted_at != nil {
+		fields = append(fields, department.FieldDeletedAt)
+	}
 	if m.name != nil {
 		fields = append(fields, department.FieldName)
 	}
@@ -4555,9 +4558,6 @@ func (m *DepartmentMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, department.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, department.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -4566,6 +4566,8 @@ func (m *DepartmentMutation) Fields() []string {
 // schema.
 func (m *DepartmentMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case department.FieldDeletedAt:
+		return m.DeletedAt()
 	case department.FieldName:
 		return m.Name()
 	case department.FieldDescription:
@@ -4576,8 +4578,6 @@ func (m *DepartmentMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case department.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case department.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -4587,6 +4587,8 @@ func (m *DepartmentMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *DepartmentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case department.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case department.FieldName:
 		return m.OldName(ctx)
 	case department.FieldDescription:
@@ -4597,8 +4599,6 @@ func (m *DepartmentMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldCreatedAt(ctx)
 	case department.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case department.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Department field %s", name)
 }
@@ -4608,6 +4608,13 @@ func (m *DepartmentMutation) OldField(ctx context.Context, name string) (ent.Val
 // type.
 func (m *DepartmentMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case department.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case department.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -4643,13 +4650,6 @@ func (m *DepartmentMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
-	case department.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
-		return nil
 	}
 	return fmt.Errorf("unknown Department field %s", name)
 }
@@ -4680,14 +4680,14 @@ func (m *DepartmentMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *DepartmentMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(department.FieldDeletedAt) {
+		fields = append(fields, department.FieldDeletedAt)
+	}
 	if m.FieldCleared(department.FieldDescription) {
 		fields = append(fields, department.FieldDescription)
 	}
 	if m.FieldCleared(department.FieldParentID) {
 		fields = append(fields, department.FieldParentID)
-	}
-	if m.FieldCleared(department.FieldDeletedAt) {
-		fields = append(fields, department.FieldDeletedAt)
 	}
 	return fields
 }
@@ -4703,14 +4703,14 @@ func (m *DepartmentMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *DepartmentMutation) ClearField(name string) error {
 	switch name {
+	case department.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
 	case department.FieldDescription:
 		m.ClearDescription()
 		return nil
 	case department.FieldParentID:
 		m.ClearParentID()
-		return nil
-	case department.FieldDeletedAt:
-		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Department nullable field %s", name)
@@ -4720,6 +4720,9 @@ func (m *DepartmentMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *DepartmentMutation) ResetField(name string) error {
 	switch name {
+	case department.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case department.FieldName:
 		m.ResetName()
 		return nil
@@ -4734,9 +4737,6 @@ func (m *DepartmentMutation) ResetField(name string) error {
 		return nil
 	case department.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case department.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Department field %s", name)
@@ -4832,12 +4832,12 @@ type JobEducationRequirementMutation struct {
 	op            Op
 	typ           string
 	id            *uuid.UUID
+	deleted_at    *time.Time
 	min_degree    *string
 	weight        *int
 	addweight     *int
 	created_at    *time.Time
 	updated_at    *time.Time
-	deleted_at    *time.Time
 	clearedFields map[string]struct{}
 	job           *uuid.UUID
 	clearedjob    bool
@@ -4948,6 +4948,55 @@ func (m *JobEducationRequirementMutation) IDs(ctx context.Context) ([]uuid.UUID,
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *JobEducationRequirementMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *JobEducationRequirementMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the JobEducationRequirement entity.
+// If the JobEducationRequirement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobEducationRequirementMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *JobEducationRequirementMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[jobeducationrequirement.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *JobEducationRequirementMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[jobeducationrequirement.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *JobEducationRequirementMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, jobeducationrequirement.FieldDeletedAt)
 }
 
 // SetJobID sets the "job_id" field.
@@ -5150,55 +5199,6 @@ func (m *JobEducationRequirementMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *JobEducationRequirementMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *JobEducationRequirementMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the JobEducationRequirement entity.
-// If the JobEducationRequirement object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobEducationRequirementMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *JobEducationRequirementMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[jobeducationrequirement.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *JobEducationRequirementMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[jobeducationrequirement.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *JobEducationRequirementMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, jobeducationrequirement.FieldDeletedAt)
-}
-
 // ClearJob clears the "job" edge to the JobPosition entity.
 func (m *JobEducationRequirementMutation) ClearJob() {
 	m.clearedjob = true
@@ -5261,6 +5261,9 @@ func (m *JobEducationRequirementMutation) Type() string {
 // AddedFields().
 func (m *JobEducationRequirementMutation) Fields() []string {
 	fields := make([]string, 0, 6)
+	if m.deleted_at != nil {
+		fields = append(fields, jobeducationrequirement.FieldDeletedAt)
+	}
 	if m.job != nil {
 		fields = append(fields, jobeducationrequirement.FieldJobID)
 	}
@@ -5276,9 +5279,6 @@ func (m *JobEducationRequirementMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, jobeducationrequirement.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, jobeducationrequirement.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -5287,6 +5287,8 @@ func (m *JobEducationRequirementMutation) Fields() []string {
 // schema.
 func (m *JobEducationRequirementMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case jobeducationrequirement.FieldDeletedAt:
+		return m.DeletedAt()
 	case jobeducationrequirement.FieldJobID:
 		return m.JobID()
 	case jobeducationrequirement.FieldMinDegree:
@@ -5297,8 +5299,6 @@ func (m *JobEducationRequirementMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case jobeducationrequirement.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case jobeducationrequirement.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -5308,6 +5308,8 @@ func (m *JobEducationRequirementMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *JobEducationRequirementMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case jobeducationrequirement.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case jobeducationrequirement.FieldJobID:
 		return m.OldJobID(ctx)
 	case jobeducationrequirement.FieldMinDegree:
@@ -5318,8 +5320,6 @@ func (m *JobEducationRequirementMutation) OldField(ctx context.Context, name str
 		return m.OldCreatedAt(ctx)
 	case jobeducationrequirement.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case jobeducationrequirement.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JobEducationRequirement field %s", name)
 }
@@ -5329,6 +5329,13 @@ func (m *JobEducationRequirementMutation) OldField(ctx context.Context, name str
 // type.
 func (m *JobEducationRequirementMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case jobeducationrequirement.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case jobeducationrequirement.FieldJobID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -5363,13 +5370,6 @@ func (m *JobEducationRequirementMutation) SetField(name string, value ent.Value)
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case jobeducationrequirement.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JobEducationRequirement field %s", name)
@@ -5444,6 +5444,9 @@ func (m *JobEducationRequirementMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JobEducationRequirementMutation) ResetField(name string) error {
 	switch name {
+	case jobeducationrequirement.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case jobeducationrequirement.FieldJobID:
 		m.ResetJobID()
 		return nil
@@ -5458,9 +5461,6 @@ func (m *JobEducationRequirementMutation) ResetField(name string) error {
 		return nil
 	case jobeducationrequirement.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case jobeducationrequirement.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JobEducationRequirement field %s", name)
@@ -5546,6 +5546,7 @@ type JobExperienceRequirementMutation struct {
 	op             Op
 	typ            string
 	id             *uuid.UUID
+	deleted_at     *time.Time
 	min_years      *int
 	addmin_years   *int
 	ideal_years    *int
@@ -5554,7 +5555,6 @@ type JobExperienceRequirementMutation struct {
 	addweight      *int
 	created_at     *time.Time
 	updated_at     *time.Time
-	deleted_at     *time.Time
 	clearedFields  map[string]struct{}
 	job            *uuid.UUID
 	clearedjob     bool
@@ -5665,6 +5665,55 @@ func (m *JobExperienceRequirementMutation) IDs(ctx context.Context) ([]uuid.UUID
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *JobExperienceRequirementMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *JobExperienceRequirementMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the JobExperienceRequirement entity.
+// If the JobExperienceRequirement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobExperienceRequirementMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *JobExperienceRequirementMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[jobexperiencerequirement.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *JobExperienceRequirementMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[jobexperiencerequirement.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *JobExperienceRequirementMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, jobexperiencerequirement.FieldDeletedAt)
 }
 
 // SetJobID sets the "job_id" field.
@@ -5943,55 +5992,6 @@ func (m *JobExperienceRequirementMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *JobExperienceRequirementMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *JobExperienceRequirementMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the JobExperienceRequirement entity.
-// If the JobExperienceRequirement object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobExperienceRequirementMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *JobExperienceRequirementMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[jobexperiencerequirement.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *JobExperienceRequirementMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[jobexperiencerequirement.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *JobExperienceRequirementMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, jobexperiencerequirement.FieldDeletedAt)
-}
-
 // ClearJob clears the "job" edge to the JobPosition entity.
 func (m *JobExperienceRequirementMutation) ClearJob() {
 	m.clearedjob = true
@@ -6054,6 +6054,9 @@ func (m *JobExperienceRequirementMutation) Type() string {
 // AddedFields().
 func (m *JobExperienceRequirementMutation) Fields() []string {
 	fields := make([]string, 0, 7)
+	if m.deleted_at != nil {
+		fields = append(fields, jobexperiencerequirement.FieldDeletedAt)
+	}
 	if m.job != nil {
 		fields = append(fields, jobexperiencerequirement.FieldJobID)
 	}
@@ -6072,9 +6075,6 @@ func (m *JobExperienceRequirementMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, jobexperiencerequirement.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, jobexperiencerequirement.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -6083,6 +6083,8 @@ func (m *JobExperienceRequirementMutation) Fields() []string {
 // schema.
 func (m *JobExperienceRequirementMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case jobexperiencerequirement.FieldDeletedAt:
+		return m.DeletedAt()
 	case jobexperiencerequirement.FieldJobID:
 		return m.JobID()
 	case jobexperiencerequirement.FieldMinYears:
@@ -6095,8 +6097,6 @@ func (m *JobExperienceRequirementMutation) Field(name string) (ent.Value, bool) 
 		return m.CreatedAt()
 	case jobexperiencerequirement.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case jobexperiencerequirement.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -6106,6 +6106,8 @@ func (m *JobExperienceRequirementMutation) Field(name string) (ent.Value, bool) 
 // database failed.
 func (m *JobExperienceRequirementMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case jobexperiencerequirement.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case jobexperiencerequirement.FieldJobID:
 		return m.OldJobID(ctx)
 	case jobexperiencerequirement.FieldMinYears:
@@ -6118,8 +6120,6 @@ func (m *JobExperienceRequirementMutation) OldField(ctx context.Context, name st
 		return m.OldCreatedAt(ctx)
 	case jobexperiencerequirement.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case jobexperiencerequirement.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JobExperienceRequirement field %s", name)
 }
@@ -6129,6 +6129,13 @@ func (m *JobExperienceRequirementMutation) OldField(ctx context.Context, name st
 // type.
 func (m *JobExperienceRequirementMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case jobexperiencerequirement.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case jobexperiencerequirement.FieldJobID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -6170,13 +6177,6 @@ func (m *JobExperienceRequirementMutation) SetField(name string, value ent.Value
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case jobexperiencerequirement.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JobExperienceRequirement field %s", name)
@@ -6275,6 +6275,9 @@ func (m *JobExperienceRequirementMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JobExperienceRequirementMutation) ResetField(name string) error {
 	switch name {
+	case jobexperiencerequirement.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case jobexperiencerequirement.FieldJobID:
 		m.ResetJobID()
 		return nil
@@ -6292,9 +6295,6 @@ func (m *JobExperienceRequirementMutation) ResetField(name string) error {
 		return nil
 	case jobexperiencerequirement.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case jobexperiencerequirement.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JobExperienceRequirement field %s", name)
@@ -6380,13 +6380,13 @@ type JobIndustryRequirementMutation struct {
 	op            Op
 	typ           string
 	id            *uuid.UUID
+	deleted_at    *time.Time
 	industry      *string
 	company_name  *string
 	weight        *int
 	addweight     *int
 	created_at    *time.Time
 	updated_at    *time.Time
-	deleted_at    *time.Time
 	clearedFields map[string]struct{}
 	job           *uuid.UUID
 	clearedjob    bool
@@ -6497,6 +6497,55 @@ func (m *JobIndustryRequirementMutation) IDs(ctx context.Context) ([]uuid.UUID, 
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *JobIndustryRequirementMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *JobIndustryRequirementMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the JobIndustryRequirement entity.
+// If the JobIndustryRequirement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobIndustryRequirementMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *JobIndustryRequirementMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[jobindustryrequirement.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *JobIndustryRequirementMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[jobindustryrequirement.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *JobIndustryRequirementMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, jobindustryrequirement.FieldDeletedAt)
 }
 
 // SetJobID sets the "job_id" field.
@@ -6748,55 +6797,6 @@ func (m *JobIndustryRequirementMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *JobIndustryRequirementMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *JobIndustryRequirementMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the JobIndustryRequirement entity.
-// If the JobIndustryRequirement object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobIndustryRequirementMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *JobIndustryRequirementMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[jobindustryrequirement.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *JobIndustryRequirementMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[jobindustryrequirement.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *JobIndustryRequirementMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, jobindustryrequirement.FieldDeletedAt)
-}
-
 // ClearJob clears the "job" edge to the JobPosition entity.
 func (m *JobIndustryRequirementMutation) ClearJob() {
 	m.clearedjob = true
@@ -6859,6 +6859,9 @@ func (m *JobIndustryRequirementMutation) Type() string {
 // AddedFields().
 func (m *JobIndustryRequirementMutation) Fields() []string {
 	fields := make([]string, 0, 7)
+	if m.deleted_at != nil {
+		fields = append(fields, jobindustryrequirement.FieldDeletedAt)
+	}
 	if m.job != nil {
 		fields = append(fields, jobindustryrequirement.FieldJobID)
 	}
@@ -6877,9 +6880,6 @@ func (m *JobIndustryRequirementMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, jobindustryrequirement.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, jobindustryrequirement.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -6888,6 +6888,8 @@ func (m *JobIndustryRequirementMutation) Fields() []string {
 // schema.
 func (m *JobIndustryRequirementMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case jobindustryrequirement.FieldDeletedAt:
+		return m.DeletedAt()
 	case jobindustryrequirement.FieldJobID:
 		return m.JobID()
 	case jobindustryrequirement.FieldIndustry:
@@ -6900,8 +6902,6 @@ func (m *JobIndustryRequirementMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case jobindustryrequirement.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case jobindustryrequirement.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -6911,6 +6911,8 @@ func (m *JobIndustryRequirementMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *JobIndustryRequirementMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case jobindustryrequirement.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case jobindustryrequirement.FieldJobID:
 		return m.OldJobID(ctx)
 	case jobindustryrequirement.FieldIndustry:
@@ -6923,8 +6925,6 @@ func (m *JobIndustryRequirementMutation) OldField(ctx context.Context, name stri
 		return m.OldCreatedAt(ctx)
 	case jobindustryrequirement.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case jobindustryrequirement.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JobIndustryRequirement field %s", name)
 }
@@ -6934,6 +6934,13 @@ func (m *JobIndustryRequirementMutation) OldField(ctx context.Context, name stri
 // type.
 func (m *JobIndustryRequirementMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case jobindustryrequirement.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case jobindustryrequirement.FieldJobID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -6975,13 +6982,6 @@ func (m *JobIndustryRequirementMutation) SetField(name string, value ent.Value) 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case jobindustryrequirement.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JobIndustryRequirement field %s", name)
@@ -7028,11 +7028,11 @@ func (m *JobIndustryRequirementMutation) AddField(name string, value ent.Value) 
 // mutation.
 func (m *JobIndustryRequirementMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(jobindustryrequirement.FieldCompanyName) {
-		fields = append(fields, jobindustryrequirement.FieldCompanyName)
-	}
 	if m.FieldCleared(jobindustryrequirement.FieldDeletedAt) {
 		fields = append(fields, jobindustryrequirement.FieldDeletedAt)
+	}
+	if m.FieldCleared(jobindustryrequirement.FieldCompanyName) {
+		fields = append(fields, jobindustryrequirement.FieldCompanyName)
 	}
 	return fields
 }
@@ -7048,11 +7048,11 @@ func (m *JobIndustryRequirementMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *JobIndustryRequirementMutation) ClearField(name string) error {
 	switch name {
-	case jobindustryrequirement.FieldCompanyName:
-		m.ClearCompanyName()
-		return nil
 	case jobindustryrequirement.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case jobindustryrequirement.FieldCompanyName:
+		m.ClearCompanyName()
 		return nil
 	}
 	return fmt.Errorf("unknown JobIndustryRequirement nullable field %s", name)
@@ -7062,6 +7062,9 @@ func (m *JobIndustryRequirementMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JobIndustryRequirementMutation) ResetField(name string) error {
 	switch name {
+	case jobindustryrequirement.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case jobindustryrequirement.FieldJobID:
 		m.ResetJobID()
 		return nil
@@ -7079,9 +7082,6 @@ func (m *JobIndustryRequirementMutation) ResetField(name string) error {
 		return nil
 	case jobindustryrequirement.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case jobindustryrequirement.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JobIndustryRequirement field %s", name)
@@ -7167,6 +7167,7 @@ type JobPositionMutation struct {
 	op                             Op
 	typ                            string
 	id                             *uuid.UUID
+	deleted_at                     *time.Time
 	name                           *string
 	location                       *string
 	salary_min                     *float64
@@ -7176,7 +7177,6 @@ type JobPositionMutation struct {
 	description                    *string
 	created_at                     *time.Time
 	updated_at                     *time.Time
-	deleted_at                     *time.Time
 	clearedFields                  map[string]struct{}
 	department                     *uuid.UUID
 	cleareddepartment              bool
@@ -7302,6 +7302,55 @@ func (m *JobPositionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *JobPositionMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *JobPositionMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the JobPosition entity.
+// If the JobPosition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobPositionMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *JobPositionMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[jobposition.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *JobPositionMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[jobposition.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *JobPositionMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, jobposition.FieldDeletedAt)
 }
 
 // SetName sets the "name" field.
@@ -7686,55 +7735,6 @@ func (m *JobPositionMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *JobPositionMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *JobPositionMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the JobPosition entity.
-// If the JobPosition object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobPositionMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *JobPositionMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[jobposition.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *JobPositionMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[jobposition.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *JobPositionMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, jobposition.FieldDeletedAt)
-}
-
 // ClearDepartment clears the "department" edge to the Department entity.
 func (m *JobPositionMutation) ClearDepartment() {
 	m.cleareddepartment = true
@@ -8067,6 +8067,9 @@ func (m *JobPositionMutation) Type() string {
 // AddedFields().
 func (m *JobPositionMutation) Fields() []string {
 	fields := make([]string, 0, 9)
+	if m.deleted_at != nil {
+		fields = append(fields, jobposition.FieldDeletedAt)
+	}
 	if m.name != nil {
 		fields = append(fields, jobposition.FieldName)
 	}
@@ -8091,9 +8094,6 @@ func (m *JobPositionMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, jobposition.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, jobposition.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -8102,6 +8102,8 @@ func (m *JobPositionMutation) Fields() []string {
 // schema.
 func (m *JobPositionMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case jobposition.FieldDeletedAt:
+		return m.DeletedAt()
 	case jobposition.FieldName:
 		return m.Name()
 	case jobposition.FieldDepartmentID:
@@ -8118,8 +8120,6 @@ func (m *JobPositionMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case jobposition.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case jobposition.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -8129,6 +8129,8 @@ func (m *JobPositionMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *JobPositionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case jobposition.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case jobposition.FieldName:
 		return m.OldName(ctx)
 	case jobposition.FieldDepartmentID:
@@ -8145,8 +8147,6 @@ func (m *JobPositionMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldCreatedAt(ctx)
 	case jobposition.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case jobposition.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JobPosition field %s", name)
 }
@@ -8156,6 +8156,13 @@ func (m *JobPositionMutation) OldField(ctx context.Context, name string) (ent.Va
 // type.
 func (m *JobPositionMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case jobposition.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case jobposition.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -8211,13 +8218,6 @@ func (m *JobPositionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case jobposition.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JobPosition field %s", name)
@@ -8276,6 +8276,9 @@ func (m *JobPositionMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *JobPositionMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(jobposition.FieldDeletedAt) {
+		fields = append(fields, jobposition.FieldDeletedAt)
+	}
 	if m.FieldCleared(jobposition.FieldLocation) {
 		fields = append(fields, jobposition.FieldLocation)
 	}
@@ -8287,9 +8290,6 @@ func (m *JobPositionMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(jobposition.FieldDescription) {
 		fields = append(fields, jobposition.FieldDescription)
-	}
-	if m.FieldCleared(jobposition.FieldDeletedAt) {
-		fields = append(fields, jobposition.FieldDeletedAt)
 	}
 	return fields
 }
@@ -8305,6 +8305,9 @@ func (m *JobPositionMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *JobPositionMutation) ClearField(name string) error {
 	switch name {
+	case jobposition.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
 	case jobposition.FieldLocation:
 		m.ClearLocation()
 		return nil
@@ -8317,9 +8320,6 @@ func (m *JobPositionMutation) ClearField(name string) error {
 	case jobposition.FieldDescription:
 		m.ClearDescription()
 		return nil
-	case jobposition.FieldDeletedAt:
-		m.ClearDeletedAt()
-		return nil
 	}
 	return fmt.Errorf("unknown JobPosition nullable field %s", name)
 }
@@ -8328,6 +8328,9 @@ func (m *JobPositionMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JobPositionMutation) ResetField(name string) error {
 	switch name {
+	case jobposition.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case jobposition.FieldName:
 		m.ResetName()
 		return nil
@@ -8351,9 +8354,6 @@ func (m *JobPositionMutation) ResetField(name string) error {
 		return nil
 	case jobposition.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case jobposition.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JobPosition field %s", name)
@@ -8571,12 +8571,12 @@ type JobResponsibilityMutation struct {
 	op             Op
 	typ            string
 	id             *uuid.UUID
+	deleted_at     *time.Time
 	responsibility *string
 	sort_order     *int
 	addsort_order  *int
 	created_at     *time.Time
 	updated_at     *time.Time
-	deleted_at     *time.Time
 	clearedFields  map[string]struct{}
 	job            *uuid.UUID
 	clearedjob     bool
@@ -8687,6 +8687,55 @@ func (m *JobResponsibilityMutation) IDs(ctx context.Context) ([]uuid.UUID, error
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *JobResponsibilityMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *JobResponsibilityMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the JobResponsibility entity.
+// If the JobResponsibility object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobResponsibilityMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *JobResponsibilityMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[jobresponsibility.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *JobResponsibilityMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[jobresponsibility.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *JobResponsibilityMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, jobresponsibility.FieldDeletedAt)
 }
 
 // SetJobID sets the "job_id" field.
@@ -8889,55 +8938,6 @@ func (m *JobResponsibilityMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *JobResponsibilityMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *JobResponsibilityMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the JobResponsibility entity.
-// If the JobResponsibility object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobResponsibilityMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *JobResponsibilityMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[jobresponsibility.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *JobResponsibilityMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[jobresponsibility.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *JobResponsibilityMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, jobresponsibility.FieldDeletedAt)
-}
-
 // ClearJob clears the "job" edge to the JobPosition entity.
 func (m *JobResponsibilityMutation) ClearJob() {
 	m.clearedjob = true
@@ -9000,6 +9000,9 @@ func (m *JobResponsibilityMutation) Type() string {
 // AddedFields().
 func (m *JobResponsibilityMutation) Fields() []string {
 	fields := make([]string, 0, 6)
+	if m.deleted_at != nil {
+		fields = append(fields, jobresponsibility.FieldDeletedAt)
+	}
 	if m.job != nil {
 		fields = append(fields, jobresponsibility.FieldJobID)
 	}
@@ -9015,9 +9018,6 @@ func (m *JobResponsibilityMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, jobresponsibility.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, jobresponsibility.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -9026,6 +9026,8 @@ func (m *JobResponsibilityMutation) Fields() []string {
 // schema.
 func (m *JobResponsibilityMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case jobresponsibility.FieldDeletedAt:
+		return m.DeletedAt()
 	case jobresponsibility.FieldJobID:
 		return m.JobID()
 	case jobresponsibility.FieldResponsibility:
@@ -9036,8 +9038,6 @@ func (m *JobResponsibilityMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case jobresponsibility.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case jobresponsibility.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -9047,6 +9047,8 @@ func (m *JobResponsibilityMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *JobResponsibilityMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case jobresponsibility.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case jobresponsibility.FieldJobID:
 		return m.OldJobID(ctx)
 	case jobresponsibility.FieldResponsibility:
@@ -9057,8 +9059,6 @@ func (m *JobResponsibilityMutation) OldField(ctx context.Context, name string) (
 		return m.OldCreatedAt(ctx)
 	case jobresponsibility.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case jobresponsibility.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JobResponsibility field %s", name)
 }
@@ -9068,6 +9068,13 @@ func (m *JobResponsibilityMutation) OldField(ctx context.Context, name string) (
 // type.
 func (m *JobResponsibilityMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case jobresponsibility.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case jobresponsibility.FieldJobID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -9102,13 +9109,6 @@ func (m *JobResponsibilityMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case jobresponsibility.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JobResponsibility field %s", name)
@@ -9183,6 +9183,9 @@ func (m *JobResponsibilityMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JobResponsibilityMutation) ResetField(name string) error {
 	switch name {
+	case jobresponsibility.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case jobresponsibility.FieldJobID:
 		m.ResetJobID()
 		return nil
@@ -9197,9 +9200,6 @@ func (m *JobResponsibilityMutation) ResetField(name string) error {
 		return nil
 	case jobresponsibility.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case jobresponsibility.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JobResponsibility field %s", name)
@@ -9285,12 +9285,12 @@ type JobSkillMutation struct {
 	op            Op
 	typ           string
 	id            *uuid.UUID
+	deleted_at    *time.Time
 	_type         *jobskill.Type
 	weight        *int
 	addweight     *int
 	created_at    *time.Time
 	updated_at    *time.Time
-	deleted_at    *time.Time
 	clearedFields map[string]struct{}
 	job           *uuid.UUID
 	clearedjob    bool
@@ -9403,6 +9403,55 @@ func (m *JobSkillMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *JobSkillMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *JobSkillMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the JobSkill entity.
+// If the JobSkill object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobSkillMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *JobSkillMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[jobskill.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *JobSkillMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[jobskill.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *JobSkillMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, jobskill.FieldDeletedAt)
 }
 
 // SetJobID sets the "job_id" field.
@@ -9641,55 +9690,6 @@ func (m *JobSkillMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *JobSkillMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *JobSkillMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the JobSkill entity.
-// If the JobSkill object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobSkillMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *JobSkillMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[jobskill.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *JobSkillMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[jobskill.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *JobSkillMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, jobskill.FieldDeletedAt)
-}
-
 // ClearJob clears the "job" edge to the JobPosition entity.
 func (m *JobSkillMutation) ClearJob() {
 	m.clearedjob = true
@@ -9779,6 +9779,9 @@ func (m *JobSkillMutation) Type() string {
 // AddedFields().
 func (m *JobSkillMutation) Fields() []string {
 	fields := make([]string, 0, 7)
+	if m.deleted_at != nil {
+		fields = append(fields, jobskill.FieldDeletedAt)
+	}
 	if m.job != nil {
 		fields = append(fields, jobskill.FieldJobID)
 	}
@@ -9797,9 +9800,6 @@ func (m *JobSkillMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, jobskill.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, jobskill.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -9808,6 +9808,8 @@ func (m *JobSkillMutation) Fields() []string {
 // schema.
 func (m *JobSkillMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case jobskill.FieldDeletedAt:
+		return m.DeletedAt()
 	case jobskill.FieldJobID:
 		return m.JobID()
 	case jobskill.FieldSkillID:
@@ -9820,8 +9822,6 @@ func (m *JobSkillMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case jobskill.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case jobskill.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -9831,6 +9831,8 @@ func (m *JobSkillMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *JobSkillMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case jobskill.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case jobskill.FieldJobID:
 		return m.OldJobID(ctx)
 	case jobskill.FieldSkillID:
@@ -9843,8 +9845,6 @@ func (m *JobSkillMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCreatedAt(ctx)
 	case jobskill.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case jobskill.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JobSkill field %s", name)
 }
@@ -9854,6 +9854,13 @@ func (m *JobSkillMutation) OldField(ctx context.Context, name string) (ent.Value
 // type.
 func (m *JobSkillMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case jobskill.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case jobskill.FieldJobID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -9895,13 +9902,6 @@ func (m *JobSkillMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case jobskill.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JobSkill field %s", name)
@@ -9976,6 +9976,9 @@ func (m *JobSkillMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JobSkillMutation) ResetField(name string) error {
 	switch name {
+	case jobskill.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case jobskill.FieldJobID:
 		m.ResetJobID()
 		return nil
@@ -9993,9 +9996,6 @@ func (m *JobSkillMutation) ResetField(name string) error {
 		return nil
 	case jobskill.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case jobskill.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JobSkill field %s", name)
@@ -10099,10 +10099,10 @@ type JobSkillMetaMutation struct {
 	op               Op
 	typ              string
 	id               *uuid.UUID
+	deleted_at       *time.Time
 	name             *string
 	updated_at       *time.Time
 	created_at       *time.Time
-	deleted_at       *time.Time
 	clearedFields    map[string]struct{}
 	job_links        map[uuid.UUID]struct{}
 	removedjob_links map[uuid.UUID]struct{}
@@ -10216,6 +10216,55 @@ func (m *JobSkillMetaMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	}
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *JobSkillMetaMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *JobSkillMetaMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the JobSkillMeta entity.
+// If the JobSkillMeta object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobSkillMetaMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *JobSkillMetaMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[jobskillmeta.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *JobSkillMetaMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[jobskillmeta.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *JobSkillMetaMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, jobskillmeta.FieldDeletedAt)
+}
+
 // SetName sets the "name" field.
 func (m *JobSkillMetaMutation) SetName(s string) {
 	m.name = &s
@@ -10324,55 +10373,6 @@ func (m *JobSkillMetaMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *JobSkillMetaMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *JobSkillMetaMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the JobSkillMeta entity.
-// If the JobSkillMeta object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobSkillMetaMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *JobSkillMetaMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[jobskillmeta.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *JobSkillMetaMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[jobskillmeta.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *JobSkillMetaMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, jobskillmeta.FieldDeletedAt)
-}
-
 // AddJobLinkIDs adds the "job_links" edge to the JobSkill entity by ids.
 func (m *JobSkillMetaMutation) AddJobLinkIDs(ids ...uuid.UUID) {
 	if m.job_links == nil {
@@ -10462,6 +10462,9 @@ func (m *JobSkillMetaMutation) Type() string {
 // AddedFields().
 func (m *JobSkillMetaMutation) Fields() []string {
 	fields := make([]string, 0, 4)
+	if m.deleted_at != nil {
+		fields = append(fields, jobskillmeta.FieldDeletedAt)
+	}
 	if m.name != nil {
 		fields = append(fields, jobskillmeta.FieldName)
 	}
@@ -10471,9 +10474,6 @@ func (m *JobSkillMetaMutation) Fields() []string {
 	if m.created_at != nil {
 		fields = append(fields, jobskillmeta.FieldCreatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, jobskillmeta.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -10482,14 +10482,14 @@ func (m *JobSkillMetaMutation) Fields() []string {
 // schema.
 func (m *JobSkillMetaMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case jobskillmeta.FieldDeletedAt:
+		return m.DeletedAt()
 	case jobskillmeta.FieldName:
 		return m.Name()
 	case jobskillmeta.FieldUpdatedAt:
 		return m.UpdatedAt()
 	case jobskillmeta.FieldCreatedAt:
 		return m.CreatedAt()
-	case jobskillmeta.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -10499,14 +10499,14 @@ func (m *JobSkillMetaMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *JobSkillMetaMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case jobskillmeta.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case jobskillmeta.FieldName:
 		return m.OldName(ctx)
 	case jobskillmeta.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
 	case jobskillmeta.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case jobskillmeta.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown JobSkillMeta field %s", name)
 }
@@ -10516,6 +10516,13 @@ func (m *JobSkillMetaMutation) OldField(ctx context.Context, name string) (ent.V
 // type.
 func (m *JobSkillMetaMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case jobskillmeta.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case jobskillmeta.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -10536,13 +10543,6 @@ func (m *JobSkillMetaMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
-		return nil
-	case jobskillmeta.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown JobSkillMeta field %s", name)
@@ -10602,6 +10602,9 @@ func (m *JobSkillMetaMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *JobSkillMetaMutation) ResetField(name string) error {
 	switch name {
+	case jobskillmeta.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case jobskillmeta.FieldName:
 		m.ResetName()
 		return nil
@@ -10610,9 +10613,6 @@ func (m *JobSkillMetaMutation) ResetField(name string) error {
 		return nil
 	case jobskillmeta.FieldCreatedAt:
 		m.ResetCreatedAt()
-		return nil
-	case jobskillmeta.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown JobSkillMeta field %s", name)

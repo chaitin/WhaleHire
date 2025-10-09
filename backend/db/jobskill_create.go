@@ -26,6 +26,20 @@ type JobSkillCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jsc *JobSkillCreate) SetDeletedAt(t time.Time) *JobSkillCreate {
+	jsc.mutation.SetDeletedAt(t)
+	return jsc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jsc *JobSkillCreate) SetNillableDeletedAt(t *time.Time) *JobSkillCreate {
+	if t != nil {
+		jsc.SetDeletedAt(*t)
+	}
+	return jsc
+}
+
 // SetJobID sets the "job_id" field.
 func (jsc *JobSkillCreate) SetJobID(u uuid.UUID) *JobSkillCreate {
 	jsc.mutation.SetJobID(u)
@@ -78,20 +92,6 @@ func (jsc *JobSkillCreate) SetNillableUpdatedAt(t *time.Time) *JobSkillCreate {
 	return jsc
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jsc *JobSkillCreate) SetDeletedAt(t time.Time) *JobSkillCreate {
-	jsc.mutation.SetDeletedAt(t)
-	return jsc
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jsc *JobSkillCreate) SetNillableDeletedAt(t *time.Time) *JobSkillCreate {
-	if t != nil {
-		jsc.SetDeletedAt(*t)
-	}
-	return jsc
-}
-
 // SetID sets the "id" field.
 func (jsc *JobSkillCreate) SetID(u uuid.UUID) *JobSkillCreate {
 	jsc.mutation.SetID(u)
@@ -123,7 +123,9 @@ func (jsc *JobSkillCreate) Mutation() *JobSkillMutation {
 
 // Save creates the JobSkill in the database.
 func (jsc *JobSkillCreate) Save(ctx context.Context) (*JobSkill, error) {
-	jsc.defaults()
+	if err := jsc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jsc.sqlSave, jsc.mutation, jsc.hooks)
 }
 
@@ -150,19 +152,29 @@ func (jsc *JobSkillCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jsc *JobSkillCreate) defaults() {
+func (jsc *JobSkillCreate) defaults() error {
 	if _, ok := jsc.mutation.CreatedAt(); !ok {
+		if jobskill.DefaultCreatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskill.DefaultCreatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskill.DefaultCreatedAt()
 		jsc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := jsc.mutation.UpdatedAt(); !ok {
+		if jobskill.DefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskill.DefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskill.DefaultUpdatedAt()
 		jsc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := jsc.mutation.ID(); !ok {
+		if jobskill.DefaultID == nil {
+			return fmt.Errorf("db: uninitialized jobskill.DefaultID (forgotten import db/runtime?)")
+		}
 		v := jobskill.DefaultID()
 		jsc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -237,6 +249,10 @@ func (jsc *JobSkillCreate) createSpec() (*JobSkill, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := jsc.mutation.DeletedAt(); ok {
+		_spec.SetField(jobskill.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := jsc.mutation.GetType(); ok {
 		_spec.SetField(jobskill.FieldType, field.TypeEnum, value)
 		_node.Type = value
@@ -252,10 +268,6 @@ func (jsc *JobSkillCreate) createSpec() (*JobSkill, *sqlgraph.CreateSpec) {
 	if value, ok := jsc.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobskill.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if value, ok := jsc.mutation.DeletedAt(); ok {
-		_spec.SetField(jobskill.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = &value
 	}
 	if nodes := jsc.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -298,7 +310,7 @@ func (jsc *JobSkillCreate) createSpec() (*JobSkill, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.JobSkill.Create().
-//		SetJobID(v).
+//		SetDeletedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -307,7 +319,7 @@ func (jsc *JobSkillCreate) createSpec() (*JobSkill, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobSkillUpsert) {
-//			SetJobID(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jsc *JobSkillCreate) OnConflict(opts ...sql.ConflictOption) *JobSkillUpsertOne {
@@ -342,6 +354,24 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobSkillUpsert) SetDeletedAt(v time.Time) *JobSkillUpsert {
+	u.Set(jobskill.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobSkillUpsert) UpdateDeletedAt() *JobSkillUpsert {
+	u.SetExcluded(jobskill.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobSkillUpsert) ClearDeletedAt() *JobSkillUpsert {
+	u.SetNull(jobskill.FieldDeletedAt)
+	return u
+}
 
 // SetJobID sets the "job_id" field.
 func (u *JobSkillUpsert) SetJobID(v uuid.UUID) *JobSkillUpsert {
@@ -409,24 +439,6 @@ func (u *JobSkillUpsert) UpdateUpdatedAt() *JobSkillUpsert {
 	return u
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobSkillUpsert) SetDeletedAt(v time.Time) *JobSkillUpsert {
-	u.Set(jobskill.FieldDeletedAt, v)
-	return u
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobSkillUpsert) UpdateDeletedAt() *JobSkillUpsert {
-	u.SetExcluded(jobskill.FieldDeletedAt)
-	return u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobSkillUpsert) ClearDeletedAt() *JobSkillUpsert {
-	u.SetNull(jobskill.FieldDeletedAt)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -476,6 +488,27 @@ func (u *JobSkillUpsertOne) Update(set func(*JobSkillUpsert)) *JobSkillUpsertOne
 		set(&JobSkillUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobSkillUpsertOne) SetDeletedAt(v time.Time) *JobSkillUpsertOne {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobSkillUpsertOne) UpdateDeletedAt() *JobSkillUpsertOne {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobSkillUpsertOne) ClearDeletedAt() *JobSkillUpsertOne {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetJobID sets the "job_id" field.
@@ -552,27 +585,6 @@ func (u *JobSkillUpsertOne) SetUpdatedAt(v time.Time) *JobSkillUpsertOne {
 func (u *JobSkillUpsertOne) UpdateUpdatedAt() *JobSkillUpsertOne {
 	return u.Update(func(s *JobSkillUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobSkillUpsertOne) SetDeletedAt(v time.Time) *JobSkillUpsertOne {
-	return u.Update(func(s *JobSkillUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobSkillUpsertOne) UpdateDeletedAt() *JobSkillUpsertOne {
-	return u.Update(func(s *JobSkillUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobSkillUpsertOne) ClearDeletedAt() *JobSkillUpsertOne {
-	return u.Update(func(s *JobSkillUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 
@@ -712,7 +724,7 @@ func (jscb *JobSkillCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobSkillUpsert) {
-//			SetJobID(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jscb *JobSkillCreateBulk) OnConflict(opts ...sql.ConflictOption) *JobSkillUpsertBulk {
@@ -794,6 +806,27 @@ func (u *JobSkillUpsertBulk) Update(set func(*JobSkillUpsert)) *JobSkillUpsertBu
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobSkillUpsertBulk) SetDeletedAt(v time.Time) *JobSkillUpsertBulk {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobSkillUpsertBulk) UpdateDeletedAt() *JobSkillUpsertBulk {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobSkillUpsertBulk) ClearDeletedAt() *JobSkillUpsertBulk {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetJobID sets the "job_id" field.
 func (u *JobSkillUpsertBulk) SetJobID(v uuid.UUID) *JobSkillUpsertBulk {
 	return u.Update(func(s *JobSkillUpsert) {
@@ -868,27 +901,6 @@ func (u *JobSkillUpsertBulk) SetUpdatedAt(v time.Time) *JobSkillUpsertBulk {
 func (u *JobSkillUpsertBulk) UpdateUpdatedAt() *JobSkillUpsertBulk {
 	return u.Update(func(s *JobSkillUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobSkillUpsertBulk) SetDeletedAt(v time.Time) *JobSkillUpsertBulk {
-	return u.Update(func(s *JobSkillUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobSkillUpsertBulk) UpdateDeletedAt() *JobSkillUpsertBulk {
-	return u.Update(func(s *JobSkillUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobSkillUpsertBulk) ClearDeletedAt() *JobSkillUpsertBulk {
-	return u.Update(func(s *JobSkillUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 

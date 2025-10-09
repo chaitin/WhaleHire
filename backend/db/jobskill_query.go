@@ -338,12 +338,12 @@ func (jsq *JobSkillQuery) WithSkill(opts ...func(*JobSkillMetaQuery)) *JobSkillQ
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.JobSkill.Query().
-//		GroupBy(jobskill.FieldJobID).
+//		GroupBy(jobskill.FieldDeletedAt).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 func (jsq *JobSkillQuery) GroupBy(field string, fields ...string) *JobSkillGroupBy {
@@ -361,11 +361,11 @@ func (jsq *JobSkillQuery) GroupBy(field string, fields ...string) *JobSkillGroup
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.JobSkill.Query().
-//		Select(jobskill.FieldJobID).
+//		Select(jobskill.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (jsq *JobSkillQuery) Select(fields ...string) *JobSkillSelect {
 	jsq.ctx.Fields = append(jsq.ctx.Fields, fields...)

@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
@@ -11,6 +10,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 type JobSkillMetaRepo struct {
@@ -57,15 +57,13 @@ func (r *JobSkillMetaRepo) List(ctx context.Context, req *domain.ListSkillMetaRe
 	return query.Page(ctx, req.Pagination.Page, req.Pagination.Size)
 }
 
-// Delete performs soft delete by setting deleted_at timestamp
+// Delete performs soft delete using SoftDeleteMixin
 func (r *JobSkillMetaRepo) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return fmt.Errorf("skill meta id is required")
 	}
 
-	return r.db.JobSkillMeta.UpdateOneID(uuid.MustParse(id)).
-		SetDeletedAt(time.Now()).
-		Exec(ctx)
+	return r.db.JobSkillMeta.DeleteOneID(uuid.MustParse(id)).Exec(ctx)
 }
 
 // HardDelete performs physical deletion from database
@@ -74,5 +72,7 @@ func (r *JobSkillMetaRepo) HardDelete(ctx context.Context, id string) error {
 		return fmt.Errorf("skill meta id is required")
 	}
 
+	// 使用 SkipSoftDelete 上下文跳过软删除逻辑，执行真正的物理删除
+	ctx = entx.SkipSoftDelete(ctx)
 	return r.db.JobSkillMeta.DeleteOneID(uuid.MustParse(id)).Exec(ctx)
 }

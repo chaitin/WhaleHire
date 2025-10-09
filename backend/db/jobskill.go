@@ -20,6 +20,8 @@ type JobSkill struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
 	// SkillID holds the value of the "skill_id" field.
@@ -32,8 +34,6 @@ type JobSkill struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JobSkillQuery when eager-loading is set.
 	Edges        JobSkillEdges `json:"edges"`
@@ -82,7 +82,7 @@ func (*JobSkill) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case jobskill.FieldType:
 			values[i] = new(sql.NullString)
-		case jobskill.FieldCreatedAt, jobskill.FieldUpdatedAt, jobskill.FieldDeletedAt:
+		case jobskill.FieldDeletedAt, jobskill.FieldCreatedAt, jobskill.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case jobskill.FieldID, jobskill.FieldJobID, jobskill.FieldSkillID:
 			values[i] = new(uuid.UUID)
@@ -106,6 +106,12 @@ func (js *JobSkill) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				js.ID = *value
+			}
+		case jobskill.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				js.DeletedAt = value.Time
 			}
 		case jobskill.FieldJobID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -142,13 +148,6 @@ func (js *JobSkill) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				js.UpdatedAt = value.Time
-			}
-		case jobskill.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				js.DeletedAt = new(time.Time)
-				*js.DeletedAt = value.Time
 			}
 		default:
 			js.selectValues.Set(columns[i], values[i])
@@ -196,6 +195,9 @@ func (js *JobSkill) String() string {
 	var builder strings.Builder
 	builder.WriteString("JobSkill(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", js.ID))
+	builder.WriteString("deleted_at=")
+	builder.WriteString(js.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", js.JobID))
 	builder.WriteString(", ")
@@ -213,11 +215,6 @@ func (js *JobSkill) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(js.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := js.DeletedAt; v != nil {
-		builder.WriteString("deleted_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteByte(')')
 	return builder.String()
 }

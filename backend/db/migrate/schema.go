@@ -140,12 +140,12 @@ var (
 	// DepartmentColumns holds the columns for the "department" table.
 	DepartmentColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 255},
 		{Name: "parent_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 	}
 	// DepartmentTable holds the schema information for the "department" table.
 	DepartmentTable = &schema.Table{
@@ -156,11 +156,11 @@ var (
 	// JobEducationRequirementColumns holds the columns for the "job_education_requirement" table.
 	JobEducationRequirementColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "min_degree", Type: field.TypeString, Size: 50},
 		{Name: "weight", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "job_id", Type: field.TypeUUID},
 	}
 	// JobEducationRequirementTable holds the schema information for the "job_education_requirement" table.
@@ -180,12 +180,12 @@ var (
 	// JobExperienceRequirementColumns holds the columns for the "job_experience_requirement" table.
 	JobExperienceRequirementColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "min_years", Type: field.TypeInt, Default: 0},
 		{Name: "ideal_years", Type: field.TypeInt, Default: 0},
 		{Name: "weight", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "job_id", Type: field.TypeUUID},
 	}
 	// JobExperienceRequirementTable holds the schema information for the "job_experience_requirement" table.
@@ -205,12 +205,12 @@ var (
 	// JobIndustryRequirementColumns holds the columns for the "job_industry_requirement" table.
 	JobIndustryRequirementColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "industry", Type: field.TypeString, Size: 100},
 		{Name: "company_name", Type: field.TypeString, Nullable: true, Size: 200},
 		{Name: "weight", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "job_id", Type: field.TypeUUID},
 	}
 	// JobIndustryRequirementTable holds the schema information for the "job_industry_requirement" table.
@@ -230,6 +230,7 @@ var (
 	// JobPositionColumns holds the columns for the "job_position" table.
 	JobPositionColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "location", Type: field.TypeString, Nullable: true, Size: 200},
 		{Name: "salary_min", Type: field.TypeFloat64, Nullable: true},
@@ -237,7 +238,6 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "department_id", Type: field.TypeUUID},
 	}
 	// JobPositionTable holds the schema information for the "job_position" table.
@@ -257,11 +257,11 @@ var (
 	// JobResponsibilityColumns holds the columns for the "job_responsibility" table.
 	JobResponsibilityColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "responsibility", Type: field.TypeString},
 		{Name: "sort_order", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "job_id", Type: field.TypeUUID},
 	}
 	// JobResponsibilityTable holds the schema information for the "job_responsibility" table.
@@ -281,11 +281,11 @@ var (
 	// JobSkillColumns holds the columns for the "job_skill" table.
 	JobSkillColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"required", "bonus"}},
 		{Name: "weight", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "job_id", Type: field.TypeUUID},
 		{Name: "skill_id", Type: field.TypeUUID},
 	}
@@ -312,17 +312,17 @@ var (
 			{
 				Name:    "jobskill_job_id_skill_id_type",
 				Unique:  true,
-				Columns: []*schema.Column{JobSkillColumns[6], JobSkillColumns[7], JobSkillColumns[1]},
+				Columns: []*schema.Column{JobSkillColumns[6], JobSkillColumns[7], JobSkillColumns[2]},
 			},
 		},
 	}
 	// JobSkillmetaColumns holds the columns for the "job_skillmeta" table.
 	JobSkillmetaColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Unique: true, Size: 100},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 	}
 	// JobSkillmetaTable holds the schema information for the "job_skillmeta" table.
 	JobSkillmetaTable = &schema.Table{
@@ -333,7 +333,7 @@ var (
 			{
 				Name:    "jobskillmeta_name",
 				Unique:  true,
-				Columns: []*schema.Column{JobSkillmetaColumns[1]},
+				Columns: []*schema.Column{JobSkillmetaColumns[2]},
 			},
 		},
 	}

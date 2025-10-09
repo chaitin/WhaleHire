@@ -31,26 +31,6 @@ func (jsmu *JobSkillMetaUpdate) Where(ps ...predicate.JobSkillMeta) *JobSkillMet
 	return jsmu
 }
 
-// SetName sets the "name" field.
-func (jsmu *JobSkillMetaUpdate) SetName(s string) *JobSkillMetaUpdate {
-	jsmu.mutation.SetName(s)
-	return jsmu
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (jsmu *JobSkillMetaUpdate) SetNillableName(s *string) *JobSkillMetaUpdate {
-	if s != nil {
-		jsmu.SetName(*s)
-	}
-	return jsmu
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (jsmu *JobSkillMetaUpdate) SetUpdatedAt(t time.Time) *JobSkillMetaUpdate {
-	jsmu.mutation.SetUpdatedAt(t)
-	return jsmu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (jsmu *JobSkillMetaUpdate) SetDeletedAt(t time.Time) *JobSkillMetaUpdate {
 	jsmu.mutation.SetDeletedAt(t)
@@ -68,6 +48,26 @@ func (jsmu *JobSkillMetaUpdate) SetNillableDeletedAt(t *time.Time) *JobSkillMeta
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (jsmu *JobSkillMetaUpdate) ClearDeletedAt() *JobSkillMetaUpdate {
 	jsmu.mutation.ClearDeletedAt()
+	return jsmu
+}
+
+// SetName sets the "name" field.
+func (jsmu *JobSkillMetaUpdate) SetName(s string) *JobSkillMetaUpdate {
+	jsmu.mutation.SetName(s)
+	return jsmu
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (jsmu *JobSkillMetaUpdate) SetNillableName(s *string) *JobSkillMetaUpdate {
+	if s != nil {
+		jsmu.SetName(*s)
+	}
+	return jsmu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (jsmu *JobSkillMetaUpdate) SetUpdatedAt(t time.Time) *JobSkillMetaUpdate {
+	jsmu.mutation.SetUpdatedAt(t)
 	return jsmu
 }
 
@@ -114,7 +114,9 @@ func (jsmu *JobSkillMetaUpdate) RemoveJobLinks(j ...*JobSkill) *JobSkillMetaUpda
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (jsmu *JobSkillMetaUpdate) Save(ctx context.Context) (int, error) {
-	jsmu.defaults()
+	if err := jsmu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, jsmu.sqlSave, jsmu.mutation, jsmu.hooks)
 }
 
@@ -141,11 +143,15 @@ func (jsmu *JobSkillMetaUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jsmu *JobSkillMetaUpdate) defaults() {
+func (jsmu *JobSkillMetaUpdate) defaults() error {
 	if _, ok := jsmu.mutation.UpdatedAt(); !ok {
+		if jobskillmeta.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskillmeta.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskillmeta.UpdateDefaultUpdatedAt()
 		jsmu.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -176,17 +182,17 @@ func (jsmu *JobSkillMetaUpdate) sqlSave(ctx context.Context) (n int, err error) 
 			}
 		}
 	}
-	if value, ok := jsmu.mutation.Name(); ok {
-		_spec.SetField(jobskillmeta.FieldName, field.TypeString, value)
-	}
-	if value, ok := jsmu.mutation.UpdatedAt(); ok {
-		_spec.SetField(jobskillmeta.FieldUpdatedAt, field.TypeTime, value)
-	}
 	if value, ok := jsmu.mutation.DeletedAt(); ok {
 		_spec.SetField(jobskillmeta.FieldDeletedAt, field.TypeTime, value)
 	}
 	if jsmu.mutation.DeletedAtCleared() {
 		_spec.ClearField(jobskillmeta.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := jsmu.mutation.Name(); ok {
+		_spec.SetField(jobskillmeta.FieldName, field.TypeString, value)
+	}
+	if value, ok := jsmu.mutation.UpdatedAt(); ok {
+		_spec.SetField(jobskillmeta.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if jsmu.mutation.JobLinksCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -255,26 +261,6 @@ type JobSkillMetaUpdateOne struct {
 	modifiers []func(*sql.UpdateBuilder)
 }
 
-// SetName sets the "name" field.
-func (jsmuo *JobSkillMetaUpdateOne) SetName(s string) *JobSkillMetaUpdateOne {
-	jsmuo.mutation.SetName(s)
-	return jsmuo
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (jsmuo *JobSkillMetaUpdateOne) SetNillableName(s *string) *JobSkillMetaUpdateOne {
-	if s != nil {
-		jsmuo.SetName(*s)
-	}
-	return jsmuo
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (jsmuo *JobSkillMetaUpdateOne) SetUpdatedAt(t time.Time) *JobSkillMetaUpdateOne {
-	jsmuo.mutation.SetUpdatedAt(t)
-	return jsmuo
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (jsmuo *JobSkillMetaUpdateOne) SetDeletedAt(t time.Time) *JobSkillMetaUpdateOne {
 	jsmuo.mutation.SetDeletedAt(t)
@@ -292,6 +278,26 @@ func (jsmuo *JobSkillMetaUpdateOne) SetNillableDeletedAt(t *time.Time) *JobSkill
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (jsmuo *JobSkillMetaUpdateOne) ClearDeletedAt() *JobSkillMetaUpdateOne {
 	jsmuo.mutation.ClearDeletedAt()
+	return jsmuo
+}
+
+// SetName sets the "name" field.
+func (jsmuo *JobSkillMetaUpdateOne) SetName(s string) *JobSkillMetaUpdateOne {
+	jsmuo.mutation.SetName(s)
+	return jsmuo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (jsmuo *JobSkillMetaUpdateOne) SetNillableName(s *string) *JobSkillMetaUpdateOne {
+	if s != nil {
+		jsmuo.SetName(*s)
+	}
+	return jsmuo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (jsmuo *JobSkillMetaUpdateOne) SetUpdatedAt(t time.Time) *JobSkillMetaUpdateOne {
+	jsmuo.mutation.SetUpdatedAt(t)
 	return jsmuo
 }
 
@@ -351,7 +357,9 @@ func (jsmuo *JobSkillMetaUpdateOne) Select(field string, fields ...string) *JobS
 
 // Save executes the query and returns the updated JobSkillMeta entity.
 func (jsmuo *JobSkillMetaUpdateOne) Save(ctx context.Context) (*JobSkillMeta, error) {
-	jsmuo.defaults()
+	if err := jsmuo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jsmuo.sqlSave, jsmuo.mutation, jsmuo.hooks)
 }
 
@@ -378,11 +386,15 @@ func (jsmuo *JobSkillMetaUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jsmuo *JobSkillMetaUpdateOne) defaults() {
+func (jsmuo *JobSkillMetaUpdateOne) defaults() error {
 	if _, ok := jsmuo.mutation.UpdatedAt(); !ok {
+		if jobskillmeta.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskillmeta.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskillmeta.UpdateDefaultUpdatedAt()
 		jsmuo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -430,17 +442,17 @@ func (jsmuo *JobSkillMetaUpdateOne) sqlSave(ctx context.Context) (_node *JobSkil
 			}
 		}
 	}
-	if value, ok := jsmuo.mutation.Name(); ok {
-		_spec.SetField(jobskillmeta.FieldName, field.TypeString, value)
-	}
-	if value, ok := jsmuo.mutation.UpdatedAt(); ok {
-		_spec.SetField(jobskillmeta.FieldUpdatedAt, field.TypeTime, value)
-	}
 	if value, ok := jsmuo.mutation.DeletedAt(); ok {
 		_spec.SetField(jobskillmeta.FieldDeletedAt, field.TypeTime, value)
 	}
 	if jsmuo.mutation.DeletedAtCleared() {
 		_spec.ClearField(jobskillmeta.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := jsmuo.mutation.Name(); ok {
+		_spec.SetField(jobskillmeta.FieldName, field.TypeString, value)
+	}
+	if value, ok := jsmuo.mutation.UpdatedAt(); ok {
+		_spec.SetField(jobskillmeta.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if jsmuo.mutation.JobLinksCleared() {
 		edge := &sqlgraph.EdgeSpec{

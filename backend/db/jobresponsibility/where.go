@@ -56,6 +56,11 @@ func IDLTE(id uuid.UUID) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldLTE(FieldID, id))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // JobID applies equality check predicate on the "job_id" field. It's identical to JobIDEQ.
 func JobID(v uuid.UUID) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldEQ(FieldJobID, v))
@@ -81,9 +86,54 @@ func UpdatedAt(v time.Time) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
-func DeletedAt(v time.Time) predicate.JobResponsibility {
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // JobIDEQ applies the EQ predicate on the "job_id" field.
@@ -289,56 +339,6 @@ func UpdatedAtLT(v time.Time) predicate.JobResponsibility {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
-func DeletedAtEQ(v time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldEQ(FieldDeletedAt, v))
-}
-
-// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
-func DeletedAtNEQ(v time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldNEQ(FieldDeletedAt, v))
-}
-
-// DeletedAtIn applies the In predicate on the "deleted_at" field.
-func DeletedAtIn(vs ...time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldIn(FieldDeletedAt, vs...))
-}
-
-// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
-func DeletedAtNotIn(vs ...time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldNotIn(FieldDeletedAt, vs...))
-}
-
-// DeletedAtGT applies the GT predicate on the "deleted_at" field.
-func DeletedAtGT(v time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldGT(FieldDeletedAt, v))
-}
-
-// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
-func DeletedAtGTE(v time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldGTE(FieldDeletedAt, v))
-}
-
-// DeletedAtLT applies the LT predicate on the "deleted_at" field.
-func DeletedAtLT(v time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldLT(FieldDeletedAt, v))
-}
-
-// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
-func DeletedAtLTE(v time.Time) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldLTE(FieldDeletedAt, v))
-}
-
-// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
-func DeletedAtIsNil() predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldIsNull(FieldDeletedAt))
-}
-
-// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
-func DeletedAtNotNil() predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // HasJob applies the HasEdge predicate on the "job" edge.

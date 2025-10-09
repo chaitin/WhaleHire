@@ -25,6 +25,20 @@ type JobSkillMetaCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jsmc *JobSkillMetaCreate) SetDeletedAt(t time.Time) *JobSkillMetaCreate {
+	jsmc.mutation.SetDeletedAt(t)
+	return jsmc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jsmc *JobSkillMetaCreate) SetNillableDeletedAt(t *time.Time) *JobSkillMetaCreate {
+	if t != nil {
+		jsmc.SetDeletedAt(*t)
+	}
+	return jsmc
+}
+
 // SetName sets the "name" field.
 func (jsmc *JobSkillMetaCreate) SetName(s string) *JobSkillMetaCreate {
 	jsmc.mutation.SetName(s)
@@ -55,20 +69,6 @@ func (jsmc *JobSkillMetaCreate) SetCreatedAt(t time.Time) *JobSkillMetaCreate {
 func (jsmc *JobSkillMetaCreate) SetNillableCreatedAt(t *time.Time) *JobSkillMetaCreate {
 	if t != nil {
 		jsmc.SetCreatedAt(*t)
-	}
-	return jsmc
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (jsmc *JobSkillMetaCreate) SetDeletedAt(t time.Time) *JobSkillMetaCreate {
-	jsmc.mutation.SetDeletedAt(t)
-	return jsmc
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jsmc *JobSkillMetaCreate) SetNillableDeletedAt(t *time.Time) *JobSkillMetaCreate {
-	if t != nil {
-		jsmc.SetDeletedAt(*t)
 	}
 	return jsmc
 }
@@ -109,7 +109,9 @@ func (jsmc *JobSkillMetaCreate) Mutation() *JobSkillMetaMutation {
 
 // Save creates the JobSkillMeta in the database.
 func (jsmc *JobSkillMetaCreate) Save(ctx context.Context) (*JobSkillMeta, error) {
-	jsmc.defaults()
+	if err := jsmc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jsmc.sqlSave, jsmc.mutation, jsmc.hooks)
 }
 
@@ -136,19 +138,29 @@ func (jsmc *JobSkillMetaCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jsmc *JobSkillMetaCreate) defaults() {
+func (jsmc *JobSkillMetaCreate) defaults() error {
 	if _, ok := jsmc.mutation.UpdatedAt(); !ok {
+		if jobskillmeta.DefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskillmeta.DefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskillmeta.DefaultUpdatedAt()
 		jsmc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := jsmc.mutation.CreatedAt(); !ok {
+		if jobskillmeta.DefaultCreatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobskillmeta.DefaultCreatedAt (forgotten import db/runtime?)")
+		}
 		v := jobskillmeta.DefaultCreatedAt()
 		jsmc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := jsmc.mutation.ID(); !ok {
+		if jobskillmeta.DefaultID == nil {
+			return fmt.Errorf("db: uninitialized jobskillmeta.DefaultID (forgotten import db/runtime?)")
+		}
 		v := jobskillmeta.DefaultID()
 		jsmc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -203,6 +215,10 @@ func (jsmc *JobSkillMetaCreate) createSpec() (*JobSkillMeta, *sqlgraph.CreateSpe
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := jsmc.mutation.DeletedAt(); ok {
+		_spec.SetField(jobskillmeta.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := jsmc.mutation.Name(); ok {
 		_spec.SetField(jobskillmeta.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -214,10 +230,6 @@ func (jsmc *JobSkillMetaCreate) createSpec() (*JobSkillMeta, *sqlgraph.CreateSpe
 	if value, ok := jsmc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobskillmeta.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
-	}
-	if value, ok := jsmc.mutation.DeletedAt(); ok {
-		_spec.SetField(jobskillmeta.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = &value
 	}
 	if nodes := jsmc.mutation.JobLinksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -242,7 +254,7 @@ func (jsmc *JobSkillMetaCreate) createSpec() (*JobSkillMeta, *sqlgraph.CreateSpe
 // of the `INSERT` statement. For example:
 //
 //	client.JobSkillMeta.Create().
-//		SetName(v).
+//		SetDeletedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -251,7 +263,7 @@ func (jsmc *JobSkillMetaCreate) createSpec() (*JobSkillMeta, *sqlgraph.CreateSpe
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobSkillMetaUpsert) {
-//			SetName(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jsmc *JobSkillMetaCreate) OnConflict(opts ...sql.ConflictOption) *JobSkillMetaUpsertOne {
@@ -287,6 +299,24 @@ type (
 	}
 )
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobSkillMetaUpsert) SetDeletedAt(v time.Time) *JobSkillMetaUpsert {
+	u.Set(jobskillmeta.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobSkillMetaUpsert) UpdateDeletedAt() *JobSkillMetaUpsert {
+	u.SetExcluded(jobskillmeta.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobSkillMetaUpsert) ClearDeletedAt() *JobSkillMetaUpsert {
+	u.SetNull(jobskillmeta.FieldDeletedAt)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *JobSkillMetaUpsert) SetName(v string) *JobSkillMetaUpsert {
 	u.Set(jobskillmeta.FieldName, v)
@@ -308,24 +338,6 @@ func (u *JobSkillMetaUpsert) SetUpdatedAt(v time.Time) *JobSkillMetaUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *JobSkillMetaUpsert) UpdateUpdatedAt() *JobSkillMetaUpsert {
 	u.SetExcluded(jobskillmeta.FieldUpdatedAt)
-	return u
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobSkillMetaUpsert) SetDeletedAt(v time.Time) *JobSkillMetaUpsert {
-	u.Set(jobskillmeta.FieldDeletedAt, v)
-	return u
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobSkillMetaUpsert) UpdateDeletedAt() *JobSkillMetaUpsert {
-	u.SetExcluded(jobskillmeta.FieldDeletedAt)
-	return u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobSkillMetaUpsert) ClearDeletedAt() *JobSkillMetaUpsert {
-	u.SetNull(jobskillmeta.FieldDeletedAt)
 	return u
 }
 
@@ -380,6 +392,27 @@ func (u *JobSkillMetaUpsertOne) Update(set func(*JobSkillMetaUpsert)) *JobSkillM
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobSkillMetaUpsertOne) SetDeletedAt(v time.Time) *JobSkillMetaUpsertOne {
+	return u.Update(func(s *JobSkillMetaUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobSkillMetaUpsertOne) UpdateDeletedAt() *JobSkillMetaUpsertOne {
+	return u.Update(func(s *JobSkillMetaUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobSkillMetaUpsertOne) ClearDeletedAt() *JobSkillMetaUpsertOne {
+	return u.Update(func(s *JobSkillMetaUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *JobSkillMetaUpsertOne) SetName(v string) *JobSkillMetaUpsertOne {
 	return u.Update(func(s *JobSkillMetaUpsert) {
@@ -405,27 +438,6 @@ func (u *JobSkillMetaUpsertOne) SetUpdatedAt(v time.Time) *JobSkillMetaUpsertOne
 func (u *JobSkillMetaUpsertOne) UpdateUpdatedAt() *JobSkillMetaUpsertOne {
 	return u.Update(func(s *JobSkillMetaUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobSkillMetaUpsertOne) SetDeletedAt(v time.Time) *JobSkillMetaUpsertOne {
-	return u.Update(func(s *JobSkillMetaUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobSkillMetaUpsertOne) UpdateDeletedAt() *JobSkillMetaUpsertOne {
-	return u.Update(func(s *JobSkillMetaUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobSkillMetaUpsertOne) ClearDeletedAt() *JobSkillMetaUpsertOne {
-	return u.Update(func(s *JobSkillMetaUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 
@@ -565,7 +577,7 @@ func (jsmcb *JobSkillMetaCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobSkillMetaUpsert) {
-//			SetName(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jsmcb *JobSkillMetaCreateBulk) OnConflict(opts ...sql.ConflictOption) *JobSkillMetaUpsertBulk {
@@ -647,6 +659,27 @@ func (u *JobSkillMetaUpsertBulk) Update(set func(*JobSkillMetaUpsert)) *JobSkill
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobSkillMetaUpsertBulk) SetDeletedAt(v time.Time) *JobSkillMetaUpsertBulk {
+	return u.Update(func(s *JobSkillMetaUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobSkillMetaUpsertBulk) UpdateDeletedAt() *JobSkillMetaUpsertBulk {
+	return u.Update(func(s *JobSkillMetaUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobSkillMetaUpsertBulk) ClearDeletedAt() *JobSkillMetaUpsertBulk {
+	return u.Update(func(s *JobSkillMetaUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *JobSkillMetaUpsertBulk) SetName(v string) *JobSkillMetaUpsertBulk {
 	return u.Update(func(s *JobSkillMetaUpsert) {
@@ -672,27 +705,6 @@ func (u *JobSkillMetaUpsertBulk) SetUpdatedAt(v time.Time) *JobSkillMetaUpsertBu
 func (u *JobSkillMetaUpsertBulk) UpdateUpdatedAt() *JobSkillMetaUpsertBulk {
 	return u.Update(func(s *JobSkillMetaUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobSkillMetaUpsertBulk) SetDeletedAt(v time.Time) *JobSkillMetaUpsertBulk {
-	return u.Update(func(s *JobSkillMetaUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobSkillMetaUpsertBulk) UpdateDeletedAt() *JobSkillMetaUpsertBulk {
-	return u.Update(func(s *JobSkillMetaUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobSkillMetaUpsertBulk) ClearDeletedAt() *JobSkillMetaUpsertBulk {
-	return u.Update(func(s *JobSkillMetaUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 

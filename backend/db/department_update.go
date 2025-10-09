@@ -31,6 +31,26 @@ func (du *DepartmentUpdate) Where(ps ...predicate.Department) *DepartmentUpdate 
 	return du
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (du *DepartmentUpdate) SetDeletedAt(t time.Time) *DepartmentUpdate {
+	du.mutation.SetDeletedAt(t)
+	return du
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (du *DepartmentUpdate) SetNillableDeletedAt(t *time.Time) *DepartmentUpdate {
+	if t != nil {
+		du.SetDeletedAt(*t)
+	}
+	return du
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (du *DepartmentUpdate) ClearDeletedAt() *DepartmentUpdate {
+	du.mutation.ClearDeletedAt()
+	return du
+}
+
 // SetName sets the "name" field.
 func (du *DepartmentUpdate) SetName(s string) *DepartmentUpdate {
 	du.mutation.SetName(s)
@@ -91,26 +111,6 @@ func (du *DepartmentUpdate) SetUpdatedAt(t time.Time) *DepartmentUpdate {
 	return du
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (du *DepartmentUpdate) SetDeletedAt(t time.Time) *DepartmentUpdate {
-	du.mutation.SetDeletedAt(t)
-	return du
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableDeletedAt(t *time.Time) *DepartmentUpdate {
-	if t != nil {
-		du.SetDeletedAt(*t)
-	}
-	return du
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (du *DepartmentUpdate) ClearDeletedAt() *DepartmentUpdate {
-	du.mutation.ClearDeletedAt()
-	return du
-}
-
 // AddPositionIDs adds the "positions" edge to the JobPosition entity by IDs.
 func (du *DepartmentUpdate) AddPositionIDs(ids ...uuid.UUID) *DepartmentUpdate {
 	du.mutation.AddPositionIDs(ids...)
@@ -154,7 +154,9 @@ func (du *DepartmentUpdate) RemovePositions(j ...*JobPosition) *DepartmentUpdate
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (du *DepartmentUpdate) Save(ctx context.Context) (int, error) {
-	du.defaults()
+	if err := du.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, du.sqlSave, du.mutation, du.hooks)
 }
 
@@ -181,11 +183,15 @@ func (du *DepartmentUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (du *DepartmentUpdate) defaults() {
+func (du *DepartmentUpdate) defaults() error {
 	if _, ok := du.mutation.UpdatedAt(); !ok {
+		if department.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized department.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := department.UpdateDefaultUpdatedAt()
 		du.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -221,6 +227,12 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := du.mutation.DeletedAt(); ok {
+		_spec.SetField(department.FieldDeletedAt, field.TypeTime, value)
+	}
+	if du.mutation.DeletedAtCleared() {
+		_spec.ClearField(department.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := du.mutation.Name(); ok {
 		_spec.SetField(department.FieldName, field.TypeString, value)
 	}
@@ -238,12 +250,6 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := du.mutation.UpdatedAt(); ok {
 		_spec.SetField(department.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := du.mutation.DeletedAt(); ok {
-		_spec.SetField(department.FieldDeletedAt, field.TypeTime, value)
-	}
-	if du.mutation.DeletedAtCleared() {
-		_spec.ClearField(department.FieldDeletedAt, field.TypeTime)
 	}
 	if du.mutation.PositionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -312,6 +318,26 @@ type DepartmentUpdateOne struct {
 	modifiers []func(*sql.UpdateBuilder)
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (duo *DepartmentUpdateOne) SetDeletedAt(t time.Time) *DepartmentUpdateOne {
+	duo.mutation.SetDeletedAt(t)
+	return duo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (duo *DepartmentUpdateOne) SetNillableDeletedAt(t *time.Time) *DepartmentUpdateOne {
+	if t != nil {
+		duo.SetDeletedAt(*t)
+	}
+	return duo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (duo *DepartmentUpdateOne) ClearDeletedAt() *DepartmentUpdateOne {
+	duo.mutation.ClearDeletedAt()
+	return duo
+}
+
 // SetName sets the "name" field.
 func (duo *DepartmentUpdateOne) SetName(s string) *DepartmentUpdateOne {
 	duo.mutation.SetName(s)
@@ -372,26 +398,6 @@ func (duo *DepartmentUpdateOne) SetUpdatedAt(t time.Time) *DepartmentUpdateOne {
 	return duo
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (duo *DepartmentUpdateOne) SetDeletedAt(t time.Time) *DepartmentUpdateOne {
-	duo.mutation.SetDeletedAt(t)
-	return duo
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableDeletedAt(t *time.Time) *DepartmentUpdateOne {
-	if t != nil {
-		duo.SetDeletedAt(*t)
-	}
-	return duo
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (duo *DepartmentUpdateOne) ClearDeletedAt() *DepartmentUpdateOne {
-	duo.mutation.ClearDeletedAt()
-	return duo
-}
-
 // AddPositionIDs adds the "positions" edge to the JobPosition entity by IDs.
 func (duo *DepartmentUpdateOne) AddPositionIDs(ids ...uuid.UUID) *DepartmentUpdateOne {
 	duo.mutation.AddPositionIDs(ids...)
@@ -448,7 +454,9 @@ func (duo *DepartmentUpdateOne) Select(field string, fields ...string) *Departme
 
 // Save executes the query and returns the updated Department entity.
 func (duo *DepartmentUpdateOne) Save(ctx context.Context) (*Department, error) {
-	duo.defaults()
+	if err := duo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, duo.sqlSave, duo.mutation, duo.hooks)
 }
 
@@ -475,11 +483,15 @@ func (duo *DepartmentUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (duo *DepartmentUpdateOne) defaults() {
+func (duo *DepartmentUpdateOne) defaults() error {
 	if _, ok := duo.mutation.UpdatedAt(); !ok {
+		if department.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized department.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := department.UpdateDefaultUpdatedAt()
 		duo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -532,6 +544,12 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 			}
 		}
 	}
+	if value, ok := duo.mutation.DeletedAt(); ok {
+		_spec.SetField(department.FieldDeletedAt, field.TypeTime, value)
+	}
+	if duo.mutation.DeletedAtCleared() {
+		_spec.ClearField(department.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := duo.mutation.Name(); ok {
 		_spec.SetField(department.FieldName, field.TypeString, value)
 	}
@@ -549,12 +567,6 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 	}
 	if value, ok := duo.mutation.UpdatedAt(); ok {
 		_spec.SetField(department.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := duo.mutation.DeletedAt(); ok {
-		_spec.SetField(department.FieldDeletedAt, field.TypeTime, value)
-	}
-	if duo.mutation.DeletedAtCleared() {
-		_spec.ClearField(department.FieldDeletedAt, field.TypeTime)
 	}
 	if duo.mutation.PositionsCleared() {
 		edge := &sqlgraph.EdgeSpec{

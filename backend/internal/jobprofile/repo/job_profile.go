@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
@@ -140,51 +139,44 @@ func (r *JobProfileRepo) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("invalid job profile ID: %w", err)
 	}
 
-	now := time.Now()
 	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
-		// Soft delete job responsibilities
-		if err := tx.JobResponsibility.Update().
+		// Soft delete job responsibilities using SoftDeleteMixin
+		if _, err := tx.JobResponsibility.Delete().
 			Where(jobresponsibility.JobID(jobID)).
-			SetDeletedAt(now).
 			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to soft delete job responsibilities: %w", err)
 		}
 
-		// Soft delete job skills
-		if err := tx.JobSkill.Update().
+		// Soft delete job skills using SoftDeleteMixin
+		if _, err := tx.JobSkill.Delete().
 			Where(jobskill.JobID(jobID)).
-			SetDeletedAt(now).
 			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to soft delete job skills: %w", err)
 		}
 
-		// Soft delete job education requirements
-		if err := tx.JobEducationRequirement.Update().
+		// Soft delete job education requirements using SoftDeleteMixin
+		if _, err := tx.JobEducationRequirement.Delete().
 			Where(jobeducationrequirement.JobID(jobID)).
-			SetDeletedAt(now).
 			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to soft delete job education requirements: %w", err)
 		}
 
-		// Soft delete job experience requirements
-		if err := tx.JobExperienceRequirement.Update().
+		// Soft delete job experience requirements using SoftDeleteMixin
+		if _, err := tx.JobExperienceRequirement.Delete().
 			Where(jobexperiencerequirement.JobID(jobID)).
-			SetDeletedAt(now).
 			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to soft delete job experience requirements: %w", err)
 		}
 
-		// Soft delete job industry requirements (already has deleted_at support)
-		if err := tx.JobIndustryRequirement.Update().
+		// Soft delete job industry requirements using SoftDeleteMixin
+		if _, err := tx.JobIndustryRequirement.Delete().
 			Where(jobindustryrequirement.JobID(jobID)).
-			SetDeletedAt(now).
 			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to soft delete job industry requirements: %w", err)
 		}
 
-		// Soft delete job position
-		if err := tx.JobPosition.UpdateOneID(jobID).
-			SetDeletedAt(now).
+		// Soft delete job position using SoftDeleteMixin
+		if err := tx.JobPosition.DeleteOneID(jobID).
 			Exec(ctx); err != nil {
 			return fmt.Errorf("failed to soft delete job position: %w", err)
 		}

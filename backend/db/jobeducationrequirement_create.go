@@ -25,6 +25,20 @@ type JobEducationRequirementCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jerc *JobEducationRequirementCreate) SetDeletedAt(t time.Time) *JobEducationRequirementCreate {
+	jerc.mutation.SetDeletedAt(t)
+	return jerc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jerc *JobEducationRequirementCreate) SetNillableDeletedAt(t *time.Time) *JobEducationRequirementCreate {
+	if t != nil {
+		jerc.SetDeletedAt(*t)
+	}
+	return jerc
+}
+
 // SetJobID sets the "job_id" field.
 func (jerc *JobEducationRequirementCreate) SetJobID(u uuid.UUID) *JobEducationRequirementCreate {
 	jerc.mutation.SetJobID(u)
@@ -71,20 +85,6 @@ func (jerc *JobEducationRequirementCreate) SetNillableUpdatedAt(t *time.Time) *J
 	return jerc
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jerc *JobEducationRequirementCreate) SetDeletedAt(t time.Time) *JobEducationRequirementCreate {
-	jerc.mutation.SetDeletedAt(t)
-	return jerc
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jerc *JobEducationRequirementCreate) SetNillableDeletedAt(t *time.Time) *JobEducationRequirementCreate {
-	if t != nil {
-		jerc.SetDeletedAt(*t)
-	}
-	return jerc
-}
-
 // SetID sets the "id" field.
 func (jerc *JobEducationRequirementCreate) SetID(u uuid.UUID) *JobEducationRequirementCreate {
 	jerc.mutation.SetID(u)
@@ -111,7 +111,9 @@ func (jerc *JobEducationRequirementCreate) Mutation() *JobEducationRequirementMu
 
 // Save creates the JobEducationRequirement in the database.
 func (jerc *JobEducationRequirementCreate) Save(ctx context.Context) (*JobEducationRequirement, error) {
-	jerc.defaults()
+	if err := jerc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jerc.sqlSave, jerc.mutation, jerc.hooks)
 }
 
@@ -138,19 +140,29 @@ func (jerc *JobEducationRequirementCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jerc *JobEducationRequirementCreate) defaults() {
+func (jerc *JobEducationRequirementCreate) defaults() error {
 	if _, ok := jerc.mutation.CreatedAt(); !ok {
+		if jobeducationrequirement.DefaultCreatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobeducationrequirement.DefaultCreatedAt (forgotten import db/runtime?)")
+		}
 		v := jobeducationrequirement.DefaultCreatedAt()
 		jerc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := jerc.mutation.UpdatedAt(); !ok {
+		if jobeducationrequirement.DefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobeducationrequirement.DefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobeducationrequirement.DefaultUpdatedAt()
 		jerc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := jerc.mutation.ID(); !ok {
+		if jobeducationrequirement.DefaultID == nil {
+			return fmt.Errorf("db: uninitialized jobeducationrequirement.DefaultID (forgotten import db/runtime?)")
+		}
 		v := jobeducationrequirement.DefaultID()
 		jerc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -219,6 +231,10 @@ func (jerc *JobEducationRequirementCreate) createSpec() (*JobEducationRequiremen
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := jerc.mutation.DeletedAt(); ok {
+		_spec.SetField(jobeducationrequirement.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := jerc.mutation.MinDegree(); ok {
 		_spec.SetField(jobeducationrequirement.FieldMinDegree, field.TypeString, value)
 		_node.MinDegree = value
@@ -234,10 +250,6 @@ func (jerc *JobEducationRequirementCreate) createSpec() (*JobEducationRequiremen
 	if value, ok := jerc.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobeducationrequirement.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if value, ok := jerc.mutation.DeletedAt(); ok {
-		_spec.SetField(jobeducationrequirement.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = &value
 	}
 	if nodes := jerc.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -263,7 +275,7 @@ func (jerc *JobEducationRequirementCreate) createSpec() (*JobEducationRequiremen
 // of the `INSERT` statement. For example:
 //
 //	client.JobEducationRequirement.Create().
-//		SetJobID(v).
+//		SetDeletedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -272,7 +284,7 @@ func (jerc *JobEducationRequirementCreate) createSpec() (*JobEducationRequiremen
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobEducationRequirementUpsert) {
-//			SetJobID(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jerc *JobEducationRequirementCreate) OnConflict(opts ...sql.ConflictOption) *JobEducationRequirementUpsertOne {
@@ -307,6 +319,24 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobEducationRequirementUpsert) SetDeletedAt(v time.Time) *JobEducationRequirementUpsert {
+	u.Set(jobeducationrequirement.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobEducationRequirementUpsert) UpdateDeletedAt() *JobEducationRequirementUpsert {
+	u.SetExcluded(jobeducationrequirement.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobEducationRequirementUpsert) ClearDeletedAt() *JobEducationRequirementUpsert {
+	u.SetNull(jobeducationrequirement.FieldDeletedAt)
+	return u
+}
 
 // SetJobID sets the "job_id" field.
 func (u *JobEducationRequirementUpsert) SetJobID(v uuid.UUID) *JobEducationRequirementUpsert {
@@ -362,24 +392,6 @@ func (u *JobEducationRequirementUpsert) UpdateUpdatedAt() *JobEducationRequireme
 	return u
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobEducationRequirementUpsert) SetDeletedAt(v time.Time) *JobEducationRequirementUpsert {
-	u.Set(jobeducationrequirement.FieldDeletedAt, v)
-	return u
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsert) UpdateDeletedAt() *JobEducationRequirementUpsert {
-	u.SetExcluded(jobeducationrequirement.FieldDeletedAt)
-	return u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobEducationRequirementUpsert) ClearDeletedAt() *JobEducationRequirementUpsert {
-	u.SetNull(jobeducationrequirement.FieldDeletedAt)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -429,6 +441,27 @@ func (u *JobEducationRequirementUpsertOne) Update(set func(*JobEducationRequirem
 		set(&JobEducationRequirementUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobEducationRequirementUpsertOne) SetDeletedAt(v time.Time) *JobEducationRequirementUpsertOne {
+	return u.Update(func(s *JobEducationRequirementUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobEducationRequirementUpsertOne) UpdateDeletedAt() *JobEducationRequirementUpsertOne {
+	return u.Update(func(s *JobEducationRequirementUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobEducationRequirementUpsertOne) ClearDeletedAt() *JobEducationRequirementUpsertOne {
+	return u.Update(func(s *JobEducationRequirementUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetJobID sets the "job_id" field.
@@ -491,27 +524,6 @@ func (u *JobEducationRequirementUpsertOne) SetUpdatedAt(v time.Time) *JobEducati
 func (u *JobEducationRequirementUpsertOne) UpdateUpdatedAt() *JobEducationRequirementUpsertOne {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobEducationRequirementUpsertOne) SetDeletedAt(v time.Time) *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertOne) UpdateDeletedAt() *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobEducationRequirementUpsertOne) ClearDeletedAt() *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 
@@ -651,7 +663,7 @@ func (jercb *JobEducationRequirementCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobEducationRequirementUpsert) {
-//			SetJobID(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jercb *JobEducationRequirementCreateBulk) OnConflict(opts ...sql.ConflictOption) *JobEducationRequirementUpsertBulk {
@@ -733,6 +745,27 @@ func (u *JobEducationRequirementUpsertBulk) Update(set func(*JobEducationRequire
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobEducationRequirementUpsertBulk) SetDeletedAt(v time.Time) *JobEducationRequirementUpsertBulk {
+	return u.Update(func(s *JobEducationRequirementUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobEducationRequirementUpsertBulk) UpdateDeletedAt() *JobEducationRequirementUpsertBulk {
+	return u.Update(func(s *JobEducationRequirementUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobEducationRequirementUpsertBulk) ClearDeletedAt() *JobEducationRequirementUpsertBulk {
+	return u.Update(func(s *JobEducationRequirementUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetJobID sets the "job_id" field.
 func (u *JobEducationRequirementUpsertBulk) SetJobID(v uuid.UUID) *JobEducationRequirementUpsertBulk {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
@@ -793,27 +826,6 @@ func (u *JobEducationRequirementUpsertBulk) SetUpdatedAt(v time.Time) *JobEducat
 func (u *JobEducationRequirementUpsertBulk) UpdateUpdatedAt() *JobEducationRequirementUpsertBulk {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobEducationRequirementUpsertBulk) SetDeletedAt(v time.Time) *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertBulk) UpdateDeletedAt() *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobEducationRequirementUpsertBulk) ClearDeletedAt() *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 

@@ -302,12 +302,12 @@ func (jrq *JobResponsibilityQuery) WithJob(opts ...func(*JobPositionQuery)) *Job
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.JobResponsibility.Query().
-//		GroupBy(jobresponsibility.FieldJobID).
+//		GroupBy(jobresponsibility.FieldDeletedAt).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 func (jrq *JobResponsibilityQuery) GroupBy(field string, fields ...string) *JobResponsibilityGroupBy {
@@ -325,11 +325,11 @@ func (jrq *JobResponsibilityQuery) GroupBy(field string, fields ...string) *JobR
 // Example:
 //
 //	var v []struct {
-//		JobID uuid.UUID `json:"job_id,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.JobResponsibility.Query().
-//		Select(jobresponsibility.FieldJobID).
+//		Select(jobresponsibility.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (jrq *JobResponsibilityQuery) Select(fields ...string) *JobResponsibilitySelect {
 	jrq.ctx.Fields = append(jrq.ctx.Fields, fields...)

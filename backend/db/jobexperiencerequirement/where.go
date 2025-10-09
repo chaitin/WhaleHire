@@ -56,6 +56,11 @@ func IDLTE(id uuid.UUID) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldID, id))
 }
 
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // JobID applies equality check predicate on the "job_id" field. It's identical to JobIDEQ.
 func JobID(v uuid.UUID) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldJobID, v))
@@ -86,9 +91,54 @@ func UpdatedAt(v time.Time) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
-func DeletedAt(v time.Time) predicate.JobExperienceRequirement {
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // JobIDEQ applies the EQ predicate on the "job_id" field.
@@ -309,56 +359,6 @@ func UpdatedAtLT(v time.Time) predicate.JobExperienceRequirement {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
-func DeletedAtEQ(v time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldDeletedAt, v))
-}
-
-// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
-func DeletedAtNEQ(v time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldNEQ(FieldDeletedAt, v))
-}
-
-// DeletedAtIn applies the In predicate on the "deleted_at" field.
-func DeletedAtIn(vs ...time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldIn(FieldDeletedAt, vs...))
-}
-
-// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
-func DeletedAtNotIn(vs ...time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldNotIn(FieldDeletedAt, vs...))
-}
-
-// DeletedAtGT applies the GT predicate on the "deleted_at" field.
-func DeletedAtGT(v time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldGT(FieldDeletedAt, v))
-}
-
-// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
-func DeletedAtGTE(v time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldGTE(FieldDeletedAt, v))
-}
-
-// DeletedAtLT applies the LT predicate on the "deleted_at" field.
-func DeletedAtLT(v time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldLT(FieldDeletedAt, v))
-}
-
-// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
-func DeletedAtLTE(v time.Time) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldDeletedAt, v))
-}
-
-// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
-func DeletedAtIsNil() predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldIsNull(FieldDeletedAt))
-}
-
-// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
-func DeletedAtNotNil() predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // HasJob applies the HasEdge predicate on the "job" edge.

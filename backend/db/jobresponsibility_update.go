@@ -31,6 +31,26 @@ func (jru *JobResponsibilityUpdate) Where(ps ...predicate.JobResponsibility) *Jo
 	return jru
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jru *JobResponsibilityUpdate) SetDeletedAt(t time.Time) *JobResponsibilityUpdate {
+	jru.mutation.SetDeletedAt(t)
+	return jru
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jru *JobResponsibilityUpdate) SetNillableDeletedAt(t *time.Time) *JobResponsibilityUpdate {
+	if t != nil {
+		jru.SetDeletedAt(*t)
+	}
+	return jru
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jru *JobResponsibilityUpdate) ClearDeletedAt() *JobResponsibilityUpdate {
+	jru.mutation.ClearDeletedAt()
+	return jru
+}
+
 // SetJobID sets the "job_id" field.
 func (jru *JobResponsibilityUpdate) SetJobID(u uuid.UUID) *JobResponsibilityUpdate {
 	jru.mutation.SetJobID(u)
@@ -86,26 +106,6 @@ func (jru *JobResponsibilityUpdate) SetUpdatedAt(t time.Time) *JobResponsibility
 	return jru
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jru *JobResponsibilityUpdate) SetDeletedAt(t time.Time) *JobResponsibilityUpdate {
-	jru.mutation.SetDeletedAt(t)
-	return jru
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jru *JobResponsibilityUpdate) SetNillableDeletedAt(t *time.Time) *JobResponsibilityUpdate {
-	if t != nil {
-		jru.SetDeletedAt(*t)
-	}
-	return jru
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jru *JobResponsibilityUpdate) ClearDeletedAt() *JobResponsibilityUpdate {
-	jru.mutation.ClearDeletedAt()
-	return jru
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jru *JobResponsibilityUpdate) SetJob(j *JobPosition) *JobResponsibilityUpdate {
 	return jru.SetJobID(j.ID)
@@ -124,7 +124,9 @@ func (jru *JobResponsibilityUpdate) ClearJob() *JobResponsibilityUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (jru *JobResponsibilityUpdate) Save(ctx context.Context) (int, error) {
-	jru.defaults()
+	if err := jru.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, jru.sqlSave, jru.mutation, jru.hooks)
 }
 
@@ -151,11 +153,15 @@ func (jru *JobResponsibilityUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jru *JobResponsibilityUpdate) defaults() {
+func (jru *JobResponsibilityUpdate) defaults() error {
 	if _, ok := jru.mutation.UpdatedAt(); !ok {
+		if jobresponsibility.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobresponsibility.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobresponsibility.UpdateDefaultUpdatedAt()
 		jru.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -184,6 +190,12 @@ func (jru *JobResponsibilityUpdate) sqlSave(ctx context.Context) (n int, err err
 			}
 		}
 	}
+	if value, ok := jru.mutation.DeletedAt(); ok {
+		_spec.SetField(jobresponsibility.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jru.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobresponsibility.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jru.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
 	}
@@ -195,12 +207,6 @@ func (jru *JobResponsibilityUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if value, ok := jru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jru.mutation.DeletedAt(); ok {
-		_spec.SetField(jobresponsibility.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jru.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobresponsibility.FieldDeletedAt, field.TypeTime)
 	}
 	if jru.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -251,6 +257,26 @@ type JobResponsibilityUpdateOne struct {
 	hooks     []Hook
 	mutation  *JobResponsibilityMutation
 	modifiers []func(*sql.UpdateBuilder)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (jruo *JobResponsibilityUpdateOne) SetDeletedAt(t time.Time) *JobResponsibilityUpdateOne {
+	jruo.mutation.SetDeletedAt(t)
+	return jruo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jruo *JobResponsibilityUpdateOne) SetNillableDeletedAt(t *time.Time) *JobResponsibilityUpdateOne {
+	if t != nil {
+		jruo.SetDeletedAt(*t)
+	}
+	return jruo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jruo *JobResponsibilityUpdateOne) ClearDeletedAt() *JobResponsibilityUpdateOne {
+	jruo.mutation.ClearDeletedAt()
+	return jruo
 }
 
 // SetJobID sets the "job_id" field.
@@ -308,26 +334,6 @@ func (jruo *JobResponsibilityUpdateOne) SetUpdatedAt(t time.Time) *JobResponsibi
 	return jruo
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jruo *JobResponsibilityUpdateOne) SetDeletedAt(t time.Time) *JobResponsibilityUpdateOne {
-	jruo.mutation.SetDeletedAt(t)
-	return jruo
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jruo *JobResponsibilityUpdateOne) SetNillableDeletedAt(t *time.Time) *JobResponsibilityUpdateOne {
-	if t != nil {
-		jruo.SetDeletedAt(*t)
-	}
-	return jruo
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jruo *JobResponsibilityUpdateOne) ClearDeletedAt() *JobResponsibilityUpdateOne {
-	jruo.mutation.ClearDeletedAt()
-	return jruo
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jruo *JobResponsibilityUpdateOne) SetJob(j *JobPosition) *JobResponsibilityUpdateOne {
 	return jruo.SetJobID(j.ID)
@@ -359,7 +365,9 @@ func (jruo *JobResponsibilityUpdateOne) Select(field string, fields ...string) *
 
 // Save executes the query and returns the updated JobResponsibility entity.
 func (jruo *JobResponsibilityUpdateOne) Save(ctx context.Context) (*JobResponsibility, error) {
-	jruo.defaults()
+	if err := jruo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jruo.sqlSave, jruo.mutation, jruo.hooks)
 }
 
@@ -386,11 +394,15 @@ func (jruo *JobResponsibilityUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jruo *JobResponsibilityUpdateOne) defaults() {
+func (jruo *JobResponsibilityUpdateOne) defaults() error {
 	if _, ok := jruo.mutation.UpdatedAt(); !ok {
+		if jobresponsibility.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobresponsibility.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobresponsibility.UpdateDefaultUpdatedAt()
 		jruo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -436,6 +448,12 @@ func (jruo *JobResponsibilityUpdateOne) sqlSave(ctx context.Context) (_node *Job
 			}
 		}
 	}
+	if value, ok := jruo.mutation.DeletedAt(); ok {
+		_spec.SetField(jobresponsibility.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jruo.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobresponsibility.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jruo.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
 	}
@@ -447,12 +465,6 @@ func (jruo *JobResponsibilityUpdateOne) sqlSave(ctx context.Context) (_node *Job
 	}
 	if value, ok := jruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jruo.mutation.DeletedAt(); ok {
-		_spec.SetField(jobresponsibility.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jruo.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobresponsibility.FieldDeletedAt, field.TypeTime)
 	}
 	if jruo.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{

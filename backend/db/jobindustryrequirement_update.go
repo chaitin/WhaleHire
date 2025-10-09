@@ -31,6 +31,26 @@ func (jiru *JobIndustryRequirementUpdate) Where(ps ...predicate.JobIndustryRequi
 	return jiru
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jiru *JobIndustryRequirementUpdate) SetDeletedAt(t time.Time) *JobIndustryRequirementUpdate {
+	jiru.mutation.SetDeletedAt(t)
+	return jiru
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jiru *JobIndustryRequirementUpdate) SetNillableDeletedAt(t *time.Time) *JobIndustryRequirementUpdate {
+	if t != nil {
+		jiru.SetDeletedAt(*t)
+	}
+	return jiru
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jiru *JobIndustryRequirementUpdate) ClearDeletedAt() *JobIndustryRequirementUpdate {
+	jiru.mutation.ClearDeletedAt()
+	return jiru
+}
+
 // SetJobID sets the "job_id" field.
 func (jiru *JobIndustryRequirementUpdate) SetJobID(u uuid.UUID) *JobIndustryRequirementUpdate {
 	jiru.mutation.SetJobID(u)
@@ -106,26 +126,6 @@ func (jiru *JobIndustryRequirementUpdate) SetUpdatedAt(t time.Time) *JobIndustry
 	return jiru
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jiru *JobIndustryRequirementUpdate) SetDeletedAt(t time.Time) *JobIndustryRequirementUpdate {
-	jiru.mutation.SetDeletedAt(t)
-	return jiru
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jiru *JobIndustryRequirementUpdate) SetNillableDeletedAt(t *time.Time) *JobIndustryRequirementUpdate {
-	if t != nil {
-		jiru.SetDeletedAt(*t)
-	}
-	return jiru
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jiru *JobIndustryRequirementUpdate) ClearDeletedAt() *JobIndustryRequirementUpdate {
-	jiru.mutation.ClearDeletedAt()
-	return jiru
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jiru *JobIndustryRequirementUpdate) SetJob(j *JobPosition) *JobIndustryRequirementUpdate {
 	return jiru.SetJobID(j.ID)
@@ -144,7 +144,9 @@ func (jiru *JobIndustryRequirementUpdate) ClearJob() *JobIndustryRequirementUpda
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (jiru *JobIndustryRequirementUpdate) Save(ctx context.Context) (int, error) {
-	jiru.defaults()
+	if err := jiru.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, jiru.sqlSave, jiru.mutation, jiru.hooks)
 }
 
@@ -171,11 +173,15 @@ func (jiru *JobIndustryRequirementUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jiru *JobIndustryRequirementUpdate) defaults() {
+func (jiru *JobIndustryRequirementUpdate) defaults() error {
 	if _, ok := jiru.mutation.UpdatedAt(); !ok {
+		if jobindustryrequirement.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobindustryrequirement.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobindustryrequirement.UpdateDefaultUpdatedAt()
 		jiru.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -219,6 +225,12 @@ func (jiru *JobIndustryRequirementUpdate) sqlSave(ctx context.Context) (n int, e
 			}
 		}
 	}
+	if value, ok := jiru.mutation.DeletedAt(); ok {
+		_spec.SetField(jobindustryrequirement.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jiru.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobindustryrequirement.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jiru.mutation.Industry(); ok {
 		_spec.SetField(jobindustryrequirement.FieldIndustry, field.TypeString, value)
 	}
@@ -236,12 +248,6 @@ func (jiru *JobIndustryRequirementUpdate) sqlSave(ctx context.Context) (n int, e
 	}
 	if value, ok := jiru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobindustryrequirement.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jiru.mutation.DeletedAt(); ok {
-		_spec.SetField(jobindustryrequirement.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jiru.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobindustryrequirement.FieldDeletedAt, field.TypeTime)
 	}
 	if jiru.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -292,6 +298,26 @@ type JobIndustryRequirementUpdateOne struct {
 	hooks     []Hook
 	mutation  *JobIndustryRequirementMutation
 	modifiers []func(*sql.UpdateBuilder)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (jiruo *JobIndustryRequirementUpdateOne) SetDeletedAt(t time.Time) *JobIndustryRequirementUpdateOne {
+	jiruo.mutation.SetDeletedAt(t)
+	return jiruo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jiruo *JobIndustryRequirementUpdateOne) SetNillableDeletedAt(t *time.Time) *JobIndustryRequirementUpdateOne {
+	if t != nil {
+		jiruo.SetDeletedAt(*t)
+	}
+	return jiruo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (jiruo *JobIndustryRequirementUpdateOne) ClearDeletedAt() *JobIndustryRequirementUpdateOne {
+	jiruo.mutation.ClearDeletedAt()
+	return jiruo
 }
 
 // SetJobID sets the "job_id" field.
@@ -369,26 +395,6 @@ func (jiruo *JobIndustryRequirementUpdateOne) SetUpdatedAt(t time.Time) *JobIndu
 	return jiruo
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (jiruo *JobIndustryRequirementUpdateOne) SetDeletedAt(t time.Time) *JobIndustryRequirementUpdateOne {
-	jiruo.mutation.SetDeletedAt(t)
-	return jiruo
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jiruo *JobIndustryRequirementUpdateOne) SetNillableDeletedAt(t *time.Time) *JobIndustryRequirementUpdateOne {
-	if t != nil {
-		jiruo.SetDeletedAt(*t)
-	}
-	return jiruo
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (jiruo *JobIndustryRequirementUpdateOne) ClearDeletedAt() *JobIndustryRequirementUpdateOne {
-	jiruo.mutation.ClearDeletedAt()
-	return jiruo
-}
-
 // SetJob sets the "job" edge to the JobPosition entity.
 func (jiruo *JobIndustryRequirementUpdateOne) SetJob(j *JobPosition) *JobIndustryRequirementUpdateOne {
 	return jiruo.SetJobID(j.ID)
@@ -420,7 +426,9 @@ func (jiruo *JobIndustryRequirementUpdateOne) Select(field string, fields ...str
 
 // Save executes the query and returns the updated JobIndustryRequirement entity.
 func (jiruo *JobIndustryRequirementUpdateOne) Save(ctx context.Context) (*JobIndustryRequirement, error) {
-	jiruo.defaults()
+	if err := jiruo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jiruo.sqlSave, jiruo.mutation, jiruo.hooks)
 }
 
@@ -447,11 +455,15 @@ func (jiruo *JobIndustryRequirementUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jiruo *JobIndustryRequirementUpdateOne) defaults() {
+func (jiruo *JobIndustryRequirementUpdateOne) defaults() error {
 	if _, ok := jiruo.mutation.UpdatedAt(); !ok {
+		if jobindustryrequirement.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobindustryrequirement.UpdateDefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobindustryrequirement.UpdateDefaultUpdatedAt()
 		jiruo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -512,6 +524,12 @@ func (jiruo *JobIndustryRequirementUpdateOne) sqlSave(ctx context.Context) (_nod
 			}
 		}
 	}
+	if value, ok := jiruo.mutation.DeletedAt(); ok {
+		_spec.SetField(jobindustryrequirement.FieldDeletedAt, field.TypeTime, value)
+	}
+	if jiruo.mutation.DeletedAtCleared() {
+		_spec.ClearField(jobindustryrequirement.FieldDeletedAt, field.TypeTime)
+	}
 	if value, ok := jiruo.mutation.Industry(); ok {
 		_spec.SetField(jobindustryrequirement.FieldIndustry, field.TypeString, value)
 	}
@@ -529,12 +547,6 @@ func (jiruo *JobIndustryRequirementUpdateOne) sqlSave(ctx context.Context) (_nod
 	}
 	if value, ok := jiruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobindustryrequirement.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := jiruo.mutation.DeletedAt(); ok {
-		_spec.SetField(jobindustryrequirement.FieldDeletedAt, field.TypeTime, value)
-	}
-	if jiruo.mutation.DeletedAtCleared() {
-		_spec.ClearField(jobindustryrequirement.FieldDeletedAt, field.TypeTime)
 	}
 	if jiruo.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{

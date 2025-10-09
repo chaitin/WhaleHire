@@ -30,6 +30,20 @@ type JobPositionCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (jpc *JobPositionCreate) SetDeletedAt(t time.Time) *JobPositionCreate {
+	jpc.mutation.SetDeletedAt(t)
+	return jpc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (jpc *JobPositionCreate) SetNillableDeletedAt(t *time.Time) *JobPositionCreate {
+	if t != nil {
+		jpc.SetDeletedAt(*t)
+	}
+	return jpc
+}
+
 // SetName sets the "name" field.
 func (jpc *JobPositionCreate) SetName(s string) *JobPositionCreate {
 	jpc.mutation.SetName(s)
@@ -122,20 +136,6 @@ func (jpc *JobPositionCreate) SetUpdatedAt(t time.Time) *JobPositionCreate {
 func (jpc *JobPositionCreate) SetNillableUpdatedAt(t *time.Time) *JobPositionCreate {
 	if t != nil {
 		jpc.SetUpdatedAt(*t)
-	}
-	return jpc
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (jpc *JobPositionCreate) SetDeletedAt(t time.Time) *JobPositionCreate {
-	jpc.mutation.SetDeletedAt(t)
-	return jpc
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (jpc *JobPositionCreate) SetNillableDeletedAt(t *time.Time) *JobPositionCreate {
-	if t != nil {
-		jpc.SetDeletedAt(*t)
 	}
 	return jpc
 }
@@ -241,7 +241,9 @@ func (jpc *JobPositionCreate) Mutation() *JobPositionMutation {
 
 // Save creates the JobPosition in the database.
 func (jpc *JobPositionCreate) Save(ctx context.Context) (*JobPosition, error) {
-	jpc.defaults()
+	if err := jpc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, jpc.sqlSave, jpc.mutation, jpc.hooks)
 }
 
@@ -268,19 +270,29 @@ func (jpc *JobPositionCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (jpc *JobPositionCreate) defaults() {
+func (jpc *JobPositionCreate) defaults() error {
 	if _, ok := jpc.mutation.CreatedAt(); !ok {
+		if jobposition.DefaultCreatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobposition.DefaultCreatedAt (forgotten import db/runtime?)")
+		}
 		v := jobposition.DefaultCreatedAt()
 		jpc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := jpc.mutation.UpdatedAt(); !ok {
+		if jobposition.DefaultUpdatedAt == nil {
+			return fmt.Errorf("db: uninitialized jobposition.DefaultUpdatedAt (forgotten import db/runtime?)")
+		}
 		v := jobposition.DefaultUpdatedAt()
 		jpc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := jpc.mutation.ID(); !ok {
+		if jobposition.DefaultID == nil {
+			return fmt.Errorf("db: uninitialized jobposition.DefaultID (forgotten import db/runtime?)")
+		}
 		v := jobposition.DefaultID()
 		jpc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -346,6 +358,10 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := jpc.mutation.DeletedAt(); ok {
+		_spec.SetField(jobposition.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := jpc.mutation.Name(); ok {
 		_spec.SetField(jobposition.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -373,10 +389,6 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 	if value, ok := jpc.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobposition.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if value, ok := jpc.mutation.DeletedAt(); ok {
-		_spec.SetField(jobposition.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = &value
 	}
 	if nodes := jpc.mutation.DepartmentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -482,7 +494,7 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 // of the `INSERT` statement. For example:
 //
 //	client.JobPosition.Create().
-//		SetName(v).
+//		SetDeletedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -491,7 +503,7 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobPositionUpsert) {
-//			SetName(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jpc *JobPositionCreate) OnConflict(opts ...sql.ConflictOption) *JobPositionUpsertOne {
@@ -526,6 +538,24 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobPositionUpsert) SetDeletedAt(v time.Time) *JobPositionUpsert {
+	u.Set(jobposition.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobPositionUpsert) UpdateDeletedAt() *JobPositionUpsert {
+	u.SetExcluded(jobposition.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobPositionUpsert) ClearDeletedAt() *JobPositionUpsert {
+	u.SetNull(jobposition.FieldDeletedAt)
+	return u
+}
 
 // SetName sets the "name" field.
 func (u *JobPositionUpsert) SetName(v string) *JobPositionUpsert {
@@ -647,24 +677,6 @@ func (u *JobPositionUpsert) UpdateUpdatedAt() *JobPositionUpsert {
 	return u
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobPositionUpsert) SetDeletedAt(v time.Time) *JobPositionUpsert {
-	u.Set(jobposition.FieldDeletedAt, v)
-	return u
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobPositionUpsert) UpdateDeletedAt() *JobPositionUpsert {
-	u.SetExcluded(jobposition.FieldDeletedAt)
-	return u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobPositionUpsert) ClearDeletedAt() *JobPositionUpsert {
-	u.SetNull(jobposition.FieldDeletedAt)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -714,6 +726,27 @@ func (u *JobPositionUpsertOne) Update(set func(*JobPositionUpsert)) *JobPosition
 		set(&JobPositionUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobPositionUpsertOne) SetDeletedAt(v time.Time) *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobPositionUpsertOne) UpdateDeletedAt() *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobPositionUpsertOne) ClearDeletedAt() *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetName sets the "name" field.
@@ -856,27 +889,6 @@ func (u *JobPositionUpsertOne) UpdateUpdatedAt() *JobPositionUpsertOne {
 	})
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobPositionUpsertOne) SetDeletedAt(v time.Time) *JobPositionUpsertOne {
-	return u.Update(func(s *JobPositionUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobPositionUpsertOne) UpdateDeletedAt() *JobPositionUpsertOne {
-	return u.Update(func(s *JobPositionUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobPositionUpsertOne) ClearDeletedAt() *JobPositionUpsertOne {
-	return u.Update(func(s *JobPositionUpsert) {
-		s.ClearDeletedAt()
-	})
-}
-
 // Exec executes the query.
 func (u *JobPositionUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -1013,7 +1025,7 @@ func (jpcb *JobPositionCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.JobPositionUpsert) {
-//			SetName(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (jpcb *JobPositionCreateBulk) OnConflict(opts ...sql.ConflictOption) *JobPositionUpsertBulk {
@@ -1093,6 +1105,27 @@ func (u *JobPositionUpsertBulk) Update(set func(*JobPositionUpsert)) *JobPositio
 		set(&JobPositionUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *JobPositionUpsertBulk) SetDeletedAt(v time.Time) *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *JobPositionUpsertBulk) UpdateDeletedAt() *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *JobPositionUpsertBulk) ClearDeletedAt() *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetName sets the "name" field.
@@ -1232,27 +1265,6 @@ func (u *JobPositionUpsertBulk) SetUpdatedAt(v time.Time) *JobPositionUpsertBulk
 func (u *JobPositionUpsertBulk) UpdateUpdatedAt() *JobPositionUpsertBulk {
 	return u.Update(func(s *JobPositionUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *JobPositionUpsertBulk) SetDeletedAt(v time.Time) *JobPositionUpsertBulk {
-	return u.Update(func(s *JobPositionUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *JobPositionUpsertBulk) UpdateDeletedAt() *JobPositionUpsertBulk {
-	return u.Update(func(s *JobPositionUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *JobPositionUpsertBulk) ClearDeletedAt() *JobPositionUpsertBulk {
-	return u.Update(func(s *JobPositionUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 

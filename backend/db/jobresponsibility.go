@@ -19,6 +19,8 @@ type JobResponsibility struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
 	// Responsibility holds the value of the "responsibility" field.
@@ -29,8 +31,6 @@ type JobResponsibility struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the JobResponsibilityQuery when eager-loading is set.
 	Edges        JobResponsibilityEdges `json:"edges"`
@@ -66,7 +66,7 @@ func (*JobResponsibility) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case jobresponsibility.FieldResponsibility:
 			values[i] = new(sql.NullString)
-		case jobresponsibility.FieldCreatedAt, jobresponsibility.FieldUpdatedAt, jobresponsibility.FieldDeletedAt:
+		case jobresponsibility.FieldDeletedAt, jobresponsibility.FieldCreatedAt, jobresponsibility.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case jobresponsibility.FieldID, jobresponsibility.FieldJobID:
 			values[i] = new(uuid.UUID)
@@ -90,6 +90,12 @@ func (jr *JobResponsibility) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				jr.ID = *value
+			}
+		case jobresponsibility.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				jr.DeletedAt = value.Time
 			}
 		case jobresponsibility.FieldJobID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -120,13 +126,6 @@ func (jr *JobResponsibility) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				jr.UpdatedAt = value.Time
-			}
-		case jobresponsibility.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				jr.DeletedAt = new(time.Time)
-				*jr.DeletedAt = value.Time
 			}
 		default:
 			jr.selectValues.Set(columns[i], values[i])
@@ -169,6 +168,9 @@ func (jr *JobResponsibility) String() string {
 	var builder strings.Builder
 	builder.WriteString("JobResponsibility(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", jr.ID))
+	builder.WriteString("deleted_at=")
+	builder.WriteString(jr.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", jr.JobID))
 	builder.WriteString(", ")
@@ -183,11 +185,6 @@ func (jr *JobResponsibility) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(jr.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := jr.DeletedAt; v != nil {
-		builder.WriteString("deleted_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteByte(')')
 	return builder.String()
 }
