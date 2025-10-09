@@ -207,21 +207,6 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
         <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
           {currentStep === 'upload' && (
             <>
-              {/* 岗位输入 */}
-              <div className="space-y-2">
-                <Label htmlFor="position" className="text-sm font-medium text-gray-400">
-                  选择岗位 <span className="text-gray-400">*</span>
-                </Label>
-                <Input
-                  id="position"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  placeholder="请输入岗位名称"
-                  className="h-12 text-gray-400 placeholder:text-gray-400 bg-gray-100 cursor-not-allowed"
-                  disabled
-                />
-              </div>
-
               {/* 上传方式选择 */}
               <div className="space-y-4">
                 <Label className="text-sm font-medium text-gray-700">
