@@ -519,7 +519,7 @@ export const useResumeProgress = (id?: string, options?: {
         return () => clearTimeout(timer);
       }
     }
-  }, [id, fetchProgress, autoPolling, startPolling]);
+  }, [id, fetchProgress, autoPolling, startPolling, progress]);
 
   // 监听进度状态变化，决定是否需要轮询
   useEffect(() => {
@@ -532,7 +532,7 @@ export const useResumeProgress = (id?: string, options?: {
         stopPolling();
       }
     }
-  }, [progress?.status, autoPolling, id, startPolling, stopPolling]);
+  }, [progress, autoPolling, id, startPolling, stopPolling]);
 
   return {
     progress,

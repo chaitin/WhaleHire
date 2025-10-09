@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Eye,
   Download,
@@ -10,12 +10,20 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { type Resume, type PaginationInfo, ResumeStatus } from '@/types/resume';
+import { type Resume, type PaginationInfo, ResumeStatus, type ResumeParseProgress } from '@/types/resume';
 import { formatDate, formatPhone, cn } from '@/lib/utils';
-import { statusLabels } from '@/utils/mock-data';
+
+// 状态标签映射
+const statusLabels: Record<string, string> = {
+  [ResumeStatus.PENDING]: '待解析',
+  [ResumeStatus.PROCESSING]: '解析中',
+  [ResumeStatus.COMPLETED]: '待筛选', // 解析成功翻译为待筛选
+  [ResumeStatus.FAILED]: '解析失败',
+  [ResumeStatus.ARCHIVED]: '已归档',
+};
 import { downloadResumeFile, isValidFileUrl } from '@/utils/download';
 import { SimpleResumeProgress } from '@/components/ui/resume-parse-progress';
-import { useResumeProgress } from '@/hooks/useResume';
+import { useResumePollingManager } from '@/hooks/useResumePollingManager';
 
 interface ResumeTableProps {
   resumes: Resume[];
@@ -320,10 +328,20 @@ export function ResumeTable({
 
   // 简历进度单元格组件
   function ResumeProgressCell({ resumeId }: { resumeId: string }) {
-    const { progress } = useResumeProgress(resumeId, {
-      autoPolling: true,
-      pollingInterval: 3000,
-    });
+    const [progress, setProgress] = useState<ResumeParseProgress | null>(null);
+    const { startPolling, stopPolling } = useResumePollingManager();
+
+    useEffect(() => {
+      // 启动轮询
+      startPolling(resumeId, (newProgress) => {
+        setProgress(newProgress);
+      });
+
+      // 清理函数
+      return () => {
+        stopPolling();
+      };
+    }, [resumeId, startPolling, stopPolling]);
 
     if (!progress) {
       return (

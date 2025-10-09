@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { ResumeParseProgress, ResumeStatus } from '@/types/resume';
 import { cn } from '@/lib/utils';

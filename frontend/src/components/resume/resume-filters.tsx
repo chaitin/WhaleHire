@@ -2,7 +2,7 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ResumeStatusFilter } from '@/types/resume';
+import { ResumeStatusFilter, ResumeStatus } from '@/types/resume';
 import {
   Select,
   SelectContent,
@@ -11,7 +11,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ResumeFilters } from '@/types/resume';
-import { statusOptions } from '@/utils/mock-data';
+
+// 状态选项
+const statusOptions = [
+  { value: 'all', label: '所有状态' },
+  { value: ResumeStatus.PROCESSING, label: '解析中' },
+  { value: ResumeStatus.COMPLETED, label: '待筛选' }, // 解析成功翻译为待筛选
+];
 
 interface ResumeFiltersProps {
   filters: ResumeFilters;
