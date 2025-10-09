@@ -113,7 +113,6 @@ export function ResumeTable({
             <thead style={stickyStyle} className="sticky top-0 z-10">
               <tr className="text-left">
                 <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">简历信息</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">岗位</th>
                 <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">上传时间</th>
                 <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">状态</th>
                 <th className="w-40 px-6 py-3 text-xs font-medium text-[#6B7280] text-right">操作</th>
@@ -122,7 +121,7 @@ export function ResumeTable({
             <tbody className="divide-y divide-[#E5E7EB] bg-white">
               {resumes && resumes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={4} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center space-y-3">
                       <div className="text-gray-400">
                         <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,7 +154,6 @@ export function ResumeTable({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-[#111827] text-sm">--</td>
                   <td className="px-6 py-4 text-sm text-[#6B7280]">
                     {formatDate(resume.created_at)}
                   </td>
