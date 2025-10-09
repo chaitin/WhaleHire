@@ -13,6 +13,9 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { type Resume, type PaginationInfo, ResumeStatus } from '@/types/resume';
 import { formatDate, formatPhone, cn } from '@/lib/utils';
 import { statusLabels } from '@/utils/mock-data';
+import { downloadResumeFile, isValidFileUrl } from '@/utils/download';
+import { SimpleResumeProgress } from '@/components/ui/resume-parse-progress';
+import { useResumeProgress } from '@/hooks/useResume';
 
 interface ResumeTableProps {
   resumes: Resume[];
@@ -37,6 +40,7 @@ export function ResumeTable({
   const [deletingResumeId, setDeletingResumeId] = useState<string | null>(null);
   const [deletingResumeName, setDeletingResumeName] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [downloadingResumeId, setDownloadingResumeId] = useState<string | null>(null);
 
   const handleDeleteClick = (resume: Resume) => {
     setDeletingResumeId(resume.id);
@@ -58,6 +62,22 @@ export function ResumeTable({
       setIsDeleting(false);
       setDeletingResumeId(null);
       setDeletingResumeName('');
+    }
+  };
+
+  const handleDownloadClick = async (resume: Resume) => {
+    if (!resume.resume_file_url || !isValidFileUrl(resume.resume_file_url)) {
+      console.warn('简历文件URL无效或不存在');
+      return;
+    }
+
+    setDownloadingResumeId(resume.id);
+    try {
+      await downloadResumeFile(resume.resume_file_url, resume.name);
+    } catch (error) {
+      console.error('下载简历失败:', error);
+    } finally {
+      setDownloadingResumeId(null);
     }
   };
 
@@ -140,7 +160,7 @@ export function ResumeTable({
                     {formatDate(resume.created_at)}
                   </td>
                   <td className="px-6 py-4">
-                    {getStatusBadge(resume.status)}
+                    {getStatusBadge(resume.status, resume.id)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
@@ -155,8 +175,19 @@ export function ResumeTable({
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-5 w-5 p-0 hover:bg-transparent opacity-50 cursor-not-allowed"
-                        disabled
+                        className={cn(
+                          "h-5 w-5 p-0 hover:bg-transparent",
+                          !resume.resume_file_url || !isValidFileUrl(resume.resume_file_url)
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:text-[#374151]"
+                        )}
+                        onClick={() => handleDownloadClick(resume)}
+                        disabled={
+                          !resume.resume_file_url || 
+                          !isValidFileUrl(resume.resume_file_url) || 
+                          downloadingResumeId === resume.id ||
+                          isLoading
+                        }
                       >
                         <Download className="h-4 w-4 text-[#6B7280]" />
                       </Button>
@@ -263,7 +294,7 @@ export function ResumeTable({
     </div>
   );
 
-  function getStatusBadge(status: Resume['status']) {
+  function getStatusBadge(status: Resume['status'], resumeId?: string) {
     const statusConfig: Record<ResumeStatus | 'interview' | 'rejected' | 'hired', string> = {
       [ResumeStatus.PENDING]: 'status-badge pending',
       [ResumeStatus.PROCESSING]: 'status-badge processing',
@@ -275,6 +306,11 @@ export function ResumeTable({
       hired: 'status-badge used',
     };
 
+    // 对于处理中的简历，显示进度组件
+    if (status === ResumeStatus.PROCESSING && resumeId) {
+      return <ResumeProgressCell resumeId={resumeId} />;
+    }
+
     const label = statusLabels[status as keyof typeof statusLabels] || status;
 
     return (
@@ -282,5 +318,29 @@ export function ResumeTable({
         {label}
       </span>
     );
+  }
+
+  // 简历进度单元格组件
+  function ResumeProgressCell({ resumeId }: { resumeId: string }) {
+    const { progress } = useResumeProgress(resumeId, {
+      autoPolling: true,
+      pollingInterval: 3000,
+    });
+
+    if (!progress) {
+      return (
+        <span className="status-badge processing">
+          处理中
+        </span>
+      );
+    }
+
+    return (
+       <SimpleResumeProgress 
+         status={progress.status}
+         progress={progress.progress}
+         className="min-w-[120px]"
+       />
+     );
   }
 }
