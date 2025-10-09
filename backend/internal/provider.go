@@ -3,11 +3,17 @@ package internal
 import (
 	"github.com/google/wire"
 
+	departmentV1 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
+	departmentrepo "github.com/chaitin/WhaleHire/backend/internal/department/repo"
+	departmentusecase "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
 	fileV1 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
 	fileusecase "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
 	generalagentrepo "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	generalagentusecase "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
+	jobprofileV1 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
+	jobprofilerepo "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
+	jobprofileusecase "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	middleware "github.com/chaitin/WhaleHire/backend/internal/middleware"
 	resumeV1 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
 	resumerepo "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
@@ -23,13 +29,17 @@ func NewAPIHandlers(
 	userV1 *userV1.UserHandler,
 	generalAgentV1 *generalagentV1.GeneralAgentHandler,
 	resumeV1 *resumeV1.ResumeHandler,
+	jobProfileV1 *jobprofileV1.JobProfileHandler,
 	fileV1 *fileV1.FileHandler,
+	departmentV1 *departmentV1.DepartmentHandler,
 ) *APIHandlers {
 	return &APIHandlers{
 		UserHandler:         userV1,
 		GeneralAgentHandler: generalAgentV1,
 		ResumeHandler:       resumeV1,
+		JobProfileHandler:   jobProfileV1,
 		FileHandler:         fileV1,
+		DepartmentHandler:   departmentV1,
 	}
 }
 
@@ -48,6 +58,13 @@ var Provider = wire.NewSet(
 	resumeusecase.NewResumeUsecase,
 	resumeservice.NewParserService,
 	resumeservice.NewStorageService,
+	jobprofileV1.NewJobProfileHandler,
+	jobprofilerepo.NewJobProfileRepo,
+	jobprofilerepo.NewJobSkillMetaRepo,
+	jobprofileusecase.NewJobProfileUsecase,
+	departmentrepo.NewDepartmentRepo,
+	departmentusecase.NewDepartmentUsecase,
+	departmentV1.NewDepartmentHandler,
 	fileusecase.NewFileUsecase,
 	fileV1.NewFileHandler,
 	NewAPIHandlers,

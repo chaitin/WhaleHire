@@ -24,6 +24,22 @@ type Tx struct {
 	Attachment *AttachmentClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
+	// Department is the client for interacting with the Department builders.
+	Department *DepartmentClient
+	// JobEducationRequirement is the client for interacting with the JobEducationRequirement builders.
+	JobEducationRequirement *JobEducationRequirementClient
+	// JobExperienceRequirement is the client for interacting with the JobExperienceRequirement builders.
+	JobExperienceRequirement *JobExperienceRequirementClient
+	// JobIndustryRequirement is the client for interacting with the JobIndustryRequirement builders.
+	JobIndustryRequirement *JobIndustryRequirementClient
+	// JobPosition is the client for interacting with the JobPosition builders.
+	JobPosition *JobPositionClient
+	// JobResponsibility is the client for interacting with the JobResponsibility builders.
+	JobResponsibility *JobResponsibilityClient
+	// JobSkill is the client for interacting with the JobSkill builders.
+	JobSkill *JobSkillClient
+	// JobSkillMeta is the client for interacting with the JobSkillMeta builders.
+	JobSkillMeta *JobSkillMetaClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Resume is the client for interacting with the Resume builders.
@@ -184,6 +200,14 @@ func (tx *Tx) init() {
 	tx.AdminRole = NewAdminRoleClient(tx.config)
 	tx.Attachment = NewAttachmentClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
+	tx.Department = NewDepartmentClient(tx.config)
+	tx.JobEducationRequirement = NewJobEducationRequirementClient(tx.config)
+	tx.JobExperienceRequirement = NewJobExperienceRequirementClient(tx.config)
+	tx.JobIndustryRequirement = NewJobIndustryRequirementClient(tx.config)
+	tx.JobPosition = NewJobPositionClient(tx.config)
+	tx.JobResponsibility = NewJobResponsibilityClient(tx.config)
+	tx.JobSkill = NewJobSkillClient(tx.config)
+	tx.JobSkillMeta = NewJobSkillMetaClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Resume = NewResumeClient(tx.config)
 	tx.ResumeDocumentParse = NewResumeDocumentParseClient(tx.config)

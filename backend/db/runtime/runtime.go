@@ -10,6 +10,14 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
 	"github.com/chaitin/WhaleHire/backend/db/attachment"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/department"
+	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobexperiencerequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobindustryrequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobposition"
+	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
+	"github.com/chaitin/WhaleHire/backend/db/jobskill"
+	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
@@ -118,6 +126,198 @@ func init() {
 	conversationDescID := conversationFields[0].Descriptor()
 	// conversation.DefaultID holds the default value on creation for the id field.
 	conversation.DefaultID = conversationDescID.Default.(func() uuid.UUID)
+	departmentFields := schema.Department{}.Fields()
+	_ = departmentFields
+	// departmentDescName is the schema descriptor for name field.
+	departmentDescName := departmentFields[1].Descriptor()
+	// department.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	department.NameValidator = departmentDescName.Validators[0].(func(string) error)
+	// departmentDescDescription is the schema descriptor for description field.
+	departmentDescDescription := departmentFields[2].Descriptor()
+	// department.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	department.DescriptionValidator = departmentDescDescription.Validators[0].(func(string) error)
+	// departmentDescCreatedAt is the schema descriptor for created_at field.
+	departmentDescCreatedAt := departmentFields[4].Descriptor()
+	// department.DefaultCreatedAt holds the default value on creation for the created_at field.
+	department.DefaultCreatedAt = departmentDescCreatedAt.Default.(func() time.Time)
+	// departmentDescUpdatedAt is the schema descriptor for updated_at field.
+	departmentDescUpdatedAt := departmentFields[5].Descriptor()
+	// department.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	department.DefaultUpdatedAt = departmentDescUpdatedAt.Default.(func() time.Time)
+	// department.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	department.UpdateDefaultUpdatedAt = departmentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// departmentDescID is the schema descriptor for id field.
+	departmentDescID := departmentFields[0].Descriptor()
+	// department.DefaultID holds the default value on creation for the id field.
+	department.DefaultID = departmentDescID.Default.(func() uuid.UUID)
+	jobeducationrequirementFields := schema.JobEducationRequirement{}.Fields()
+	_ = jobeducationrequirementFields
+	// jobeducationrequirementDescMinDegree is the schema descriptor for min_degree field.
+	jobeducationrequirementDescMinDegree := jobeducationrequirementFields[2].Descriptor()
+	// jobeducationrequirement.MinDegreeValidator is a validator for the "min_degree" field. It is called by the builders before save.
+	jobeducationrequirement.MinDegreeValidator = jobeducationrequirementDescMinDegree.Validators[0].(func(string) error)
+	// jobeducationrequirementDescWeight is the schema descriptor for weight field.
+	jobeducationrequirementDescWeight := jobeducationrequirementFields[3].Descriptor()
+	// jobeducationrequirement.WeightValidator is a validator for the "weight" field. It is called by the builders before save.
+	jobeducationrequirement.WeightValidator = jobeducationrequirementDescWeight.Validators[0].(func(int) error)
+	// jobeducationrequirementDescCreatedAt is the schema descriptor for created_at field.
+	jobeducationrequirementDescCreatedAt := jobeducationrequirementFields[4].Descriptor()
+	// jobeducationrequirement.DefaultCreatedAt holds the default value on creation for the created_at field.
+	jobeducationrequirement.DefaultCreatedAt = jobeducationrequirementDescCreatedAt.Default.(func() time.Time)
+	// jobeducationrequirementDescUpdatedAt is the schema descriptor for updated_at field.
+	jobeducationrequirementDescUpdatedAt := jobeducationrequirementFields[5].Descriptor()
+	// jobeducationrequirement.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	jobeducationrequirement.DefaultUpdatedAt = jobeducationrequirementDescUpdatedAt.Default.(func() time.Time)
+	// jobeducationrequirement.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	jobeducationrequirement.UpdateDefaultUpdatedAt = jobeducationrequirementDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobeducationrequirementDescID is the schema descriptor for id field.
+	jobeducationrequirementDescID := jobeducationrequirementFields[0].Descriptor()
+	// jobeducationrequirement.DefaultID holds the default value on creation for the id field.
+	jobeducationrequirement.DefaultID = jobeducationrequirementDescID.Default.(func() uuid.UUID)
+	jobexperiencerequirementFields := schema.JobExperienceRequirement{}.Fields()
+	_ = jobexperiencerequirementFields
+	// jobexperiencerequirementDescMinYears is the schema descriptor for min_years field.
+	jobexperiencerequirementDescMinYears := jobexperiencerequirementFields[2].Descriptor()
+	// jobexperiencerequirement.DefaultMinYears holds the default value on creation for the min_years field.
+	jobexperiencerequirement.DefaultMinYears = jobexperiencerequirementDescMinYears.Default.(int)
+	// jobexperiencerequirement.MinYearsValidator is a validator for the "min_years" field. It is called by the builders before save.
+	jobexperiencerequirement.MinYearsValidator = jobexperiencerequirementDescMinYears.Validators[0].(func(int) error)
+	// jobexperiencerequirementDescIdealYears is the schema descriptor for ideal_years field.
+	jobexperiencerequirementDescIdealYears := jobexperiencerequirementFields[3].Descriptor()
+	// jobexperiencerequirement.DefaultIdealYears holds the default value on creation for the ideal_years field.
+	jobexperiencerequirement.DefaultIdealYears = jobexperiencerequirementDescIdealYears.Default.(int)
+	// jobexperiencerequirement.IdealYearsValidator is a validator for the "ideal_years" field. It is called by the builders before save.
+	jobexperiencerequirement.IdealYearsValidator = jobexperiencerequirementDescIdealYears.Validators[0].(func(int) error)
+	// jobexperiencerequirementDescWeight is the schema descriptor for weight field.
+	jobexperiencerequirementDescWeight := jobexperiencerequirementFields[4].Descriptor()
+	// jobexperiencerequirement.WeightValidator is a validator for the "weight" field. It is called by the builders before save.
+	jobexperiencerequirement.WeightValidator = jobexperiencerequirementDescWeight.Validators[0].(func(int) error)
+	// jobexperiencerequirementDescCreatedAt is the schema descriptor for created_at field.
+	jobexperiencerequirementDescCreatedAt := jobexperiencerequirementFields[5].Descriptor()
+	// jobexperiencerequirement.DefaultCreatedAt holds the default value on creation for the created_at field.
+	jobexperiencerequirement.DefaultCreatedAt = jobexperiencerequirementDescCreatedAt.Default.(func() time.Time)
+	// jobexperiencerequirementDescUpdatedAt is the schema descriptor for updated_at field.
+	jobexperiencerequirementDescUpdatedAt := jobexperiencerequirementFields[6].Descriptor()
+	// jobexperiencerequirement.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	jobexperiencerequirement.DefaultUpdatedAt = jobexperiencerequirementDescUpdatedAt.Default.(func() time.Time)
+	// jobexperiencerequirement.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	jobexperiencerequirement.UpdateDefaultUpdatedAt = jobexperiencerequirementDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobexperiencerequirementDescID is the schema descriptor for id field.
+	jobexperiencerequirementDescID := jobexperiencerequirementFields[0].Descriptor()
+	// jobexperiencerequirement.DefaultID holds the default value on creation for the id field.
+	jobexperiencerequirement.DefaultID = jobexperiencerequirementDescID.Default.(func() uuid.UUID)
+	jobindustryrequirementFields := schema.JobIndustryRequirement{}.Fields()
+	_ = jobindustryrequirementFields
+	// jobindustryrequirementDescIndustry is the schema descriptor for industry field.
+	jobindustryrequirementDescIndustry := jobindustryrequirementFields[2].Descriptor()
+	// jobindustryrequirement.IndustryValidator is a validator for the "industry" field. It is called by the builders before save.
+	jobindustryrequirement.IndustryValidator = jobindustryrequirementDescIndustry.Validators[0].(func(string) error)
+	// jobindustryrequirementDescCompanyName is the schema descriptor for company_name field.
+	jobindustryrequirementDescCompanyName := jobindustryrequirementFields[3].Descriptor()
+	// jobindustryrequirement.CompanyNameValidator is a validator for the "company_name" field. It is called by the builders before save.
+	jobindustryrequirement.CompanyNameValidator = jobindustryrequirementDescCompanyName.Validators[0].(func(string) error)
+	// jobindustryrequirementDescWeight is the schema descriptor for weight field.
+	jobindustryrequirementDescWeight := jobindustryrequirementFields[4].Descriptor()
+	// jobindustryrequirement.WeightValidator is a validator for the "weight" field. It is called by the builders before save.
+	jobindustryrequirement.WeightValidator = jobindustryrequirementDescWeight.Validators[0].(func(int) error)
+	// jobindustryrequirementDescCreatedAt is the schema descriptor for created_at field.
+	jobindustryrequirementDescCreatedAt := jobindustryrequirementFields[5].Descriptor()
+	// jobindustryrequirement.DefaultCreatedAt holds the default value on creation for the created_at field.
+	jobindustryrequirement.DefaultCreatedAt = jobindustryrequirementDescCreatedAt.Default.(func() time.Time)
+	// jobindustryrequirementDescUpdatedAt is the schema descriptor for updated_at field.
+	jobindustryrequirementDescUpdatedAt := jobindustryrequirementFields[6].Descriptor()
+	// jobindustryrequirement.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	jobindustryrequirement.DefaultUpdatedAt = jobindustryrequirementDescUpdatedAt.Default.(func() time.Time)
+	// jobindustryrequirement.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	jobindustryrequirement.UpdateDefaultUpdatedAt = jobindustryrequirementDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobindustryrequirementDescID is the schema descriptor for id field.
+	jobindustryrequirementDescID := jobindustryrequirementFields[0].Descriptor()
+	// jobindustryrequirement.DefaultID holds the default value on creation for the id field.
+	jobindustryrequirement.DefaultID = jobindustryrequirementDescID.Default.(func() uuid.UUID)
+	jobpositionFields := schema.JobPosition{}.Fields()
+	_ = jobpositionFields
+	// jobpositionDescName is the schema descriptor for name field.
+	jobpositionDescName := jobpositionFields[1].Descriptor()
+	// jobposition.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	jobposition.NameValidator = jobpositionDescName.Validators[0].(func(string) error)
+	// jobpositionDescLocation is the schema descriptor for location field.
+	jobpositionDescLocation := jobpositionFields[3].Descriptor()
+	// jobposition.LocationValidator is a validator for the "location" field. It is called by the builders before save.
+	jobposition.LocationValidator = jobpositionDescLocation.Validators[0].(func(string) error)
+	// jobpositionDescCreatedAt is the schema descriptor for created_at field.
+	jobpositionDescCreatedAt := jobpositionFields[7].Descriptor()
+	// jobposition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	jobposition.DefaultCreatedAt = jobpositionDescCreatedAt.Default.(func() time.Time)
+	// jobpositionDescUpdatedAt is the schema descriptor for updated_at field.
+	jobpositionDescUpdatedAt := jobpositionFields[8].Descriptor()
+	// jobposition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	jobposition.DefaultUpdatedAt = jobpositionDescUpdatedAt.Default.(func() time.Time)
+	// jobposition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	jobposition.UpdateDefaultUpdatedAt = jobpositionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobpositionDescID is the schema descriptor for id field.
+	jobpositionDescID := jobpositionFields[0].Descriptor()
+	// jobposition.DefaultID holds the default value on creation for the id field.
+	jobposition.DefaultID = jobpositionDescID.Default.(func() uuid.UUID)
+	jobresponsibilityFields := schema.JobResponsibility{}.Fields()
+	_ = jobresponsibilityFields
+	// jobresponsibilityDescSortOrder is the schema descriptor for sort_order field.
+	jobresponsibilityDescSortOrder := jobresponsibilityFields[3].Descriptor()
+	// jobresponsibility.DefaultSortOrder holds the default value on creation for the sort_order field.
+	jobresponsibility.DefaultSortOrder = jobresponsibilityDescSortOrder.Default.(int)
+	// jobresponsibilityDescCreatedAt is the schema descriptor for created_at field.
+	jobresponsibilityDescCreatedAt := jobresponsibilityFields[4].Descriptor()
+	// jobresponsibility.DefaultCreatedAt holds the default value on creation for the created_at field.
+	jobresponsibility.DefaultCreatedAt = jobresponsibilityDescCreatedAt.Default.(func() time.Time)
+	// jobresponsibilityDescUpdatedAt is the schema descriptor for updated_at field.
+	jobresponsibilityDescUpdatedAt := jobresponsibilityFields[5].Descriptor()
+	// jobresponsibility.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	jobresponsibility.DefaultUpdatedAt = jobresponsibilityDescUpdatedAt.Default.(func() time.Time)
+	// jobresponsibility.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	jobresponsibility.UpdateDefaultUpdatedAt = jobresponsibilityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobresponsibilityDescID is the schema descriptor for id field.
+	jobresponsibilityDescID := jobresponsibilityFields[0].Descriptor()
+	// jobresponsibility.DefaultID holds the default value on creation for the id field.
+	jobresponsibility.DefaultID = jobresponsibilityDescID.Default.(func() uuid.UUID)
+	jobskillFields := schema.JobSkill{}.Fields()
+	_ = jobskillFields
+	// jobskillDescWeight is the schema descriptor for weight field.
+	jobskillDescWeight := jobskillFields[4].Descriptor()
+	// jobskill.WeightValidator is a validator for the "weight" field. It is called by the builders before save.
+	jobskill.WeightValidator = jobskillDescWeight.Validators[0].(func(int) error)
+	// jobskillDescCreatedAt is the schema descriptor for created_at field.
+	jobskillDescCreatedAt := jobskillFields[5].Descriptor()
+	// jobskill.DefaultCreatedAt holds the default value on creation for the created_at field.
+	jobskill.DefaultCreatedAt = jobskillDescCreatedAt.Default.(func() time.Time)
+	// jobskillDescUpdatedAt is the schema descriptor for updated_at field.
+	jobskillDescUpdatedAt := jobskillFields[6].Descriptor()
+	// jobskill.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	jobskill.DefaultUpdatedAt = jobskillDescUpdatedAt.Default.(func() time.Time)
+	// jobskill.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	jobskill.UpdateDefaultUpdatedAt = jobskillDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobskillDescID is the schema descriptor for id field.
+	jobskillDescID := jobskillFields[0].Descriptor()
+	// jobskill.DefaultID holds the default value on creation for the id field.
+	jobskill.DefaultID = jobskillDescID.Default.(func() uuid.UUID)
+	jobskillmetaFields := schema.JobSkillMeta{}.Fields()
+	_ = jobskillmetaFields
+	// jobskillmetaDescName is the schema descriptor for name field.
+	jobskillmetaDescName := jobskillmetaFields[1].Descriptor()
+	// jobskillmeta.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	jobskillmeta.NameValidator = jobskillmetaDescName.Validators[0].(func(string) error)
+	// jobskillmetaDescUpdatedAt is the schema descriptor for updated_at field.
+	jobskillmetaDescUpdatedAt := jobskillmetaFields[2].Descriptor()
+	// jobskillmeta.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	jobskillmeta.DefaultUpdatedAt = jobskillmetaDescUpdatedAt.Default.(func() time.Time)
+	// jobskillmeta.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	jobskillmeta.UpdateDefaultUpdatedAt = jobskillmetaDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobskillmetaDescCreatedAt is the schema descriptor for created_at field.
+	jobskillmetaDescCreatedAt := jobskillmetaFields[3].Descriptor()
+	// jobskillmeta.DefaultCreatedAt holds the default value on creation for the created_at field.
+	jobskillmeta.DefaultCreatedAt = jobskillmetaDescCreatedAt.Default.(func() time.Time)
+	// jobskillmetaDescID is the schema descriptor for id field.
+	jobskillmetaDescID := jobskillmetaFields[0].Descriptor()
+	// jobskillmeta.DefaultID holds the default value on creation for the id field.
+	jobskillmeta.DefaultID = jobskillmetaDescID.Default.(func() uuid.UUID)
 	messageMixin := schema.Message{}.Mixin()
 	messageMixinHooks0 := messageMixin[0].Hooks()
 	message.Hooks[0] = messageMixinHooks0[0]

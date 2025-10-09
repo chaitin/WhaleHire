@@ -25,4 +25,6 @@ var (
 	ErrUserLimit           = web.NewBadRequestErr("err-user-limit")
 	ErrOnlyAdmin           = web.NewBadRequestErr("err-only-admin")
 	ErrMissKey             = web.NewBadRequestErr("err-miss-key")
+	ErrDepartmentRequired  = web.NewBadRequestErr("err-department-required")
+	ErrJobProfileRequired  = web.NewBadRequestErr("err-jobprofile-required")
 )

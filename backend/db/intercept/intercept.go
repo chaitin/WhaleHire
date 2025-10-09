@@ -13,6 +13,14 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/adminrole"
 	"github.com/chaitin/WhaleHire/backend/db/attachment"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/department"
+	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobexperiencerequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobindustryrequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobposition"
+	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
+	"github.com/chaitin/WhaleHire/backend/db/jobskill"
+	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
@@ -217,6 +225,222 @@ func (f TraverseConversation) Traverse(ctx context.Context, q db.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *db.ConversationQuery", q)
+}
+
+// The DepartmentFunc type is an adapter to allow the use of ordinary function as a Querier.
+type DepartmentFunc func(context.Context, *db.DepartmentQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f DepartmentFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.DepartmentQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.DepartmentQuery", q)
+}
+
+// The TraverseDepartment type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseDepartment func(context.Context, *db.DepartmentQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseDepartment) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseDepartment) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.DepartmentQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.DepartmentQuery", q)
+}
+
+// The JobEducationRequirementFunc type is an adapter to allow the use of ordinary function as a Querier.
+type JobEducationRequirementFunc func(context.Context, *db.JobEducationRequirementQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f JobEducationRequirementFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.JobEducationRequirementQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.JobEducationRequirementQuery", q)
+}
+
+// The TraverseJobEducationRequirement type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseJobEducationRequirement func(context.Context, *db.JobEducationRequirementQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseJobEducationRequirement) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseJobEducationRequirement) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.JobEducationRequirementQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.JobEducationRequirementQuery", q)
+}
+
+// The JobExperienceRequirementFunc type is an adapter to allow the use of ordinary function as a Querier.
+type JobExperienceRequirementFunc func(context.Context, *db.JobExperienceRequirementQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f JobExperienceRequirementFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.JobExperienceRequirementQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.JobExperienceRequirementQuery", q)
+}
+
+// The TraverseJobExperienceRequirement type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseJobExperienceRequirement func(context.Context, *db.JobExperienceRequirementQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseJobExperienceRequirement) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseJobExperienceRequirement) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.JobExperienceRequirementQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.JobExperienceRequirementQuery", q)
+}
+
+// The JobIndustryRequirementFunc type is an adapter to allow the use of ordinary function as a Querier.
+type JobIndustryRequirementFunc func(context.Context, *db.JobIndustryRequirementQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f JobIndustryRequirementFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.JobIndustryRequirementQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.JobIndustryRequirementQuery", q)
+}
+
+// The TraverseJobIndustryRequirement type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseJobIndustryRequirement func(context.Context, *db.JobIndustryRequirementQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseJobIndustryRequirement) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseJobIndustryRequirement) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.JobIndustryRequirementQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.JobIndustryRequirementQuery", q)
+}
+
+// The JobPositionFunc type is an adapter to allow the use of ordinary function as a Querier.
+type JobPositionFunc func(context.Context, *db.JobPositionQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f JobPositionFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.JobPositionQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.JobPositionQuery", q)
+}
+
+// The TraverseJobPosition type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseJobPosition func(context.Context, *db.JobPositionQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseJobPosition) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseJobPosition) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.JobPositionQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.JobPositionQuery", q)
+}
+
+// The JobResponsibilityFunc type is an adapter to allow the use of ordinary function as a Querier.
+type JobResponsibilityFunc func(context.Context, *db.JobResponsibilityQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f JobResponsibilityFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.JobResponsibilityQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.JobResponsibilityQuery", q)
+}
+
+// The TraverseJobResponsibility type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseJobResponsibility func(context.Context, *db.JobResponsibilityQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseJobResponsibility) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseJobResponsibility) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.JobResponsibilityQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.JobResponsibilityQuery", q)
+}
+
+// The JobSkillFunc type is an adapter to allow the use of ordinary function as a Querier.
+type JobSkillFunc func(context.Context, *db.JobSkillQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f JobSkillFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.JobSkillQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.JobSkillQuery", q)
+}
+
+// The TraverseJobSkill type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseJobSkill func(context.Context, *db.JobSkillQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseJobSkill) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseJobSkill) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.JobSkillQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.JobSkillQuery", q)
+}
+
+// The JobSkillMetaFunc type is an adapter to allow the use of ordinary function as a Querier.
+type JobSkillMetaFunc func(context.Context, *db.JobSkillMetaQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f JobSkillMetaFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.JobSkillMetaQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.JobSkillMetaQuery", q)
+}
+
+// The TraverseJobSkillMeta type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseJobSkillMeta func(context.Context, *db.JobSkillMetaQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseJobSkillMeta) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseJobSkillMeta) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.JobSkillMetaQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.JobSkillMetaQuery", q)
 }
 
 // The MessageFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -556,6 +780,22 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.AttachmentQuery, predicate.Attachment, attachment.OrderOption]{typ: db.TypeAttachment, tq: q}, nil
 	case *db.ConversationQuery:
 		return &query[*db.ConversationQuery, predicate.Conversation, conversation.OrderOption]{typ: db.TypeConversation, tq: q}, nil
+	case *db.DepartmentQuery:
+		return &query[*db.DepartmentQuery, predicate.Department, department.OrderOption]{typ: db.TypeDepartment, tq: q}, nil
+	case *db.JobEducationRequirementQuery:
+		return &query[*db.JobEducationRequirementQuery, predicate.JobEducationRequirement, jobeducationrequirement.OrderOption]{typ: db.TypeJobEducationRequirement, tq: q}, nil
+	case *db.JobExperienceRequirementQuery:
+		return &query[*db.JobExperienceRequirementQuery, predicate.JobExperienceRequirement, jobexperiencerequirement.OrderOption]{typ: db.TypeJobExperienceRequirement, tq: q}, nil
+	case *db.JobIndustryRequirementQuery:
+		return &query[*db.JobIndustryRequirementQuery, predicate.JobIndustryRequirement, jobindustryrequirement.OrderOption]{typ: db.TypeJobIndustryRequirement, tq: q}, nil
+	case *db.JobPositionQuery:
+		return &query[*db.JobPositionQuery, predicate.JobPosition, jobposition.OrderOption]{typ: db.TypeJobPosition, tq: q}, nil
+	case *db.JobResponsibilityQuery:
+		return &query[*db.JobResponsibilityQuery, predicate.JobResponsibility, jobresponsibility.OrderOption]{typ: db.TypeJobResponsibility, tq: q}, nil
+	case *db.JobSkillQuery:
+		return &query[*db.JobSkillQuery, predicate.JobSkill, jobskill.OrderOption]{typ: db.TypeJobSkill, tq: q}, nil
+	case *db.JobSkillMetaQuery:
+		return &query[*db.JobSkillMetaQuery, predicate.JobSkillMeta, jobskillmeta.OrderOption]{typ: db.TypeJobSkillMeta, tq: q}, nil
 	case *db.MessageQuery:
 		return &query[*db.MessageQuery, predicate.Message, message.OrderOption]{typ: db.TypeMessage, tq: q}, nil
 	case *db.ResumeQuery:

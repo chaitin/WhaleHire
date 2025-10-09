@@ -33,16 +33,16 @@ func NewFileHandler(
 	return h
 }
 
-// Upload
+// Upload 上传文件
 //
-//	@Summary		Upload File
-//	@Description	Upload File
-//	@Tags			File
-//	@Accept			multipart/form-data
-//	@Param			file	formData	file	true	"File"
-//	@Param			kb_id	formData	string	false	"Knowledge Base ID"
-//	@Success		200		{object}	domain.ObjectUploadResp
-//	@Router			/api/v1/file/upload [post]
+// @Summary		Upload File
+// @Description	Upload File
+// @Tags			File
+// @Accept			multipart/form-data
+// @Param			file	formData	file	true	"File"
+// @Param			kb_id	formData	string	false	"Knowledge Base ID"
+// @Success		200		{object}	domain.ObjectUploadResp
+// @Router			/api/v1/file/upload [post]
 func (h *FileHandler) Upload(c *web.Context) error {
 	ctx := c.Request().Context()
 	kbID := c.FormValue("kb_id")
