@@ -44,9 +44,9 @@ func (rc *ResumeCreate) SetNillableDeletedAt(t *time.Time) *ResumeCreate {
 	return rc
 }
 
-// SetUserID sets the "user_id" field.
-func (rc *ResumeCreate) SetUserID(u uuid.UUID) *ResumeCreate {
-	rc.mutation.SetUserID(u)
+// SetUploaderID sets the "uploader_id" field.
+func (rc *ResumeCreate) SetUploaderID(u uuid.UUID) *ResumeCreate {
+	rc.mutation.SetUploaderID(u)
 	return rc
 }
 
@@ -260,6 +260,12 @@ func (rc *ResumeCreate) SetNillableID(u *uuid.UUID) *ResumeCreate {
 	return rc
 }
 
+// SetUserID sets the "user" edge to the User entity by ID.
+func (rc *ResumeCreate) SetUserID(id uuid.UUID) *ResumeCreate {
+	rc.mutation.SetUserID(id)
+	return rc
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (rc *ResumeCreate) SetUser(u *User) *ResumeCreate {
 	return rc.SetUserID(u.ID)
@@ -407,8 +413,8 @@ func (rc *ResumeCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (rc *ResumeCreate) check() error {
-	if _, ok := rc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user_id", err: errors.New(`db: missing required field "Resume.user_id"`)}
+	if _, ok := rc.mutation.UploaderID(); !ok {
+		return &ValidationError{Name: "uploader_id", err: errors.New(`db: missing required field "Resume.uploader_id"`)}
 	}
 	if v, ok := rc.mutation.HighestEducation(); ok {
 		if err := resume.HighestEducationValidator(v); err != nil {
@@ -537,7 +543,7 @@ func (rc *ResumeCreate) createSpec() (*Resume, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.UserID = nodes[0]
+		_node.UploaderID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.EducationsIDs(); len(nodes) > 0 {
@@ -690,15 +696,15 @@ func (u *ResumeUpsert) ClearDeletedAt() *ResumeUpsert {
 	return u
 }
 
-// SetUserID sets the "user_id" field.
-func (u *ResumeUpsert) SetUserID(v uuid.UUID) *ResumeUpsert {
-	u.Set(resume.FieldUserID, v)
+// SetUploaderID sets the "uploader_id" field.
+func (u *ResumeUpsert) SetUploaderID(v uuid.UUID) *ResumeUpsert {
+	u.Set(resume.FieldUploaderID, v)
 	return u
 }
 
-// UpdateUserID sets the "user_id" field to the value that was provided on create.
-func (u *ResumeUpsert) UpdateUserID() *ResumeUpsert {
-	u.SetExcluded(resume.FieldUserID)
+// UpdateUploaderID sets the "uploader_id" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateUploaderID() *ResumeUpsert {
+	u.SetExcluded(resume.FieldUploaderID)
 	return u
 }
 
@@ -1011,17 +1017,17 @@ func (u *ResumeUpsertOne) ClearDeletedAt() *ResumeUpsertOne {
 	})
 }
 
-// SetUserID sets the "user_id" field.
-func (u *ResumeUpsertOne) SetUserID(v uuid.UUID) *ResumeUpsertOne {
+// SetUploaderID sets the "uploader_id" field.
+func (u *ResumeUpsertOne) SetUploaderID(v uuid.UUID) *ResumeUpsertOne {
 	return u.Update(func(s *ResumeUpsert) {
-		s.SetUserID(v)
+		s.SetUploaderID(v)
 	})
 }
 
-// UpdateUserID sets the "user_id" field to the value that was provided on create.
-func (u *ResumeUpsertOne) UpdateUserID() *ResumeUpsertOne {
+// UpdateUploaderID sets the "uploader_id" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateUploaderID() *ResumeUpsertOne {
 	return u.Update(func(s *ResumeUpsert) {
-		s.UpdateUserID()
+		s.UpdateUploaderID()
 	})
 }
 
@@ -1541,17 +1547,17 @@ func (u *ResumeUpsertBulk) ClearDeletedAt() *ResumeUpsertBulk {
 	})
 }
 
-// SetUserID sets the "user_id" field.
-func (u *ResumeUpsertBulk) SetUserID(v uuid.UUID) *ResumeUpsertBulk {
+// SetUploaderID sets the "uploader_id" field.
+func (u *ResumeUpsertBulk) SetUploaderID(v uuid.UUID) *ResumeUpsertBulk {
 	return u.Update(func(s *ResumeUpsert) {
-		s.SetUserID(v)
+		s.SetUploaderID(v)
 	})
 }
 
-// UpdateUserID sets the "user_id" field to the value that was provided on create.
-func (u *ResumeUpsertBulk) UpdateUserID() *ResumeUpsertBulk {
+// UpdateUploaderID sets the "uploader_id" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateUploaderID() *ResumeUpsertBulk {
 	return u.Update(func(s *ResumeUpsert) {
-		s.UpdateUserID()
+		s.UpdateUploaderID()
 	})
 }
 

@@ -12158,13 +12158,13 @@ func (m *ResumeMutation) ResetDeletedAt() {
 	delete(m.clearedFields, resume.FieldDeletedAt)
 }
 
-// SetUserID sets the "user_id" field.
-func (m *ResumeMutation) SetUserID(u uuid.UUID) {
+// SetUploaderID sets the "uploader_id" field.
+func (m *ResumeMutation) SetUploaderID(u uuid.UUID) {
 	m.user = &u
 }
 
-// UserID returns the value of the "user_id" field in the mutation.
-func (m *ResumeMutation) UserID() (r uuid.UUID, exists bool) {
+// UploaderID returns the value of the "uploader_id" field in the mutation.
+func (m *ResumeMutation) UploaderID() (r uuid.UUID, exists bool) {
 	v := m.user
 	if v == nil {
 		return
@@ -12172,25 +12172,25 @@ func (m *ResumeMutation) UserID() (r uuid.UUID, exists bool) {
 	return *v, true
 }
 
-// OldUserID returns the old "user_id" field's value of the Resume entity.
+// OldUploaderID returns the old "uploader_id" field's value of the Resume entity.
 // If the Resume object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeMutation) OldUserID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *ResumeMutation) OldUploaderID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+		return v, errors.New("OldUploaderID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUserID requires an ID field in the mutation")
+		return v, errors.New("OldUploaderID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+		return v, fmt.Errorf("querying old value for OldUploaderID: %w", err)
 	}
-	return oldValue.UserID, nil
+	return oldValue.UploaderID, nil
 }
 
-// ResetUserID resets all changes to the "user_id" field.
-func (m *ResumeMutation) ResetUserID() {
+// ResetUploaderID resets all changes to the "uploader_id" field.
+func (m *ResumeMutation) ResetUploaderID() {
 	m.user = nil
 }
 
@@ -12862,15 +12862,28 @@ func (m *ResumeMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *ResumeMutation) SetUserID(id uuid.UUID) {
+	m.user = &id
+}
+
 // ClearUser clears the "user" edge to the User entity.
 func (m *ResumeMutation) ClearUser() {
 	m.cleareduser = true
-	m.clearedFields[resume.FieldUserID] = struct{}{}
+	m.clearedFields[resume.FieldUploaderID] = struct{}{}
 }
 
 // UserCleared reports if the "user" edge to the User entity was cleared.
 func (m *ResumeMutation) UserCleared() bool {
 	return m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *ResumeMutation) UserID() (id uuid.UUID, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
 }
 
 // UserIDs returns the "user" edge IDs in the mutation.
@@ -13198,7 +13211,7 @@ func (m *ResumeMutation) Fields() []string {
 		fields = append(fields, resume.FieldDeletedAt)
 	}
 	if m.user != nil {
-		fields = append(fields, resume.FieldUserID)
+		fields = append(fields, resume.FieldUploaderID)
 	}
 	if m.name != nil {
 		fields = append(fields, resume.FieldName)
@@ -13252,8 +13265,8 @@ func (m *ResumeMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case resume.FieldDeletedAt:
 		return m.DeletedAt()
-	case resume.FieldUserID:
-		return m.UserID()
+	case resume.FieldUploaderID:
+		return m.UploaderID()
 	case resume.FieldName:
 		return m.Name()
 	case resume.FieldGender:
@@ -13293,8 +13306,8 @@ func (m *ResumeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 	switch name {
 	case resume.FieldDeletedAt:
 		return m.OldDeletedAt(ctx)
-	case resume.FieldUserID:
-		return m.OldUserID(ctx)
+	case resume.FieldUploaderID:
+		return m.OldUploaderID(ctx)
 	case resume.FieldName:
 		return m.OldName(ctx)
 	case resume.FieldGender:
@@ -13339,12 +13352,12 @@ func (m *ResumeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDeletedAt(v)
 		return nil
-	case resume.FieldUserID:
+	case resume.FieldUploaderID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetUserID(v)
+		m.SetUploaderID(v)
 		return nil
 	case resume.FieldName:
 		v, ok := value.(string)
@@ -13586,8 +13599,8 @@ func (m *ResumeMutation) ResetField(name string) error {
 	case resume.FieldDeletedAt:
 		m.ResetDeletedAt()
 		return nil
-	case resume.FieldUserID:
-		m.ResetUserID()
+	case resume.FieldUploaderID:
+		m.ResetUploaderID()
 		return nil
 	case resume.FieldName:
 		m.ResetName()

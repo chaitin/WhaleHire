@@ -36,10 +36,10 @@ func (Resume) Mixin() []ent.Mixin {
 func (Resume) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.UUID("user_id", uuid.UUID{}),
+		field.UUID("uploader_id", uuid.UUID{}),
 		field.String("name").Optional(),
 		field.String("gender").Optional(),
-		field.Time("birthday").Optional(), // 生t
+		field.Time("birthday").Optional(), // 生日
 		field.String("email").Optional(),
 		field.String("phone").Optional(),
 		field.String("current_city").Optional(),                 //当前城市
@@ -57,7 +57,7 @@ func (Resume) Fields() []ent.Field {
 // Edges of the Resume.
 func (Resume) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).Ref("resumes").Field("user_id").Unique().Required(),
+		edge.From("user", User.Type).Ref("resumes").Field("uploader_id").Unique().Required(),
 		edge.To("educations", ResumeEducation.Type),
 		edge.To("experiences", ResumeExperience.Type),
 		edge.To("skills", ResumeSkill.Type),

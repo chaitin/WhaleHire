@@ -61,9 +61,9 @@ func DeletedAt(v time.Time) predicate.Resume {
 	return predicate.Resume(sql.FieldEQ(FieldDeletedAt, v))
 }
 
-// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
-func UserID(v uuid.UUID) predicate.Resume {
-	return predicate.Resume(sql.FieldEQ(FieldUserID, v))
+// UploaderID applies equality check predicate on the "uploader_id" field. It's identical to UploaderIDEQ.
+func UploaderID(v uuid.UUID) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldUploaderID, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -186,24 +186,24 @@ func DeletedAtNotNil() predicate.Resume {
 	return predicate.Resume(sql.FieldNotNull(FieldDeletedAt))
 }
 
-// UserIDEQ applies the EQ predicate on the "user_id" field.
-func UserIDEQ(v uuid.UUID) predicate.Resume {
-	return predicate.Resume(sql.FieldEQ(FieldUserID, v))
+// UploaderIDEQ applies the EQ predicate on the "uploader_id" field.
+func UploaderIDEQ(v uuid.UUID) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldUploaderID, v))
 }
 
-// UserIDNEQ applies the NEQ predicate on the "user_id" field.
-func UserIDNEQ(v uuid.UUID) predicate.Resume {
-	return predicate.Resume(sql.FieldNEQ(FieldUserID, v))
+// UploaderIDNEQ applies the NEQ predicate on the "uploader_id" field.
+func UploaderIDNEQ(v uuid.UUID) predicate.Resume {
+	return predicate.Resume(sql.FieldNEQ(FieldUploaderID, v))
 }
 
-// UserIDIn applies the In predicate on the "user_id" field.
-func UserIDIn(vs ...uuid.UUID) predicate.Resume {
-	return predicate.Resume(sql.FieldIn(FieldUserID, vs...))
+// UploaderIDIn applies the In predicate on the "uploader_id" field.
+func UploaderIDIn(vs ...uuid.UUID) predicate.Resume {
+	return predicate.Resume(sql.FieldIn(FieldUploaderID, vs...))
 }
 
-// UserIDNotIn applies the NotIn predicate on the "user_id" field.
-func UserIDNotIn(vs ...uuid.UUID) predicate.Resume {
-	return predicate.Resume(sql.FieldNotIn(FieldUserID, vs...))
+// UploaderIDNotIn applies the NotIn predicate on the "uploader_id" field.
+func UploaderIDNotIn(vs ...uuid.UUID) predicate.Resume {
+	return predicate.Resume(sql.FieldNotIn(FieldUploaderID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.

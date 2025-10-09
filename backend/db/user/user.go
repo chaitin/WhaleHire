@@ -73,7 +73,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "resume" package.
 	ResumesInverseTable = "resumes"
 	// ResumesColumn is the table column denoting the resumes relation/edge.
-	ResumesColumn = "user_id"
+	ResumesColumn = "uploader_id"
 	// CreatedPositionsTable is the table that holds the created_positions relation/edge.
 	CreatedPositionsTable = "job_position"
 	// CreatedPositionsInverseTable is the table name for the JobPosition entity.

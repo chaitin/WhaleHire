@@ -391,7 +391,7 @@ var (
 		{Name: "parsed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "uploader_id", Type: field.TypeUUID},
 	}
 	// ResumesTable holds the schema information for the "resumes" table.
 	ResumesTable = &schema.Table{

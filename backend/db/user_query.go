@@ -687,7 +687,7 @@ func (uq *UserQuery) loadResumes(ctx context.Context, query *ResumeQuery, nodes 
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(resume.FieldUserID)
+		query.ctx.AppendFieldOnce(resume.FieldUploaderID)
 	}
 	query.Where(predicate.Resume(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.ResumesColumn), fks...))
@@ -697,10 +697,10 @@ func (uq *UserQuery) loadResumes(ctx context.Context, query *ResumeQuery, nodes 
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.UserID
+		fk := n.UploaderID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "uploader_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

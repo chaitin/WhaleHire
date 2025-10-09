@@ -21,8 +21,8 @@ type Resume struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
-	// UserID holds the value of the "user_id" field.
-	UserID uuid.UUID `json:"user_id,omitempty"`
+	// UploaderID holds the value of the "uploader_id" field.
+	UploaderID uuid.UUID `json:"uploader_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Gender holds the value of the "gender" field.
@@ -143,7 +143,7 @@ func (*Resume) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case resume.FieldDeletedAt, resume.FieldBirthday, resume.FieldParsedAt, resume.FieldCreatedAt, resume.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case resume.FieldID, resume.FieldUserID:
+		case resume.FieldID, resume.FieldUploaderID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -172,11 +172,11 @@ func (r *Resume) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.DeletedAt = value.Time
 			}
-		case resume.FieldUserID:
+		case resume.FieldUploaderID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+				return fmt.Errorf("unexpected type %T for field uploader_id", values[i])
 			} else if value != nil {
-				r.UserID = *value
+				r.UploaderID = *value
 			}
 		case resume.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -331,8 +331,8 @@ func (r *Resume) String() string {
 	builder.WriteString("deleted_at=")
 	builder.WriteString(r.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", r.UserID))
+	builder.WriteString("uploader_id=")
+	builder.WriteString(fmt.Sprintf("%v", r.UploaderID))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(r.Name)
