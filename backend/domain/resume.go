@@ -182,6 +182,7 @@ type UpdateResumeSkill struct {
 type Resume struct {
 	ID               string       `json:"id"`
 	UploaderID       string       `json:"uploader_id"`
+	UploaderName     string       `json:"uploader_name"`
 	Name             string       `json:"name"`
 	Gender           string       `json:"gender"`
 	Birthday         *time.Time   `json:"birthday,omitempty"`
@@ -204,6 +205,10 @@ func (r *Resume) From(e *db.Resume) *Resume {
 	}
 	r.ID = e.ID.String()
 	r.UploaderID = e.UploaderID.String()
+	// 填充上传人姓名
+	if e.Edges.User != nil {
+		r.UploaderName = e.Edges.User.Username
+	}
 	r.Name = e.Name
 	r.Gender = e.Gender
 	if !e.Birthday.IsZero() {

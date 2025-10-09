@@ -155,7 +155,7 @@ func (r *ResumeRepo) Delete(ctx context.Context, id string) error {
 
 // List 获取简历列表
 func (r *ResumeRepo) List(ctx context.Context, req *domain.ListResumeReq) ([]*db.Resume, *db.PageInfo, error) {
-	query := r.db.Resume.Query()
+	query := r.db.Resume.Query().WithUser()
 
 	// 应用过滤条件
 	if req.UploaderID != nil {
@@ -198,7 +198,7 @@ func (r *ResumeRepo) List(ctx context.Context, req *domain.ListResumeReq) ([]*db
 
 // Search 搜索简历
 func (r *ResumeRepo) Search(ctx context.Context, req *domain.SearchResumeReq) ([]*db.Resume, *db.PageInfo, error) {
-	query := r.db.Resume.Query()
+	query := r.db.Resume.Query().WithUser()
 
 	// 用户ID过滤
 	if req.UploaderID != nil {
