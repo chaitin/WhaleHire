@@ -49,18 +49,19 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
   });
 
   useEffect(() => {
-    if (open) {
-      // 打开弹窗时重置所有状态为初始状态
-      setPosition('');
-      setUploadMethod(null);
-      setCurrentStep('upload');
-      setUploadedResume(null);
-      setShowContentTip(false);
-    } else {
+    if (!open) {
       // 关闭弹窗时停止轮询
       stopPolling();
+      // 只有在解析完成后关闭弹窗时才重置状态
+      if (currentStep === 'complete') {
+        setPosition('');
+        setUploadMethod(null);
+        setCurrentStep('upload');
+        setUploadedResume(null);
+        setShowContentTip(false);
+      }
     }
-  }, [open, stopPolling]);
+  }, [open, stopPolling, currentStep]);
 
   const handleFileUpload = () => {
     // 创建文件输入元素
