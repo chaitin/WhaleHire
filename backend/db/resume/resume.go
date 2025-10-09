@@ -18,8 +18,8 @@ const (
 	FieldID = "id"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// FieldUserID holds the string denoting the user_id field in the database.
-	FieldUserID = "user_id"
+	// FieldUploaderID holds the string denoting the uploader_id field in the database.
+	FieldUploaderID = "uploader_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldGender holds the string denoting the gender field in the database.
@@ -68,7 +68,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_id"
+	UserColumn = "uploader_id"
 	// EducationsTable is the table that holds the educations relation/edge.
 	EducationsTable = "resume_educations"
 	// EducationsInverseTable is the table name for the ResumeEducation entity.
@@ -110,7 +110,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldDeletedAt,
-	FieldUserID,
+	FieldUploaderID,
 	FieldName,
 	FieldGender,
 	FieldBirthday,
@@ -172,9 +172,9 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByUserID orders the results by the user_id field.
-func ByUserID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+// ByUploaderID orders the results by the uploader_id field.
+func ByUploaderID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUploaderID, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.

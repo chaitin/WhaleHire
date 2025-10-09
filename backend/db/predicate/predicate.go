@@ -21,6 +21,30 @@ type Attachment func(*sql.Selector)
 // Conversation is the predicate function for conversation builders.
 type Conversation func(*sql.Selector)
 
+// Department is the predicate function for department builders.
+type Department func(*sql.Selector)
+
+// JobEducationRequirement is the predicate function for jobeducationrequirement builders.
+type JobEducationRequirement func(*sql.Selector)
+
+// JobExperienceRequirement is the predicate function for jobexperiencerequirement builders.
+type JobExperienceRequirement func(*sql.Selector)
+
+// JobIndustryRequirement is the predicate function for jobindustryrequirement builders.
+type JobIndustryRequirement func(*sql.Selector)
+
+// JobPosition is the predicate function for jobposition builders.
+type JobPosition func(*sql.Selector)
+
+// JobResponsibility is the predicate function for jobresponsibility builders.
+type JobResponsibility func(*sql.Selector)
+
+// JobSkill is the predicate function for jobskill builders.
+type JobSkill func(*sql.Selector)
+
+// JobSkillMeta is the predicate function for jobskillmeta builders.
+type JobSkillMeta func(*sql.Selector)
+
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 

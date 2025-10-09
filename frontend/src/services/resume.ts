@@ -1,62 +1,15 @@
 // 简历管理相关API服务 - 根据swagger.json定义
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
-import { Resume, ResumeDetail, ResumeStatus } from '@/types/resume';
-
-
-// 简历列表查询参数 - 根据swagger定义
-export interface ResumeListParams {
-  page?: number;
-  size?: number;
-  next_token?: string;
-  position?: string;
-  status?: string;
-  keywords?: string;
-}
-
-// 简历搜索参数
-export interface ResumeSearchParams extends ResumeListParams {
-  keywords: string;
-}
-
-// 简历列表响应 - 根据swagger ListResumeResp定义
-export interface ResumeListResponse {
-  resumes: Resume[];
-  total_count: number;
-  has_next_page: boolean;
-  next_token?: string;
-}
-
-// 简历搜索响应 - 根据swagger SearchResumeResp定义
-export interface ResumeSearchResponse {
-  resumes: Resume[];
-  total_count: number;
-  has_next_page: boolean;
-  next_token?: string;
-}
-
-// 简历更新参数 - 根据swagger UpdateResumeReq定义
-export interface ResumeUpdateParams {
-  id: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  gender?: string;
-  birthday?: string;
-  current_city?: string;
-  highest_education?: string;
-  years_experience?: number;
-}
-
-// 简历解析进度 - 根据swagger ResumeParseProgress定义
-export interface ResumeParseProgress {
-  resume_id: string;
-  status: ResumeStatus;
-  progress: number; // 0-100
-  message: string;
-  error_message?: string;
-  started_at: string;
-  completed_at?: string;
-}
+import { 
+  Resume, 
+  ResumeDetail, 
+  ResumeListParams,
+  ResumeSearchParams,
+  ResumeListResponse,
+  ResumeSearchResponse,
+  ResumeUpdateParams,
+  ResumeParseProgress
+} from '@/types/resume';
 
 // 获取简历列表
 export const getResumeList = async (params: ResumeListParams = {}): Promise<ResumeListResponse> => {
@@ -94,9 +47,8 @@ export const getResumeDetail = async (id: string): Promise<ResumeDetail> => {
 };
 
 // 更新简历
-export const updateResume = async (id: string, params: Omit<ResumeUpdateParams, 'id'>): Promise<Resume> => {
-  const updateData = { ...params, id };
-  return apiPut<Resume>(`/v1/resume/${id}`, updateData);
+export const updateResume = async (id: string, params: ResumeUpdateParams): Promise<Resume> => {
+  return apiPut<Resume>(`/v1/resume/${id}`, params as Record<string, unknown>);
 };
 
 // 删除简历

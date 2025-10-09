@@ -4,4 +4,5 @@ backend/assets-amd64
 /tmp
 .trae
 .qoder
+.vscode
 .env

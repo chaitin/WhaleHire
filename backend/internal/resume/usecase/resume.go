@@ -48,14 +48,14 @@ func (u *ResumeUsecase) Upload(ctx context.Context, req *domain.UploadResumeReq)
 	}
 
 	// 解析用户ID
-	userID, err := uuid.Parse(req.UserID)
+	uploaderID, err := uuid.Parse(req.UploaderID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid user ID: %w", err)
+		return nil, fmt.Errorf("invalid uploader ID: %w", err)
 	}
 
 	// 创建简历记录
 	resume := &db.Resume{
-		UserID:        userID,
+		UploaderID:    uploaderID,
 		ResumeFileURL: fileInfo.FileURL,
 		Status:        string(domain.ResumeStatusPending),
 		CreatedAt:     time.Now(),
@@ -124,8 +124,8 @@ func (u *ResumeUsecase) List(ctx context.Context, req *domain.ListResumeReq) (*d
 		return nil, fmt.Errorf("failed to list resumes: %w", err)
 	}
 
-	// 转换为domain对象
-	var result []*domain.Resume
+	// 转换为domain对象，确保返回空数组而不是nil
+	result := make([]*domain.Resume, 0, len(resumes))
 	for _, resume := range resumes {
 		domainResume := &domain.Resume{}
 		result = append(result, domainResume.From(resume))
@@ -145,7 +145,7 @@ func (u *ResumeUsecase) Search(ctx context.Context, req *domain.SearchResumeReq)
 	}
 
 	// 转换为domain对象
-	var result []*domain.Resume
+	result := make([]*domain.Resume, 0, len(resumes))
 	for _, resume := range resumes {
 		domainResume := &domain.Resume{}
 		result = append(result, domainResume.From(resume))

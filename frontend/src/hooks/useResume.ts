@@ -9,15 +9,18 @@ import {
   uploadResume,
   getResumeProgress,
   reparseResume,
-  searchResumes,
+  searchResumes
+} from '@/services/resume';
+import { 
+  Resume, 
+  ResumeDetail,
   ResumeListParams,
   ResumeUpdateParams,
   ResumeListResponse,
   ResumeSearchParams,
   ResumeSearchResponse,
   ResumeParseProgress
-} from '@/services/resume';
-import { Resume, ResumeDetail } from '@/types/resume';
+} from '@/types/resume';
 
 const shallowEqualParams = (a: ResumeListParams, b: ResumeListParams): boolean => {
   const keys = new Set<string>([...Object.keys(a), ...Object.keys(b)]);
@@ -376,24 +379,90 @@ export const useResumeUpload = () => {
 };
 
 // 简历解析进度 Hook
-export const useResumeProgress = (id?: string) => {
+export const useResumeProgress = (id?: string, options?: {
+  autoPolling?: boolean;
+  pollingInterval?: number;
+  onComplete?: (progress: ResumeParseProgress, resumeDetail?: ResumeDetail) => void;
+  onError?: (error: string) => void;
+}) => {
   const [progress, setProgress] = useState<ResumeParseProgress | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
+  const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { 
+    autoPolling = false, 
+    pollingInterval = 2000,
+    onComplete,
+    onError 
+  } = options || {};
 
-  const fetchProgress = useCallback(async (resumeId: string) => {
-    setLoading(true);
+  const stopPolling = useCallback(() => {
+    if (pollingTimerRef.current) {
+      clearInterval(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+  }, []);
+
+  const fetchProgress = useCallback(async (resumeId: string, silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     setError(null);
     
     try {
       const progressData = await getResumeProgress(resumeId);
       setProgress(progressData);
+
+      // 检查是否完成或失败，停止轮询
+      if (progressData.status === 'completed' || progressData.status === 'failed') {
+        stopPolling();
+        
+        if (progressData.status === 'completed') {
+          // 解析完成后，获取详细数据
+          try {
+            const detailData = await getResumeDetail(resumeId);
+            setResumeDetail(detailData);
+            if (onComplete) {
+              onComplete(progressData, detailData);
+            }
+          } catch (detailError) {
+            console.error('获取简历详情失败:', detailError);
+            if (onComplete) {
+              onComplete(progressData);
+            }
+          }
+        } else if (progressData.status === 'failed' && onError) {
+          onError(progressData.error_message || '解析失败');
+        }
+      }
+
+      return progressData;
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取解析进度失败');
+      const errorMessage = err instanceof Error ? err.message : '获取解析进度失败';
+      setError(errorMessage);
+      if (onError) {
+        onError(errorMessage);
+      }
+      stopPolling();
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [stopPolling, onComplete, onError]);
+
+  const startPolling = useCallback((resumeId: string) => {
+    stopPolling();
+    
+    // 立即获取一次进度
+    fetchProgress(resumeId, true);
+    
+    // 开始轮询
+    pollingTimerRef.current = setInterval(() => {
+      fetchProgress(resumeId, true);
+    }, pollingInterval);
+  }, [fetchProgress, pollingInterval, stopPolling]);
 
   const reparse = useCallback(async (resumeId: string) => {
     setLoading(true);
@@ -401,28 +470,80 @@ export const useResumeProgress = (id?: string) => {
     
     try {
       await reparseResume(resumeId);
-      // 重新获取进度
+      // 重新获取进度并开始轮询
       await fetchProgress(resumeId);
+      if (autoPolling) {
+        startPolling(resumeId);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '重新解析失败');
+      const errorMessage = err instanceof Error ? err.message : '重新解析失败';
+      setError(errorMessage);
+      if (onError) {
+        onError(errorMessage);
+      }
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [fetchProgress]);
+  }, [fetchProgress, autoPolling, startPolling, onError]);
 
+  // 手动开始轮询
+  const startProgressPolling = useCallback((resumeId?: string) => {
+    const targetId = resumeId || id;
+    if (targetId) {
+      startPolling(targetId);
+    }
+  }, [id, startPolling]);
+
+  // 清理轮询
+  useEffect(() => {
+    return () => {
+      stopPolling();
+    };
+  }, [stopPolling]);
+
+  // 初始化和自动轮询
   useEffect(() => {
     if (id) {
       fetchProgress(id);
+      
+      // 如果启用自动轮询且状态需要轮询
+      if (autoPolling) {
+        // 延迟启动轮询，等待初始状态获取完成
+        const timer = setTimeout(() => {
+          if (progress && (progress.status === 'pending' || progress.status === 'processing')) {
+            startPolling(id);
+          }
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, [id, fetchProgress]);
+  }, [id, fetchProgress, autoPolling, startPolling, progress]);
+
+  // 监听进度状态变化，决定是否需要轮询
+  useEffect(() => {
+    if (autoPolling && id && progress) {
+      if (progress.status === 'pending' || progress.status === 'processing') {
+        if (!pollingTimerRef.current) {
+          startPolling(id);
+        }
+      } else {
+        stopPolling();
+      }
+    }
+  }, [progress, autoPolling, id, startPolling, stopPolling]);
 
   return {
     progress,
     loading,
     error,
+    resumeDetail,
     fetchProgress,
     reparse,
+    startProgressPolling,
+    stopPolling,
+    isPolling: !!pollingTimerRef.current,
     refresh: () => id && fetchProgress(id)
   };
 };

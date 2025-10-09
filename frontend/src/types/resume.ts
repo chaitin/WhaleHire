@@ -1,5 +1,7 @@
 // 简历相关类型定义 - 根据swagger.json定义
 
+// ==================== 枚举类型 ====================
+
 // 简历状态枚举
 export enum ResumeStatus {
   PENDING = 'pending',      // 已上传，等待解析
@@ -9,6 +11,9 @@ export enum ResumeStatus {
   ARCHIVED = 'archived'     // 已归档
 }
 
+// ==================== 实体类型 ====================
+
+// 简历基础信息
 export interface Resume {
   id: string;
   name: string;
@@ -23,7 +28,8 @@ export interface Resume {
   resume_file_url?: string;
   parsed_at?: string;
   error_message?: string;
-  user_id: string;
+  uploader_id: string;
+  uploader_name?: string; // 上传人姓名
   created_at: number;
   updated_at: number;
 }
@@ -76,7 +82,7 @@ export interface ResumeLog {
   updated_at: number;
 }
 
-// 简历详细信息
+// 简历详细信息（包含关联数据）
 export interface ResumeDetail extends Resume {
   experiences: ResumeExperience[];
   educations: ResumeEducation[];
@@ -84,14 +90,110 @@ export interface ResumeDetail extends Resume {
   logs: ResumeLog[];
 }
 
+// ==================== API 请求/响应类型 ====================
+
+// 简历列表查询参数 - 根据swagger定义
+export interface ResumeListParams {
+  page?: number;
+  size?: number;
+  next_token?: string;
+  position?: string;
+  status?: string;
+  keywords?: string;
+}
+
+// 简历搜索参数
+export interface ResumeSearchParams extends ResumeListParams {
+  keywords: string;
+}
+
+// 简历列表响应 - 根据swagger ListResumeResp定义
+export interface ResumeListResponse {
+  resumes: Resume[];
+  total_count: number;
+  has_next_page: boolean;
+  next_token?: string;
+}
+
+// 简历搜索响应 - 根据swagger SearchResumeResp定义
+export interface ResumeSearchResponse {
+  resumes: Resume[];
+  total_count: number;
+  has_next_page: boolean;
+  next_token?: string;
+}
+
+// 简历更新参数 - 根据swagger UpdateResumeReq定义
+export interface ResumeUpdateParams {
+  name?: string;
+  email?: string;
+  phone?: string;
+  gender?: string;
+  birthday?: string;
+  current_city?: string;
+  highest_education?: string;
+  years_experience?: number;
+  experiences?: UpdateResumeExperience[];
+  educations?: UpdateResumeEducation[];
+  skills?: UpdateResumeSkill[];
+}
+
+// 更新工作经历参数
+export interface UpdateResumeExperience {
+  id?: string; // 更新时必填
+  action: 'create' | 'update' | 'delete'; // 操作类型
+  company?: string;
+  position?: string;
+  title?: string;
+  start_date?: string;
+  end_date?: string;
+  description?: string;
+}
+
+// 更新教育背景参数
+export interface UpdateResumeEducation {
+  id?: string; // 更新时必填
+  action: 'create' | 'update' | 'delete'; // 操作类型
+  school?: string;
+  major?: string;
+  degree?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+// 更新技能参数
+export interface UpdateResumeSkill {
+  id?: string; // 更新时必填
+  action: 'create' | 'update' | 'delete'; // 操作类型
+  skill_name?: string;
+  level?: string;
+  description?: string;
+}
+
+// 简历解析进度 - 根据swagger ResumeParseProgress定义
+export interface ResumeParseProgress {
+  resume_id: string;
+  status: ResumeStatus;
+  progress: number; // 0-100
+  message: string;
+  error_message?: string;
+  started_at: string;
+  completed_at?: string;
+}
+
+// ==================== 业务逻辑类型 ====================
+
+// 简历状态筛选类型
 export type ResumeStatusFilter = 'all' | ResumeStatus;
 
+// 简历筛选条件
 export interface ResumeFilters {
   position?: string;
   status: ResumeStatusFilter;
   keywords: string;
 }
 
+// 分页信息
 export interface PaginationInfo {
   current: number;
   total: number;

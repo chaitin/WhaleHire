@@ -56,16 +56,16 @@ func (ru *ResumeUpdate) ClearDeletedAt() *ResumeUpdate {
 	return ru
 }
 
-// SetUserID sets the "user_id" field.
-func (ru *ResumeUpdate) SetUserID(u uuid.UUID) *ResumeUpdate {
-	ru.mutation.SetUserID(u)
+// SetUploaderID sets the "uploader_id" field.
+func (ru *ResumeUpdate) SetUploaderID(u uuid.UUID) *ResumeUpdate {
+	ru.mutation.SetUploaderID(u)
 	return ru
 }
 
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (ru *ResumeUpdate) SetNillableUserID(u *uuid.UUID) *ResumeUpdate {
+// SetNillableUploaderID sets the "uploader_id" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableUploaderID(u *uuid.UUID) *ResumeUpdate {
 	if u != nil {
-		ru.SetUserID(*u)
+		ru.SetUploaderID(*u)
 	}
 	return ru
 }
@@ -328,6 +328,12 @@ func (ru *ResumeUpdate) SetNillableCreatedAt(t *time.Time) *ResumeUpdate {
 // SetUpdatedAt sets the "updated_at" field.
 func (ru *ResumeUpdate) SetUpdatedAt(t time.Time) *ResumeUpdate {
 	ru.mutation.SetUpdatedAt(t)
+	return ru
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (ru *ResumeUpdate) SetUserID(id uuid.UUID) *ResumeUpdate {
+	ru.mutation.SetUserID(id)
 	return ru
 }
 
@@ -980,16 +986,16 @@ func (ruo *ResumeUpdateOne) ClearDeletedAt() *ResumeUpdateOne {
 	return ruo
 }
 
-// SetUserID sets the "user_id" field.
-func (ruo *ResumeUpdateOne) SetUserID(u uuid.UUID) *ResumeUpdateOne {
-	ruo.mutation.SetUserID(u)
+// SetUploaderID sets the "uploader_id" field.
+func (ruo *ResumeUpdateOne) SetUploaderID(u uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.SetUploaderID(u)
 	return ruo
 }
 
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (ruo *ResumeUpdateOne) SetNillableUserID(u *uuid.UUID) *ResumeUpdateOne {
+// SetNillableUploaderID sets the "uploader_id" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableUploaderID(u *uuid.UUID) *ResumeUpdateOne {
 	if u != nil {
-		ruo.SetUserID(*u)
+		ruo.SetUploaderID(*u)
 	}
 	return ruo
 }
@@ -1252,6 +1258,12 @@ func (ruo *ResumeUpdateOne) SetNillableCreatedAt(t *time.Time) *ResumeUpdateOne 
 // SetUpdatedAt sets the "updated_at" field.
 func (ruo *ResumeUpdateOne) SetUpdatedAt(t time.Time) *ResumeUpdateOne {
 	ruo.mutation.SetUpdatedAt(t)
+	return ruo
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (ruo *ResumeUpdateOne) SetUserID(id uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.SetUserID(id)
 	return ruo
 }
 

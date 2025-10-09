@@ -137,6 +137,214 @@ var (
 			},
 		},
 	}
+	// DepartmentColumns holds the columns for the "department" table.
+	DepartmentColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "parent_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// DepartmentTable holds the schema information for the "department" table.
+	DepartmentTable = &schema.Table{
+		Name:       "department",
+		Columns:    DepartmentColumns,
+		PrimaryKey: []*schema.Column{DepartmentColumns[0]},
+	}
+	// JobEducationRequirementColumns holds the columns for the "job_education_requirement" table.
+	JobEducationRequirementColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "min_degree", Type: field.TypeString, Size: 50},
+		{Name: "weight", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_id", Type: field.TypeUUID},
+	}
+	// JobEducationRequirementTable holds the schema information for the "job_education_requirement" table.
+	JobEducationRequirementTable = &schema.Table{
+		Name:       "job_education_requirement",
+		Columns:    JobEducationRequirementColumns,
+		PrimaryKey: []*schema.Column{JobEducationRequirementColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "job_education_requirement_job_position_education_requirements",
+				Columns:    []*schema.Column{JobEducationRequirementColumns[6]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// JobExperienceRequirementColumns holds the columns for the "job_experience_requirement" table.
+	JobExperienceRequirementColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "min_years", Type: field.TypeInt, Default: 0},
+		{Name: "ideal_years", Type: field.TypeInt, Default: 0},
+		{Name: "weight", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_id", Type: field.TypeUUID},
+	}
+	// JobExperienceRequirementTable holds the schema information for the "job_experience_requirement" table.
+	JobExperienceRequirementTable = &schema.Table{
+		Name:       "job_experience_requirement",
+		Columns:    JobExperienceRequirementColumns,
+		PrimaryKey: []*schema.Column{JobExperienceRequirementColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "job_experience_requirement_job_position_experience_requirements",
+				Columns:    []*schema.Column{JobExperienceRequirementColumns[7]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// JobIndustryRequirementColumns holds the columns for the "job_industry_requirement" table.
+	JobIndustryRequirementColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "industry", Type: field.TypeString, Size: 100},
+		{Name: "company_name", Type: field.TypeString, Nullable: true, Size: 200},
+		{Name: "weight", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_id", Type: field.TypeUUID},
+	}
+	// JobIndustryRequirementTable holds the schema information for the "job_industry_requirement" table.
+	JobIndustryRequirementTable = &schema.Table{
+		Name:       "job_industry_requirement",
+		Columns:    JobIndustryRequirementColumns,
+		PrimaryKey: []*schema.Column{JobIndustryRequirementColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "job_industry_requirement_job_position_industry_requirements",
+				Columns:    []*schema.Column{JobIndustryRequirementColumns[7]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// JobPositionColumns holds the columns for the "job_position" table.
+	JobPositionColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "location", Type: field.TypeString, Nullable: true, Size: 200},
+		{Name: "salary_min", Type: field.TypeFloat64, Nullable: true},
+		{Name: "salary_max", Type: field.TypeFloat64, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "department_id", Type: field.TypeUUID},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+	}
+	// JobPositionTable holds the schema information for the "job_position" table.
+	JobPositionTable = &schema.Table{
+		Name:       "job_position",
+		Columns:    JobPositionColumns,
+		PrimaryKey: []*schema.Column{JobPositionColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "job_position_department_positions",
+				Columns:    []*schema.Column{JobPositionColumns[10]},
+				RefColumns: []*schema.Column{DepartmentColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "job_position_users_created_positions",
+				Columns:    []*schema.Column{JobPositionColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// JobResponsibilityColumns holds the columns for the "job_responsibility" table.
+	JobResponsibilityColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "responsibility", Type: field.TypeString},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_id", Type: field.TypeUUID},
+	}
+	// JobResponsibilityTable holds the schema information for the "job_responsibility" table.
+	JobResponsibilityTable = &schema.Table{
+		Name:       "job_responsibility",
+		Columns:    JobResponsibilityColumns,
+		PrimaryKey: []*schema.Column{JobResponsibilityColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "job_responsibility_job_position_responsibilities",
+				Columns:    []*schema.Column{JobResponsibilityColumns[6]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// JobSkillColumns holds the columns for the "job_skill" table.
+	JobSkillColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"required", "bonus"}},
+		{Name: "weight", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_id", Type: field.TypeUUID},
+		{Name: "skill_id", Type: field.TypeUUID},
+	}
+	// JobSkillTable holds the schema information for the "job_skill" table.
+	JobSkillTable = &schema.Table{
+		Name:       "job_skill",
+		Columns:    JobSkillColumns,
+		PrimaryKey: []*schema.Column{JobSkillColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "job_skill_job_position_skills",
+				Columns:    []*schema.Column{JobSkillColumns[6]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "job_skill_job_skillmeta_job_links",
+				Columns:    []*schema.Column{JobSkillColumns[7]},
+				RefColumns: []*schema.Column{JobSkillmetaColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "jobskill_job_id_skill_id_type",
+				Unique:  true,
+				Columns: []*schema.Column{JobSkillColumns[6], JobSkillColumns[7], JobSkillColumns[2]},
+			},
+		},
+	}
+	// JobSkillmetaColumns holds the columns for the "job_skillmeta" table.
+	JobSkillmetaColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Unique: true, Size: 100},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// JobSkillmetaTable holds the schema information for the "job_skillmeta" table.
+	JobSkillmetaTable = &schema.Table{
+		Name:       "job_skillmeta",
+		Columns:    JobSkillmetaColumns,
+		PrimaryKey: []*schema.Column{JobSkillmetaColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "jobskillmeta_name",
+				Unique:  true,
+				Columns: []*schema.Column{JobSkillmetaColumns[2]},
+			},
+		},
+	}
 	// MessagesColumns holds the columns for the "messages" table.
 	MessagesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -183,7 +391,7 @@ var (
 		{Name: "parsed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "uploader_id", Type: field.TypeUUID},
 	}
 	// ResumesTable holds the schema information for the "resumes" table.
 	ResumesTable = &schema.Table{
@@ -449,6 +657,14 @@ var (
 		AdminRolesTable,
 		AttachmentsTable,
 		ConversationsTable,
+		DepartmentTable,
+		JobEducationRequirementTable,
+		JobExperienceRequirementTable,
+		JobIndustryRequirementTable,
+		JobPositionTable,
+		JobResponsibilityTable,
+		JobSkillTable,
+		JobSkillmetaTable,
 		MessagesTable,
 		ResumesTable,
 		ResumeDocumentParsesTable,
@@ -484,6 +700,38 @@ func init() {
 	ConversationsTable.ForeignKeys[0].RefTable = UsersTable
 	ConversationsTable.Annotation = &entsql.Annotation{
 		Table: "conversations",
+	}
+	DepartmentTable.Annotation = &entsql.Annotation{
+		Table: "department",
+	}
+	JobEducationRequirementTable.ForeignKeys[0].RefTable = JobPositionTable
+	JobEducationRequirementTable.Annotation = &entsql.Annotation{
+		Table: "job_education_requirement",
+	}
+	JobExperienceRequirementTable.ForeignKeys[0].RefTable = JobPositionTable
+	JobExperienceRequirementTable.Annotation = &entsql.Annotation{
+		Table: "job_experience_requirement",
+	}
+	JobIndustryRequirementTable.ForeignKeys[0].RefTable = JobPositionTable
+	JobIndustryRequirementTable.Annotation = &entsql.Annotation{
+		Table: "job_industry_requirement",
+	}
+	JobPositionTable.ForeignKeys[0].RefTable = DepartmentTable
+	JobPositionTable.ForeignKeys[1].RefTable = UsersTable
+	JobPositionTable.Annotation = &entsql.Annotation{
+		Table: "job_position",
+	}
+	JobResponsibilityTable.ForeignKeys[0].RefTable = JobPositionTable
+	JobResponsibilityTable.Annotation = &entsql.Annotation{
+		Table: "job_responsibility",
+	}
+	JobSkillTable.ForeignKeys[0].RefTable = JobPositionTable
+	JobSkillTable.ForeignKeys[1].RefTable = JobSkillmetaTable
+	JobSkillTable.Annotation = &entsql.Annotation{
+		Table: "job_skill",
+	}
+	JobSkillmetaTable.Annotation = &entsql.Annotation{
+		Table: "job_skillmeta",
 	}
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MessagesTable.Annotation = &entsql.Annotation{

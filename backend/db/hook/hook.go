@@ -69,6 +69,102 @@ func (f ConversationFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ConversationMutation", m)
 }
 
+// The DepartmentFunc type is an adapter to allow the use of ordinary
+// function as Department mutator.
+type DepartmentFunc func(context.Context, *db.DepartmentMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DepartmentFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.DepartmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.DepartmentMutation", m)
+}
+
+// The JobEducationRequirementFunc type is an adapter to allow the use of ordinary
+// function as JobEducationRequirement mutator.
+type JobEducationRequirementFunc func(context.Context, *db.JobEducationRequirementMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JobEducationRequirementFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.JobEducationRequirementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.JobEducationRequirementMutation", m)
+}
+
+// The JobExperienceRequirementFunc type is an adapter to allow the use of ordinary
+// function as JobExperienceRequirement mutator.
+type JobExperienceRequirementFunc func(context.Context, *db.JobExperienceRequirementMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JobExperienceRequirementFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.JobExperienceRequirementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.JobExperienceRequirementMutation", m)
+}
+
+// The JobIndustryRequirementFunc type is an adapter to allow the use of ordinary
+// function as JobIndustryRequirement mutator.
+type JobIndustryRequirementFunc func(context.Context, *db.JobIndustryRequirementMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JobIndustryRequirementFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.JobIndustryRequirementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.JobIndustryRequirementMutation", m)
+}
+
+// The JobPositionFunc type is an adapter to allow the use of ordinary
+// function as JobPosition mutator.
+type JobPositionFunc func(context.Context, *db.JobPositionMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JobPositionFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.JobPositionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.JobPositionMutation", m)
+}
+
+// The JobResponsibilityFunc type is an adapter to allow the use of ordinary
+// function as JobResponsibility mutator.
+type JobResponsibilityFunc func(context.Context, *db.JobResponsibilityMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JobResponsibilityFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.JobResponsibilityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.JobResponsibilityMutation", m)
+}
+
+// The JobSkillFunc type is an adapter to allow the use of ordinary
+// function as JobSkill mutator.
+type JobSkillFunc func(context.Context, *db.JobSkillMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JobSkillFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.JobSkillMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.JobSkillMutation", m)
+}
+
+// The JobSkillMetaFunc type is an adapter to allow the use of ordinary
+// function as JobSkillMeta mutator.
+type JobSkillMetaFunc func(context.Context, *db.JobSkillMetaMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JobSkillMetaFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.JobSkillMetaMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.JobSkillMetaMutation", m)
+}
+
 // The MessageFunc type is an adapter to allow the use of ordinary
 // function as Message mutator.
 type MessageFunc func(context.Context, *db.MessageMutation) (db.Value, error)

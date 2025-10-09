@@ -21,6 +21,14 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/adminrole"
 	"github.com/chaitin/WhaleHire/backend/db/attachment"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/department"
+	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobexperiencerequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobindustryrequirement"
+	"github.com/chaitin/WhaleHire/backend/db/jobposition"
+	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
+	"github.com/chaitin/WhaleHire/backend/db/jobskill"
+	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/db/message"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
@@ -52,6 +60,22 @@ type Client struct {
 	Attachment *AttachmentClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
+	// Department is the client for interacting with the Department builders.
+	Department *DepartmentClient
+	// JobEducationRequirement is the client for interacting with the JobEducationRequirement builders.
+	JobEducationRequirement *JobEducationRequirementClient
+	// JobExperienceRequirement is the client for interacting with the JobExperienceRequirement builders.
+	JobExperienceRequirement *JobExperienceRequirementClient
+	// JobIndustryRequirement is the client for interacting with the JobIndustryRequirement builders.
+	JobIndustryRequirement *JobIndustryRequirementClient
+	// JobPosition is the client for interacting with the JobPosition builders.
+	JobPosition *JobPositionClient
+	// JobResponsibility is the client for interacting with the JobResponsibility builders.
+	JobResponsibility *JobResponsibilityClient
+	// JobSkill is the client for interacting with the JobSkill builders.
+	JobSkill *JobSkillClient
+	// JobSkillMeta is the client for interacting with the JobSkillMeta builders.
+	JobSkillMeta *JobSkillMetaClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Resume is the client for interacting with the Resume builders.
@@ -92,6 +116,14 @@ func (c *Client) init() {
 	c.AdminRole = NewAdminRoleClient(c.config)
 	c.Attachment = NewAttachmentClient(c.config)
 	c.Conversation = NewConversationClient(c.config)
+	c.Department = NewDepartmentClient(c.config)
+	c.JobEducationRequirement = NewJobEducationRequirementClient(c.config)
+	c.JobExperienceRequirement = NewJobExperienceRequirementClient(c.config)
+	c.JobIndustryRequirement = NewJobIndustryRequirementClient(c.config)
+	c.JobPosition = NewJobPositionClient(c.config)
+	c.JobResponsibility = NewJobResponsibilityClient(c.config)
+	c.JobSkill = NewJobSkillClient(c.config)
+	c.JobSkillMeta = NewJobSkillMetaClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Resume = NewResumeClient(c.config)
 	c.ResumeDocumentParse = NewResumeDocumentParseClient(c.config)
@@ -194,25 +226,33 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                 ctx,
-		config:              cfg,
-		Admin:               NewAdminClient(cfg),
-		AdminLoginHistory:   NewAdminLoginHistoryClient(cfg),
-		AdminRole:           NewAdminRoleClient(cfg),
-		Attachment:          NewAttachmentClient(cfg),
-		Conversation:        NewConversationClient(cfg),
-		Message:             NewMessageClient(cfg),
-		Resume:              NewResumeClient(cfg),
-		ResumeDocumentParse: NewResumeDocumentParseClient(cfg),
-		ResumeEducation:     NewResumeEducationClient(cfg),
-		ResumeExperience:    NewResumeExperienceClient(cfg),
-		ResumeLog:           NewResumeLogClient(cfg),
-		ResumeSkill:         NewResumeSkillClient(cfg),
-		Role:                NewRoleClient(cfg),
-		Setting:             NewSettingClient(cfg),
-		User:                NewUserClient(cfg),
-		UserIdentity:        NewUserIdentityClient(cfg),
-		UserLoginHistory:    NewUserLoginHistoryClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		Admin:                    NewAdminClient(cfg),
+		AdminLoginHistory:        NewAdminLoginHistoryClient(cfg),
+		AdminRole:                NewAdminRoleClient(cfg),
+		Attachment:               NewAttachmentClient(cfg),
+		Conversation:             NewConversationClient(cfg),
+		Department:               NewDepartmentClient(cfg),
+		JobEducationRequirement:  NewJobEducationRequirementClient(cfg),
+		JobExperienceRequirement: NewJobExperienceRequirementClient(cfg),
+		JobIndustryRequirement:   NewJobIndustryRequirementClient(cfg),
+		JobPosition:              NewJobPositionClient(cfg),
+		JobResponsibility:        NewJobResponsibilityClient(cfg),
+		JobSkill:                 NewJobSkillClient(cfg),
+		JobSkillMeta:             NewJobSkillMetaClient(cfg),
+		Message:                  NewMessageClient(cfg),
+		Resume:                   NewResumeClient(cfg),
+		ResumeDocumentParse:      NewResumeDocumentParseClient(cfg),
+		ResumeEducation:          NewResumeEducationClient(cfg),
+		ResumeExperience:         NewResumeExperienceClient(cfg),
+		ResumeLog:                NewResumeLogClient(cfg),
+		ResumeSkill:              NewResumeSkillClient(cfg),
+		Role:                     NewRoleClient(cfg),
+		Setting:                  NewSettingClient(cfg),
+		User:                     NewUserClient(cfg),
+		UserIdentity:             NewUserIdentityClient(cfg),
+		UserLoginHistory:         NewUserLoginHistoryClient(cfg),
 	}, nil
 }
 
@@ -230,25 +270,33 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                 ctx,
-		config:              cfg,
-		Admin:               NewAdminClient(cfg),
-		AdminLoginHistory:   NewAdminLoginHistoryClient(cfg),
-		AdminRole:           NewAdminRoleClient(cfg),
-		Attachment:          NewAttachmentClient(cfg),
-		Conversation:        NewConversationClient(cfg),
-		Message:             NewMessageClient(cfg),
-		Resume:              NewResumeClient(cfg),
-		ResumeDocumentParse: NewResumeDocumentParseClient(cfg),
-		ResumeEducation:     NewResumeEducationClient(cfg),
-		ResumeExperience:    NewResumeExperienceClient(cfg),
-		ResumeLog:           NewResumeLogClient(cfg),
-		ResumeSkill:         NewResumeSkillClient(cfg),
-		Role:                NewRoleClient(cfg),
-		Setting:             NewSettingClient(cfg),
-		User:                NewUserClient(cfg),
-		UserIdentity:        NewUserIdentityClient(cfg),
-		UserLoginHistory:    NewUserLoginHistoryClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		Admin:                    NewAdminClient(cfg),
+		AdminLoginHistory:        NewAdminLoginHistoryClient(cfg),
+		AdminRole:                NewAdminRoleClient(cfg),
+		Attachment:               NewAttachmentClient(cfg),
+		Conversation:             NewConversationClient(cfg),
+		Department:               NewDepartmentClient(cfg),
+		JobEducationRequirement:  NewJobEducationRequirementClient(cfg),
+		JobExperienceRequirement: NewJobExperienceRequirementClient(cfg),
+		JobIndustryRequirement:   NewJobIndustryRequirementClient(cfg),
+		JobPosition:              NewJobPositionClient(cfg),
+		JobResponsibility:        NewJobResponsibilityClient(cfg),
+		JobSkill:                 NewJobSkillClient(cfg),
+		JobSkillMeta:             NewJobSkillMetaClient(cfg),
+		Message:                  NewMessageClient(cfg),
+		Resume:                   NewResumeClient(cfg),
+		ResumeDocumentParse:      NewResumeDocumentParseClient(cfg),
+		ResumeEducation:          NewResumeEducationClient(cfg),
+		ResumeExperience:         NewResumeExperienceClient(cfg),
+		ResumeLog:                NewResumeLogClient(cfg),
+		ResumeSkill:              NewResumeSkillClient(cfg),
+		Role:                     NewRoleClient(cfg),
+		Setting:                  NewSettingClient(cfg),
+		User:                     NewUserClient(cfg),
+		UserIdentity:             NewUserIdentityClient(cfg),
+		UserLoginHistory:         NewUserLoginHistoryClient(cfg),
 	}, nil
 }
 
@@ -279,7 +327,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Admin, c.AdminLoginHistory, c.AdminRole, c.Attachment, c.Conversation,
-		c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
+		c.Department, c.JobEducationRequirement, c.JobExperienceRequirement,
+		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
+		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
 		c.ResumeExperience, c.ResumeLog, c.ResumeSkill, c.Role, c.Setting, c.User,
 		c.UserIdentity, c.UserLoginHistory,
 	} {
@@ -292,7 +342,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Admin, c.AdminLoginHistory, c.AdminRole, c.Attachment, c.Conversation,
-		c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
+		c.Department, c.JobEducationRequirement, c.JobExperienceRequirement,
+		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
+		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
 		c.ResumeExperience, c.ResumeLog, c.ResumeSkill, c.Role, c.Setting, c.User,
 		c.UserIdentity, c.UserLoginHistory,
 	} {
@@ -313,6 +365,22 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Attachment.mutate(ctx, m)
 	case *ConversationMutation:
 		return c.Conversation.mutate(ctx, m)
+	case *DepartmentMutation:
+		return c.Department.mutate(ctx, m)
+	case *JobEducationRequirementMutation:
+		return c.JobEducationRequirement.mutate(ctx, m)
+	case *JobExperienceRequirementMutation:
+		return c.JobExperienceRequirement.mutate(ctx, m)
+	case *JobIndustryRequirementMutation:
+		return c.JobIndustryRequirement.mutate(ctx, m)
+	case *JobPositionMutation:
+		return c.JobPosition.mutate(ctx, m)
+	case *JobResponsibilityMutation:
+		return c.JobResponsibility.mutate(ctx, m)
+	case *JobSkillMutation:
+		return c.JobSkill.mutate(ctx, m)
+	case *JobSkillMetaMutation:
+		return c.JobSkillMeta.mutate(ctx, m)
 	case *MessageMutation:
 		return c.Message.mutate(ctx, m)
 	case *ResumeMutation:
@@ -1152,6 +1220,1326 @@ func (c *ConversationClient) mutate(ctx context.Context, m *ConversationMutation
 		return (&ConversationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("db: unknown Conversation mutation op: %q", m.Op())
+	}
+}
+
+// DepartmentClient is a client for the Department schema.
+type DepartmentClient struct {
+	config
+}
+
+// NewDepartmentClient returns a client for the Department from the given config.
+func NewDepartmentClient(c config) *DepartmentClient {
+	return &DepartmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `department.Hooks(f(g(h())))`.
+func (c *DepartmentClient) Use(hooks ...Hook) {
+	c.hooks.Department = append(c.hooks.Department, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `department.Intercept(f(g(h())))`.
+func (c *DepartmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Department = append(c.inters.Department, interceptors...)
+}
+
+// Create returns a builder for creating a Department entity.
+func (c *DepartmentClient) Create() *DepartmentCreate {
+	mutation := newDepartmentMutation(c.config, OpCreate)
+	return &DepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Department entities.
+func (c *DepartmentClient) CreateBulk(builders ...*DepartmentCreate) *DepartmentCreateBulk {
+	return &DepartmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DepartmentClient) MapCreateBulk(slice any, setFunc func(*DepartmentCreate, int)) *DepartmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DepartmentCreateBulk{err: fmt.Errorf("calling to DepartmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DepartmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DepartmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Department.
+func (c *DepartmentClient) Update() *DepartmentUpdate {
+	mutation := newDepartmentMutation(c.config, OpUpdate)
+	return &DepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DepartmentClient) UpdateOne(d *Department) *DepartmentUpdateOne {
+	mutation := newDepartmentMutation(c.config, OpUpdateOne, withDepartment(d))
+	return &DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DepartmentClient) UpdateOneID(id uuid.UUID) *DepartmentUpdateOne {
+	mutation := newDepartmentMutation(c.config, OpUpdateOne, withDepartmentID(id))
+	return &DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Department.
+func (c *DepartmentClient) Delete() *DepartmentDelete {
+	mutation := newDepartmentMutation(c.config, OpDelete)
+	return &DepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DepartmentClient) DeleteOne(d *Department) *DepartmentDeleteOne {
+	return c.DeleteOneID(d.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DepartmentClient) DeleteOneID(id uuid.UUID) *DepartmentDeleteOne {
+	builder := c.Delete().Where(department.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DepartmentDeleteOne{builder}
+}
+
+// Query returns a query builder for Department.
+func (c *DepartmentClient) Query() *DepartmentQuery {
+	return &DepartmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDepartment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Department entity by its id.
+func (c *DepartmentClient) Get(ctx context.Context, id uuid.UUID) (*Department, error) {
+	return c.Query().Where(department.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DepartmentClient) GetX(ctx context.Context, id uuid.UUID) *Department {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPositions queries the positions edge of a Department.
+func (c *DepartmentClient) QueryPositions(d *Department) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := d.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(department.Table, department.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, department.PositionsTable, department.PositionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DepartmentClient) Hooks() []Hook {
+	hooks := c.hooks.Department
+	return append(hooks[:len(hooks):len(hooks)], department.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *DepartmentClient) Interceptors() []Interceptor {
+	inters := c.inters.Department
+	return append(inters[:len(inters):len(inters)], department.Interceptors[:]...)
+}
+
+func (c *DepartmentClient) mutate(ctx context.Context, m *DepartmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown Department mutation op: %q", m.Op())
+	}
+}
+
+// JobEducationRequirementClient is a client for the JobEducationRequirement schema.
+type JobEducationRequirementClient struct {
+	config
+}
+
+// NewJobEducationRequirementClient returns a client for the JobEducationRequirement from the given config.
+func NewJobEducationRequirementClient(c config) *JobEducationRequirementClient {
+	return &JobEducationRequirementClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jobeducationrequirement.Hooks(f(g(h())))`.
+func (c *JobEducationRequirementClient) Use(hooks ...Hook) {
+	c.hooks.JobEducationRequirement = append(c.hooks.JobEducationRequirement, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jobeducationrequirement.Intercept(f(g(h())))`.
+func (c *JobEducationRequirementClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JobEducationRequirement = append(c.inters.JobEducationRequirement, interceptors...)
+}
+
+// Create returns a builder for creating a JobEducationRequirement entity.
+func (c *JobEducationRequirementClient) Create() *JobEducationRequirementCreate {
+	mutation := newJobEducationRequirementMutation(c.config, OpCreate)
+	return &JobEducationRequirementCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JobEducationRequirement entities.
+func (c *JobEducationRequirementClient) CreateBulk(builders ...*JobEducationRequirementCreate) *JobEducationRequirementCreateBulk {
+	return &JobEducationRequirementCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JobEducationRequirementClient) MapCreateBulk(slice any, setFunc func(*JobEducationRequirementCreate, int)) *JobEducationRequirementCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JobEducationRequirementCreateBulk{err: fmt.Errorf("calling to JobEducationRequirementClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JobEducationRequirementCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JobEducationRequirementCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JobEducationRequirement.
+func (c *JobEducationRequirementClient) Update() *JobEducationRequirementUpdate {
+	mutation := newJobEducationRequirementMutation(c.config, OpUpdate)
+	return &JobEducationRequirementUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobEducationRequirementClient) UpdateOne(jer *JobEducationRequirement) *JobEducationRequirementUpdateOne {
+	mutation := newJobEducationRequirementMutation(c.config, OpUpdateOne, withJobEducationRequirement(jer))
+	return &JobEducationRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobEducationRequirementClient) UpdateOneID(id uuid.UUID) *JobEducationRequirementUpdateOne {
+	mutation := newJobEducationRequirementMutation(c.config, OpUpdateOne, withJobEducationRequirementID(id))
+	return &JobEducationRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JobEducationRequirement.
+func (c *JobEducationRequirementClient) Delete() *JobEducationRequirementDelete {
+	mutation := newJobEducationRequirementMutation(c.config, OpDelete)
+	return &JobEducationRequirementDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JobEducationRequirementClient) DeleteOne(jer *JobEducationRequirement) *JobEducationRequirementDeleteOne {
+	return c.DeleteOneID(jer.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JobEducationRequirementClient) DeleteOneID(id uuid.UUID) *JobEducationRequirementDeleteOne {
+	builder := c.Delete().Where(jobeducationrequirement.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobEducationRequirementDeleteOne{builder}
+}
+
+// Query returns a query builder for JobEducationRequirement.
+func (c *JobEducationRequirementClient) Query() *JobEducationRequirementQuery {
+	return &JobEducationRequirementQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJobEducationRequirement},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JobEducationRequirement entity by its id.
+func (c *JobEducationRequirementClient) Get(ctx context.Context, id uuid.UUID) (*JobEducationRequirement, error) {
+	return c.Query().Where(jobeducationrequirement.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobEducationRequirementClient) GetX(ctx context.Context, id uuid.UUID) *JobEducationRequirement {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryJob queries the job edge of a JobEducationRequirement.
+func (c *JobEducationRequirementClient) QueryJob(jer *JobEducationRequirement) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jer.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobeducationrequirement.Table, jobeducationrequirement.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobeducationrequirement.JobTable, jobeducationrequirement.JobColumn),
+		)
+		fromV = sqlgraph.Neighbors(jer.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JobEducationRequirementClient) Hooks() []Hook {
+	hooks := c.hooks.JobEducationRequirement
+	return append(hooks[:len(hooks):len(hooks)], jobeducationrequirement.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *JobEducationRequirementClient) Interceptors() []Interceptor {
+	inters := c.inters.JobEducationRequirement
+	return append(inters[:len(inters):len(inters)], jobeducationrequirement.Interceptors[:]...)
+}
+
+func (c *JobEducationRequirementClient) mutate(ctx context.Context, m *JobEducationRequirementMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JobEducationRequirementCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JobEducationRequirementUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JobEducationRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JobEducationRequirementDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown JobEducationRequirement mutation op: %q", m.Op())
+	}
+}
+
+// JobExperienceRequirementClient is a client for the JobExperienceRequirement schema.
+type JobExperienceRequirementClient struct {
+	config
+}
+
+// NewJobExperienceRequirementClient returns a client for the JobExperienceRequirement from the given config.
+func NewJobExperienceRequirementClient(c config) *JobExperienceRequirementClient {
+	return &JobExperienceRequirementClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jobexperiencerequirement.Hooks(f(g(h())))`.
+func (c *JobExperienceRequirementClient) Use(hooks ...Hook) {
+	c.hooks.JobExperienceRequirement = append(c.hooks.JobExperienceRequirement, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jobexperiencerequirement.Intercept(f(g(h())))`.
+func (c *JobExperienceRequirementClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JobExperienceRequirement = append(c.inters.JobExperienceRequirement, interceptors...)
+}
+
+// Create returns a builder for creating a JobExperienceRequirement entity.
+func (c *JobExperienceRequirementClient) Create() *JobExperienceRequirementCreate {
+	mutation := newJobExperienceRequirementMutation(c.config, OpCreate)
+	return &JobExperienceRequirementCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JobExperienceRequirement entities.
+func (c *JobExperienceRequirementClient) CreateBulk(builders ...*JobExperienceRequirementCreate) *JobExperienceRequirementCreateBulk {
+	return &JobExperienceRequirementCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JobExperienceRequirementClient) MapCreateBulk(slice any, setFunc func(*JobExperienceRequirementCreate, int)) *JobExperienceRequirementCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JobExperienceRequirementCreateBulk{err: fmt.Errorf("calling to JobExperienceRequirementClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JobExperienceRequirementCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JobExperienceRequirementCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JobExperienceRequirement.
+func (c *JobExperienceRequirementClient) Update() *JobExperienceRequirementUpdate {
+	mutation := newJobExperienceRequirementMutation(c.config, OpUpdate)
+	return &JobExperienceRequirementUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobExperienceRequirementClient) UpdateOne(jer *JobExperienceRequirement) *JobExperienceRequirementUpdateOne {
+	mutation := newJobExperienceRequirementMutation(c.config, OpUpdateOne, withJobExperienceRequirement(jer))
+	return &JobExperienceRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobExperienceRequirementClient) UpdateOneID(id uuid.UUID) *JobExperienceRequirementUpdateOne {
+	mutation := newJobExperienceRequirementMutation(c.config, OpUpdateOne, withJobExperienceRequirementID(id))
+	return &JobExperienceRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JobExperienceRequirement.
+func (c *JobExperienceRequirementClient) Delete() *JobExperienceRequirementDelete {
+	mutation := newJobExperienceRequirementMutation(c.config, OpDelete)
+	return &JobExperienceRequirementDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JobExperienceRequirementClient) DeleteOne(jer *JobExperienceRequirement) *JobExperienceRequirementDeleteOne {
+	return c.DeleteOneID(jer.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JobExperienceRequirementClient) DeleteOneID(id uuid.UUID) *JobExperienceRequirementDeleteOne {
+	builder := c.Delete().Where(jobexperiencerequirement.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobExperienceRequirementDeleteOne{builder}
+}
+
+// Query returns a query builder for JobExperienceRequirement.
+func (c *JobExperienceRequirementClient) Query() *JobExperienceRequirementQuery {
+	return &JobExperienceRequirementQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJobExperienceRequirement},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JobExperienceRequirement entity by its id.
+func (c *JobExperienceRequirementClient) Get(ctx context.Context, id uuid.UUID) (*JobExperienceRequirement, error) {
+	return c.Query().Where(jobexperiencerequirement.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobExperienceRequirementClient) GetX(ctx context.Context, id uuid.UUID) *JobExperienceRequirement {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryJob queries the job edge of a JobExperienceRequirement.
+func (c *JobExperienceRequirementClient) QueryJob(jer *JobExperienceRequirement) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jer.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobexperiencerequirement.Table, jobexperiencerequirement.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobexperiencerequirement.JobTable, jobexperiencerequirement.JobColumn),
+		)
+		fromV = sqlgraph.Neighbors(jer.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JobExperienceRequirementClient) Hooks() []Hook {
+	hooks := c.hooks.JobExperienceRequirement
+	return append(hooks[:len(hooks):len(hooks)], jobexperiencerequirement.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *JobExperienceRequirementClient) Interceptors() []Interceptor {
+	inters := c.inters.JobExperienceRequirement
+	return append(inters[:len(inters):len(inters)], jobexperiencerequirement.Interceptors[:]...)
+}
+
+func (c *JobExperienceRequirementClient) mutate(ctx context.Context, m *JobExperienceRequirementMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JobExperienceRequirementCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JobExperienceRequirementUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JobExperienceRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JobExperienceRequirementDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown JobExperienceRequirement mutation op: %q", m.Op())
+	}
+}
+
+// JobIndustryRequirementClient is a client for the JobIndustryRequirement schema.
+type JobIndustryRequirementClient struct {
+	config
+}
+
+// NewJobIndustryRequirementClient returns a client for the JobIndustryRequirement from the given config.
+func NewJobIndustryRequirementClient(c config) *JobIndustryRequirementClient {
+	return &JobIndustryRequirementClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jobindustryrequirement.Hooks(f(g(h())))`.
+func (c *JobIndustryRequirementClient) Use(hooks ...Hook) {
+	c.hooks.JobIndustryRequirement = append(c.hooks.JobIndustryRequirement, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jobindustryrequirement.Intercept(f(g(h())))`.
+func (c *JobIndustryRequirementClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JobIndustryRequirement = append(c.inters.JobIndustryRequirement, interceptors...)
+}
+
+// Create returns a builder for creating a JobIndustryRequirement entity.
+func (c *JobIndustryRequirementClient) Create() *JobIndustryRequirementCreate {
+	mutation := newJobIndustryRequirementMutation(c.config, OpCreate)
+	return &JobIndustryRequirementCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JobIndustryRequirement entities.
+func (c *JobIndustryRequirementClient) CreateBulk(builders ...*JobIndustryRequirementCreate) *JobIndustryRequirementCreateBulk {
+	return &JobIndustryRequirementCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JobIndustryRequirementClient) MapCreateBulk(slice any, setFunc func(*JobIndustryRequirementCreate, int)) *JobIndustryRequirementCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JobIndustryRequirementCreateBulk{err: fmt.Errorf("calling to JobIndustryRequirementClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JobIndustryRequirementCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JobIndustryRequirementCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JobIndustryRequirement.
+func (c *JobIndustryRequirementClient) Update() *JobIndustryRequirementUpdate {
+	mutation := newJobIndustryRequirementMutation(c.config, OpUpdate)
+	return &JobIndustryRequirementUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobIndustryRequirementClient) UpdateOne(jir *JobIndustryRequirement) *JobIndustryRequirementUpdateOne {
+	mutation := newJobIndustryRequirementMutation(c.config, OpUpdateOne, withJobIndustryRequirement(jir))
+	return &JobIndustryRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobIndustryRequirementClient) UpdateOneID(id uuid.UUID) *JobIndustryRequirementUpdateOne {
+	mutation := newJobIndustryRequirementMutation(c.config, OpUpdateOne, withJobIndustryRequirementID(id))
+	return &JobIndustryRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JobIndustryRequirement.
+func (c *JobIndustryRequirementClient) Delete() *JobIndustryRequirementDelete {
+	mutation := newJobIndustryRequirementMutation(c.config, OpDelete)
+	return &JobIndustryRequirementDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JobIndustryRequirementClient) DeleteOne(jir *JobIndustryRequirement) *JobIndustryRequirementDeleteOne {
+	return c.DeleteOneID(jir.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JobIndustryRequirementClient) DeleteOneID(id uuid.UUID) *JobIndustryRequirementDeleteOne {
+	builder := c.Delete().Where(jobindustryrequirement.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobIndustryRequirementDeleteOne{builder}
+}
+
+// Query returns a query builder for JobIndustryRequirement.
+func (c *JobIndustryRequirementClient) Query() *JobIndustryRequirementQuery {
+	return &JobIndustryRequirementQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJobIndustryRequirement},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JobIndustryRequirement entity by its id.
+func (c *JobIndustryRequirementClient) Get(ctx context.Context, id uuid.UUID) (*JobIndustryRequirement, error) {
+	return c.Query().Where(jobindustryrequirement.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobIndustryRequirementClient) GetX(ctx context.Context, id uuid.UUID) *JobIndustryRequirement {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryJob queries the job edge of a JobIndustryRequirement.
+func (c *JobIndustryRequirementClient) QueryJob(jir *JobIndustryRequirement) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jir.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobindustryrequirement.Table, jobindustryrequirement.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobindustryrequirement.JobTable, jobindustryrequirement.JobColumn),
+		)
+		fromV = sqlgraph.Neighbors(jir.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JobIndustryRequirementClient) Hooks() []Hook {
+	hooks := c.hooks.JobIndustryRequirement
+	return append(hooks[:len(hooks):len(hooks)], jobindustryrequirement.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *JobIndustryRequirementClient) Interceptors() []Interceptor {
+	inters := c.inters.JobIndustryRequirement
+	return append(inters[:len(inters):len(inters)], jobindustryrequirement.Interceptors[:]...)
+}
+
+func (c *JobIndustryRequirementClient) mutate(ctx context.Context, m *JobIndustryRequirementMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JobIndustryRequirementCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JobIndustryRequirementUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JobIndustryRequirementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JobIndustryRequirementDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown JobIndustryRequirement mutation op: %q", m.Op())
+	}
+}
+
+// JobPositionClient is a client for the JobPosition schema.
+type JobPositionClient struct {
+	config
+}
+
+// NewJobPositionClient returns a client for the JobPosition from the given config.
+func NewJobPositionClient(c config) *JobPositionClient {
+	return &JobPositionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jobposition.Hooks(f(g(h())))`.
+func (c *JobPositionClient) Use(hooks ...Hook) {
+	c.hooks.JobPosition = append(c.hooks.JobPosition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jobposition.Intercept(f(g(h())))`.
+func (c *JobPositionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JobPosition = append(c.inters.JobPosition, interceptors...)
+}
+
+// Create returns a builder for creating a JobPosition entity.
+func (c *JobPositionClient) Create() *JobPositionCreate {
+	mutation := newJobPositionMutation(c.config, OpCreate)
+	return &JobPositionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JobPosition entities.
+func (c *JobPositionClient) CreateBulk(builders ...*JobPositionCreate) *JobPositionCreateBulk {
+	return &JobPositionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JobPositionClient) MapCreateBulk(slice any, setFunc func(*JobPositionCreate, int)) *JobPositionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JobPositionCreateBulk{err: fmt.Errorf("calling to JobPositionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JobPositionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JobPositionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JobPosition.
+func (c *JobPositionClient) Update() *JobPositionUpdate {
+	mutation := newJobPositionMutation(c.config, OpUpdate)
+	return &JobPositionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobPositionClient) UpdateOne(jp *JobPosition) *JobPositionUpdateOne {
+	mutation := newJobPositionMutation(c.config, OpUpdateOne, withJobPosition(jp))
+	return &JobPositionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobPositionClient) UpdateOneID(id uuid.UUID) *JobPositionUpdateOne {
+	mutation := newJobPositionMutation(c.config, OpUpdateOne, withJobPositionID(id))
+	return &JobPositionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JobPosition.
+func (c *JobPositionClient) Delete() *JobPositionDelete {
+	mutation := newJobPositionMutation(c.config, OpDelete)
+	return &JobPositionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JobPositionClient) DeleteOne(jp *JobPosition) *JobPositionDeleteOne {
+	return c.DeleteOneID(jp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JobPositionClient) DeleteOneID(id uuid.UUID) *JobPositionDeleteOne {
+	builder := c.Delete().Where(jobposition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobPositionDeleteOne{builder}
+}
+
+// Query returns a query builder for JobPosition.
+func (c *JobPositionClient) Query() *JobPositionQuery {
+	return &JobPositionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJobPosition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JobPosition entity by its id.
+func (c *JobPositionClient) Get(ctx context.Context, id uuid.UUID) (*JobPosition, error) {
+	return c.Query().Where(jobposition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobPositionClient) GetX(ctx context.Context, id uuid.UUID) *JobPosition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryDepartment queries the department edge of a JobPosition.
+func (c *JobPositionClient) QueryDepartment(jp *JobPosition) *DepartmentQuery {
+	query := (&DepartmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobposition.DepartmentTable, jobposition.DepartmentColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCreator queries the creator edge of a JobPosition.
+func (c *JobPositionClient) QueryCreator(jp *JobPosition) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobposition.CreatorTable, jobposition.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryResponsibilities queries the responsibilities edge of a JobPosition.
+func (c *JobPositionClient) QueryResponsibilities(jp *JobPosition) *JobResponsibilityQuery {
+	query := (&JobResponsibilityClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(jobresponsibility.Table, jobresponsibility.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ResponsibilitiesTable, jobposition.ResponsibilitiesColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySkills queries the skills edge of a JobPosition.
+func (c *JobPositionClient) QuerySkills(jp *JobPosition) *JobSkillQuery {
+	query := (&JobSkillClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(jobskill.Table, jobskill.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.SkillsTable, jobposition.SkillsColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEducationRequirements queries the education_requirements edge of a JobPosition.
+func (c *JobPositionClient) QueryEducationRequirements(jp *JobPosition) *JobEducationRequirementQuery {
+	query := (&JobEducationRequirementClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(jobeducationrequirement.Table, jobeducationrequirement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.EducationRequirementsTable, jobposition.EducationRequirementsColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryExperienceRequirements queries the experience_requirements edge of a JobPosition.
+func (c *JobPositionClient) QueryExperienceRequirements(jp *JobPosition) *JobExperienceRequirementQuery {
+	query := (&JobExperienceRequirementClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(jobexperiencerequirement.Table, jobexperiencerequirement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ExperienceRequirementsTable, jobposition.ExperienceRequirementsColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryIndustryRequirements queries the industry_requirements edge of a JobPosition.
+func (c *JobPositionClient) QueryIndustryRequirements(jp *JobPosition) *JobIndustryRequirementQuery {
+	query := (&JobIndustryRequirementClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(jobindustryrequirement.Table, jobindustryrequirement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.IndustryRequirementsTable, jobposition.IndustryRequirementsColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JobPositionClient) Hooks() []Hook {
+	hooks := c.hooks.JobPosition
+	return append(hooks[:len(hooks):len(hooks)], jobposition.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *JobPositionClient) Interceptors() []Interceptor {
+	inters := c.inters.JobPosition
+	return append(inters[:len(inters):len(inters)], jobposition.Interceptors[:]...)
+}
+
+func (c *JobPositionClient) mutate(ctx context.Context, m *JobPositionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JobPositionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JobPositionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JobPositionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JobPositionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown JobPosition mutation op: %q", m.Op())
+	}
+}
+
+// JobResponsibilityClient is a client for the JobResponsibility schema.
+type JobResponsibilityClient struct {
+	config
+}
+
+// NewJobResponsibilityClient returns a client for the JobResponsibility from the given config.
+func NewJobResponsibilityClient(c config) *JobResponsibilityClient {
+	return &JobResponsibilityClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jobresponsibility.Hooks(f(g(h())))`.
+func (c *JobResponsibilityClient) Use(hooks ...Hook) {
+	c.hooks.JobResponsibility = append(c.hooks.JobResponsibility, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jobresponsibility.Intercept(f(g(h())))`.
+func (c *JobResponsibilityClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JobResponsibility = append(c.inters.JobResponsibility, interceptors...)
+}
+
+// Create returns a builder for creating a JobResponsibility entity.
+func (c *JobResponsibilityClient) Create() *JobResponsibilityCreate {
+	mutation := newJobResponsibilityMutation(c.config, OpCreate)
+	return &JobResponsibilityCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JobResponsibility entities.
+func (c *JobResponsibilityClient) CreateBulk(builders ...*JobResponsibilityCreate) *JobResponsibilityCreateBulk {
+	return &JobResponsibilityCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JobResponsibilityClient) MapCreateBulk(slice any, setFunc func(*JobResponsibilityCreate, int)) *JobResponsibilityCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JobResponsibilityCreateBulk{err: fmt.Errorf("calling to JobResponsibilityClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JobResponsibilityCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JobResponsibilityCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JobResponsibility.
+func (c *JobResponsibilityClient) Update() *JobResponsibilityUpdate {
+	mutation := newJobResponsibilityMutation(c.config, OpUpdate)
+	return &JobResponsibilityUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobResponsibilityClient) UpdateOne(jr *JobResponsibility) *JobResponsibilityUpdateOne {
+	mutation := newJobResponsibilityMutation(c.config, OpUpdateOne, withJobResponsibility(jr))
+	return &JobResponsibilityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobResponsibilityClient) UpdateOneID(id uuid.UUID) *JobResponsibilityUpdateOne {
+	mutation := newJobResponsibilityMutation(c.config, OpUpdateOne, withJobResponsibilityID(id))
+	return &JobResponsibilityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JobResponsibility.
+func (c *JobResponsibilityClient) Delete() *JobResponsibilityDelete {
+	mutation := newJobResponsibilityMutation(c.config, OpDelete)
+	return &JobResponsibilityDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JobResponsibilityClient) DeleteOne(jr *JobResponsibility) *JobResponsibilityDeleteOne {
+	return c.DeleteOneID(jr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JobResponsibilityClient) DeleteOneID(id uuid.UUID) *JobResponsibilityDeleteOne {
+	builder := c.Delete().Where(jobresponsibility.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobResponsibilityDeleteOne{builder}
+}
+
+// Query returns a query builder for JobResponsibility.
+func (c *JobResponsibilityClient) Query() *JobResponsibilityQuery {
+	return &JobResponsibilityQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJobResponsibility},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JobResponsibility entity by its id.
+func (c *JobResponsibilityClient) Get(ctx context.Context, id uuid.UUID) (*JobResponsibility, error) {
+	return c.Query().Where(jobresponsibility.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobResponsibilityClient) GetX(ctx context.Context, id uuid.UUID) *JobResponsibility {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryJob queries the job edge of a JobResponsibility.
+func (c *JobResponsibilityClient) QueryJob(jr *JobResponsibility) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobresponsibility.Table, jobresponsibility.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobresponsibility.JobTable, jobresponsibility.JobColumn),
+		)
+		fromV = sqlgraph.Neighbors(jr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JobResponsibilityClient) Hooks() []Hook {
+	hooks := c.hooks.JobResponsibility
+	return append(hooks[:len(hooks):len(hooks)], jobresponsibility.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *JobResponsibilityClient) Interceptors() []Interceptor {
+	inters := c.inters.JobResponsibility
+	return append(inters[:len(inters):len(inters)], jobresponsibility.Interceptors[:]...)
+}
+
+func (c *JobResponsibilityClient) mutate(ctx context.Context, m *JobResponsibilityMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JobResponsibilityCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JobResponsibilityUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JobResponsibilityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JobResponsibilityDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown JobResponsibility mutation op: %q", m.Op())
+	}
+}
+
+// JobSkillClient is a client for the JobSkill schema.
+type JobSkillClient struct {
+	config
+}
+
+// NewJobSkillClient returns a client for the JobSkill from the given config.
+func NewJobSkillClient(c config) *JobSkillClient {
+	return &JobSkillClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jobskill.Hooks(f(g(h())))`.
+func (c *JobSkillClient) Use(hooks ...Hook) {
+	c.hooks.JobSkill = append(c.hooks.JobSkill, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jobskill.Intercept(f(g(h())))`.
+func (c *JobSkillClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JobSkill = append(c.inters.JobSkill, interceptors...)
+}
+
+// Create returns a builder for creating a JobSkill entity.
+func (c *JobSkillClient) Create() *JobSkillCreate {
+	mutation := newJobSkillMutation(c.config, OpCreate)
+	return &JobSkillCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JobSkill entities.
+func (c *JobSkillClient) CreateBulk(builders ...*JobSkillCreate) *JobSkillCreateBulk {
+	return &JobSkillCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JobSkillClient) MapCreateBulk(slice any, setFunc func(*JobSkillCreate, int)) *JobSkillCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JobSkillCreateBulk{err: fmt.Errorf("calling to JobSkillClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JobSkillCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JobSkillCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JobSkill.
+func (c *JobSkillClient) Update() *JobSkillUpdate {
+	mutation := newJobSkillMutation(c.config, OpUpdate)
+	return &JobSkillUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobSkillClient) UpdateOne(js *JobSkill) *JobSkillUpdateOne {
+	mutation := newJobSkillMutation(c.config, OpUpdateOne, withJobSkill(js))
+	return &JobSkillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobSkillClient) UpdateOneID(id uuid.UUID) *JobSkillUpdateOne {
+	mutation := newJobSkillMutation(c.config, OpUpdateOne, withJobSkillID(id))
+	return &JobSkillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JobSkill.
+func (c *JobSkillClient) Delete() *JobSkillDelete {
+	mutation := newJobSkillMutation(c.config, OpDelete)
+	return &JobSkillDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JobSkillClient) DeleteOne(js *JobSkill) *JobSkillDeleteOne {
+	return c.DeleteOneID(js.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JobSkillClient) DeleteOneID(id uuid.UUID) *JobSkillDeleteOne {
+	builder := c.Delete().Where(jobskill.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobSkillDeleteOne{builder}
+}
+
+// Query returns a query builder for JobSkill.
+func (c *JobSkillClient) Query() *JobSkillQuery {
+	return &JobSkillQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJobSkill},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JobSkill entity by its id.
+func (c *JobSkillClient) Get(ctx context.Context, id uuid.UUID) (*JobSkill, error) {
+	return c.Query().Where(jobskill.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobSkillClient) GetX(ctx context.Context, id uuid.UUID) *JobSkill {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryJob queries the job edge of a JobSkill.
+func (c *JobSkillClient) QueryJob(js *JobSkill) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := js.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobskill.Table, jobskill.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobskill.JobTable, jobskill.JobColumn),
+		)
+		fromV = sqlgraph.Neighbors(js.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySkill queries the skill edge of a JobSkill.
+func (c *JobSkillClient) QuerySkill(js *JobSkill) *JobSkillMetaQuery {
+	query := (&JobSkillMetaClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := js.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobskill.Table, jobskill.FieldID, id),
+			sqlgraph.To(jobskillmeta.Table, jobskillmeta.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, jobskill.SkillTable, jobskill.SkillColumn),
+		)
+		fromV = sqlgraph.Neighbors(js.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JobSkillClient) Hooks() []Hook {
+	hooks := c.hooks.JobSkill
+	return append(hooks[:len(hooks):len(hooks)], jobskill.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *JobSkillClient) Interceptors() []Interceptor {
+	inters := c.inters.JobSkill
+	return append(inters[:len(inters):len(inters)], jobskill.Interceptors[:]...)
+}
+
+func (c *JobSkillClient) mutate(ctx context.Context, m *JobSkillMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JobSkillCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JobSkillUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JobSkillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JobSkillDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown JobSkill mutation op: %q", m.Op())
+	}
+}
+
+// JobSkillMetaClient is a client for the JobSkillMeta schema.
+type JobSkillMetaClient struct {
+	config
+}
+
+// NewJobSkillMetaClient returns a client for the JobSkillMeta from the given config.
+func NewJobSkillMetaClient(c config) *JobSkillMetaClient {
+	return &JobSkillMetaClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jobskillmeta.Hooks(f(g(h())))`.
+func (c *JobSkillMetaClient) Use(hooks ...Hook) {
+	c.hooks.JobSkillMeta = append(c.hooks.JobSkillMeta, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jobskillmeta.Intercept(f(g(h())))`.
+func (c *JobSkillMetaClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JobSkillMeta = append(c.inters.JobSkillMeta, interceptors...)
+}
+
+// Create returns a builder for creating a JobSkillMeta entity.
+func (c *JobSkillMetaClient) Create() *JobSkillMetaCreate {
+	mutation := newJobSkillMetaMutation(c.config, OpCreate)
+	return &JobSkillMetaCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JobSkillMeta entities.
+func (c *JobSkillMetaClient) CreateBulk(builders ...*JobSkillMetaCreate) *JobSkillMetaCreateBulk {
+	return &JobSkillMetaCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *JobSkillMetaClient) MapCreateBulk(slice any, setFunc func(*JobSkillMetaCreate, int)) *JobSkillMetaCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &JobSkillMetaCreateBulk{err: fmt.Errorf("calling to JobSkillMetaClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*JobSkillMetaCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &JobSkillMetaCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JobSkillMeta.
+func (c *JobSkillMetaClient) Update() *JobSkillMetaUpdate {
+	mutation := newJobSkillMetaMutation(c.config, OpUpdate)
+	return &JobSkillMetaUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JobSkillMetaClient) UpdateOne(jsm *JobSkillMeta) *JobSkillMetaUpdateOne {
+	mutation := newJobSkillMetaMutation(c.config, OpUpdateOne, withJobSkillMeta(jsm))
+	return &JobSkillMetaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JobSkillMetaClient) UpdateOneID(id uuid.UUID) *JobSkillMetaUpdateOne {
+	mutation := newJobSkillMetaMutation(c.config, OpUpdateOne, withJobSkillMetaID(id))
+	return &JobSkillMetaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JobSkillMeta.
+func (c *JobSkillMetaClient) Delete() *JobSkillMetaDelete {
+	mutation := newJobSkillMetaMutation(c.config, OpDelete)
+	return &JobSkillMetaDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JobSkillMetaClient) DeleteOne(jsm *JobSkillMeta) *JobSkillMetaDeleteOne {
+	return c.DeleteOneID(jsm.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JobSkillMetaClient) DeleteOneID(id uuid.UUID) *JobSkillMetaDeleteOne {
+	builder := c.Delete().Where(jobskillmeta.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JobSkillMetaDeleteOne{builder}
+}
+
+// Query returns a query builder for JobSkillMeta.
+func (c *JobSkillMetaClient) Query() *JobSkillMetaQuery {
+	return &JobSkillMetaQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJobSkillMeta},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JobSkillMeta entity by its id.
+func (c *JobSkillMetaClient) Get(ctx context.Context, id uuid.UUID) (*JobSkillMeta, error) {
+	return c.Query().Where(jobskillmeta.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JobSkillMetaClient) GetX(ctx context.Context, id uuid.UUID) *JobSkillMeta {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryJobLinks queries the job_links edge of a JobSkillMeta.
+func (c *JobSkillMetaClient) QueryJobLinks(jsm *JobSkillMeta) *JobSkillQuery {
+	query := (&JobSkillClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jsm.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobskillmeta.Table, jobskillmeta.FieldID, id),
+			sqlgraph.To(jobskill.Table, jobskill.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobskillmeta.JobLinksTable, jobskillmeta.JobLinksColumn),
+		)
+		fromV = sqlgraph.Neighbors(jsm.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *JobSkillMetaClient) Hooks() []Hook {
+	hooks := c.hooks.JobSkillMeta
+	return append(hooks[:len(hooks):len(hooks)], jobskillmeta.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *JobSkillMetaClient) Interceptors() []Interceptor {
+	inters := c.inters.JobSkillMeta
+	return append(inters[:len(inters):len(inters)], jobskillmeta.Interceptors[:]...)
+}
+
+func (c *JobSkillMetaClient) mutate(ctx context.Context, m *JobSkillMetaMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JobSkillMetaCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JobSkillMetaUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JobSkillMetaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JobSkillMetaDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown JobSkillMeta mutation op: %q", m.Op())
 	}
 }
 
@@ -2778,6 +4166,22 @@ func (c *UserClient) QueryResumes(u *User) *ResumeQuery {
 	return query
 }
 
+// QueryCreatedPositions queries the created_positions edge of a User.
+func (c *UserClient) QueryCreatedPositions(u *User) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CreatedPositionsTable, user.CreatedPositionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	hooks := c.hooks.User
@@ -3108,12 +4512,16 @@ func (c *UserLoginHistoryClient) mutate(ctx context.Context, m *UserLoginHistory
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Message, Resume,
+		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Department,
+		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
+		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
 		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill,
 		Role, Setting, User, UserIdentity, UserLoginHistory []ent.Hook
 	}
 	inters struct {
-		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Message, Resume,
+		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Department,
+		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
+		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
 		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill,
 		Role, Setting, User, UserIdentity, UserLoginHistory []ent.Interceptor
 	}

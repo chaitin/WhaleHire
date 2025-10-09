@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/user"
@@ -25,15 +26,16 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                *QueryContext
-	order              []user.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.User
-	withLoginHistories *UserLoginHistoryQuery
-	withIdentities     *UserIdentityQuery
-	withConversations  *ConversationQuery
-	withResumes        *ResumeQuery
-	modifiers          []func(*sql.Selector)
+	ctx                  *QueryContext
+	order                []user.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.User
+	withLoginHistories   *UserLoginHistoryQuery
+	withIdentities       *UserIdentityQuery
+	withConversations    *ConversationQuery
+	withResumes          *ResumeQuery
+	withCreatedPositions *JobPositionQuery
+	modifiers            []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -151,6 +153,28 @@ func (uq *UserQuery) QueryResumes() *ResumeQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(resume.Table, resume.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.ResumesTable, user.ResumesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCreatedPositions chains the current query on the "created_positions" edge.
+func (uq *UserQuery) QueryCreatedPositions() *JobPositionQuery {
+	query := (&JobPositionClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CreatedPositionsTable, user.CreatedPositionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -345,15 +369,16 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:             uq.config,
-		ctx:                uq.ctx.Clone(),
-		order:              append([]user.OrderOption{}, uq.order...),
-		inters:             append([]Interceptor{}, uq.inters...),
-		predicates:         append([]predicate.User{}, uq.predicates...),
-		withLoginHistories: uq.withLoginHistories.Clone(),
-		withIdentities:     uq.withIdentities.Clone(),
-		withConversations:  uq.withConversations.Clone(),
-		withResumes:        uq.withResumes.Clone(),
+		config:               uq.config,
+		ctx:                  uq.ctx.Clone(),
+		order:                append([]user.OrderOption{}, uq.order...),
+		inters:               append([]Interceptor{}, uq.inters...),
+		predicates:           append([]predicate.User{}, uq.predicates...),
+		withLoginHistories:   uq.withLoginHistories.Clone(),
+		withIdentities:       uq.withIdentities.Clone(),
+		withConversations:    uq.withConversations.Clone(),
+		withResumes:          uq.withResumes.Clone(),
+		withCreatedPositions: uq.withCreatedPositions.Clone(),
 		// clone intermediate query.
 		sql:       uq.sql.Clone(),
 		path:      uq.path,
@@ -402,6 +427,17 @@ func (uq *UserQuery) WithResumes(opts ...func(*ResumeQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withResumes = query
+	return uq
+}
+
+// WithCreatedPositions tells the query-builder to eager-load the nodes that are connected to
+// the "created_positions" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCreatedPositions(opts ...func(*JobPositionQuery)) *UserQuery {
+	query := (&JobPositionClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withCreatedPositions = query
 	return uq
 }
 
@@ -483,11 +519,12 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			uq.withLoginHistories != nil,
 			uq.withIdentities != nil,
 			uq.withConversations != nil,
 			uq.withResumes != nil,
+			uq.withCreatedPositions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -536,6 +573,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadResumes(ctx, query, nodes,
 			func(n *User) { n.Edges.Resumes = []*Resume{} },
 			func(n *User, e *Resume) { n.Edges.Resumes = append(n.Edges.Resumes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withCreatedPositions; query != nil {
+		if err := uq.loadCreatedPositions(ctx, query, nodes,
+			func(n *User) { n.Edges.CreatedPositions = []*JobPosition{} },
+			func(n *User, e *JobPosition) { n.Edges.CreatedPositions = append(n.Edges.CreatedPositions, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -643,7 +687,7 @@ func (uq *UserQuery) loadResumes(ctx context.Context, query *ResumeQuery, nodes 
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(resume.FieldUserID)
+		query.ctx.AppendFieldOnce(resume.FieldUploaderID)
 	}
 	query.Where(predicate.Resume(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.ResumesColumn), fks...))
@@ -653,10 +697,43 @@ func (uq *UserQuery) loadResumes(ctx context.Context, query *ResumeQuery, nodes 
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.UserID
+		fk := n.UploaderID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "uploader_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadCreatedPositions(ctx context.Context, query *JobPositionQuery, nodes []*User, init func(*User), assign func(*User, *JobPosition)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(jobposition.FieldCreatedBy)
+	}
+	query.Where(predicate.JobPosition(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.CreatedPositionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CreatedBy
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "created_by" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "created_by" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

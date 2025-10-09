@@ -95,31 +95,31 @@ const (
 
 // UploadResumeReq 上传简历请求
 type UploadResumeReq struct {
-	UserID   string    `json:"user_id" validate:"required"`
-	File     io.Reader `json:"-"`
-	Filename string    `json:"filename" validate:"required"`
-	JobID    *string   `json:"job_id,omitempty"`
-	Source   *string   `json:"source,omitempty"`
+	UploaderID string    `json:"uploader_id" validate:"required"`
+	File       io.Reader `json:"-"`
+	Filename   string    `json:"filename" validate:"required"`
+	JobID      *string   `json:"job_id,omitempty"`
+	Source     *string   `json:"source,omitempty"`
 }
 
 // ListResumeReq 简历列表请求
 type ListResumeReq struct {
 	web.Pagination
 
-	UserID   *string       `json:"user_id,omitempty" query:"user_id"`
-	Status   *ResumeStatus `json:"status,omitempty" query:"status"`
-	Search   *string       `json:"search,omitempty" query:"search"`
-	JobID    *string       `json:"job_id,omitempty" query:"job_id"`
-	Source   *string       `json:"source,omitempty" query:"source"`
-	DateFrom *time.Time    `json:"date_from,omitempty" query:"date_from"`
-	DateTo   *time.Time    `json:"date_to,omitempty" query:"date_to"`
+	UploaderID *string       `json:"uploader_id,omitempty" query:"uploader_id"`
+	Status     *ResumeStatus `json:"status,omitempty" query:"status"`
+	Search     *string       `json:"search,omitempty" query:"search"`
+	JobID      *string       `json:"job_id,omitempty" query:"job_id"`
+	Source     *string       `json:"source,omitempty" query:"source"`
+	DateFrom   *time.Time    `json:"date_from,omitempty" query:"date_from"`
+	DateTo     *time.Time    `json:"date_to,omitempty" query:"date_to"`
 }
 
 // SearchResumeReq 搜索简历请求
 type SearchResumeReq struct {
 	web.Pagination
 
-	UserID          *string  `json:"user_id,omitempty" query:"user_id"`
+	UploaderID      *string  `json:"uploader_id,omitempty" query:"uploader_id"`
 	Keywords        *string  `json:"keywords,omitempty" query:"keywords"`
 	Skills          []string `json:"skills,omitempty" query:"skills"`
 	Education       *string  `json:"education,omitempty" query:"education"`
@@ -181,7 +181,8 @@ type UpdateResumeSkill struct {
 // Resume 简历信息
 type Resume struct {
 	ID               string       `json:"id"`
-	UserID           string       `json:"user_id"`
+	UploaderID       string       `json:"uploader_id"`
+	UploaderName     string       `json:"uploader_name"`
 	Name             string       `json:"name"`
 	Gender           string       `json:"gender"`
 	Birthday         *time.Time   `json:"birthday,omitempty"`
@@ -203,7 +204,11 @@ func (r *Resume) From(e *db.Resume) *Resume {
 		return r
 	}
 	r.ID = e.ID.String()
-	r.UserID = e.UserID.String()
+	r.UploaderID = e.UploaderID.String()
+	// 填充上传人姓名
+	if e.Edges.User != nil {
+		r.UploaderName = e.Edges.User.Username
+	}
 	r.Name = e.Name
 	r.Gender = e.Gender
 	if !e.Birthday.IsZero() {

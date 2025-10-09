@@ -72,9 +72,9 @@ func (h *ResumeHandler) Upload(c *web.Context) error {
 
 	// 构建上传请求
 	req := &domain.UploadResumeReq{
-		UserID:   user.ID,
-		File:     file,
-		Filename: header.Filename,
+		UploaderID: user.ID,
+		File:       file,
+		Filename:   header.Filename,
 	}
 
 	// 调用业务逻辑
@@ -126,20 +126,13 @@ func (h *ResumeHandler) GetByID(c *web.Context) error {
 //	@Success		200		{object}	web.Resp{data=domain.ListResumeResp}
 //	@Router			/api/v1/resume/list [get]
 func (h *ResumeHandler) List(c *web.Context, req domain.ListResumeReq) error {
-	// 获取当前用户
-	user := middleware.GetUser(c)
-	if user == nil {
-		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
-	}
-
-	// 设置用户ID
-	req.UserID = &user.ID
+	// 设置分页参数
 	req.Page = c.Page().Page
 	req.Size = c.Page().Size
 
 	resp, err := h.usecase.List(c.Request().Context(), &req)
 	if err != nil {
-		h.logger.Error("failed to list resumes", "error", err, "user_id", user.ID)
+		h.logger.Error("failed to list resumes", "error", err)
 		return err
 	}
 
@@ -159,21 +152,13 @@ func (h *ResumeHandler) List(c *web.Context, req domain.ListResumeReq) error {
 //	@Success		200			{object}	web.Resp{data=domain.SearchResumeResp}
 //	@Router			/api/v1/resume/search [get]
 func (h *ResumeHandler) Search(c *web.Context, req domain.SearchResumeReq) error {
-	// 获取当前用户
-	user := middleware.GetUser(c)
-	if user == nil {
-		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
-	}
-
-	// 设置用户ID过滤
-	req.UserID = &user.ID
 	// 设置分页参数
 	req.Page = c.Page().Page
 	req.Size = c.Page().Size
 
 	resp, err := h.usecase.Search(c.Request().Context(), &req)
 	if err != nil {
-		h.logger.Error("failed to search resumes", "error", err, "user_id", user.ID, "keywords", req.Keywords)
+		h.logger.Error("failed to search resumes", "error", err, "keywords", req.Keywords)
 		return err
 	}
 

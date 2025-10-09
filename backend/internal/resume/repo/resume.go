@@ -30,7 +30,7 @@ func NewResumeRepo(db *db.Client) domain.ResumeRepo {
 // Create 创建简历
 func (r *ResumeRepo) Create(ctx context.Context, resume *db.Resume) (*db.Resume, error) {
 	creator := r.db.Resume.Create().
-		SetUserID(resume.UserID).
+		SetUploaderID(resume.UploaderID).
 		SetName(resume.Name).
 		SetGender(resume.Gender).
 		SetEmail(resume.Email).
@@ -155,15 +155,15 @@ func (r *ResumeRepo) Delete(ctx context.Context, id string) error {
 
 // List 获取简历列表
 func (r *ResumeRepo) List(ctx context.Context, req *domain.ListResumeReq) ([]*db.Resume, *db.PageInfo, error) {
-	query := r.db.Resume.Query()
+	query := r.db.Resume.Query().WithUser()
 
 	// 应用过滤条件
-	if req.UserID != nil {
-		userID, err := uuid.Parse(*req.UserID)
+	if req.UploaderID != nil {
+		uploaderID, err := uuid.Parse(*req.UploaderID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid user ID: %w", err)
+			return nil, nil, fmt.Errorf("invalid uploader ID: %w", err)
 		}
-		query = query.Where(resume.UserID(userID))
+		query = query.Where(resume.UploaderID(uploaderID))
 	}
 
 	if req.Status != nil {
@@ -198,15 +198,15 @@ func (r *ResumeRepo) List(ctx context.Context, req *domain.ListResumeReq) ([]*db
 
 // Search 搜索简历
 func (r *ResumeRepo) Search(ctx context.Context, req *domain.SearchResumeReq) ([]*db.Resume, *db.PageInfo, error) {
-	query := r.db.Resume.Query()
+	query := r.db.Resume.Query().WithUser()
 
 	// 用户ID过滤
-	if req.UserID != nil {
-		userID, err := uuid.Parse(*req.UserID)
+	if req.UploaderID != nil {
+		uploaderID, err := uuid.Parse(*req.UploaderID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid user ID: %w", err)
+			return nil, nil, fmt.Errorf("invalid uploader ID: %w", err)
 		}
-		query = query.Where(resume.UserID(userID))
+		query = query.Where(resume.UploaderID(uploaderID))
 	}
 
 	// 关键词搜索

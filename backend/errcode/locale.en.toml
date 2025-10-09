@@ -39,3 +39,12 @@ other = "User limit reached"
 
 [err-miss-key]
 other = "file key miss"
+
+[err-department-required]
+other = "Department ID is required"
+
+[err-jobprofile-required]
+other = " Jobprofile ID is required"
+
+[err-jobskillmeta-required]
+other = " JobSkillMeta ID is required"

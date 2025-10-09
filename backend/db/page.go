@@ -81,6 +81,118 @@ func (c *ConversationQuery) Page(ctx context.Context, page, size int) ([]*Conver
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (d *DepartmentQuery) Page(ctx context.Context, page, size int) ([]*Department, *PageInfo, error) {
+	cnt, err := d.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := d.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (jer *JobEducationRequirementQuery) Page(ctx context.Context, page, size int) ([]*JobEducationRequirement, *PageInfo, error) {
+	cnt, err := jer.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := jer.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (jer *JobExperienceRequirementQuery) Page(ctx context.Context, page, size int) ([]*JobExperienceRequirement, *PageInfo, error) {
+	cnt, err := jer.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := jer.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (jir *JobIndustryRequirementQuery) Page(ctx context.Context, page, size int) ([]*JobIndustryRequirement, *PageInfo, error) {
+	cnt, err := jir.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := jir.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (jp *JobPositionQuery) Page(ctx context.Context, page, size int) ([]*JobPosition, *PageInfo, error) {
+	cnt, err := jp.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := jp.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (jr *JobResponsibilityQuery) Page(ctx context.Context, page, size int) ([]*JobResponsibility, *PageInfo, error) {
+	cnt, err := jr.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := jr.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (js *JobSkillQuery) Page(ctx context.Context, page, size int) ([]*JobSkill, *PageInfo, error) {
+	cnt, err := js.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := js.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (jsm *JobSkillMetaQuery) Page(ctx context.Context, page, size int) ([]*JobSkillMeta, *PageInfo, error) {
+	cnt, err := jsm.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := jsm.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (m *MessageQuery) Page(ctx context.Context, page, size int) ([]*Message, *PageInfo, error) {
 	cnt, err := m.Count(ctx)
 	if err != nil {

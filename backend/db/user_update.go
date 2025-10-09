@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
+	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/user"
@@ -251,6 +252,21 @@ func (uu *UserUpdate) AddResumes(r ...*Resume) *UserUpdate {
 	return uu.AddResumeIDs(ids...)
 }
 
+// AddCreatedPositionIDs adds the "created_positions" edge to the JobPosition entity by IDs.
+func (uu *UserUpdate) AddCreatedPositionIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddCreatedPositionIDs(ids...)
+	return uu
+}
+
+// AddCreatedPositions adds the "created_positions" edges to the JobPosition entity.
+func (uu *UserUpdate) AddCreatedPositions(j ...*JobPosition) *UserUpdate {
+	ids := make([]uuid.UUID, len(j))
+	for i := range j {
+		ids[i] = j[i].ID
+	}
+	return uu.AddCreatedPositionIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -338,6 +354,27 @@ func (uu *UserUpdate) RemoveResumes(r ...*Resume) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.RemoveResumeIDs(ids...)
+}
+
+// ClearCreatedPositions clears all "created_positions" edges to the JobPosition entity.
+func (uu *UserUpdate) ClearCreatedPositions() *UserUpdate {
+	uu.mutation.ClearCreatedPositions()
+	return uu
+}
+
+// RemoveCreatedPositionIDs removes the "created_positions" edge to JobPosition entities by IDs.
+func (uu *UserUpdate) RemoveCreatedPositionIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveCreatedPositionIDs(ids...)
+	return uu
+}
+
+// RemoveCreatedPositions removes "created_positions" edges to JobPosition entities.
+func (uu *UserUpdate) RemoveCreatedPositions(j ...*JobPosition) *UserUpdate {
+	ids := make([]uuid.UUID, len(j))
+	for i := range j {
+		ids[i] = j[i].ID
+	}
+	return uu.RemoveCreatedPositionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -604,6 +641,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.CreatedPositionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedPositionsTable,
+			Columns: []string{user.CreatedPositionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedCreatedPositionsIDs(); len(nodes) > 0 && !uu.mutation.CreatedPositionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedPositionsTable,
+			Columns: []string{user.CreatedPositionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CreatedPositionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedPositionsTable,
+			Columns: []string{user.CreatedPositionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(uu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -842,6 +924,21 @@ func (uuo *UserUpdateOne) AddResumes(r ...*Resume) *UserUpdateOne {
 	return uuo.AddResumeIDs(ids...)
 }
 
+// AddCreatedPositionIDs adds the "created_positions" edge to the JobPosition entity by IDs.
+func (uuo *UserUpdateOne) AddCreatedPositionIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddCreatedPositionIDs(ids...)
+	return uuo
+}
+
+// AddCreatedPositions adds the "created_positions" edges to the JobPosition entity.
+func (uuo *UserUpdateOne) AddCreatedPositions(j ...*JobPosition) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(j))
+	for i := range j {
+		ids[i] = j[i].ID
+	}
+	return uuo.AddCreatedPositionIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -929,6 +1026,27 @@ func (uuo *UserUpdateOne) RemoveResumes(r ...*Resume) *UserUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return uuo.RemoveResumeIDs(ids...)
+}
+
+// ClearCreatedPositions clears all "created_positions" edges to the JobPosition entity.
+func (uuo *UserUpdateOne) ClearCreatedPositions() *UserUpdateOne {
+	uuo.mutation.ClearCreatedPositions()
+	return uuo
+}
+
+// RemoveCreatedPositionIDs removes the "created_positions" edge to JobPosition entities by IDs.
+func (uuo *UserUpdateOne) RemoveCreatedPositionIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveCreatedPositionIDs(ids...)
+	return uuo
+}
+
+// RemoveCreatedPositions removes "created_positions" edges to JobPosition entities.
+func (uuo *UserUpdateOne) RemoveCreatedPositions(j ...*JobPosition) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(j))
+	for i := range j {
+		ids[i] = j[i].ID
+	}
+	return uuo.RemoveCreatedPositionIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1218,6 +1336,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resume.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CreatedPositionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedPositionsTable,
+			Columns: []string{user.CreatedPositionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedCreatedPositionsIDs(); len(nodes) > 0 && !uuo.mutation.CreatedPositionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedPositionsTable,
+			Columns: []string{user.CreatedPositionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CreatedPositionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedPositionsTable,
+			Columns: []string{user.CreatedPositionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
