@@ -11,9 +11,12 @@ import {
   Rocket,
   X,
   Crown,
+  UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NavigationItem } from '@/types/navigation';
+// 导入package.json以获取版本号
+import packageJson from '../../../package.json';
 
 const navigationItems: NavigationItem[] = [
   {
@@ -27,6 +30,12 @@ const navigationItems: NavigationItem[] = [
     label: '简历管理',
     icon: FileText,
     path: '/resume-management',
+  },
+  {
+    id: 'job-profile',
+    label: '岗位画像',
+    icon: UserCheck,
+    path: '/job-profile',
   },
   {
     id: 'position-management',
@@ -92,6 +101,12 @@ export function Sidebar({
     return location.pathname === path;
   };
 
+  // 获取版本号：优先从环境变量获取，否则从package.json获取
+  const getVersion = () => {
+    const envVersion = import.meta.env.VITE_APP_VERSION;
+    return envVersion || packageJson.version;
+  };
+
   return (
     <div
       className={cn(
@@ -143,7 +158,8 @@ export function Sidebar({
             <nav className="sidebar-nav px-3">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
-                const isDisabled = item.id !== 'resume-management';
+                const isDisabled =
+                  item.id !== 'resume-management' && item.id !== 'job-profile';
 
                 if (isDisabled) {
                   return (
@@ -221,6 +237,12 @@ export function Sidebar({
             >
               立即升级
             </button>
+            {/* 版本号显示 */}
+            <div className="mt-3 text-center">
+              <span className="text-xs text-gray-500">
+                版本号：{getVersion()}
+              </span>
+            </div>
           </div>
         </div>
       </div>

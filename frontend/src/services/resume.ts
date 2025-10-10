@@ -126,7 +126,7 @@ const processFileUrl = (url: string): string => {
   return `${baseUrl}/${url}`;
 };
 
-// 下载简历文件 - 修改为通过 /api/v1/resume/{id} 接口获取 resume_file_url 进行下载
+// 下载简历文件 - 修改为通过 /v1/resume/{id} 接口获取 resume_file_url 进行下载
 export const downloadResumeFile = async (
   resume: Resume,
   fileName?: string
@@ -134,7 +134,7 @@ export const downloadResumeFile = async (
   try {
     console.log('🔽 开始下载简历:', { resumeId: resume.id, fileName });
 
-    // 首先调用 /api/v1/resume/{id} 接口获取最新的简历详情，确保获取到正确的 resume_file_url
+    // 首先调用 /v1/resume/{id} 接口获取最新的简历详情，确保获取到正确的 resume_file_url
     const resumeDetail = await getResumeDetail(resume.id);
     console.log('🔽 获取到简历详情:', {
       id: resumeDetail.id,
