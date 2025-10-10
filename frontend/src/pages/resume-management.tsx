@@ -27,6 +27,7 @@ export function ResumeManagementPage() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [editingResume, setEditingResume] = useState<Resume | null>(null);
   const [previewingResumeId, setPreviewingResumeId] = useState<string | null>(null);
+  const [currentPreviewIndex, setCurrentPreviewIndex] = useState<number>(0);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasProcessingResumes, setHasProcessingResumes] = useState(false);
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -214,14 +215,59 @@ export function ResumeManagementPage() {
     setCurrentPage(page);
   };
 
+  // 处理每页条数变化
+  const handlePageSizeChange = (pageSize: number) => {
+    setCurrentPage(1); // 重置到第一页
+    const params = {
+      page: 1,
+      size: pageSize,
+      position: queryFilters.position,
+      status: queryFilters.status,
+      keywords: queryFilters.keywords?.trim() || undefined,
+    };
+    fetchResumes(params);
+  };
+
   const handleEdit = (resume: Resume) => {
     setEditingResume(resume);
     setIsEditModalOpen(true);
   };
 
   const handlePreview = (resume: Resume) => {
+    const index = resumes.findIndex(r => r.id === resume.id);
+    setCurrentPreviewIndex(index);
     setPreviewingResumeId(resume.id);
     setIsPreviewModalOpen(true);
+  };
+
+  // 处理简历预览切换
+  const handlePreviewNavigate = (direction: 'prev' | 'next') => {
+    let newIndex = currentPreviewIndex;
+    
+    if (direction === 'prev' && currentPreviewIndex > 0) {
+      newIndex = currentPreviewIndex - 1;
+    } else if (direction === 'next' && currentPreviewIndex < resumes.length - 1) {
+      newIndex = currentPreviewIndex + 1;
+    }
+    
+    if (newIndex !== currentPreviewIndex) {
+      const newResume = resumes[newIndex];
+      setCurrentPreviewIndex(newIndex);
+      setPreviewingResumeId(newResume.id);
+    }
+  };
+
+  // 处理从预览模式进入编辑
+  const handlePreviewEdit = (resumeDetail: any) => {
+    // 关闭预览弹窗
+    setIsPreviewModalOpen(false);
+    
+    // 找到对应的简历基础信息
+    const resume = resumes.find(r => r.id === resumeDetail.id);
+    if (resume) {
+      setEditingResume(resume);
+      setIsEditModalOpen(true);
+    }
   };
 
   const handleSaveEdit = async (updatedResume: Resume) => {
@@ -377,6 +423,7 @@ export function ResumeManagementPage() {
           resumes={resumes}
           pagination={pagination}
           onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
           onEdit={handleEdit}
           onPreview={handlePreview}
           onDelete={handleDelete}
@@ -405,6 +452,12 @@ export function ResumeManagementPage() {
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
         resumeId={previewingResumeId}
+        resumes={resumes}
+        currentResumeIndex={currentPreviewIndex}
+        onNavigate={handlePreviewNavigate}
+        onEdit={handlePreviewEdit}
+        canNavigatePrev={currentPreviewIndex > 0}
+        canNavigateNext={currentPreviewIndex < resumes.length - 1}
       />
     </div>
   );
