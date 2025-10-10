@@ -36,7 +36,6 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </Button>
-
       </div>
 
       <div className="flex items-center gap-4">
@@ -55,20 +54,28 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <div className="header-profile cursor-pointer hover:bg-accent/50 transition-colors">
               <Avatar className="header-avatar">
-                <AvatarImage src={user?.avatar_url || "/placeholder-avatar.jpg"} alt="用户头像" />
+                <AvatarImage
+                  src={user?.avatar_url || '/placeholder-avatar.jpg'}
+                  alt="用户头像"
+                />
                 <AvatarFallback>
                   {user?.username?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="header-profile-info">
-                <p className="header-profile-name">{user?.username || '用户'}</p>
+                <p className="header-profile-name">
+                  {user?.username || '用户'}
+                </p>
                 <p className="header-profile-email">{user?.email || ''}</p>
               </div>
               <ChevronDown className="header-profile-chevron" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-destructive focus:text-destructive"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               退出登录
             </DropdownMenuItem>

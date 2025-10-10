@@ -4,11 +4,11 @@
 
 // 简历状态枚举
 export enum ResumeStatus {
-  PENDING = 'pending',      // 已上传，等待解析
+  PENDING = 'pending', // 已上传，等待解析
   PROCESSING = 'processing', // 正在解析中
-  COMPLETED = 'completed',   // 解析完成
-  FAILED = 'failed',        // 解析失败
-  ARCHIVED = 'archived'     // 已归档
+  COMPLETED = 'completed', // 解析完成
+  FAILED = 'failed', // 解析失败
+  ARCHIVED = 'archived', // 已归档
 }
 
 // ==================== 实体类型 ====================

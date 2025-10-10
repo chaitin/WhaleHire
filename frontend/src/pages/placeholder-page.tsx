@@ -24,9 +24,7 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
           </div>
           <div>
             <h3 className="text-lg font-semibold">功能开发中</h3>
-            <p className="text-muted-foreground">
-              该功能正在开发中，敬请期待
-            </p>
+            <p className="text-muted-foreground">该功能正在开发中，敬请期待</p>
           </div>
         </div>
       </div>

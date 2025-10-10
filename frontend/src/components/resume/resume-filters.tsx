@@ -21,7 +21,10 @@ const statusOptions = [
 
 interface ResumeFiltersProps {
   filters: ResumeFilters;
-  onFiltersChange: (filters: ResumeFilters, options?: { shouldSearch?: boolean }) => void;
+  onFiltersChange: (
+    filters: ResumeFilters,
+    options?: { shouldSearch?: boolean }
+  ) => void;
   onSearch?: () => void;
 }
 
@@ -31,11 +34,17 @@ export function ResumeFiltersComponent({
   onSearch,
 }: ResumeFiltersProps) {
   const handleStatusChange = (value: string) => {
-    onFiltersChange({ ...filters, status: value as ResumeStatusFilter }, { shouldSearch: true });
+    onFiltersChange(
+      { ...filters, status: value as ResumeStatusFilter },
+      { shouldSearch: true }
+    );
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, keywords: e.target.value }, { shouldSearch: false });
+    onFiltersChange(
+      { ...filters, keywords: e.target.value },
+      { shouldSearch: false }
+    );
   };
 
   return (

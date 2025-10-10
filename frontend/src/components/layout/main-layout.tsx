@@ -56,7 +56,6 @@ export function MainLayout() {
             </div>
           </main>
         </div>
-
       </div>
     </ProtectedRoute>
   );

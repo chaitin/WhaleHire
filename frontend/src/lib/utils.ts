@@ -5,7 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date?: string | number | Date, format: 'date' | 'datetime' = 'date'): string {
+export function formatDate(
+  date?: string | number | Date,
+  format: 'date' | 'datetime' = 'date'
+): string {
   if (!date && date !== 0) {
     return '-';
   }

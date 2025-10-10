@@ -26,7 +26,9 @@ export function ResumeManagementPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [editingResume, setEditingResume] = useState<Resume | null>(null);
-  const [previewingResumeId, setPreviewingResumeId] = useState<string | null>(null);
+  const [previewingResumeId, setPreviewingResumeId] = useState<string | null>(
+    null
+  );
   const [currentPreviewIndex, setCurrentPreviewIndex] = useState<number>(0);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasProcessingResumes, setHasProcessingResumes] = useState(false);
@@ -79,14 +81,17 @@ export function ResumeManagementPage() {
   // 基于简历状态变化的智能自动刷新逻辑
   useEffect(() => {
     // 检查是否有处理中的简历
-    const processingResumes = resumes.some(resume => 
-      resume.status === 'pending' || resume.status === 'processing'
+    const processingResumes = resumes.some(
+      (resume) => resume.status === 'pending' || resume.status === 'processing'
     );
 
     // 检测状态变化
-    const hasStatusChanged = previousResumesRef.current.length > 0 && 
+    const hasStatusChanged =
+      previousResumesRef.current.length > 0 &&
       resumes.some((resume) => {
-        const prevResume = previousResumesRef.current.find(prev => prev.id === resume.id);
+        const prevResume = previousResumesRef.current.find(
+          (prev) => prev.id === resume.id
+        );
         return prevResume && prevResume.status !== resume.status;
       });
 
@@ -111,22 +116,28 @@ export function ResumeManagementPage() {
     if (processingResumes && fetchResumesRef.current) {
       console.log('检测到处理中的简历，启动自动刷新监控');
       refreshCountRef.current = 0;
-      
+
       autoRefreshIntervalRef.current = setInterval(() => {
         if (fetchResumesRef.current) {
           refreshCountRef.current += 1;
-          
+
           const params = {
             page: currentPage,
             size: pagination.pageSize,
-            position: queryFilters.position !== 'all' ? queryFilters.position : undefined,
-            status: queryFilters.status !== 'all' ? queryFilters.status : undefined,
+            position:
+              queryFilters.position !== 'all'
+                ? queryFilters.position
+                : undefined,
+            status:
+              queryFilters.status !== 'all' ? queryFilters.status : undefined,
             keywords: queryFilters.keywords?.trim() || undefined,
           };
-          
-          console.log(`自动刷新简历列表 (第${refreshCountRef.current}次)，检查状态变化`);
+
+          console.log(
+            `自动刷新简历列表 (第${refreshCountRef.current}次)，检查状态变化`
+          );
           fetchResumesRef.current(params, { force: true }); // 强制刷新以获取最新状态
-          
+
           // 防止无限刷新，最多刷新60次（12分钟）
           if (refreshCountRef.current >= 60) {
             console.log('达到最大刷新次数，停止自动刷新');
@@ -169,7 +180,7 @@ export function ResumeManagementPage() {
   const handleSearch = async () => {
     setCurrentPage(1);
     const searchKeywords = filters.keywords?.trim();
-    
+
     try {
       if (searchKeywords) {
         // 有搜索关键词时，调用搜索接口
@@ -180,10 +191,10 @@ export function ResumeManagementPage() {
           position: filters.position !== 'all' ? filters.position : undefined,
           status: filters.status !== 'all' ? filters.status : undefined,
         };
-        
+
         // 使用Hook中的搜索方法
         await searchResumeList(searchParams);
-        
+
         // 更新查询条件状态
         setQueryFilters({
           ...filters,
@@ -197,9 +208,9 @@ export function ResumeManagementPage() {
           position: filters.position !== 'all' ? filters.position : undefined,
           status: filters.status !== 'all' ? filters.status : undefined,
         };
-        
+
         await fetchResumes(params);
-        
+
         // 更新查询条件状态
         setQueryFilters({
           ...filters,
@@ -234,7 +245,7 @@ export function ResumeManagementPage() {
   };
 
   const handlePreview = (resume: Resume) => {
-    const index = resumes.findIndex(r => r.id === resume.id);
+    const index = resumes.findIndex((r) => r.id === resume.id);
     setCurrentPreviewIndex(index);
     setPreviewingResumeId(resume.id);
     setIsPreviewModalOpen(true);
@@ -243,13 +254,16 @@ export function ResumeManagementPage() {
   // 处理简历预览切换
   const handlePreviewNavigate = (direction: 'prev' | 'next') => {
     let newIndex = currentPreviewIndex;
-    
+
     if (direction === 'prev' && currentPreviewIndex > 0) {
       newIndex = currentPreviewIndex - 1;
-    } else if (direction === 'next' && currentPreviewIndex < resumes.length - 1) {
+    } else if (
+      direction === 'next' &&
+      currentPreviewIndex < resumes.length - 1
+    ) {
       newIndex = currentPreviewIndex + 1;
     }
-    
+
     if (newIndex !== currentPreviewIndex) {
       const newResume = resumes[newIndex];
       setCurrentPreviewIndex(newIndex);
@@ -258,12 +272,12 @@ export function ResumeManagementPage() {
   };
 
   // 处理从预览模式进入编辑
-  const handlePreviewEdit = (resumeDetail: any) => {
+  const handlePreviewEdit = (resumeId: string) => {
     // 关闭预览弹窗
     setIsPreviewModalOpen(false);
-    
+
     // 找到对应的简历基础信息
-    const resume = resumes.find(r => r.id === resumeDetail.id);
+    const resume = resumes.find((r) => r.id === resumeId);
     if (resume) {
       setEditingResume(resume);
       setIsEditModalOpen(true);
@@ -293,48 +307,54 @@ export function ResumeManagementPage() {
 
   const handleUploadSuccess = (uploadedResume?: Resume) => {
     console.log('简历上传成功，返回的数据:', uploadedResume);
-    
+
     // 显示成功提示
     setSuccessMessage('简历上传成功！正在解析中...');
-    
+
     // 如果有返回的简历数据，立即添加到列表顶部
     if (uploadedResume) {
-      console.log('将新简历添加到列表顶部:', uploadedResume.name, '状态:', uploadedResume.status);
-      
+      console.log(
+        '将新简历添加到列表顶部:',
+        uploadedResume.name,
+        '状态:',
+        uploadedResume.status
+      );
+
       // 使用 addResumeItem 方法将新简历添加到列表
       addResumeItem(uploadedResume);
-      
+
       // 重置到第一页以确保能看到新上传的简历
       setCurrentPage(1);
-      
+
       // 重置筛选条件到默认状态，确保新简历能被显示
       if (queryFilters.status !== 'all') {
-        setQueryFilters(prev => ({ ...prev, status: 'all' }));
-        setFilters(prev => ({ ...prev, status: 'all' }));
+        setQueryFilters((prev) => ({ ...prev, status: 'all' }));
+        setFilters((prev) => ({ ...prev, status: 'all' }));
       }
     } else {
       console.log('未返回简历数据，强制刷新列表');
-      
+
       // 如果没有返回数据，则强制刷新列表
       const params = {
         page: 1, // 重置到第一页
         size: pagination.pageSize,
-        position: queryFilters.position !== 'all' ? queryFilters.position : undefined,
+        position:
+          queryFilters.position !== 'all' ? queryFilters.position : undefined,
         status: undefined, // 重置状态筛选，确保能看到新上传的简历
         keywords: queryFilters.keywords?.trim() || undefined,
       };
-      
+
       // 更新当前页码状态和筛选条件
       setCurrentPage(1);
-      setQueryFilters(prev => ({ ...prev, status: 'all' }));
-      setFilters(prev => ({ ...prev, status: 'all' }));
-      
+      setQueryFilters((prev) => ({ ...prev, status: 'all' }));
+      setFilters((prev) => ({ ...prev, status: 'all' }));
+
       // 强制刷新列表
       fetchResumes(params, { force: true });
     }
-    
+
     console.log('上传成功处理完成，自动刷新机制将监控状态变化');
-    
+
     // 3秒后自动隐藏成功提示
     setTimeout(() => {
       setSuccessMessage(null);
@@ -366,7 +386,12 @@ export function ResumeManagementPage() {
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800 flex items-center justify-between">
             <span>{successMessage}</span>
-            <Button variant="ghost" size="sm" onClick={clearSuccessMessage} className="text-green-600 hover:text-green-700">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSuccessMessage}
+              className="text-green-600 hover:text-green-700"
+            >
               关闭
             </Button>
           </AlertDescription>
@@ -379,7 +404,12 @@ export function ResumeManagementPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>{error}</span>
-            <Button variant="ghost" size="sm" onClick={clearError} className="text-red-600 hover:text-red-700">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearError}
+              className="text-red-600 hover:text-red-700"
+            >
               关闭
             </Button>
           </AlertDescription>
@@ -391,11 +421,19 @@ export function ResumeManagementPage() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">简历管理</h1>
           <div className="flex items-center gap-3">
-            <p className="text-sm text-muted-foreground">管理和查看所有投递的简历</p>
+            <p className="text-sm text-muted-foreground">
+              管理和查看所有投递的简历
+            </p>
             {hasProcessingResumes && (
               <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
                 <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
-                正在解析简历... ({resumes.filter(r => r.status === 'pending' || r.status === 'processing').length}个)
+                正在解析简历... (
+                {
+                  resumes.filter(
+                    (r) => r.status === 'pending' || r.status === 'processing'
+                  ).length
+                }
+                个)
               </div>
             )}
           </div>
@@ -451,9 +489,7 @@ export function ResumeManagementPage() {
       <ResumePreviewModal
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
-        resumeId={previewingResumeId}
-        resumes={resumes}
-        currentResumeIndex={currentPreviewIndex}
+        resumeId={previewingResumeId || ''}
         onNavigate={handlePreviewNavigate}
         onEdit={handlePreviewEdit}
         canNavigatePrev={currentPreviewIndex > 0}

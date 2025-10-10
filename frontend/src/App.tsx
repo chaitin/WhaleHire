@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { MainLayout } from '@/components/layout/main-layout';
 import { DashboardPage } from '@/pages/dashboard';
 import { ResumeManagementPage } from '@/pages/resume-management';
@@ -20,9 +25,15 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
             <Route path="/" element={<MainLayout />}>
-              <Route index element={<Navigate to="/resume-management" replace />} />
+              <Route
+                index
+                element={<Navigate to="/resume-management" replace />}
+              />
               <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="resume-management" element={<ResumeManagementPage />} />
+              <Route
+                path="resume-management"
+                element={<ResumeManagementPage />}
+              />
               <Route
                 path="position-management"
                 element={

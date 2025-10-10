@@ -32,7 +32,12 @@ const statusOptions = [
   { value: 'hired', label: '已录用' },
 ];
 
-export function EditResumeModal({ isOpen, onClose, resume, onSave }: EditResumeModalProps) {
+export function EditResumeModal({
+  isOpen,
+  onClose,
+  resume,
+  onSave,
+}: EditResumeModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -89,19 +94,27 @@ export function EditResumeModal({ isOpen, onClose, resume, onSave }: EditResumeM
           <form className="space-y-6">
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="name"
+                  className="text-sm font-medium text-gray-700"
+                >
                   姓名
                 </Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="h-10"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="position" className="text-sm font-medium text-gray-400">
+                <Label
+                  htmlFor="position"
+                  className="text-sm font-medium text-gray-400"
+                >
                   应聘岗位
                 </Label>
                 <Input
@@ -115,26 +128,30 @@ export function EditResumeModal({ isOpen, onClose, resume, onSave }: EditResumeM
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="phone"
+                  className="text-sm font-medium text-gray-700"
+                >
                   电话
                 </Label>
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                   className="h-10"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status" className="text-sm font-medium text-gray-400">
+                <Label
+                  htmlFor="status"
+                  className="text-sm font-medium text-gray-400"
+                >
                   简历状态
                 </Label>
-                <Select
-                  value="pending"
-                  onValueChange={() => {}}
-                  disabled
-                >
+                <Select value="pending" onValueChange={() => {}} disabled>
                   <SelectTrigger className="h-10 text-gray-400 bg-gray-100 cursor-not-allowed">
                     <SelectValue placeholder="待筛选" />
                   </SelectTrigger>
@@ -152,11 +169,7 @@ export function EditResumeModal({ isOpen, onClose, resume, onSave }: EditResumeM
         </div>
 
         <div className="flex justify-end gap-3 pt-6 border-t bg-gray-50 -mx-6 -mb-6 px-6 py-4">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            className="px-6"
-          >
+          <Button variant="outline" onClick={handleCancel} className="px-6">
             取消
           </Button>
           <Button

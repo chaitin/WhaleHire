@@ -81,7 +81,11 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) {
+export function Sidebar({
+  className,
+  isMobile = false,
+  onClose,
+}: SidebarProps) {
   const location = useLocation();
 
   const isActive = (path: string) => {
@@ -95,7 +99,7 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
         isMobile && 'pt-2',
         className
       )}
-      style={{height: "150vh"}}
+      style={{ height: '150vh' }}
       role="navigation"
       aria-label="主导航"
     >
@@ -126,44 +130,50 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
       </div>
 
       {/* Navigation */}
-      <div className="flex flex-1 flex-col overflow-hidden" style={{height: "calc(100vh - 64px)",justifyContent: "space-between"}}>
+      <div
+        className="flex flex-1 flex-col overflow-hidden"
+        style={{
+          height: 'calc(100vh - 64px)',
+          justifyContent: 'space-between',
+        }}
+      >
         <div className="scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent -mr-1 flex-1 overflow-y-auto pr-1">
           {/* 添加顶部间距，让菜单向下移动 */}
           <div className="pt-8">
             <nav className="sidebar-nav px-3">
               {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isDisabled = item.id !== 'resume-management';
-              
-              if (isDisabled) {
+                const Icon = item.icon;
+                const isDisabled = item.id !== 'resume-management';
+
+                if (isDisabled) {
+                  return (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        'sidebar-nav-item disabled',
+                        'cursor-not-allowed opacity-50'
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </div>
+                  );
+                }
+
                 return (
-                  <div
+                  <Link
                     key={item.id}
+                    to={item.path}
                     className={cn(
-                      'sidebar-nav-item disabled',
-                      'cursor-not-allowed opacity-50'
+                      'sidebar-nav-item',
+                      isActive(item.path) && 'active'
                     )}
+                    onClick={isMobile ? onClose : undefined}
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.label}</span>
-                  </div>
+                  </Link>
                 );
-              }
-              
-              return (
-                <Link
-                  key={item.id}
-                  to={item.path}
-                  className={cn(
-                    'sidebar-nav-item',
-                    isActive(item.path) && 'active'
-                  )}
-                  onClick={isMobile ? onClose : undefined}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
               })}
             </nav>
 
@@ -187,21 +197,26 @@ export function Sidebar({ className, isMobile = false, onClose }: SidebarProps) 
             </nav>
           </div>
         </div>
-        
+
         {/* Upgrade Section - positioned to align with 10th row */}
-        <div className="border-t px-4 pt-4 pb-4" style={{marginTop: "auto", position: "relative", top: "-120px"}}>
+        <div
+          className="border-t px-4 pt-4 pb-4"
+          style={{ marginTop: 'auto', position: 'relative', top: '-120px' }}
+        >
           <div className="rounded-lg bg-gradient-to-r from-green-50 to-green-100 border border-green-200 p-4 opacity-60 cursor-not-allowed">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-green-400 to-green-500">
                 <Rocket className="h-3 w-3 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">升级专业版</span>
+              <span className="text-sm font-medium text-gray-700">
+                升级专业版
+              </span>
             </div>
             <p className="text-xs text-gray-500 mb-3">
               解锁更多高级功能，提升工作效率
             </p>
-            <button 
-              disabled 
+            <button
+              disabled
               className="w-full rounded-md bg-gradient-to-r from-green-400 to-green-500 px-3 py-2 text-xs font-medium text-white cursor-not-allowed opacity-70"
             >
               立即升级

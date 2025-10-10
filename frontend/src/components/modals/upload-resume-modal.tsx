@@ -1,5 +1,18 @@
 import { useEffect, useState } from 'react';
-import { X, Upload, Link, ArrowRight, FileText, User, Mail, Phone, MapPin, GraduationCap, Briefcase, CheckCircle } from 'lucide-react';
+import {
+  X,
+  Upload,
+  Link,
+  ArrowRight,
+  FileText,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  GraduationCap,
+  Briefcase,
+  CheckCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -21,15 +34,23 @@ interface UploadResumeModalProps {
   onSuccess?: (resume?: Resume) => void;
 }
 
-export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResumeModalProps) {
+export function UploadResumeModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}: UploadResumeModalProps) {
   const [position, setPosition] = useState('');
-  const [uploadMethod, setUploadMethod] = useState<'local' | 'link' | null>(null);
-  const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'complete'>("upload");
+  const [uploadMethod, setUploadMethod] = useState<'local' | 'link' | null>(
+    null
+  );
+  const [currentStep, setCurrentStep] = useState<
+    'upload' | 'preview' | 'complete'
+  >('upload');
   const [uploadedResume, setUploadedResume] = useState<Resume | null>(null);
   const [showContentTip, setShowContentTip] = useState(false);
   const [progress, setProgress] = useState<ResumeParseProgress | null>(null);
   const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
-  
+
   const { uploadFile, uploading, uploadProgress, error } = useResumeUpload();
   const { startPolling, stopPolling } = useResumePollingManager();
 
@@ -52,11 +73,14 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
   useEffect(() => {
     if (uploadedResume && currentStep === 'preview') {
       // 如果简历状态需要轮询，则启动轮询
-      if (uploadedResume.status === 'pending' || uploadedResume.status === 'processing') {
+      if (
+        uploadedResume.status === 'pending' ||
+        uploadedResume.status === 'processing'
+      ) {
         console.log('启动简历解析进度轮询:', uploadedResume.id);
         startPolling(uploadedResume.id, async (newProgress) => {
           setProgress(newProgress);
-          
+
           // 解析完成后获取详细信息并进入完成步骤
           if (newProgress.status === 'completed') {
             try {
@@ -72,7 +96,9 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
         });
       } else {
         // 获取初始进度状态
-        getResumeProgress(uploadedResume.id).then(setProgress).catch(console.error);
+        getResumeProgress(uploadedResume.id)
+          .then(setProgress)
+          .catch(console.error);
       }
     }
   }, [uploadedResume, currentStep, startPolling]);
@@ -110,20 +136,26 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
     }
   };
 
-
   const getStepNumber = (step: string) => {
     switch (step) {
-      case 'upload': return 1;
-      case 'preview': return 2;
-      case 'complete': return 3;
-      default: return 1;
+      case 'upload':
+        return 1;
+      case 'preview':
+        return 2;
+      case 'complete':
+        return 3;
+      default:
+        return 1;
     }
   };
 
   const isStepCompleted = (step: string) => {
     const stepNum = getStepNumber(step);
     const currentStepNum = getStepNumber(currentStep);
-    return stepNum < currentStepNum || (stepNum === currentStepNum && currentStep === 'complete');
+    return (
+      stepNum < currentStepNum ||
+      (stepNum === currentStepNum && currentStep === 'complete')
+    );
   };
 
   const isStepActive = (step: string) => {
@@ -155,63 +187,115 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
           <div className="flex items-center justify-center max-w-2xl mx-auto">
             {/* 步骤1 - 上传文件 */}
             <div className="flex items-center">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
-                isStepCompleted('upload') ? 'bg-green-500 text-white' : 
-                isStepActive('upload') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                {isStepCompleted('upload') ? <CheckCircle className="h-5 w-5" /> : '1'}
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
+                  isStepCompleted('upload')
+                    ? 'bg-green-500 text-white'
+                    : isStepActive('upload')
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                }`}
+              >
+                {isStepCompleted('upload') ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  '1'
+                )}
               </div>
               <div className="ml-3 hidden sm:block">
-                <div className={`text-sm font-medium ${
-                  isStepCompleted('upload') ? 'text-green-600' : 
-                  isStepActive('upload') ? 'text-blue-600' : 'text-gray-600'
-                }`}>上传文件</div>
+                <div
+                  className={`text-sm font-medium ${
+                    isStepCompleted('upload')
+                      ? 'text-green-600'
+                      : isStepActive('upload')
+                        ? 'text-blue-600'
+                        : 'text-gray-600'
+                  }`}
+                >
+                  上传文件
+                </div>
               </div>
             </div>
 
             {/* 连接线1 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
-              <div className={`h-full bg-green-500 rounded transition-all duration-300 ${
-                isStepCompleted('upload') ? 'w-full' : 'w-0'
-              }`}></div>
+              <div
+                className={`h-full bg-green-500 rounded transition-all duration-300 ${
+                  isStepCompleted('upload') ? 'w-full' : 'w-0'
+                }`}
+              ></div>
             </div>
 
             {/* 步骤2 - 预览内容 */}
             <div className="flex items-center">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
-                isStepCompleted('preview') ? 'bg-green-500 text-white' : 
-                isStepActive('preview') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                {isStepCompleted('preview') ? <CheckCircle className="h-5 w-5" /> : '2'}
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
+                  isStepCompleted('preview')
+                    ? 'bg-green-500 text-white'
+                    : isStepActive('preview')
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                }`}
+              >
+                {isStepCompleted('preview') ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  '2'
+                )}
               </div>
               <div className="ml-3 hidden sm:block">
-                <div className={`text-sm font-medium ${
-                  isStepCompleted('preview') ? 'text-green-600' : 
-                  isStepActive('preview') ? 'text-blue-600' : 'text-gray-600'
-                }`}>预览内容</div>
+                <div
+                  className={`text-sm font-medium ${
+                    isStepCompleted('preview')
+                      ? 'text-green-600'
+                      : isStepActive('preview')
+                        ? 'text-blue-600'
+                        : 'text-gray-600'
+                  }`}
+                >
+                  预览内容
+                </div>
               </div>
             </div>
 
             {/* 连接线2 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
-              <div className={`h-full bg-green-500 rounded transition-all duration-300 ${
-                isStepCompleted('preview') ? 'w-full' : 'w-0'
-              }`}></div>
+              <div
+                className={`h-full bg-green-500 rounded transition-all duration-300 ${
+                  isStepCompleted('preview') ? 'w-full' : 'w-0'
+                }`}
+              ></div>
             </div>
 
             {/* 步骤3 - 完成 */}
             <div className="flex items-center">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
-                isStepCompleted('complete') ? 'bg-green-500 text-white' : 
-                isStepActive('complete') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                {isStepCompleted('complete') ? <CheckCircle className="h-5 w-5" /> : '3'}
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
+                  isStepCompleted('complete')
+                    ? 'bg-green-500 text-white'
+                    : isStepActive('complete')
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                }`}
+              >
+                {isStepCompleted('complete') ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  '3'
+                )}
               </div>
               <div className="ml-3 hidden sm:block">
-                <div className={`text-sm font-medium ${
-                  isStepCompleted('complete') ? 'text-green-600' : 
-                  isStepActive('complete') ? 'text-blue-600' : 'text-gray-600'
-                }`}>完成</div>
+                <div
+                  className={`text-sm font-medium ${
+                    isStepCompleted('complete')
+                      ? 'text-green-600'
+                      : isStepActive('complete')
+                        ? 'text-blue-600'
+                        : 'text-gray-600'
+                  }`}
+                >
+                  完成
+                </div>
               </div>
             </div>
           </div>
@@ -226,7 +310,7 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                 <Label className="text-sm font-medium text-gray-700">
                   选择上传方式 <span className="text-red-500">*</span>
                 </Label>
-                
+
                 <div className="grid grid-cols-2 gap-5">
                   {/* 本地上传 */}
                   <div
@@ -241,8 +325,12 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                       <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                         <Upload className="h-5 w-5 text-blue-600" />
                       </div>
-                      <h4 className="text-base font-medium text-gray-900 mb-2">本地上传</h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">从您的设备上传简历文件</p>
+                      <h4 className="text-base font-medium text-gray-900 mb-2">
+                        本地上传
+                      </h4>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        从您的设备上传简历文件
+                      </p>
                     </div>
                     {uploadMethod === 'local' && (
                       <div className="absolute top-3 right-3 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -257,8 +345,12 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                       <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
                         <Link className="h-5 w-5 text-green-600" />
                       </div>
-                      <h4 className="text-base font-medium text-gray-900 mb-2">链接导入</h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">通过简历链接导入</p>
+                      <h4 className="text-base font-medium text-gray-900 mb-2">
+                        链接导入
+                      </h4>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        通过简历链接导入
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -290,8 +382,12 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                   <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <FileText className="h-8 w-8 text-green-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">简历上传成功！</h3>
-                  <p className="text-sm text-gray-600">以下是解析到的简历信息</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    简历上传成功！
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    以下是解析到的简历信息
+                  </p>
                 </div>
 
                 {/* 简历信息卡片 */}
@@ -299,7 +395,7 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                   {/* 解析进度显示 */}
                   {progress && (
                     <div className="mb-6">
-                      <ResumeParseProgressComponent 
+                      <ResumeParseProgressComponent
                         progress={progress}
                         showDetails={true}
                         className="bg-white rounded-lg p-4 border border-gray-200"
@@ -313,17 +409,23 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                       <div className="flex items-center space-x-3">
                         <User className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">姓名：</span>
-                        <span className="text-sm font-medium text-gray-900">{uploadedResume.name || '待解析'}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {uploadedResume.name || '待解析'}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <Mail className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">邮箱：</span>
-                        <span className="text-sm font-medium text-gray-900">{uploadedResume.email || '待解析'}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {uploadedResume.email || '待解析'}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <Phone className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">电话：</span>
-                        <span className="text-sm font-medium text-gray-900">{uploadedResume.phone || '待解析'}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {uploadedResume.phone || '待解析'}
+                        </span>
                       </div>
                     </div>
 
@@ -332,18 +434,24 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                       <div className="flex items-center space-x-3">
                         <MapPin className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">城市：</span>
-                        <span className="text-sm font-medium text-gray-900">{uploadedResume.current_city || '待解析'}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {uploadedResume.current_city || '待解析'}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <GraduationCap className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">学历：</span>
-                        <span className="text-sm font-medium text-gray-900">{uploadedResume.highest_education || '待解析'}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {uploadedResume.highest_education || '待解析'}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <Briefcase className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">经验：</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {uploadedResume.years_experience ? `${uploadedResume.years_experience}年` : '待解析'}
+                          {uploadedResume.years_experience
+                            ? `${uploadedResume.years_experience}年`
+                            : '待解析'}
                         </span>
                       </div>
                     </div>
@@ -353,20 +461,32 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                   <div className="pt-4 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">解析状态：</span>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          uploadedResume.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          uploadedResume.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                          uploadedResume.status === 'pending' ? 'bg-blue-100 text-blue-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {uploadedResume.status === 'completed' ? '解析完成' :
-                           uploadedResume.status === 'processing' ? '解析中' :
-                           uploadedResume.status === 'pending' ? '待解析' : '解析失败'}
+                        <span className="text-sm text-gray-600">
+                          解析状态：
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            uploadedResume.status === 'completed'
+                              ? 'bg-green-100 text-green-800'
+                              : uploadedResume.status === 'processing'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : uploadedResume.status === 'pending'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {uploadedResume.status === 'completed'
+                            ? '解析完成'
+                            : uploadedResume.status === 'processing'
+                              ? '解析中'
+                              : uploadedResume.status === 'pending'
+                                ? '待解析'
+                                : '解析失败'}
                         </span>
                       </div>
                       <div className="text-xs text-gray-500">
-                        上传时间：{formatDate(uploadedResume.created_at, 'datetime')}
+                        上传时间：
+                        {formatDate(uploadedResume.created_at, 'datetime')}
                       </div>
                     </div>
                   </div>
@@ -375,11 +495,17 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                 {/* PDF预览区域（如果有文件URL） */}
                 {uploadedResume.resume_file_url && (
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="text-sm font-medium text-gray-700 mb-3">简历文件预览</div>
+                    <div className="text-sm font-medium text-gray-700 mb-3">
+                      简历文件预览
+                    </div>
                     <div className="bg-gray-100 rounded-lg p-8 text-center">
                       <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                      <p className="text-sm text-gray-600 mb-2">PDF文件已上传</p>
-                      <p className="text-xs text-gray-500">文件正在后台解析中，请稍候...</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        PDF文件已上传
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        文件正在后台解析中，请稍候...
+                      </p>
                     </div>
                   </div>
                 )}
@@ -389,7 +515,9 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">简历上传成功！</span>
+                      <span className="text-sm font-medium text-green-800">
+                        简历上传成功！
+                      </span>
                     </div>
                     <p className="text-sm text-green-700 mt-1">
                       简历正在后台解析中，解析完成后您可以在简历列表中查看详细信息。
@@ -408,44 +536,62 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                   <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">简历解析完成！</h3>
-                  <p className="text-sm text-gray-600">简历信息已成功解析并保存</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    简历解析完成！
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    简历信息已成功解析并保存
+                  </p>
                 </div>
 
                 {/* 解析完成的简历信息展示 */}
                 <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 space-y-4">
                   <div className="text-center mb-4">
-                    <h4 className="text-base font-semibold text-gray-900 mb-2">解析结果</h4>
-                    <p className="text-sm text-gray-600">以下是从简历中提取的关键信息</p>
+                    <h4 className="text-base font-semibold text-gray-900 mb-2">
+                      解析结果
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      以下是从简历中提取的关键信息
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* 基本信息 */}
                     <div className="bg-white rounded-lg p-4 space-y-3">
-                      <h5 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">基本信息</h5>
+                      <h5 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+                        基本信息
+                      </h5>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">姓名</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {(resumeDetail?.name || uploadedResume.name) || '未解析'}
+                            {resumeDetail?.name ||
+                              uploadedResume.name ||
+                              '未解析'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">邮箱</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {(resumeDetail?.email || uploadedResume.email) || '未解析'}
+                            {resumeDetail?.email ||
+                              uploadedResume.email ||
+                              '未解析'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">电话</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {(resumeDetail?.phone || uploadedResume.phone) || '未解析'}
+                            {resumeDetail?.phone ||
+                              uploadedResume.phone ||
+                              '未解析'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">城市</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {(resumeDetail?.current_city || uploadedResume.current_city) || '未解析'}
+                            {resumeDetail?.current_city ||
+                              uploadedResume.current_city ||
+                              '未解析'}
                           </span>
                         </div>
                       </div>
@@ -453,30 +599,46 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
 
                     {/* 职业信息 */}
                     <div className="bg-white rounded-lg p-4 space-y-3">
-                      <h5 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">职业信息</h5>
+                      <h5 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+                        职业信息
+                      </h5>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">学历</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {(resumeDetail?.highest_education || uploadedResume.highest_education) || '未解析'}
+                            {resumeDetail?.highest_education ||
+                              uploadedResume.highest_education ||
+                              '未解析'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">工作经验</span>
+                          <span className="text-sm text-gray-600">
+                            工作经验
+                          </span>
                           <span className="text-sm font-medium text-gray-900">
-                            {(resumeDetail?.years_experience || uploadedResume.years_experience) ? 
-                              `${resumeDetail?.years_experience || uploadedResume.years_experience}年` : '未解析'}
+                            {resumeDetail?.years_experience ||
+                            uploadedResume.years_experience
+                              ? `${resumeDetail?.years_experience || uploadedResume.years_experience}年`
+                              : '未解析'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                           <span className="text-sm text-gray-600">解析时间</span>
-                           <span className="text-sm font-medium text-gray-900">
-                             {(resumeDetail?.parsed_at || uploadedResume.parsed_at) ? 
-                               formatDate(resumeDetail?.parsed_at || uploadedResume.parsed_at) : '未解析'}
-                           </span>
-                         </div>
+                          <span className="text-sm text-gray-600">
+                            解析时间
+                          </span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {resumeDetail?.parsed_at || uploadedResume.parsed_at
+                              ? formatDate(
+                                  resumeDetail?.parsed_at ||
+                                    uploadedResume.parsed_at
+                                )
+                              : '未解析'}
+                          </span>
+                        </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">解析状态</span>
+                          <span className="text-sm text-gray-600">
+                            解析状态
+                          </span>
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             解析完成
                           </span>
@@ -486,42 +648,60 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                   </div>
 
                   {/* 技能和经验概览 - 使用resumeDetail数据 */}
-                   {resumeDetail && (
-                     <div className="bg-white rounded-lg p-4 space-y-3">
-                       <h5 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">技能与经验</h5>
-                       {resumeDetail.skills && resumeDetail.skills.length > 0 && (
-                         <div>
-                           <span className="text-sm text-gray-600">技能：</span>
-                           <div className="flex flex-wrap gap-1 mt-1">
-                              {resumeDetail.skills.slice(0, 8).map((skill, index) => (
-                                <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {skill.skill_name}
+                  {resumeDetail && (
+                    <div className="bg-white rounded-lg p-4 space-y-3">
+                      <h5 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+                        技能与经验
+                      </h5>
+                      {resumeDetail.skills &&
+                        resumeDetail.skills.length > 0 && (
+                          <div>
+                            <span className="text-sm text-gray-600">
+                              技能：
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {resumeDetail.skills
+                                .slice(0, 8)
+                                .map((skill, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                  >
+                                    {skill.skill_name}
+                                  </span>
+                                ))}
+                              {resumeDetail.skills.length > 8 && (
+                                <span className="text-xs text-gray-500">
+                                  +{resumeDetail.skills.length - 8}个技能
                                 </span>
-                              ))}
-                             {resumeDetail.skills.length > 8 && (
-                               <span className="text-xs text-gray-500">+{resumeDetail.skills.length - 8}个技能</span>
-                             )}
-                           </div>
-                         </div>
-                       )}
-                       {resumeDetail.experiences && resumeDetail.experiences.length > 0 && (
-                         <div>
-                           <span className="text-sm text-gray-600">工作经历：</span>
-                           <p className="text-sm text-gray-900 mt-1">
-                             共{resumeDetail.experiences.length}段工作经历
-                           </p>
-                         </div>
-                       )}
-                       {resumeDetail.educations && resumeDetail.educations.length > 0 && (
-                         <div>
-                           <span className="text-sm text-gray-600">教育经历：</span>
-                           <p className="text-sm text-gray-900 mt-1">
-                             共{resumeDetail.educations.length}段教育经历
-                           </p>
-                         </div>
-                       )}
-                     </div>
-                   )}
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      {resumeDetail.experiences &&
+                        resumeDetail.experiences.length > 0 && (
+                          <div>
+                            <span className="text-sm text-gray-600">
+                              工作经历：
+                            </span>
+                            <p className="text-sm text-gray-900 mt-1">
+                              共{resumeDetail.experiences.length}段工作经历
+                            </p>
+                          </div>
+                        )}
+                      {resumeDetail.educations &&
+                        resumeDetail.educations.length > 0 && (
+                          <div>
+                            <span className="text-sm text-gray-600">
+                              教育经历：
+                            </span>
+                            <p className="text-sm text-gray-900 mt-1">
+                              共{resumeDetail.educations.length}段教育经历
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 操作提示 */}
@@ -529,7 +709,9 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                   <div className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
                     <div>
-                      <h5 className="text-sm font-medium text-blue-900">简历已成功保存</h5>
+                      <h5 className="text-sm font-medium text-blue-900">
+                        简历已成功保存
+                      </h5>
                       <p className="text-sm text-blue-700 mt-1">
                         您可以在简历管理页面查看完整的简历信息，或继续上传更多简历。
                       </p>
