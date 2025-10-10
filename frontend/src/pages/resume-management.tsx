@@ -5,6 +5,7 @@ import { ResumeFiltersComponent } from '@/components/resume/resume-filters';
 import { ResumeTable } from '@/components/resume/resume-table';
 import { UploadResumeModal } from '@/components/modals/upload-resume-modal';
 import { EditResumeModal } from '@/components/modals/edit-resume-modal';
+import { ResumePreviewModal } from '@/components/modals/resume-preview-modal';
 import { ResumeFilters, Resume } from '@/types/resume';
 import { useResumeList } from '@/hooks/useResume';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,7 +24,9 @@ export function ResumeManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [editingResume, setEditingResume] = useState<Resume | null>(null);
+  const [previewingResumeId, setPreviewingResumeId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasProcessingResumes, setHasProcessingResumes] = useState(false);
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -216,6 +219,11 @@ export function ResumeManagementPage() {
     setIsEditModalOpen(true);
   };
 
+  const handlePreview = (resume: Resume) => {
+    setPreviewingResumeId(resume.id);
+    setIsPreviewModalOpen(true);
+  };
+
   const handleSaveEdit = async (updatedResume: Resume) => {
     try {
       await updateResumeRecord(updatedResume.id, updatedResume);
@@ -370,6 +378,7 @@ export function ResumeManagementPage() {
           pagination={pagination}
           onPageChange={handlePageChange}
           onEdit={handleEdit}
+          onPreview={handlePreview}
           onDelete={handleDelete}
           isLoading={isLoading}
           className="px-6 py-6"
@@ -389,6 +398,13 @@ export function ResumeManagementPage() {
         onClose={() => setIsEditModalOpen(false)}
         resume={editingResume}
         onSave={handleSaveEdit}
+      />
+
+      {/* 预览简历弹窗 */}
+      <ResumePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        resumeId={previewingResumeId}
       />
     </div>
   );

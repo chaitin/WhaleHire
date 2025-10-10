@@ -366,7 +366,7 @@ export function UploadResumeModal({ open, onOpenChange, onSuccess }: UploadResum
                         </span>
                       </div>
                       <div className="text-xs text-gray-500">
-                        上传时间：{formatDate(uploadedResume.created_at)}
+                        上传时间：{formatDate(uploadedResume.created_at, 'datetime')}
                       </div>
                     </div>
                   </div>

@@ -31,6 +31,7 @@ interface ResumeTableProps {
   onPageChange: (page: number) => void;
   onEdit: (resume: Resume) => void;
   onDelete?: (id: string) => Promise<void>;
+  onPreview?: (resume: Resume) => void;
   isLoading?: boolean;
   className?: string;
 }
@@ -41,6 +42,7 @@ export function ResumeTable({
   onPageChange,
   onEdit,
   onDelete,
+  onPreview,
   isLoading = false,
   className,
 }: ResumeTableProps) {
@@ -121,6 +123,7 @@ export function ResumeTable({
             <thead style={stickyStyle} className="sticky top-0 z-10">
               <tr className="text-left">
                 <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">简历信息</th>
+                <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">生日</th>
                 <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">上传时间</th>
                 <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">上传人</th>
                 <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">状态</th>
@@ -130,7 +133,7 @@ export function ResumeTable({
             <tbody className="divide-y divide-[#E5E7EB] bg-white">
               {resumes && resumes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center space-y-3">
                       <div className="text-gray-400">
                         <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,7 +167,10 @@ export function ResumeTable({
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-[#6B7280]">
-                    {formatDate(resume.created_at)}
+                    {resume.birthday ? formatDate(resume.birthday) : '-'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-[#6B7280]">
+                    {formatDate(resume.created_at, 'datetime')}
                   </td>
                   <td className="px-6 py-4 text-sm text-[#6B7280]">
                     {resume.uploader_name || '-'}
@@ -177,8 +183,14 @@ export function ResumeTable({
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-5 w-5 p-0 hover:bg-transparent opacity-50 cursor-not-allowed" 
-                        disabled
+                        className={cn(
+                          "h-5 w-5 p-0 hover:bg-transparent",
+                          resume.status === ResumeStatus.COMPLETED
+                            ? "hover:text-[#374151]"
+                            : "opacity-50 cursor-not-allowed"
+                        )}
+                        onClick={() => onPreview?.(resume)}
+                        disabled={!onPreview || resume.status !== ResumeStatus.COMPLETED || isLoading}
                       >
                         <Eye className="h-4 w-4 text-[#6B7280]" />
                       </Button>
