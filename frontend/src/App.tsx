@@ -8,6 +8,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { DashboardPage } from '@/pages/dashboard';
 import { ResumeManagementPage } from '@/pages/resume-management';
 import JobProfilePage from '@/pages/job-profile';
+import PlatformConfig from '@/pages/platform-config';
 import { PlaceholderPage } from '@/pages/placeholder-page';
 import LoginPage from '@/pages/login';
 import RegisterPage from '@/pages/register';
@@ -36,6 +37,7 @@ function App() {
                 element={<ResumeManagementPage />}
               />
               <Route path="job-profile" element={<JobProfilePage />} />
+              <Route path="platform-config" element={<PlatformConfig />} />
               <Route
                 path="position-management"
                 element={

@@ -444,6 +444,7 @@ var (
 		{Name: "school", Type: field.TypeString, Nullable: true},
 		{Name: "degree", Type: field.TypeString, Nullable: true},
 		{Name: "major", Type: field.TypeString, Nullable: true},
+		{Name: "university_type", Type: field.TypeString, Nullable: true},
 		{Name: "start_date", Type: field.TypeTime, Nullable: true},
 		{Name: "end_date", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
@@ -458,7 +459,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "resume_educations_resumes_educations",
-				Columns:    []*schema.Column{ResumeEducationsColumns[9]},
+				Columns:    []*schema.Column{ResumeEducationsColumns[10]},
 				RefColumns: []*schema.Column{ResumesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -511,6 +512,39 @@ var (
 			{
 				Symbol:     "resume_logs_resumes_logs",
 				Columns:    []*schema.Column{ResumeLogsColumns[6]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ResumeProjectsColumns holds the columns for the "resume_projects" table.
+	ResumeProjectsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Nullable: true},
+		{Name: "role", Type: field.TypeString, Nullable: true},
+		{Name: "company", Type: field.TypeString, Nullable: true},
+		{Name: "start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "responsibilities", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "achievements", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "technologies", Type: field.TypeString, Nullable: true},
+		{Name: "project_url", Type: field.TypeString, Nullable: true},
+		{Name: "project_type", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resume_id", Type: field.TypeUUID},
+	}
+	// ResumeProjectsTable holds the schema information for the "resume_projects" table.
+	ResumeProjectsTable = &schema.Table{
+		Name:       "resume_projects",
+		Columns:    ResumeProjectsColumns,
+		PrimaryKey: []*schema.Column{ResumeProjectsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_projects_resumes_projects",
+				Columns:    []*schema.Column{ResumeProjectsColumns[15]},
 				RefColumns: []*schema.Column{ResumesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -671,6 +705,7 @@ var (
 		ResumeEducationsTable,
 		ResumeExperiencesTable,
 		ResumeLogsTable,
+		ResumeProjectsTable,
 		ResumeSkillsTable,
 		RolesTable,
 		SettingsTable,
@@ -756,6 +791,10 @@ func init() {
 	ResumeLogsTable.ForeignKeys[0].RefTable = ResumesTable
 	ResumeLogsTable.Annotation = &entsql.Annotation{
 		Table: "resume_logs",
+	}
+	ResumeProjectsTable.ForeignKeys[0].RefTable = ResumesTable
+	ResumeProjectsTable.Annotation = &entsql.Annotation{
+		Table: "resume_projects",
 	}
 	ResumeSkillsTable.ForeignKeys[0].RefTable = ResumesTable
 	ResumeSkillsTable.Annotation = &entsql.Annotation{

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
@@ -122,6 +123,26 @@ func (reu *ResumeEducationUpdate) SetNillableMajor(s *string) *ResumeEducationUp
 // ClearMajor clears the value of the "major" field.
 func (reu *ResumeEducationUpdate) ClearMajor() *ResumeEducationUpdate {
 	reu.mutation.ClearMajor()
+	return reu
+}
+
+// SetUniversityType sets the "university_type" field.
+func (reu *ResumeEducationUpdate) SetUniversityType(ct consts.UniversityType) *ResumeEducationUpdate {
+	reu.mutation.SetUniversityType(ct)
+	return reu
+}
+
+// SetNillableUniversityType sets the "university_type" field if the given value is not nil.
+func (reu *ResumeEducationUpdate) SetNillableUniversityType(ct *consts.UniversityType) *ResumeEducationUpdate {
+	if ct != nil {
+		reu.SetUniversityType(*ct)
+	}
+	return reu
+}
+
+// ClearUniversityType clears the value of the "university_type" field.
+func (reu *ResumeEducationUpdate) ClearUniversityType() *ResumeEducationUpdate {
+	reu.mutation.ClearUniversityType()
 	return reu
 }
 
@@ -293,6 +314,12 @@ func (reu *ResumeEducationUpdate) sqlSave(ctx context.Context) (n int, err error
 	if reu.mutation.MajorCleared() {
 		_spec.ClearField(resumeeducation.FieldMajor, field.TypeString)
 	}
+	if value, ok := reu.mutation.UniversityType(); ok {
+		_spec.SetField(resumeeducation.FieldUniversityType, field.TypeString, value)
+	}
+	if reu.mutation.UniversityTypeCleared() {
+		_spec.ClearField(resumeeducation.FieldUniversityType, field.TypeString)
+	}
 	if value, ok := reu.mutation.StartDate(); ok {
 		_spec.SetField(resumeeducation.FieldStartDate, field.TypeTime, value)
 	}
@@ -453,6 +480,26 @@ func (reuo *ResumeEducationUpdateOne) SetNillableMajor(s *string) *ResumeEducati
 // ClearMajor clears the value of the "major" field.
 func (reuo *ResumeEducationUpdateOne) ClearMajor() *ResumeEducationUpdateOne {
 	reuo.mutation.ClearMajor()
+	return reuo
+}
+
+// SetUniversityType sets the "university_type" field.
+func (reuo *ResumeEducationUpdateOne) SetUniversityType(ct consts.UniversityType) *ResumeEducationUpdateOne {
+	reuo.mutation.SetUniversityType(ct)
+	return reuo
+}
+
+// SetNillableUniversityType sets the "university_type" field if the given value is not nil.
+func (reuo *ResumeEducationUpdateOne) SetNillableUniversityType(ct *consts.UniversityType) *ResumeEducationUpdateOne {
+	if ct != nil {
+		reuo.SetUniversityType(*ct)
+	}
+	return reuo
+}
+
+// ClearUniversityType clears the value of the "university_type" field.
+func (reuo *ResumeEducationUpdateOne) ClearUniversityType() *ResumeEducationUpdateOne {
+	reuo.mutation.ClearUniversityType()
 	return reuo
 }
 
@@ -653,6 +700,12 @@ func (reuo *ResumeEducationUpdateOne) sqlSave(ctx context.Context) (_node *Resum
 	}
 	if reuo.mutation.MajorCleared() {
 		_spec.ClearField(resumeeducation.FieldMajor, field.TypeString)
+	}
+	if value, ok := reuo.mutation.UniversityType(); ok {
+		_spec.SetField(resumeeducation.FieldUniversityType, field.TypeString, value)
+	}
+	if reuo.mutation.UniversityTypeCleared() {
+		_spec.ClearField(resumeeducation.FieldUniversityType, field.TypeString)
 	}
 	if value, ok := reuo.mutation.StartDate(); ok {
 		_spec.SetField(resumeeducation.FieldStartDate, field.TypeTime, value)

@@ -61,6 +61,12 @@ const navigationItems: NavigationItem[] = [
     icon: BarChart3,
     path: '/data-analysis',
   },
+  {
+    id: 'platform-config',
+    label: '平台配置',
+    icon: Settings,
+    path: '/platform-config',
+  },
 ];
 
 const systemItems: NavigationItem[] = [
@@ -159,7 +165,9 @@ export function Sidebar({
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled =
-                  item.id !== 'resume-management' && item.id !== 'job-profile';
+                  item.id !== 'resume-management' &&
+                  item.id !== 'job-profile' &&
+                  item.id !== 'platform-config';
 
                 if (isDisabled) {
                   return (

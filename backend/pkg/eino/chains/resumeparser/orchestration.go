@@ -33,9 +33,8 @@ func (c *ResumeParserChain) Compile(ctx context.Context) (compose.Runnable[*Resu
 // 输入处理，将 Resume 文本与历史对话传入模板
 func newInputLambda(ctx context.Context, input *ResumeParseInput, opts ...any) (map[string]any, error) {
 	return map[string]any{
-		"resume":  input.Resume,
-		"history": input.History,
-		"date":    time.Now().Format("2006-01-02"),
+		"resume": input.Resume,
+		"date":   time.Now().Format("2006-01-02"),
 	}, nil
 }
 

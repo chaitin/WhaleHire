@@ -2633,6 +2633,24 @@
                 "LoginSourceBrowser"
             ]
         },
+        "consts.UniversityType": {
+            "type": "string",
+            "enum": [
+                "ordinary",
+                "211",
+                "985"
+            ],
+            "x-enum-comments": {
+                "UniversityType211": "211工程学校",
+                "UniversityType985": "985工程学校",
+                "UniversityTypeOrdinary": "普通学校"
+            },
+            "x-enum-varnames": [
+                "UniversityTypeOrdinary",
+                "UniversityType211",
+                "UniversityType985"
+            ]
+        },
         "consts.UserPlatform": {
             "type": "string",
             "enum": [
@@ -3614,14 +3632,20 @@
         "domain.ListDepartmentResp": {
             "type": "object",
             "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
                 "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.Department"
                     }
                 },
-                "page_info": {
-                    "$ref": "#/definitions/db.PageInfo"
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
                 }
             }
         },
@@ -3999,6 +4023,12 @@
                 "phone": {
                     "type": "string"
                 },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ResumeProject"
+                    }
+                },
                 "resume_file_url": {
                     "type": "string"
                 },
@@ -4051,6 +4081,9 @@
                 },
                 "start_date": {
                     "type": "string"
+                },
+                "university_type": {
+                    "$ref": "#/definitions/consts.UniversityType"
                 },
                 "updated_at": {
                     "type": "integer"
@@ -4143,6 +4176,56 @@
                 },
                 "status": {
                     "$ref": "#/definitions/domain.ResumeStatus"
+                }
+            }
+        },
+        "domain.ResumeProject": {
+            "type": "object",
+            "properties": {
+                "achievements": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project_type": {
+                    "type": "string"
+                },
+                "project_url": {
+                    "type": "string"
+                },
+                "responsibilities": {
+                    "type": "string"
+                },
+                "resume_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "technologies": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "integer"
                 }
             }
         },
@@ -4430,6 +4513,14 @@
                 "start_date": {
                     "description": "开始时间",
                     "type": "string"
+                },
+                "university_type": {
+                    "description": "学校类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.UniversityType"
+                        }
+                    ]
                 }
             }
         },
@@ -4470,6 +4561,63 @@
                 }
             }
         },
+        "domain.UpdateResumeProject": {
+            "type": "object",
+            "properties": {
+                "achievements": {
+                    "description": "项目成果",
+                    "type": "string"
+                },
+                "action": {
+                    "description": "操作类型：create, update, delete",
+                    "type": "string"
+                },
+                "company": {
+                    "description": "所属公司",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "项目描述",
+                    "type": "string"
+                },
+                "end_date": {
+                    "description": "结束时间",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "项目经验ID，更新时必填",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "项目名称",
+                    "type": "string"
+                },
+                "project_type": {
+                    "description": "项目类型",
+                    "type": "string"
+                },
+                "project_url": {
+                    "description": "项目链接",
+                    "type": "string"
+                },
+                "responsibilities": {
+                    "description": "主要职责",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "担任角色",
+                    "type": "string"
+                },
+                "start_date": {
+                    "description": "开始时间",
+                    "type": "string"
+                },
+                "technologies": {
+                    "description": "使用技术",
+                    "type": "string"
+                }
+            }
+        },
         "domain.UpdateResumeReq": {
             "type": "object",
             "properties": {
@@ -4505,6 +4653,12 @@
                 },
                 "phone": {
                     "type": "string"
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.UpdateResumeProject"
+                    }
                 },
                 "skills": {
                     "type": "array",

@@ -52,6 +52,8 @@ type Tx struct {
 	ResumeExperience *ResumeExperienceClient
 	// ResumeLog is the client for interacting with the ResumeLog builders.
 	ResumeLog *ResumeLogClient
+	// ResumeProject is the client for interacting with the ResumeProject builders.
+	ResumeProject *ResumeProjectClient
 	// ResumeSkill is the client for interacting with the ResumeSkill builders.
 	ResumeSkill *ResumeSkillClient
 	// Role is the client for interacting with the Role builders.
@@ -214,6 +216,7 @@ func (tx *Tx) init() {
 	tx.ResumeEducation = NewResumeEducationClient(tx.config)
 	tx.ResumeExperience = NewResumeExperienceClient(tx.config)
 	tx.ResumeLog = NewResumeLogClient(tx.config)
+	tx.ResumeProject = NewResumeProjectClient(tx.config)
 	tx.ResumeSkill = NewResumeSkillClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)

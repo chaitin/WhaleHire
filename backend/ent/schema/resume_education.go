@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
@@ -40,6 +41,7 @@ func (ResumeEducation) Fields() []ent.Field {
 		field.String("school").Optional(),
 		field.String("degree").Optional(),
 		field.String("major").Optional(),
+		field.String("university_type").GoType(consts.UniversityType("")).Optional(),
 		field.Time("start_date").Optional(),
 		field.Time("end_date").Optional(),
 		field.Time("created_at").Default(time.Now),

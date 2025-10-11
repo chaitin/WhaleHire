@@ -24,6 +24,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
@@ -457,11 +458,11 @@ func init() {
 	resumeeducationFields := schema.ResumeEducation{}.Fields()
 	_ = resumeeducationFields
 	// resumeeducationDescCreatedAt is the schema descriptor for created_at field.
-	resumeeducationDescCreatedAt := resumeeducationFields[7].Descriptor()
+	resumeeducationDescCreatedAt := resumeeducationFields[8].Descriptor()
 	// resumeeducation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	resumeeducation.DefaultCreatedAt = resumeeducationDescCreatedAt.Default.(func() time.Time)
 	// resumeeducationDescUpdatedAt is the schema descriptor for updated_at field.
-	resumeeducationDescUpdatedAt := resumeeducationFields[8].Descriptor()
+	resumeeducationDescUpdatedAt := resumeeducationFields[9].Descriptor()
 	// resumeeducation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	resumeeducation.DefaultUpdatedAt = resumeeducationDescUpdatedAt.Default.(func() time.Time)
 	// resumeeducation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -516,6 +517,27 @@ func init() {
 	resumelogDescID := resumelogFields[0].Descriptor()
 	// resumelog.DefaultID holds the default value on creation for the id field.
 	resumelog.DefaultID = resumelogDescID.Default.(func() uuid.UUID)
+	resumeprojectMixin := schema.ResumeProject{}.Mixin()
+	resumeprojectMixinHooks0 := resumeprojectMixin[0].Hooks()
+	resumeproject.Hooks[0] = resumeprojectMixinHooks0[0]
+	resumeprojectMixinInters0 := resumeprojectMixin[0].Interceptors()
+	resumeproject.Interceptors[0] = resumeprojectMixinInters0[0]
+	resumeprojectFields := schema.ResumeProject{}.Fields()
+	_ = resumeprojectFields
+	// resumeprojectDescCreatedAt is the schema descriptor for created_at field.
+	resumeprojectDescCreatedAt := resumeprojectFields[13].Descriptor()
+	// resumeproject.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumeproject.DefaultCreatedAt = resumeprojectDescCreatedAt.Default.(func() time.Time)
+	// resumeprojectDescUpdatedAt is the schema descriptor for updated_at field.
+	resumeprojectDescUpdatedAt := resumeprojectFields[14].Descriptor()
+	// resumeproject.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumeproject.DefaultUpdatedAt = resumeprojectDescUpdatedAt.Default.(func() time.Time)
+	// resumeproject.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumeproject.UpdateDefaultUpdatedAt = resumeprojectDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumeprojectDescID is the schema descriptor for id field.
+	resumeprojectDescID := resumeprojectFields[0].Descriptor()
+	// resumeproject.DefaultID holds the default value on creation for the id field.
+	resumeproject.DefaultID = resumeprojectDescID.Default.(func() uuid.UUID)
 	resumeskillMixin := schema.ResumeSkill{}.Mixin()
 	resumeskillMixinHooks0 := resumeskillMixin[0].Hooks()
 	resumeskill.Hooks[0] = resumeskillMixinHooks0[0]

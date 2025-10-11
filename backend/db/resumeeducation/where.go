@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -79,6 +80,12 @@ func Degree(v string) predicate.ResumeEducation {
 // Major applies equality check predicate on the "major" field. It's identical to MajorEQ.
 func Major(v string) predicate.ResumeEducation {
 	return predicate.ResumeEducation(sql.FieldEQ(FieldMajor, v))
+}
+
+// UniversityType applies equality check predicate on the "university_type" field. It's identical to UniversityTypeEQ.
+func UniversityType(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldEQ(FieldUniversityType, vc))
 }
 
 // StartDate applies equality check predicate on the "start_date" field. It's identical to StartDateEQ.
@@ -394,6 +401,100 @@ func MajorEqualFold(v string) predicate.ResumeEducation {
 // MajorContainsFold applies the ContainsFold predicate on the "major" field.
 func MajorContainsFold(v string) predicate.ResumeEducation {
 	return predicate.ResumeEducation(sql.FieldContainsFold(FieldMajor, v))
+}
+
+// UniversityTypeEQ applies the EQ predicate on the "university_type" field.
+func UniversityTypeEQ(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldEQ(FieldUniversityType, vc))
+}
+
+// UniversityTypeNEQ applies the NEQ predicate on the "university_type" field.
+func UniversityTypeNEQ(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldNEQ(FieldUniversityType, vc))
+}
+
+// UniversityTypeIn applies the In predicate on the "university_type" field.
+func UniversityTypeIn(vs ...consts.UniversityType) predicate.ResumeEducation {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.ResumeEducation(sql.FieldIn(FieldUniversityType, v...))
+}
+
+// UniversityTypeNotIn applies the NotIn predicate on the "university_type" field.
+func UniversityTypeNotIn(vs ...consts.UniversityType) predicate.ResumeEducation {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.ResumeEducation(sql.FieldNotIn(FieldUniversityType, v...))
+}
+
+// UniversityTypeGT applies the GT predicate on the "university_type" field.
+func UniversityTypeGT(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldGT(FieldUniversityType, vc))
+}
+
+// UniversityTypeGTE applies the GTE predicate on the "university_type" field.
+func UniversityTypeGTE(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldGTE(FieldUniversityType, vc))
+}
+
+// UniversityTypeLT applies the LT predicate on the "university_type" field.
+func UniversityTypeLT(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldLT(FieldUniversityType, vc))
+}
+
+// UniversityTypeLTE applies the LTE predicate on the "university_type" field.
+func UniversityTypeLTE(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldLTE(FieldUniversityType, vc))
+}
+
+// UniversityTypeContains applies the Contains predicate on the "university_type" field.
+func UniversityTypeContains(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldContains(FieldUniversityType, vc))
+}
+
+// UniversityTypeHasPrefix applies the HasPrefix predicate on the "university_type" field.
+func UniversityTypeHasPrefix(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldHasPrefix(FieldUniversityType, vc))
+}
+
+// UniversityTypeHasSuffix applies the HasSuffix predicate on the "university_type" field.
+func UniversityTypeHasSuffix(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldHasSuffix(FieldUniversityType, vc))
+}
+
+// UniversityTypeIsNil applies the IsNil predicate on the "university_type" field.
+func UniversityTypeIsNil() predicate.ResumeEducation {
+	return predicate.ResumeEducation(sql.FieldIsNull(FieldUniversityType))
+}
+
+// UniversityTypeNotNil applies the NotNil predicate on the "university_type" field.
+func UniversityTypeNotNil() predicate.ResumeEducation {
+	return predicate.ResumeEducation(sql.FieldNotNull(FieldUniversityType))
+}
+
+// UniversityTypeEqualFold applies the EqualFold predicate on the "university_type" field.
+func UniversityTypeEqualFold(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldEqualFold(FieldUniversityType, vc))
+}
+
+// UniversityTypeContainsFold applies the ContainsFold predicate on the "university_type" field.
+func UniversityTypeContainsFold(v consts.UniversityType) predicate.ResumeEducation {
+	vc := string(v)
+	return predicate.ResumeEducation(sql.FieldContainsFold(FieldUniversityType, vc))
 }
 
 // StartDateEQ applies the EQ predicate on the "start_date" field.

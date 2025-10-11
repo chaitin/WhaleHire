@@ -57,6 +57,7 @@ export interface ResumeEducation {
   degree: string;
   start_date: string;
   end_date: string;
+  university_type?: 'ordinary' | '211' | '985'; // 大学类型：普通学校、211工程、985工程
   created_at: number;
   updated_at: number;
 }
@@ -68,6 +69,27 @@ export interface ResumeSkill {
   skill_name: string;
   level: string;
   description: string;
+  created_at: number;
+  updated_at: number;
+}
+
+// 项目经历 - 根据swagger文档domain.ResumeProject定义
+export interface ResumeProject {
+  id: string;
+  resume_id: string;
+  name: string; // 项目名称
+  project_name?: string; // 兼容旧字段
+  description: string; // 项目描述
+  start_date: string; // 开始日期
+  end_date: string; // 结束日期
+  achievements?: string; // 项目成就
+  company?: string; // 所属公司
+  project_type?: string; // 项目类型
+  project_url?: string; // 项目链接
+  responsibilities?: string; // 项目职责
+  role?: string; // 担任角色
+  technologies?: string; // 技术栈
+  tech_stack?: string; // 兼容旧字段
   created_at: number;
   updated_at: number;
 }
@@ -87,6 +109,7 @@ export interface ResumeDetail extends Resume {
   experiences: ResumeExperience[];
   educations: ResumeEducation[];
   skills: ResumeSkill[];
+  projects: ResumeProject[];
   logs: ResumeLog[];
 }
 
@@ -136,6 +159,7 @@ export interface ResumeUpdateParams {
   experiences?: UpdateResumeExperience[];
   educations?: UpdateResumeEducation[];
   skills?: UpdateResumeSkill[];
+  projects?: UpdateResumeProject[];
 }
 
 // 更新工作经历参数
@@ -159,6 +183,7 @@ export interface UpdateResumeEducation {
   degree?: string;
   start_date?: string;
   end_date?: string;
+  university_type?: 'ordinary' | '211' | '985'; // 大学类型：普通学校、211工程、985工程
 }
 
 // 更新技能参数
@@ -168,6 +193,25 @@ export interface UpdateResumeSkill {
   skill_name?: string;
   level?: string;
   description?: string;
+}
+
+// 更新项目经历参数 - 根据swagger文档扩展
+export interface UpdateResumeProject {
+  id?: string; // 更新时必填
+  action: 'create' | 'update' | 'delete'; // 操作类型
+  name?: string; // 项目名称
+  project_name?: string; // 兼容旧字段
+  description?: string; // 项目描述
+  start_date?: string; // 开始日期
+  end_date?: string; // 结束日期
+  achievements?: string; // 项目成就
+  company?: string; // 所属公司
+  project_type?: string; // 项目类型
+  project_url?: string; // 项目链接
+  responsibilities?: string; // 项目职责
+  role?: string; // 担任角色
+  technologies?: string; // 技术栈
+  tech_stack?: string; // 兼容旧字段
 }
 
 // 简历解析进度 - 根据swagger ResumeParseProgress定义
