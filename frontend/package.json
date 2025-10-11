@@ -1,7 +1,7 @@
 {
-  "name": "wh-frontend-cursor",
+  "name": "whale-hire-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.3",
   "type": "module",
   "scripts": {
     "dev": "vite --mode development",
