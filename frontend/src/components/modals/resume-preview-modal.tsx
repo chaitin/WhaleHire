@@ -196,6 +196,7 @@ export function ResumePreviewModal({
             degree: edu.degree,
             start_date: edu.start_date,
             end_date: edu.end_date,
+            university_type: edu.university_type || 'ordinary', // 初始化大学类型字段
           })) || [],
         skills:
           resumeDetail.skills?.map((skill) => ({
@@ -209,11 +210,19 @@ export function ResumePreviewModal({
           resumeDetail.projects?.map((project) => ({
             id: project.id,
             action: 'update' as const,
+            name: project.name || project.project_name,
             project_name: project.project_name,
             description: project.description,
-            tech_stack: project.tech_stack,
             start_date: project.start_date,
             end_date: project.end_date,
+            achievements: project.achievements,
+            company: project.company,
+            project_type: project.project_type,
+            project_url: project.project_url,
+            responsibilities: project.responsibilities,
+            role: project.role,
+            technologies: project.technologies || project.tech_stack,
+            tech_stack: project.tech_stack,
           })) || [],
       });
     }
@@ -559,18 +568,12 @@ export function ResumePreviewModal({
                         className="text-3xl font-bold text-center"
                         placeholder="姓名"
                       />
-                      <p className="text-lg text-green-600 font-medium">
-                        高级前端开发工程师
-                      </p>
                     </div>
                   ) : (
                     <>
                       <h1 className="text-3xl font-bold text-gray-900 mb-2">
                         {resumeDetail.name || '张明'}
                       </h1>
-                      <p className="text-lg text-green-600 font-medium mb-4">
-                        高级前端开发工程师
-                      </p>
                     </>
                   )}
 
@@ -750,43 +753,75 @@ export function ResumePreviewModal({
                           key={project.id || index}
                           className="bg-gray-50 rounded-lg p-6"
                         >
-                          <div className="flex justify-between items-start mb-3">
+                          {/* 项目标题和时间 */}
+                          <div className="flex justify-between items-start mb-4">
                             <div className="flex-1">
                               {isEditing ? (
                                 <div className="space-y-2">
                                   <Input
-                                    value={project.project_name || ''}
+                                    value={project.name || project.project_name || ''}
                                     onChange={(e) =>
                                       updateProject(
                                         index,
-                                        'project_name',
+                                        'name',
                                         e.target.value
                                       )
                                     }
                                     placeholder="项目名称"
                                     className="text-lg font-semibold"
                                   />
-                                  <Input
-                                    value={project.tech_stack || ''}
-                                    onChange={(e) =>
-                                      updateProject(
-                                        index,
-                                        'tech_stack',
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="技术栈"
-                                    className="text-green-600 font-medium"
-                                  />
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <Input
+                                      value={project.company || ''}
+                                      onChange={(e) =>
+                                        updateProject(
+                                          index,
+                                          'company',
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="所属公司"
+                                      className="text-sm"
+                                    />
+                                    <Input
+                                      value={project.role || ''}
+                                      onChange={(e) =>
+                                        updateProject(
+                                          index,
+                                          'role',
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="担任角色"
+                                      className="text-sm"
+                                    />
+                                  </div>
                                 </div>
                               ) : (
                                 <>
-                                  <h3 className="text-lg font-semibold text-gray-900">
-                                    {project.project_name}
+                                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                    {project.name || project.project_name}
                                   </h3>
-                                  <p className="text-green-600 font-medium">
-                                    {project.tech_stack}
-                                  </p>
+                                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
+                                    {project.company && (
+                                      <span className="flex items-center">
+                                        <span className="font-medium">公司：</span>
+                                        {project.company}
+                                      </span>
+                                    )}
+                                    {project.role && (
+                                      <span className="flex items-center">
+                                        <span className="font-medium">角色：</span>
+                                        {project.role}
+                                      </span>
+                                    )}
+                                    {project.project_type && (
+                                      <span className="flex items-center">
+                                        <span className="font-medium">类型：</span>
+                                        {project.project_type}
+                                      </span>
+                                    )}
+                                  </div>
                                 </>
                               )}
                             </div>
@@ -797,32 +832,188 @@ export function ResumePreviewModal({
                                 : '至今'}
                             </span>
                           </div>
-                          {isEditing ? (
-                            <textarea
-                              value={project.description || ''}
-                              onChange={(e) =>
-                                updateProject(
-                                  index,
-                                  'description',
-                                  e.target.value
-                                )
-                              }
-                              placeholder="项目描述"
-                              className="w-full p-3 border border-gray-300 rounded-md resize-none"
-                              rows={3}
-                            />
-                          ) : (
-                            project.description && (
-                              <div className="text-gray-700 leading-relaxed">
-                                {project.description
-                                  .split('\n')
-                                  .map((line, lineIndex) => (
-                                    <p key={lineIndex} className="mb-2">
-                                      • {line}
-                                    </p>
-                                  ))}
-                              </div>
-                            )
+
+                          {/* 技术栈 */}
+                          {(project.technologies || project.tech_stack) && (
+                            <div className="mb-3">
+                              {isEditing ? (
+                                <Input
+                                  value={project.technologies || project.tech_stack || ''}
+                                  onChange={(e) =>
+                                    updateProject(
+                                      index,
+                                      'technologies',
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="技术栈"
+                                  className="text-green-600 font-medium"
+                                />
+                              ) : (
+                                <div className="flex flex-wrap gap-2">
+                                  <span className="text-sm font-medium text-gray-700">技术栈：</span>
+                                  <div className="flex flex-wrap gap-1">
+                                    {(project.technologies || project.tech_stack)
+                                      ?.split(/[,，、]/)
+                                      .map((tech, techIndex) => (
+                                        <span
+                                          key={techIndex}
+                                          className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium"
+                                        >
+                                          {tech.trim()}
+                                        </span>
+                                      ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 项目链接 */}
+                          {project.project_url && !isEditing && (
+                            <div className="mb-3">
+                              <span className="text-sm font-medium text-gray-700">项目链接：</span>
+                              <a
+                                href={project.project_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline ml-1"
+                              >
+                                {project.project_url}
+                              </a>
+                            </div>
+                          )}
+
+                          {/* 项目描述 */}
+                          {project.description && (
+                            <div className="mb-3">
+                              {isEditing ? (
+                                <textarea
+                                  value={project.description || ''}
+                                  onChange={(e) =>
+                                    updateProject(
+                                      index,
+                                      'description',
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="项目描述"
+                                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
+                                  rows={3}
+                                />
+                              ) : (
+                                <div>
+                                  <span className="text-sm font-medium text-gray-700 block mb-1">项目描述：</span>
+                                  <div className="text-gray-700 leading-relaxed">
+                                    {project.description
+                                      .split('\n')
+                                      .map((line, lineIndex) => (
+                                        <p key={lineIndex} className="mb-1">
+                                          • {line}
+                                        </p>
+                                      ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 项目职责 */}
+                          {project.responsibilities && (
+                            <div className="mb-3">
+                              {isEditing ? (
+                                <textarea
+                                  value={project.responsibilities || ''}
+                                  onChange={(e) =>
+                                    updateProject(
+                                      index,
+                                      'responsibilities',
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="项目职责"
+                                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
+                                  rows={2}
+                                />
+                              ) : (
+                                <div>
+                                  <span className="text-sm font-medium text-gray-700 block mb-1">项目职责：</span>
+                                  <div className="text-gray-700 leading-relaxed">
+                                    {project.responsibilities
+                                      .split('\n')
+                                      .map((line, lineIndex) => (
+                                        <p key={lineIndex} className="mb-1">
+                                          • {line}
+                                        </p>
+                                      ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 项目成就 */}
+                          {project.achievements && (
+                            <div className="mb-3">
+                              {isEditing ? (
+                                <textarea
+                                  value={project.achievements || ''}
+                                  onChange={(e) =>
+                                    updateProject(
+                                      index,
+                                      'achievements',
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="项目成就"
+                                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
+                                  rows={2}
+                                />
+                              ) : (
+                                <div>
+                                  <span className="text-sm font-medium text-gray-700 block mb-1">项目成就：</span>
+                                  <div className="text-gray-700 leading-relaxed">
+                                    {project.achievements
+                                      .split('\n')
+                                      .map((line, lineIndex) => (
+                                        <p key={lineIndex} className="mb-1">
+                                          • {line}
+                                        </p>
+                                      ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 编辑模式下的额外字段 */}
+                          {isEditing && (
+                            <div className="grid grid-cols-2 gap-2 mt-3">
+                              <Input
+                                value={project.project_type || ''}
+                                onChange={(e) =>
+                                  updateProject(
+                                    index,
+                                    'project_type',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="项目类型"
+                                className="text-sm"
+                              />
+                              <Input
+                                value={project.project_url || ''}
+                                onChange={(e) =>
+                                  updateProject(
+                                    index,
+                                    'project_url',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="项目链接"
+                                className="text-sm"
+                              />
+                            </div>
                           )}
                         </div>
                       ))}
@@ -888,12 +1079,40 @@ export function ResumePreviewModal({
                                     placeholder="学位"
                                     className="text-gray-600"
                                   />
+                                  <select
+                                    value={edu.university_type || 'ordinary'}
+                                    onChange={(e) =>
+                                      updateEducation(
+                                        index,
+                                        'university_type',
+                                        e.target.value as 'ordinary' | '211' | '985'
+                                      )
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                  >
+                                    <option value="ordinary">普通学校</option>
+                                    <option value="211">211工程</option>
+                                    <option value="985">985工程</option>
+                                  </select>
                                 </div>
                               ) : (
                                 <>
-                                  <h3 className="text-lg font-semibold text-gray-900">
-                                    {edu.school}
-                                  </h3>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-semibold text-gray-900">
+                                      {edu.school}
+                                    </h3>
+                                    {/* 大学类型标签 */}
+                                    {edu.university_type === '211' && (
+                                      <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium">
+                                        211
+                                      </span>
+                                    )}
+                                    {edu.university_type === '985' && (
+                                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">
+                                        985
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="text-green-600 font-medium">
                                     {edu.major}
                                   </p>
