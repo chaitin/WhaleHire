@@ -404,7 +404,7 @@ export default function PlatformConfig() {
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-[1200px] h-auto max-h-[800px] overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-full max-w-[800px] h-auto max-h-[800px] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 弹窗头部 */}
@@ -624,17 +624,7 @@ export default function PlatformConfig() {
               )}
             </div>
 
-            {/* 弹窗底部 */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
-              <Button
-                variant="outline"
-                className="px-6"
-                onClick={handleCloseModal}
-              >
-                取消
-              </Button>
-              <Button className="px-6">确定</Button>
-            </div>
+
           </div>
         </div>
       )}
