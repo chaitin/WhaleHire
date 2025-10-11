@@ -17,17 +17,18 @@ interface AppConfig {
 const detectRuntime = () => {
   // 检测是否为开发环境（vite dev）
   const isDev = import.meta.env.DEV;
-  
+
   // 检测是否为预览模式（vite preview）
   // 预览模式下 import.meta.env.PROD 为 true，但端口通常是 4173 或 4174
-  const isPreview = import.meta.env.PROD && 
-    typeof window !== 'undefined' && 
+  const isPreview =
+    import.meta.env.PROD &&
+    typeof window !== 'undefined' &&
     (window.location.port === '4173' || window.location.port === '4174');
-  
+
   return {
     isDev,
     isPreview,
-    isProd: import.meta.env.PROD && !isPreview
+    isProd: import.meta.env.PROD && !isPreview,
   };
 };
 
@@ -35,13 +36,13 @@ const detectRuntime = () => {
 const getEnvConfig = (): AppConfig => {
   const env = import.meta.env;
   const runtime = detectRuntime();
-  
+
   // API 基础 URL 逻辑：
   // 1. 开发模式：使用 /api（通过 vite 代理）
   // 2. 预览模式：使用完整的生产环境 URL
   // 3. 生产环境：使用完整的生产环境 URL
   let apiBaseUrl: string;
-  
+
   if (runtime.isDev) {
     // 开发模式使用相对路径，通过 vite 代理
     apiBaseUrl = '/api';
@@ -49,7 +50,7 @@ const getEnvConfig = (): AppConfig => {
     // 预览模式和生产环境都使用完整 URL
     apiBaseUrl = env.VITE_API_BASE_URL || 'https://hire.chaitin.net/api';
   }
-  
+
   return {
     apiBaseUrl,
     appTitle: env.VITE_APP_TITLE || 'WhaleHire 智能招聘系统',
@@ -80,7 +81,7 @@ if (appConfig.debug || import.meta.env.DEV) {
     apiBaseUrl: appConfig.apiBaseUrl,
     mode: import.meta.env.MODE,
     prod: import.meta.env.PROD,
-    dev: import.meta.env.DEV
+    dev: import.meta.env.DEV,
   });
 }
 
@@ -153,13 +154,13 @@ export async function apiRequest<T = unknown>(
   try {
     debugLog(`🌐 API Request: ${method} ${url}`);
     const response = await fetch(url, config);
-    
+
     // 处理HTTP错误状态
     if (!response.ok) {
       if (response.status === 401) {
         // 未授权，Cookie已失效
         debugLog('🔐 401 Unauthorized - Cookie已失效');
-        
+
         // 只有在不是登录页面时才跳转到登录页
         if (!window.location.pathname.includes('/login')) {
           debugLog('🔐 Redirecting to login page');
@@ -167,7 +168,7 @@ export async function apiRequest<T = unknown>(
         }
         throw new ApiError(401, '登录已过期，请重新登录');
       }
-      
+
       const errorData = await response.json().catch(() => ({}));
       throw new ApiError(
         response.status,
@@ -178,13 +179,13 @@ export async function apiRequest<T = unknown>(
 
     const data: ApiResponse<T> = await response.json();
     debugLog(`✅ API Response: ${method} ${url} - ${response.status}`);
-    
+
     return data.data;
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
     }
-    
+
     // 网络错误或其他错误
     console.error(`❌ API Error: ${method} ${url}`, error);
     throw new ApiError(0, '网络请求失败，请检查网络连接', error);
@@ -192,9 +193,12 @@ export async function apiRequest<T = unknown>(
 }
 
 // GET 请求
-export const apiGet = <T = unknown>(endpoint: string, params?: Record<string, unknown>): Promise<T> => {
+export const apiGet = <T = unknown>(
+  endpoint: string,
+  params?: Record<string, unknown>
+): Promise<T> => {
   let finalEndpoint = endpoint;
-  
+
   if (params) {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -202,20 +206,32 @@ export const apiGet = <T = unknown>(endpoint: string, params?: Record<string, un
         queryParams.append(key, String(value));
       }
     });
-    
+
     const queryString = queryParams.toString();
     if (queryString) {
       finalEndpoint += (endpoint.includes('?') ? '&' : '?') + queryString;
     }
   }
-  
+
   return apiRequest<T>(finalEndpoint);
 };
 
 // POST 请求
-export function apiPost<T = unknown>(endpoint: string, data?: Record<string, unknown>, options?: RequestInit): Promise<T>;
-export function apiPost<T = unknown>(endpoint: string, data: FormData, options?: RequestInit): Promise<T>;
-export function apiPost<T = unknown>(endpoint: string, data?: FormData | Record<string, unknown>, options: RequestInit = {}): Promise<T> {
+export function apiPost<T = unknown>(
+  endpoint: string,
+  data?: Record<string, unknown>,
+  options?: RequestInit
+): Promise<T>;
+export function apiPost<T = unknown>(
+  endpoint: string,
+  data: FormData,
+  options?: RequestInit
+): Promise<T>;
+export function apiPost<T = unknown>(
+  endpoint: string,
+  data?: FormData | Record<string, unknown>,
+  options: RequestInit = {}
+): Promise<T> {
   const isFormData = data instanceof FormData;
   const headers = isFormData
     ? options.headers
@@ -233,7 +249,10 @@ export function apiPost<T = unknown>(endpoint: string, data?: FormData | Record<
 }
 
 // PUT 请求
-export const apiPut = <T = unknown>(endpoint: string, data?: Record<string, unknown>): Promise<T> => {
+export const apiPut = <T = unknown>(
+  endpoint: string,
+  data?: Record<string, unknown>
+): Promise<T> => {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
     body: data ? JSON.stringify(data) : undefined,
@@ -248,7 +267,10 @@ export const apiDelete = <T = unknown>(endpoint: string): Promise<T> => {
 };
 
 // 文件上传请求
-export const apiUpload = <T = unknown>(endpoint: string, formData: FormData): Promise<T> => {
+export const apiUpload = <T = unknown>(
+  endpoint: string,
+  formData: FormData
+): Promise<T> => {
   return apiRequest<T>(endpoint, {
     method: 'POST',
     body: formData,

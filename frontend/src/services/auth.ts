@@ -35,7 +35,9 @@ export interface LoginResponse {
 }
 
 // 登录
-export const login = async (credentials: LoginFormData): Promise<LoginResponse> => {
+export const login = async (
+  credentials: LoginFormData
+): Promise<LoginResponse> => {
   // 构建符合后端API的登录请求参数
   const loginData: LoginRequest = {
     username: credentials.username,
@@ -45,7 +47,10 @@ export const login = async (credentials: LoginFormData): Promise<LoginResponse> 
 
   try {
     debugLog('🔐 发送登录请求到后端...');
-    const response = await apiPost<LoginResponse>('/v1/user/login', loginData as unknown as Record<string, unknown>);
+    const response = await apiPost<LoginResponse>(
+      '/v1/user/login',
+      loginData as unknown as Record<string, unknown>
+    );
 
     debugLog('🔐 登录成功，Cookie已设置');
     return response;
@@ -89,15 +94,21 @@ export interface OAuthUrlResponse {
 // 获取OAuth认证地址
 export const getOAuthUrl = async (): Promise<string> => {
   debugLog('🔐 获取OAuth认证地址...');
-  debugLog('🔐 使用固定OAuth回调地址:', "https://hire.chaitin.net/resume-management");
-  
+  debugLog(
+    '🔐 使用固定OAuth回调地址:',
+    'https://hire.chaitin.net/resume-management'
+  );
+
   try {
     // 传递固定的回调地址给后端
-    const response = await apiGet<OAuthUrlResponse>('/v1/user/oauth/signup-or-in', {
-      platform: 'custom',
-      source: 'browser',
-      redirect_url: "https://hire.chaitin.net/resume-management"
-    });
+    const response = await apiGet<OAuthUrlResponse>(
+      '/v1/user/oauth/signup-or-in',
+      {
+        platform: 'custom',
+        source: 'browser',
+        redirect_url: 'https://hire.chaitin.net/resume-management',
+      }
+    );
     debugLog('🔐 OAuth认证地址获取成功:', response.url);
     return response.url;
   } catch (error) {
@@ -107,20 +118,23 @@ export const getOAuthUrl = async (): Promise<string> => {
 };
 
 // OAuth回调处理
-export const handleOAuthCallback = async (code: string, state: string): Promise<LoginResponse> => {
+export const handleOAuthCallback = async (
+  code: string,
+  state: string
+): Promise<LoginResponse> => {
   debugLog('🔐 处理OAuth回调...');
-  debugLog('🔐 OAuth回调地址:', "https://hire.chaitin.net//resume-management");
-  
+  debugLog('🔐 OAuth回调地址:', 'https://hire.chaitin.net//resume-management');
+
   try {
     const response = await apiGet<LoginResponse>('/v1/user/oauth/callback', {
       code,
       state,
     });
-    
+
     // 保存用户信息到 sessionStorage
     // setUserInfo(response.user as unknown as Record<string, unknown>);
     debugLog('🔐 OAuth登录成功，用户信息已保存');
-    
+
     return response;
   } catch (error) {
     console.error('🔐 OAuth回调处理失败:', error);
@@ -136,10 +150,15 @@ export interface UpdateProfileRequest {
   password?: string;
 }
 
-export const updateProfile = async (data: UpdateProfileRequest): Promise<UserInfo> => {
+export const updateProfile = async (
+  data: UpdateProfileRequest
+): Promise<UserInfo> => {
   debugLog('🔐 更新用户资料...');
   try {
-    const response = await apiPost<UserInfo>('/v1/user/profile', data as unknown as Record<string, unknown>);
+    const response = await apiPost<UserInfo>(
+      '/v1/user/profile',
+      data as unknown as Record<string, unknown>
+    );
     debugLog('🔐 用户资料更新成功:', response);
     return response;
   } catch (error) {

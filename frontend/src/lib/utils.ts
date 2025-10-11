@@ -5,7 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date?: string | number | Date): string {
+export function formatDate(
+  date?: string | number | Date,
+  format: 'date' | 'datetime' = 'date'
+): string {
   if (!date && date !== 0) {
     return '-';
   }
@@ -27,12 +30,20 @@ export function formatDate(date?: string | number | Date): string {
     return '-';
   }
 
+  if (format === 'datetime') {
+    return parsedDate.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
   return parsedDate.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 }
 

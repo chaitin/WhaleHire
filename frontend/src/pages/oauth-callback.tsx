@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { handleOAuthCallback} from '@/services/auth';
+import { handleOAuthCallback } from '@/services/auth';
 import { ApiError } from '@/lib/api';
 
 export default function OAuthCallbackPage() {
@@ -10,7 +10,7 @@ export default function OAuthCallbackPage() {
   const { login } = useAuth();
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(true);
-  
+
   // 使用 ref 防止 React.StrictMode 导致的重复执行
   const hasProcessedRef = useRef(false);
 
@@ -25,7 +25,7 @@ export default function OAuthCallbackPage() {
       try {
         // 标记为已处理，防止重复执行
         hasProcessedRef.current = true;
-        
+
         // 从URL参数中获取code和state
         const code = searchParams.get('code');
         const state = searchParams.get('state');
@@ -59,16 +59,15 @@ export default function OAuthCallbackPage() {
         // 这个延迟确保浏览器有足够时间处理后端返回的Set-Cookie头
         // 避免在Cookie还未设置完成时就跳转到下一个页面导致401错误
         console.log('等待Cookie处理完成...');
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         // 跳转到简历管理页面
         navigate('/resume-management', { replace: true });
-
       } catch (error) {
         console.error('OAuth回调处理失败:', error);
         // 处理失败时重置标记，允许重试
         hasProcessedRef.current = false;
-        
+
         if (error instanceof ApiError) {
           setError(error.message);
         } else {
@@ -104,26 +103,32 @@ export default function OAuthCallbackPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               正在处理登录...
             </h2>
-            <p className="text-gray-600">
-              请稍候，我们正在验证您的身份信息
-            </p>
+            <p className="text-gray-600">请稍候，我们正在验证您的身份信息</p>
           </>
         ) : (
           <>
             {/* 错误状态 */}
             <div className="mb-6">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-8 h-8 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </div>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               登录失败
             </h2>
-            <p className="text-gray-600 mb-6">
-              {error}
-            </p>
+            <p className="text-gray-600 mb-6">{error}</p>
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/login', { replace: true })}
@@ -131,9 +136,7 @@ export default function OAuthCallbackPage() {
               >
                 返回登录页面
               </button>
-              <p className="text-sm text-gray-500">
-                5秒后将自动跳转到登录页面
-              </p>
+              <p className="text-sm text-gray-500">5秒后将自动跳转到登录页面</p>
             </div>
           </>
         )}

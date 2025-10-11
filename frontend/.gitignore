@@ -62,8 +62,13 @@ storybook-static/
 # 生成的API文档
 docs/
 
-
+# 编辑器配置
 .cursor/
+
+# Stagewise 配置文件
+stagewise.json
+
+
 
 
 

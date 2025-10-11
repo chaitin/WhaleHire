@@ -8,10 +8,10 @@ interface ResumeParseProgressProps {
   showDetails?: boolean;
 }
 
-export function ResumeParseProgressComponent({ 
-  progress, 
+export function ResumeParseProgressComponent({
+  progress,
   className,
-  showDetails = true 
+  showDetails = true,
 }: ResumeParseProgressProps) {
   const getStatusIcon = (status: ResumeStatus) => {
     switch (status) {
@@ -74,25 +74,28 @@ export function ResumeParseProgressComponent({
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn('space-y-3', className)}>
       {/* 状态标题行 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {getStatusIcon(progress.status)}
-          <span className={cn("text-sm font-medium", getStatusColor(progress.status))}>
+          <span
+            className={cn(
+              'text-sm font-medium',
+              getStatusColor(progress.status)
+            )}
+          >
             {getStatusText(progress.status)}
           </span>
         </div>
-        <span className="text-sm text-gray-500">
-          {progress.progress}%
-        </span>
+        <span className="text-sm text-gray-500">{progress.progress}%</span>
       </div>
 
       {/* 进度条 */}
       <div className="w-full bg-gray-200 rounded-full h-2">
         <div
           className={cn(
-            "h-2 rounded-full transition-all duration-300 ease-in-out",
+            'h-2 rounded-full transition-all duration-300 ease-in-out',
             getProgressBarColor(progress.status)
           )}
           style={{ width: `${progress.progress}%` }}
@@ -104,9 +107,7 @@ export function ResumeParseProgressComponent({
         <div className="space-y-2">
           {/* 进度消息 */}
           {progress.message && (
-            <p className="text-sm text-gray-600">
-              {progress.message}
-            </p>
+            <p className="text-sm text-gray-600">{progress.message}</p>
           )}
 
           {/* 错误消息 */}
@@ -143,10 +144,10 @@ interface SimpleProgressProps {
   className?: string;
 }
 
-export function SimpleResumeProgress({ 
-  status, 
-  progress = 0, 
-  className 
+export function SimpleResumeProgress({
+  status,
+  progress = 0,
+  className,
 }: SimpleProgressProps) {
   const getStatusIcon = (status: ResumeStatus) => {
     switch (status) {
@@ -194,7 +195,7 @@ export function SimpleResumeProgress({
   };
 
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
+    <div className={cn('flex items-center space-x-2', className)}>
       {getStatusIcon(status)}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
@@ -202,16 +203,14 @@ export function SimpleResumeProgress({
             {getStatusText(status)}
           </span>
           {(status === 'processing' || status === 'completed') && (
-            <span className="text-xs text-gray-500 ml-2">
-              {progress}%
-            </span>
+            <span className="text-xs text-gray-500 ml-2">{progress}%</span>
           )}
         </div>
         {(status === 'processing' || status === 'completed') && (
           <div className="w-full bg-gray-200 rounded-full h-1">
             <div
               className={cn(
-                "h-1 rounded-full transition-all duration-300",
+                'h-1 rounded-full transition-all duration-300',
                 getProgressBarColor(status)
               )}
               style={{ width: `${progress}%` }}

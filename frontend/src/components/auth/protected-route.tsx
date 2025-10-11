@@ -11,7 +11,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, authStatus } = useAuth();
   const location = useLocation();
 
-  console.log('🛡️ ProtectedRoute 状态:', { isAuthenticated, isLoading, authStatus, pathname: location.pathname });
+  console.log('🛡️ ProtectedRoute 状态:', {
+    isAuthenticated,
+    isLoading,
+    authStatus,
+    pathname: location.pathname,
+  });
 
   // 正在加载认证状态
   if (isLoading) {
@@ -36,4 +41,3 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   console.log('🛡️ 用户已认证，渲染受保护的内容');
   return <>{children}</>;
 }
-

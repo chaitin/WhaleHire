@@ -12,7 +12,10 @@ export interface FileDownloadResponse {
 }
 
 // 上传文件
-export const uploadFile = async (file: File, kb_id?: string): Promise<FileUploadResponse> => {
+export const uploadFile = async (
+  file: File,
+  kb_id?: string
+): Promise<FileUploadResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   if (kb_id) {
@@ -27,12 +30,19 @@ export const uploadFile = async (file: File, kb_id?: string): Promise<FileUpload
 };
 
 // 获取文件下载链接
-export const getFileDownloadUrl = async (key: string): Promise<FileDownloadResponse> => {
-  return apiGet<FileDownloadResponse>(`/v1/file/download?key=${encodeURIComponent(key)}`);
+export const getFileDownloadUrl = async (
+  key: string
+): Promise<FileDownloadResponse> => {
+  return apiGet<FileDownloadResponse>(
+    `/v1/file/download?key=${encodeURIComponent(key)}`
+  );
 };
 
 // 下载文件
-export const downloadFile = async (key: string, fileName?: string): Promise<void> => {
+export const downloadFile = async (
+  key: string,
+  fileName?: string
+): Promise<void> => {
   const { url } = await getFileDownloadUrl(key);
 
   // 创建临时链接下载文件
@@ -44,4 +54,3 @@ export const downloadFile = async (key: string, fileName?: string): Promise<void
   link.click();
   document.body.removeChild(link);
 };
-

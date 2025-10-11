@@ -15,7 +15,7 @@ cd "$PROJECT_ROOT"
 go_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^backend/.*\.go$' || true)
 
 # Check for frontend files (exclude node_modules)
-frontend_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^ui/src/.*\.(ts|tsx|js|jsx)$' || true)
+frontend_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^frontend/src/.*\.(ts|tsx|js|jsx)$' || true)
 
 if [ -z "$go_files" ] && [ -z "$frontend_files" ]; then
     echo "No Go or frontend files to check, skipping code quality checks."
@@ -65,32 +65,19 @@ if [ -n "$frontend_files" ]; then
     echo "Found frontend files to check: $frontend_files"
     echo "Running frontend code quality checks..."
     
-    cd ui
+    cd frontend
     
     # Check if package.json exists
     if [ ! -f "package.json" ]; then
-        echo "❌ package.json not found in ui directory."
+        echo "❌ package.json not found in frontend directory."
         exit 1
     fi
     
-    # Run ESLint if available
-    if npm list eslint >/dev/null 2>&1; then
-        echo "Running ESLint..."
-        if ! npm run lint 2>/dev/null; then
-            echo "❌ ESLint failed. Please fix the issues before committing."
-            exit 1
-        fi
-    else
-        echo "⚠️  ESLint not found, skipping frontend linting."
-    fi
-    
-    # Run type check if TypeScript is used
-    if [ -f "tsconfig.json" ]; then
-        echo "Running TypeScript type check..."
-        if ! npx tsc --noEmit 2>/dev/null; then
-            echo "❌ TypeScript type check failed. Please fix the issues before committing."
-            exit 1
-        fi
+    # Run code quality checks using Makefile
+    echo "Running frontend code quality checks..."
+    if ! make quality-check 2>/dev/null; then
+        echo "❌ Frontend code quality checks failed. Please fix the issues before committing."
+        exit 1
     fi
     
     cd ..

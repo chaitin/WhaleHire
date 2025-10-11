@@ -16,12 +16,9 @@ install-hooks:
 	@echo "Installing git hooks..."
 	@mkdir -p .git/hooks
 	@chmod +x .githooks/pre-commit
-	@chmod +x .githooks/pre-push
 	@cp .githooks/pre-commit .git/hooks/pre-commit
-	@cp .githooks/pre-push .git/hooks/pre-push
 	@echo "Git hooks installed successfully!"
 	@echo "  - pre-commit: runs code quality checks before commit"
-	@echo "  - pre-push: runs code quality checks before push"
 	@echo ""
 	@echo "Hooks will check:"
 	@echo "  - Backend Go files: formatting, vet, lint, mod tidy"
@@ -31,5 +28,4 @@ install-hooks:
 uninstall-hooks:
 	@echo "Uninstalling git hooks..."
 	@rm -f .git/hooks/pre-commit
-	@rm -f .git/hooks/pre-push
 	@echo "Git hooks uninstalled successfully!"

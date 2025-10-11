@@ -21,7 +21,10 @@ const statusOptions = [
 
 interface ResumeFiltersProps {
   filters: ResumeFilters;
-  onFiltersChange: (filters: ResumeFilters, options?: { shouldSearch?: boolean }) => void;
+  onFiltersChange: (
+    filters: ResumeFilters,
+    options?: { shouldSearch?: boolean }
+  ) => void;
   onSearch?: () => void;
 }
 
@@ -30,35 +33,24 @@ export function ResumeFiltersComponent({
   onFiltersChange,
   onSearch,
 }: ResumeFiltersProps) {
-  const handlePositionChange = (value: string) => {
-    onFiltersChange({ ...filters, position: value }, { shouldSearch: true });
-  };
-
   const handleStatusChange = (value: string) => {
-    onFiltersChange({ ...filters, status: value as ResumeStatusFilter }, { shouldSearch: true });
+    onFiltersChange(
+      { ...filters, status: value as ResumeStatusFilter },
+      { shouldSearch: true }
+    );
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, keywords: e.target.value }, { shouldSearch: false });
+    onFiltersChange(
+      { ...filters, keywords: e.target.value },
+      { shouldSearch: false }
+    );
   };
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       {/* 左侧筛选器 */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Select
-          value={filters.position}
-          onValueChange={handlePositionChange}
-          disabled
-        >
-          <SelectTrigger className="h-11 w-full rounded-lg border-[#D1D5DB] sm:w-40">
-            <SelectValue placeholder="所有岗位" />
-          </SelectTrigger>
-          <SelectContent className="rounded-lg border border-[#E5E7EB]">
-            <SelectItem value="all">所有岗位</SelectItem>
-          </SelectContent>
-        </Select>
-
         <Select value={filters.status} onValueChange={handleStatusChange}>
           <SelectTrigger className="h-11 w-full rounded-lg border-[#D1D5DB] sm:w-40">
             <SelectValue placeholder="所有状态" />

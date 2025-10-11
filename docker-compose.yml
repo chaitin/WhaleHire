@@ -83,7 +83,7 @@ services:
 
   # 前端服务
   whalehire-frontend:
-    image: portus.in.chaitin.net/whalehire/frontend:v0.1.2
+    image: portus.in.chaitin.net/whalehire/frontend:v0.1.3
     container_name: whalehire-frontend
     ports:
       - "3000:80"
