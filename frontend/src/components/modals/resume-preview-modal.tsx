@@ -10,7 +10,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Github,
   Plus,
   Trash2,
   RefreshCw,
@@ -637,8 +636,6 @@ export function ResumePreviewModal({
                   </div>
                 </div>
 
-
-
                 {/* 工作经验模块 */}
                 {((isEditing && editFormData?.experiences) ||
                   (!isEditing && resumeDetail.experiences)) && (
@@ -795,7 +792,9 @@ export function ResumePreviewModal({
                             </div>
                             <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded">
                               {formatDate(project.start_date)} -{' '}
-                              {project.end_date ? formatDate(project.end_date) : '至今'}
+                              {project.end_date
+                                ? formatDate(project.end_date)
+                                : '至今'}
                             </span>
                           </div>
                           {isEditing ? (

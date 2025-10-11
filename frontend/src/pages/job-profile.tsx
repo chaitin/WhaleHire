@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -44,6 +45,7 @@ import type {
 import { AddSkillModal } from '@/components/modals/add-skill-modal';
 
 export function JobProfilePage() {
+  const navigate = useNavigate();
   const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -222,6 +224,11 @@ export function JobProfilePage() {
   // 重试获取部门列表
   const retryFetchDepartments = async () => {
     await fetchDepartments();
+  };
+
+  // 处理跳转到平台配置页面
+  const handleNavigateToPlatformConfig = () => {
+    navigate('/platform-config?openModal=true');
   };
 
   // 打开新建岗位弹窗
@@ -937,6 +944,7 @@ export function JobProfilePage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={handleNavigateToPlatformConfig}
                         className="h-8 px-3 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
                       >
                         + 新增所属部门
