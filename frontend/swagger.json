@@ -3632,14 +3632,20 @@
         "domain.ListDepartmentResp": {
             "type": "object",
             "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
                 "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.Department"
                     }
                 },
-                "page_info": {
-                    "$ref": "#/definitions/db.PageInfo"
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
                 }
             }
         },

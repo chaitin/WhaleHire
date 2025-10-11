@@ -84,10 +84,10 @@ export default function PlatformConfig() {
           size: pageSize,
         });
 
-        const newTotalPages = Math.ceil(response.page_info.total / pageSize);
+        const newTotalPages = Math.ceil(response.total_count / pageSize);
 
         console.log(
-          `📋 获取到 ${response.items.length} 个部门，总计: ${response.page_info.total}，总页数: ${newTotalPages}`
+          `📋 获取到 ${response.items.length} 个部门，总计: ${response.total_count}，总页数: ${newTotalPages}`
         );
         console.log(
           '📋 部门列表数据:',
@@ -95,7 +95,7 @@ export default function PlatformConfig() {
         );
 
         setDepartments(response.items);
-        setTotalCount(response.page_info.total);
+        setTotalCount(response.total_count);
         setTotalPages(newTotalPages);
 
         // 如果当前页超出了总页数，自动调整到最后一页

@@ -91,6 +91,6 @@ type ListDepartmentRepoReq struct {
 }
 
 type ListDepartmentResp struct {
-	Items    []*Department `json:"items"`
-	PageInfo *db.PageInfo  `json:"page_info"`
+	Items []*Department `json:"items"`
+	*db.PageInfo
 }

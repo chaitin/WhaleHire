@@ -1,14 +1,6 @@
 // 部门管理相关API服务
 import { apiGet, apiPost, apiPut, apiDelete, debugLog } from '@/lib/api';
 
-// 分页信息接口 - 根据swagger定义
-export interface PageInfo {
-  page: number;
-  size: number;
-  total: number;
-  has_next_page: boolean;
-}
-
 // 部门数据接口 - 根据swagger domain.Department定义
 export interface Department {
   id: string;
@@ -36,7 +28,9 @@ export interface UpdateDepartmentRequest {
 // 部门列表响应 - 根据swagger domain.ListDepartmentResp定义
 export interface ListDepartmentResponse {
   items: Department[];
-  page_info: PageInfo;
+  total_count: number;
+  has_next_page: boolean;
+  next_token?: string;
 }
 
 // 获取部门列表查询参数
