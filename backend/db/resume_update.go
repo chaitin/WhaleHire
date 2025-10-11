@@ -17,6 +17,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
@@ -372,6 +373,21 @@ func (ru *ResumeUpdate) AddExperiences(r ...*ResumeExperience) *ResumeUpdate {
 	return ru.AddExperienceIDs(ids...)
 }
 
+// AddProjectIDs adds the "projects" edge to the ResumeProject entity by IDs.
+func (ru *ResumeUpdate) AddProjectIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.AddProjectIDs(ids...)
+	return ru
+}
+
+// AddProjects adds the "projects" edges to the ResumeProject entity.
+func (ru *ResumeUpdate) AddProjects(r ...*ResumeProject) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.AddProjectIDs(ids...)
+}
+
 // AddSkillIDs adds the "skills" edge to the ResumeSkill entity by IDs.
 func (ru *ResumeUpdate) AddSkillIDs(ids ...uuid.UUID) *ResumeUpdate {
 	ru.mutation.AddSkillIDs(ids...)
@@ -468,6 +484,27 @@ func (ru *ResumeUpdate) RemoveExperiences(r ...*ResumeExperience) *ResumeUpdate 
 		ids[i] = r[i].ID
 	}
 	return ru.RemoveExperienceIDs(ids...)
+}
+
+// ClearProjects clears all "projects" edges to the ResumeProject entity.
+func (ru *ResumeUpdate) ClearProjects() *ResumeUpdate {
+	ru.mutation.ClearProjects()
+	return ru
+}
+
+// RemoveProjectIDs removes the "projects" edge to ResumeProject entities by IDs.
+func (ru *ResumeUpdate) RemoveProjectIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.RemoveProjectIDs(ids...)
+	return ru
+}
+
+// RemoveProjects removes "projects" edges to ResumeProject entities.
+func (ru *ResumeUpdate) RemoveProjects(r ...*ResumeProject) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.RemoveProjectIDs(ids...)
 }
 
 // ClearSkills clears all "skills" edges to the ResumeSkill entity.
@@ -802,6 +839,51 @@ func (ru *ResumeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumeexperience.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.ProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ProjectsTable,
+			Columns: []string{resume.ProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumeproject.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !ru.mutation.ProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ProjectsTable,
+			Columns: []string{resume.ProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumeproject.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.ProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ProjectsTable,
+			Columns: []string{resume.ProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumeproject.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1302,6 +1384,21 @@ func (ruo *ResumeUpdateOne) AddExperiences(r ...*ResumeExperience) *ResumeUpdate
 	return ruo.AddExperienceIDs(ids...)
 }
 
+// AddProjectIDs adds the "projects" edge to the ResumeProject entity by IDs.
+func (ruo *ResumeUpdateOne) AddProjectIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.AddProjectIDs(ids...)
+	return ruo
+}
+
+// AddProjects adds the "projects" edges to the ResumeProject entity.
+func (ruo *ResumeUpdateOne) AddProjects(r ...*ResumeProject) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.AddProjectIDs(ids...)
+}
+
 // AddSkillIDs adds the "skills" edge to the ResumeSkill entity by IDs.
 func (ruo *ResumeUpdateOne) AddSkillIDs(ids ...uuid.UUID) *ResumeUpdateOne {
 	ruo.mutation.AddSkillIDs(ids...)
@@ -1398,6 +1495,27 @@ func (ruo *ResumeUpdateOne) RemoveExperiences(r ...*ResumeExperience) *ResumeUpd
 		ids[i] = r[i].ID
 	}
 	return ruo.RemoveExperienceIDs(ids...)
+}
+
+// ClearProjects clears all "projects" edges to the ResumeProject entity.
+func (ruo *ResumeUpdateOne) ClearProjects() *ResumeUpdateOne {
+	ruo.mutation.ClearProjects()
+	return ruo
+}
+
+// RemoveProjectIDs removes the "projects" edge to ResumeProject entities by IDs.
+func (ruo *ResumeUpdateOne) RemoveProjectIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.RemoveProjectIDs(ids...)
+	return ruo
+}
+
+// RemoveProjects removes "projects" edges to ResumeProject entities.
+func (ruo *ResumeUpdateOne) RemoveProjects(r ...*ResumeProject) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.RemoveProjectIDs(ids...)
 }
 
 // ClearSkills clears all "skills" edges to the ResumeSkill entity.
@@ -1762,6 +1880,51 @@ func (ruo *ResumeUpdateOne) sqlSave(ctx context.Context) (_node *Resume, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumeexperience.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.ProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ProjectsTable,
+			Columns: []string{resume.ProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumeproject.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !ruo.mutation.ProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ProjectsTable,
+			Columns: []string{resume.ProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumeproject.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.ProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ProjectsTable,
+			Columns: []string{resume.ProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumeproject.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

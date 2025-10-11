@@ -19,6 +19,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
@@ -34,6 +35,7 @@ type ResumeQuery struct {
 	withUser          *UserQuery
 	withEducations    *ResumeEducationQuery
 	withExperiences   *ResumeExperienceQuery
+	withProjects      *ResumeProjectQuery
 	withSkills        *ResumeSkillQuery
 	withLogs          *ResumeLogQuery
 	withDocumentParse *ResumeDocumentParseQuery
@@ -133,6 +135,28 @@ func (rq *ResumeQuery) QueryExperiences() *ResumeExperienceQuery {
 			sqlgraph.From(resume.Table, resume.FieldID, selector),
 			sqlgraph.To(resumeexperience.Table, resumeexperience.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, resume.ExperiencesTable, resume.ExperiencesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryProjects chains the current query on the "projects" edge.
+func (rq *ResumeQuery) QueryProjects() *ResumeProjectQuery {
+	query := (&ResumeProjectClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, selector),
+			sqlgraph.To(resumeproject.Table, resumeproject.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.ProjectsTable, resume.ProjectsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -401,6 +425,7 @@ func (rq *ResumeQuery) Clone() *ResumeQuery {
 		withUser:          rq.withUser.Clone(),
 		withEducations:    rq.withEducations.Clone(),
 		withExperiences:   rq.withExperiences.Clone(),
+		withProjects:      rq.withProjects.Clone(),
 		withSkills:        rq.withSkills.Clone(),
 		withLogs:          rq.withLogs.Clone(),
 		withDocumentParse: rq.withDocumentParse.Clone(),
@@ -441,6 +466,17 @@ func (rq *ResumeQuery) WithExperiences(opts ...func(*ResumeExperienceQuery)) *Re
 		opt(query)
 	}
 	rq.withExperiences = query
+	return rq
+}
+
+// WithProjects tells the query-builder to eager-load the nodes that are connected to
+// the "projects" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ResumeQuery) WithProjects(opts ...func(*ResumeProjectQuery)) *ResumeQuery {
+	query := (&ResumeProjectClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withProjects = query
 	return rq
 }
 
@@ -555,10 +591,11 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 	var (
 		nodes       = []*Resume{}
 		_spec       = rq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			rq.withUser != nil,
 			rq.withEducations != nil,
 			rq.withExperiences != nil,
+			rq.withProjects != nil,
 			rq.withSkills != nil,
 			rq.withLogs != nil,
 			rq.withDocumentParse != nil,
@@ -602,6 +639,13 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 		if err := rq.loadExperiences(ctx, query, nodes,
 			func(n *Resume) { n.Edges.Experiences = []*ResumeExperience{} },
 			func(n *Resume, e *ResumeExperience) { n.Edges.Experiences = append(n.Edges.Experiences, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withProjects; query != nil {
+		if err := rq.loadProjects(ctx, query, nodes,
+			func(n *Resume) { n.Edges.Projects = []*ResumeProject{} },
+			func(n *Resume, e *ResumeProject) { n.Edges.Projects = append(n.Edges.Projects, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -703,6 +747,36 @@ func (rq *ResumeQuery) loadExperiences(ctx context.Context, query *ResumeExperie
 	}
 	query.Where(predicate.ResumeExperience(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(resume.ExperiencesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ResumeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "resume_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (rq *ResumeQuery) loadProjects(ctx context.Context, query *ResumeProjectQuery, nodes []*Resume, init func(*Resume), assign func(*Resume, *ResumeProject)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Resume)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(resumeproject.FieldResumeID)
+	}
+	query.Where(predicate.ResumeProject(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(resume.ProjectsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

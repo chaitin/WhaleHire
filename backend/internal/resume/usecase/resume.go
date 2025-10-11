@@ -100,6 +100,11 @@ func (u *ResumeUsecase) GetByID(ctx context.Context, id string) (*domain.ResumeD
 		u.logger.Error("Failed to get skills", "error", err, "resume_id", id)
 	}
 
+	projects, err := u.getProjectsByResumeID(ctx, id)
+	if err != nil {
+		u.logger.Error("Failed to get projects", "error", err, "resume_id", id)
+	}
+
 	logs, err := u.getLogsByResumeID(ctx, id)
 	if err != nil {
 		u.logger.Error("Failed to get logs", "error", err, "resume_id", id)
@@ -111,6 +116,7 @@ func (u *ResumeUsecase) GetByID(ctx context.Context, id string) (*domain.ResumeD
 		Educations:  educations,
 		Experiences: experiences,
 		Skills:      skills,
+		Projects:    projects,
 		Logs:        logs,
 	}
 
@@ -208,6 +214,13 @@ func (u *ResumeUsecase) Update(ctx context.Context, req *domain.UpdateResumeReq)
 			}
 		}
 
+		// 处理项目经验更新
+		if req.Projects != nil {
+			if err := u.updateProjects(ctx, tx, resume.ID, req.Projects); err != nil {
+				return fmt.Errorf("failed to update projects: %w", err)
+			}
+		}
+
 		return nil
 	})
 
@@ -253,6 +266,11 @@ func (u *ResumeUsecase) Reparse(ctx context.Context, id string) error {
 	resume, err := u.repo.GetByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("获取简历失败: %w", err)
+	}
+
+	// 清理已有的解析数据，防止重复记录
+	if err := u.repo.ClearParsedData(ctx, id); err != nil {
+		return fmt.Errorf("清理已有解析数据失败: %w", err)
 	}
 
 	// 更新状态为解析中
@@ -331,6 +349,8 @@ func (u *ResumeUsecase) parseResumeAsync(ctx context.Context, resumeID string) {
 		return
 	}
 
+	u.logger.Info("Parsed resume data", "resume_id", resumeID, "data", parsedData)
+
 	// 更新解析后的数据
 	if err := u.updateParsedData(ctx, resumeID, parsedData); err != nil {
 		u.logger.Error("Failed to update parsed data", "error", err, "resume_id", resumeID)
@@ -403,12 +423,13 @@ func (u *ResumeUsecase) updateParsedData(ctx context.Context, resumeID string, d
 	// 保存教育经历
 	for _, edu := range data.Educations {
 		education := &db.ResumeEducation{
-			ResumeID:  resumeUUID,
-			School:    edu.School,
-			Degree:    edu.Degree,
-			Major:     edu.Major,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			ResumeID:       resumeUUID,
+			School:         edu.School,
+			Degree:         edu.Degree,
+			Major:          edu.Major,
+			UniversityType: edu.UniversityType,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
 		}
 		if edu.StartDate != nil {
 			education.StartDate = *edu.StartDate
@@ -454,6 +475,33 @@ func (u *ResumeUsecase) updateParsedData(ctx context.Context, resumeID string, d
 		}
 		if _, err := u.repo.CreateSkill(ctx, resumeSkill); err != nil {
 			u.logger.Error("Failed to create skill", "error", err, "resume_id", resumeID)
+		}
+	}
+
+	// 保存项目经验
+	for _, project := range data.Projects {
+		resumeProject := &db.ResumeProject{
+			ResumeID:         resumeUUID,
+			Name:             project.Name,
+			Role:             project.Role,
+			Company:          project.Company,
+			Description:      project.Description,
+			Responsibilities: project.Responsibilities,
+			Achievements:     project.Achievements,
+			Technologies:     project.Technologies,
+			ProjectURL:       project.ProjectURL,
+			ProjectType:      project.ProjectType,
+			CreatedAt:        time.Now(),
+			UpdatedAt:        time.Now(),
+		}
+		if project.StartDate != nil {
+			resumeProject.StartDate = *project.StartDate
+		}
+		if project.EndDate != nil {
+			resumeProject.EndDate = *project.EndDate
+		}
+		if _, err := u.repo.CreateProject(ctx, resumeProject); err != nil {
+			u.logger.Error("Failed to create project", "error", err, "resume_id", resumeID)
 		}
 	}
 
@@ -512,6 +560,24 @@ func (u *ResumeUsecase) getSkillsByResumeID(ctx context.Context, resumeID string
 	}
 
 	return skills, nil
+}
+
+// getProjectsByResumeID 根据简历ID获取项目经验
+func (u *ResumeUsecase) getProjectsByResumeID(ctx context.Context, resumeID string) ([]*domain.ResumeProject, error) {
+	// 从数据库获取项目经验
+	dbProjects, err := u.repo.GetProjectsByResumeID(ctx, resumeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为domain对象
+	projects := make([]*domain.ResumeProject, 0, len(dbProjects))
+	for _, dbProject := range dbProjects {
+		project := &domain.ResumeProject{}
+		projects = append(projects, project.From(dbProject))
+	}
+
+	return projects, nil
 }
 
 // getLogsByResumeID 根据简历ID获取操作日志
@@ -576,6 +642,9 @@ func (u *ResumeUsecase) updateEducations(ctx context.Context, tx *db.Tx, resumeI
 			if education.EndDate != nil {
 				updater.SetEndDate(*education.EndDate)
 			}
+			if education.UniversityType != nil {
+				updater.SetUniversityType(*education.UniversityType)
+			}
 			updater.SetUpdatedAt(time.Now())
 
 			if _, err := updater.Save(ctx); err != nil {
@@ -602,6 +671,9 @@ func (u *ResumeUsecase) updateEducations(ctx context.Context, tx *db.Tx, resumeI
 			}
 			if education.EndDate != nil {
 				creator.SetEndDate(*education.EndDate)
+			}
+			if education.UniversityType != nil {
+				creator.SetUniversityType(*education.UniversityType)
 			}
 
 			if _, err := creator.Save(ctx); err != nil {
@@ -762,6 +834,123 @@ func (u *ResumeUsecase) updateSkills(ctx context.Context, tx *db.Tx, resumeID uu
 
 			if _, err := creator.Save(ctx); err != nil {
 				return fmt.Errorf("failed to create skill: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// updateProjects 更新项目经验
+func (u *ResumeUsecase) updateProjects(ctx context.Context, tx *db.Tx, resumeID uuid.UUID, projects []*domain.UpdateResumeProject) error {
+	// 删除需要删除的项目经验
+	for _, project := range projects {
+		if project.Action == "delete" && project.ID != nil {
+			projectID, err := uuid.Parse(*project.ID)
+			if err != nil {
+				return fmt.Errorf("invalid project ID: %w", err)
+			}
+			if err := tx.ResumeProject.DeleteOneID(projectID).Exec(ctx); err != nil {
+				return fmt.Errorf("failed to delete project: %w", err)
+			}
+		}
+	}
+
+	// 更新或创建项目经验
+	for _, project := range projects {
+		if project.Action == "delete" {
+			continue
+		}
+
+		if project.Action == "update" && project.ID != nil {
+			// 更新现有项目经验
+			projectID, err := uuid.Parse(*project.ID)
+			if err != nil {
+				return fmt.Errorf("invalid project ID: %w", err)
+			}
+
+			updater := tx.ResumeProject.UpdateOneID(projectID)
+			if project.Name != nil {
+				updater.SetName(*project.Name)
+			}
+			if project.Role != nil {
+				updater.SetRole(*project.Role)
+			}
+			if project.Company != nil {
+				updater.SetCompany(*project.Company)
+			}
+			if project.StartDate != nil {
+				updater.SetStartDate(*project.StartDate)
+			}
+			if project.EndDate != nil {
+				updater.SetEndDate(*project.EndDate)
+			}
+			if project.Description != nil {
+				updater.SetDescription(*project.Description)
+			}
+			if project.Responsibilities != nil {
+				updater.SetResponsibilities(*project.Responsibilities)
+			}
+			if project.Achievements != nil {
+				updater.SetAchievements(*project.Achievements)
+			}
+			if project.Technologies != nil {
+				updater.SetTechnologies(*project.Technologies)
+			}
+			if project.ProjectURL != nil {
+				updater.SetProjectURL(*project.ProjectURL)
+			}
+			if project.ProjectType != nil {
+				updater.SetProjectType(*project.ProjectType)
+			}
+			updater.SetUpdatedAt(time.Now())
+
+			if _, err := updater.Save(ctx); err != nil {
+				return fmt.Errorf("failed to update project: %w", err)
+			}
+		} else if project.Action == "create" {
+			// 创建新项目经验
+			creator := tx.ResumeProject.Create().
+				SetResumeID(resumeID).
+				SetCreatedAt(time.Now()).
+				SetUpdatedAt(time.Now())
+
+			if project.Name != nil {
+				creator.SetName(*project.Name)
+			}
+			if project.Role != nil {
+				creator.SetRole(*project.Role)
+			}
+			if project.Company != nil {
+				creator.SetCompany(*project.Company)
+			}
+			if project.StartDate != nil {
+				creator.SetStartDate(*project.StartDate)
+			}
+			if project.EndDate != nil {
+				creator.SetEndDate(*project.EndDate)
+			}
+			if project.Description != nil {
+				creator.SetDescription(*project.Description)
+			}
+			if project.Responsibilities != nil {
+				creator.SetResponsibilities(*project.Responsibilities)
+			}
+			if project.Achievements != nil {
+				creator.SetAchievements(*project.Achievements)
+			}
+			if project.Technologies != nil {
+				creator.SetTechnologies(*project.Technologies)
+			}
+			if project.ProjectURL != nil {
+				creator.SetProjectURL(*project.ProjectURL)
+			}
+			if project.ProjectType != nil {
+				creator.SetProjectType(*project.ProjectType)
+			}
+
+			if _, err := creator.Save(ctx); err != nil {
+				return fmt.Errorf("failed to create project: %w", err)
 			}
 		}
 	}

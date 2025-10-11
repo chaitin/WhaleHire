@@ -7,6 +7,7 @@ import (
 
 	"github.com/GoYoko/web"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 )
 
@@ -50,11 +51,13 @@ type ResumeRepo interface {
 	CreateEducation(ctx context.Context, education *db.ResumeEducation) (*db.ResumeEducation, error)
 	CreateExperience(ctx context.Context, experience *db.ResumeExperience) (*db.ResumeExperience, error)
 	CreateSkill(ctx context.Context, skill *db.ResumeSkill) (*db.ResumeSkill, error)
+	CreateProject(ctx context.Context, project *db.ResumeProject) (*db.ResumeProject, error)
 
 	// 获取关联数据
 	GetEducationsByResumeID(ctx context.Context, resumeID string) ([]*db.ResumeEducation, error)
 	GetExperiencesByResumeID(ctx context.Context, resumeID string) ([]*db.ResumeExperience, error)
 	GetSkillsByResumeID(ctx context.Context, resumeID string) ([]*db.ResumeSkill, error)
+	GetProjectsByResumeID(ctx context.Context, resumeID string) ([]*db.ResumeProject, error)
 	GetLogsByResumeID(ctx context.Context, resumeID string) ([]*db.ResumeLog, error)
 
 	// 日志记录
@@ -67,6 +70,9 @@ type ResumeRepo interface {
 	// 状态更新
 	UpdateStatus(ctx context.Context, id string, status ResumeStatus) error
 	UpdateErrorMessage(ctx context.Context, id string, errorMsg string) error
+
+	// 数据清理
+	ClearParsedData(ctx context.Context, resumeID string) error
 }
 
 // ParserService LLM解析服务接口
@@ -144,17 +150,19 @@ type UpdateResumeReq struct {
 	Educations       []*UpdateResumeEducation  `json:"educations,omitempty"`
 	Experiences      []*UpdateResumeExperience `json:"experiences,omitempty"`
 	Skills           []*UpdateResumeSkill      `json:"skills,omitempty"`
+	Projects         []*UpdateResumeProject    `json:"projects,omitempty"`
 }
 
 // UpdateResumeEducation 更新教育经历请求
 type UpdateResumeEducation struct {
-	ID        *string    `json:"id,omitempty"`         // 教育经历ID，更新时必填
-	Action    string     `json:"action"`               // 操作类型：create, update, delete
-	School    *string    `json:"school,omitempty"`     // 学校
-	Degree    *string    `json:"degree,omitempty"`     // 学位
-	Major     *string    `json:"major,omitempty"`      // 专业
-	StartDate *time.Time `json:"start_date,omitempty"` // 开始时间
-	EndDate   *time.Time `json:"end_date,omitempty"`   // 结束时间
+	ID             *string                `json:"id,omitempty"`              // 教育经历ID，更新时必填
+	Action         string                 `json:"action"`                    // 操作类型：create, update, delete
+	School         *string                `json:"school,omitempty"`          // 学校
+	Degree         *string                `json:"degree,omitempty"`          // 学位
+	Major          *string                `json:"major,omitempty"`           // 专业
+	StartDate      *time.Time             `json:"start_date,omitempty"`      // 开始时间
+	EndDate        *time.Time             `json:"end_date,omitempty"`        // 结束时间
+	UniversityType *consts.UniversityType `json:"university_type,omitempty"` // 学校类型
 }
 
 // UpdateResumeExperience 更新工作经历请求
@@ -176,6 +184,23 @@ type UpdateResumeSkill struct {
 	SkillName   *string `json:"skill_name,omitempty"`  // 技能名称
 	Level       *string `json:"level,omitempty"`       // 技能水平
 	Description *string `json:"description,omitempty"` // 技能描述
+}
+
+// UpdateResumeProject 更新项目经验请求
+type UpdateResumeProject struct {
+	ID               *string    `json:"id,omitempty"`               // 项目经验ID，更新时必填
+	Action           string     `json:"action"`                     // 操作类型：create, update, delete
+	Name             *string    `json:"name,omitempty"`             // 项目名称
+	Role             *string    `json:"role,omitempty"`             // 担任角色
+	Company          *string    `json:"company,omitempty"`          // 所属公司
+	StartDate        *time.Time `json:"start_date,omitempty"`       // 开始时间
+	EndDate          *time.Time `json:"end_date,omitempty"`         // 结束时间
+	Description      *string    `json:"description,omitempty"`      // 项目描述
+	Responsibilities *string    `json:"responsibilities,omitempty"` // 主要职责
+	Achievements     *string    `json:"achievements,omitempty"`     // 项目成果
+	Technologies     *string    `json:"technologies,omitempty"`     // 使用技术
+	ProjectURL       *string    `json:"project_url,omitempty"`      // 项目链接
+	ProjectType      *string    `json:"project_type,omitempty"`     // 项目类型
 }
 
 // Resume 简历信息
@@ -236,20 +261,22 @@ type ResumeDetail struct {
 	Educations  []*ResumeEducation  `json:"educations"`
 	Experiences []*ResumeExperience `json:"experiences"`
 	Skills      []*ResumeSkill      `json:"skills"`
+	Projects    []*ResumeProject    `json:"projects"`
 	Logs        []*ResumeLog        `json:"logs"`
 }
 
 // ResumeEducation 教育经历
 type ResumeEducation struct {
-	ID        string     `json:"id"`
-	ResumeID  string     `json:"resume_id"`
-	School    string     `json:"school"`
-	Degree    string     `json:"degree"`
-	Major     string     `json:"major"`
-	StartDate *time.Time `json:"start_date,omitempty"`
-	EndDate   *time.Time `json:"end_date,omitempty"`
-	CreatedAt int64      `json:"created_at"`
-	UpdatedAt int64      `json:"updated_at"`
+	ID             string                `json:"id"`
+	ResumeID       string                `json:"resume_id"`
+	School         string                `json:"school"`
+	Degree         string                `json:"degree"`
+	Major          string                `json:"major"`
+	StartDate      *time.Time            `json:"start_date,omitempty"`
+	EndDate        *time.Time            `json:"end_date,omitempty"`
+	UniversityType consts.UniversityType `json:"university_type"`
+	CreatedAt      int64                 `json:"created_at"`
+	UpdatedAt      int64                 `json:"updated_at"`
 }
 
 func (e *ResumeEducation) From(entity *db.ResumeEducation) *ResumeEducation {
@@ -267,6 +294,7 @@ func (e *ResumeEducation) From(entity *db.ResumeEducation) *ResumeEducation {
 	if !entity.EndDate.IsZero() {
 		e.EndDate = &entity.EndDate
 	}
+	e.UniversityType = consts.UniversityType(entity.UniversityType)
 	e.CreatedAt = entity.CreatedAt.Unix()
 	e.UpdatedAt = entity.UpdatedAt.Unix()
 	return e
@@ -332,7 +360,52 @@ func (s *ResumeSkill) From(entity *db.ResumeSkill) *ResumeSkill {
 	return s
 }
 
-// ResumeLog 操作日志
+// ResumeProject 项目经验
+type ResumeProject struct {
+	ID               string     `json:"id"`
+	ResumeID         string     `json:"resume_id"`
+	Name             string     `json:"name"`
+	Role             string     `json:"role"`
+	Company          string     `json:"company"`
+	StartDate        *time.Time `json:"start_date,omitempty"`
+	EndDate          *time.Time `json:"end_date,omitempty"`
+	Description      string     `json:"description"`
+	Responsibilities string     `json:"responsibilities"`
+	Achievements     string     `json:"achievements"`
+	Technologies     string     `json:"technologies"`
+	ProjectURL       string     `json:"project_url"`
+	ProjectType      string     `json:"project_type"`
+	CreatedAt        int64      `json:"created_at"`
+	UpdatedAt        int64      `json:"updated_at"`
+}
+
+func (p *ResumeProject) From(entity *db.ResumeProject) *ResumeProject {
+	if entity == nil {
+		return p
+	}
+	p.ID = entity.ID.String()
+	p.ResumeID = entity.ResumeID.String()
+	p.Name = entity.Name
+	p.Role = entity.Role
+	p.Company = entity.Company
+	if !entity.StartDate.IsZero() {
+		p.StartDate = &entity.StartDate
+	}
+	if !entity.EndDate.IsZero() {
+		p.EndDate = &entity.EndDate
+	}
+	p.Description = entity.Description
+	p.Responsibilities = entity.Responsibilities
+	p.Achievements = entity.Achievements
+	p.Technologies = entity.Technologies
+	p.ProjectURL = entity.ProjectURL
+	p.ProjectType = entity.ProjectType
+	p.CreatedAt = entity.CreatedAt.Unix()
+	p.UpdatedAt = entity.UpdatedAt.Unix()
+	return p
+}
+
+// ResumeLog 简历日志操作日志
 type ResumeLog struct {
 	ID        string `json:"id"`
 	ResumeID  string `json:"resume_id"`
@@ -373,6 +446,7 @@ type ParsedResumeData struct {
 	Educations  []*ParsedEducation  `json:"educations"`
 	Experiences []*ParsedExperience `json:"experiences"`
 	Skills      []*ParsedSkill      `json:"skills"`
+	Projects    []*ParsedProject    `json:"projects"`
 }
 
 // ParsedBasicInfo 解析的基本信息
@@ -389,12 +463,13 @@ type ParsedBasicInfo struct {
 
 // ParsedEducation 解析的教育经历
 type ParsedEducation struct {
-	School    string     `json:"school"`
-	Major     string     `json:"major"`
-	Degree    string     `json:"degree"`
-	StartDate *time.Time `json:"start_date,omitempty"`
-	EndDate   *time.Time `json:"end_date,omitempty"`
-	GPA       string     `json:"gpa,omitempty"`
+	School         string                `json:"school"`
+	Major          string                `json:"major"`
+	Degree         string                `json:"degree"`
+	StartDate      *time.Time            `json:"start_date,omitempty"`
+	EndDate        *time.Time            `json:"end_date,omitempty"`
+	GPA            string                `json:"gpa,omitempty"`
+	UniversityType consts.UniversityType `json:"university_type,omitempty"`
 }
 
 // ParsedExperience 解析的工作经历
@@ -407,11 +482,26 @@ type ParsedExperience struct {
 	Achievements string     `json:"achievements,omitempty"`
 }
 
-// ParsedSkill 解析的技能
+// ParsedSkill 解析的技能信息
 type ParsedSkill struct {
 	Name        string `json:"name"`
 	Level       string `json:"level"`
 	Description string `json:"description,omitempty"`
+}
+
+// ParsedProject 解析的项目经验信息
+type ParsedProject struct {
+	Name             string     `json:"name"`
+	Role             string     `json:"role"`
+	Company          string     `json:"company,omitempty"`
+	StartDate        *time.Time `json:"start_date,omitempty"`
+	EndDate          *time.Time `json:"end_date,omitempty"`
+	Description      string     `json:"description"`
+	Responsibilities string     `json:"responsibilities,omitempty"`
+	Achievements     string     `json:"achievements,omitempty"`
+	Technologies     string     `json:"technologies,omitempty"`
+	ProjectURL       string     `json:"project_url,omitempty"`
+	ProjectType      string     `json:"project_type,omitempty"`
 }
 
 // FileInfo 文件信息

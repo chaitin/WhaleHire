@@ -54,6 +54,8 @@ const (
 	EdgeEducations = "educations"
 	// EdgeExperiences holds the string denoting the experiences edge name in mutations.
 	EdgeExperiences = "experiences"
+	// EdgeProjects holds the string denoting the projects edge name in mutations.
+	EdgeProjects = "projects"
 	// EdgeSkills holds the string denoting the skills edge name in mutations.
 	EdgeSkills = "skills"
 	// EdgeLogs holds the string denoting the logs edge name in mutations.
@@ -83,6 +85,13 @@ const (
 	ExperiencesInverseTable = "resume_experiences"
 	// ExperiencesColumn is the table column denoting the experiences relation/edge.
 	ExperiencesColumn = "resume_id"
+	// ProjectsTable is the table that holds the projects relation/edge.
+	ProjectsTable = "resume_projects"
+	// ProjectsInverseTable is the table name for the ResumeProject entity.
+	// It exists in this package in order to avoid circular dependency with the "resumeproject" package.
+	ProjectsInverseTable = "resume_projects"
+	// ProjectsColumn is the table column denoting the projects relation/edge.
+	ProjectsColumn = "resume_id"
 	// SkillsTable is the table that holds the skills relation/edge.
 	SkillsTable = "resume_skills"
 	// SkillsInverseTable is the table name for the ResumeSkill entity.
@@ -282,6 +291,20 @@ func ByExperiences(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByProjectsCount orders the results by projects count.
+func ByProjectsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newProjectsStep(), opts...)
+	}
+}
+
+// ByProjects orders the results by projects terms.
+func ByProjects(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProjectsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // BySkillsCount orders the results by skills count.
 func BySkillsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -342,6 +365,13 @@ func newExperiencesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ExperiencesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ExperiencesTable, ExperiencesColumn),
+	)
+}
+func newProjectsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProjectsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ProjectsTable, ProjectsColumn),
 	)
 }
 func newSkillsStep() *sqlgraph.Step {

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/google/uuid"
@@ -29,6 +30,8 @@ type ResumeEducation struct {
 	Degree string `json:"degree,omitempty"`
 	// Major holds the value of the "major" field.
 	Major string `json:"major,omitempty"`
+	// UniversityType holds the value of the "university_type" field.
+	UniversityType consts.UniversityType `json:"university_type,omitempty"`
 	// StartDate holds the value of the "start_date" field.
 	StartDate time.Time `json:"start_date,omitempty"`
 	// EndDate holds the value of the "end_date" field.
@@ -68,7 +71,7 @@ func (*ResumeEducation) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resumeeducation.FieldSchool, resumeeducation.FieldDegree, resumeeducation.FieldMajor:
+		case resumeeducation.FieldSchool, resumeeducation.FieldDegree, resumeeducation.FieldMajor, resumeeducation.FieldUniversityType:
 			values[i] = new(sql.NullString)
 		case resumeeducation.FieldDeletedAt, resumeeducation.FieldStartDate, resumeeducation.FieldEndDate, resumeeducation.FieldCreatedAt, resumeeducation.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -124,6 +127,12 @@ func (re *ResumeEducation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field major", values[i])
 			} else if value.Valid {
 				re.Major = value.String
+			}
+		case resumeeducation.FieldUniversityType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field university_type", values[i])
+			} else if value.Valid {
+				re.UniversityType = consts.UniversityType(value.String)
 			}
 		case resumeeducation.FieldStartDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -204,6 +213,9 @@ func (re *ResumeEducation) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("major=")
 	builder.WriteString(re.Major)
+	builder.WriteString(", ")
+	builder.WriteString("university_type=")
+	builder.WriteString(fmt.Sprintf("%v", re.UniversityType))
 	builder.WriteString(", ")
 	builder.WriteString("start_date=")
 	builder.WriteString(re.StartDate.Format(time.ANSIC))

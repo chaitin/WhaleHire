@@ -60,6 +60,7 @@ func (Resume) Edges() []ent.Edge {
 		edge.From("user", User.Type).Ref("resumes").Field("uploader_id").Unique().Required(),
 		edge.To("educations", ResumeEducation.Type),
 		edge.To("experiences", ResumeExperience.Type),
+		edge.To("projects", ResumeProject.Type),
 		edge.To("skills", ResumeSkill.Type),
 		edge.To("logs", ResumeLog.Type),
 		edge.To("document_parse", ResumeDocumentParse.Type),

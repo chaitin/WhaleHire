@@ -65,6 +65,8 @@ type ResumeEdges struct {
 	Educations []*ResumeEducation `json:"educations,omitempty"`
 	// Experiences holds the value of the experiences edge.
 	Experiences []*ResumeExperience `json:"experiences,omitempty"`
+	// Projects holds the value of the projects edge.
+	Projects []*ResumeProject `json:"projects,omitempty"`
 	// Skills holds the value of the skills edge.
 	Skills []*ResumeSkill `json:"skills,omitempty"`
 	// Logs holds the value of the logs edge.
@@ -73,7 +75,7 @@ type ResumeEdges struct {
 	DocumentParse []*ResumeDocumentParse `json:"document_parse,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -105,10 +107,19 @@ func (e ResumeEdges) ExperiencesOrErr() ([]*ResumeExperience, error) {
 	return nil, &NotLoadedError{edge: "experiences"}
 }
 
+// ProjectsOrErr returns the Projects value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResumeEdges) ProjectsOrErr() ([]*ResumeProject, error) {
+	if e.loadedTypes[3] {
+		return e.Projects, nil
+	}
+	return nil, &NotLoadedError{edge: "projects"}
+}
+
 // SkillsOrErr returns the Skills value or an error if the edge
 // was not loaded in eager-loading.
 func (e ResumeEdges) SkillsOrErr() ([]*ResumeSkill, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.Skills, nil
 	}
 	return nil, &NotLoadedError{edge: "skills"}
@@ -117,7 +128,7 @@ func (e ResumeEdges) SkillsOrErr() ([]*ResumeSkill, error) {
 // LogsOrErr returns the Logs value or an error if the edge
 // was not loaded in eager-loading.
 func (e ResumeEdges) LogsOrErr() ([]*ResumeLog, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.Logs, nil
 	}
 	return nil, &NotLoadedError{edge: "logs"}
@@ -126,7 +137,7 @@ func (e ResumeEdges) LogsOrErr() ([]*ResumeLog, error) {
 // DocumentParseOrErr returns the DocumentParse value or an error if the edge
 // was not loaded in eager-loading.
 func (e ResumeEdges) DocumentParseOrErr() ([]*ResumeDocumentParse, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.DocumentParse, nil
 	}
 	return nil, &NotLoadedError{edge: "document_parse"}
@@ -288,6 +299,11 @@ func (r *Resume) QueryEducations() *ResumeEducationQuery {
 // QueryExperiences queries the "experiences" edge of the Resume entity.
 func (r *Resume) QueryExperiences() *ResumeExperienceQuery {
 	return NewResumeClient(r.config).QueryExperiences(r)
+}
+
+// QueryProjects queries the "projects" edge of the Resume entity.
+func (r *Resume) QueryProjects() *ResumeProjectQuery {
+	return NewResumeClient(r.config).QueryProjects(r)
 }
 
 // QuerySkills queries the "skills" edge of the Resume entity.

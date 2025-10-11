@@ -32,6 +32,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
@@ -70,6 +71,7 @@ const (
 	TypeResumeEducation          = "ResumeEducation"
 	TypeResumeExperience         = "ResumeExperience"
 	TypeResumeLog                = "ResumeLog"
+	TypeResumeProject            = "ResumeProject"
 	TypeResumeSkill              = "ResumeSkill"
 	TypeRole                     = "Role"
 	TypeSetting                  = "Setting"
@@ -11991,6 +11993,9 @@ type ResumeMutation struct {
 	experiences           map[uuid.UUID]struct{}
 	removedexperiences    map[uuid.UUID]struct{}
 	clearedexperiences    bool
+	projects              map[uuid.UUID]struct{}
+	removedprojects       map[uuid.UUID]struct{}
+	clearedprojects       bool
 	skills                map[uuid.UUID]struct{}
 	removedskills         map[uuid.UUID]struct{}
 	clearedskills         bool
@@ -13010,6 +13015,60 @@ func (m *ResumeMutation) ResetExperiences() {
 	m.removedexperiences = nil
 }
 
+// AddProjectIDs adds the "projects" edge to the ResumeProject entity by ids.
+func (m *ResumeMutation) AddProjectIDs(ids ...uuid.UUID) {
+	if m.projects == nil {
+		m.projects = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.projects[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProjects clears the "projects" edge to the ResumeProject entity.
+func (m *ResumeMutation) ClearProjects() {
+	m.clearedprojects = true
+}
+
+// ProjectsCleared reports if the "projects" edge to the ResumeProject entity was cleared.
+func (m *ResumeMutation) ProjectsCleared() bool {
+	return m.clearedprojects
+}
+
+// RemoveProjectIDs removes the "projects" edge to the ResumeProject entity by IDs.
+func (m *ResumeMutation) RemoveProjectIDs(ids ...uuid.UUID) {
+	if m.removedprojects == nil {
+		m.removedprojects = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.projects, ids[i])
+		m.removedprojects[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProjects returns the removed IDs of the "projects" edge to the ResumeProject entity.
+func (m *ResumeMutation) RemovedProjectsIDs() (ids []uuid.UUID) {
+	for id := range m.removedprojects {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProjectsIDs returns the "projects" edge IDs in the mutation.
+func (m *ResumeMutation) ProjectsIDs() (ids []uuid.UUID) {
+	for id := range m.projects {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProjects resets all changes to the "projects" edge.
+func (m *ResumeMutation) ResetProjects() {
+	m.projects = nil
+	m.clearedprojects = false
+	m.removedprojects = nil
+}
+
 // AddSkillIDs adds the "skills" edge to the ResumeSkill entity by ids.
 func (m *ResumeMutation) AddSkillIDs(ids ...uuid.UUID) {
 	if m.skills == nil {
@@ -13650,7 +13709,7 @@ func (m *ResumeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ResumeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.user != nil {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -13659,6 +13718,9 @@ func (m *ResumeMutation) AddedEdges() []string {
 	}
 	if m.experiences != nil {
 		edges = append(edges, resume.EdgeExperiences)
+	}
+	if m.projects != nil {
+		edges = append(edges, resume.EdgeProjects)
 	}
 	if m.skills != nil {
 		edges = append(edges, resume.EdgeSkills)
@@ -13692,6 +13754,12 @@ func (m *ResumeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeProjects:
+		ids := make([]ent.Value, 0, len(m.projects))
+		for id := range m.projects {
+			ids = append(ids, id)
+		}
+		return ids
 	case resume.EdgeSkills:
 		ids := make([]ent.Value, 0, len(m.skills))
 		for id := range m.skills {
@@ -13716,12 +13784,15 @@ func (m *ResumeMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ResumeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removededucations != nil {
 		edges = append(edges, resume.EdgeEducations)
 	}
 	if m.removedexperiences != nil {
 		edges = append(edges, resume.EdgeExperiences)
+	}
+	if m.removedprojects != nil {
+		edges = append(edges, resume.EdgeProjects)
 	}
 	if m.removedskills != nil {
 		edges = append(edges, resume.EdgeSkills)
@@ -13751,6 +13822,12 @@ func (m *ResumeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeProjects:
+		ids := make([]ent.Value, 0, len(m.removedprojects))
+		for id := range m.removedprojects {
+			ids = append(ids, id)
+		}
+		return ids
 	case resume.EdgeSkills:
 		ids := make([]ent.Value, 0, len(m.removedskills))
 		for id := range m.removedskills {
@@ -13775,7 +13852,7 @@ func (m *ResumeMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ResumeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.cleareduser {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -13784,6 +13861,9 @@ func (m *ResumeMutation) ClearedEdges() []string {
 	}
 	if m.clearedexperiences {
 		edges = append(edges, resume.EdgeExperiences)
+	}
+	if m.clearedprojects {
+		edges = append(edges, resume.EdgeProjects)
 	}
 	if m.clearedskills {
 		edges = append(edges, resume.EdgeSkills)
@@ -13807,6 +13887,8 @@ func (m *ResumeMutation) EdgeCleared(name string) bool {
 		return m.clearededucations
 	case resume.EdgeExperiences:
 		return m.clearedexperiences
+	case resume.EdgeProjects:
+		return m.clearedprojects
 	case resume.EdgeSkills:
 		return m.clearedskills
 	case resume.EdgeLogs:
@@ -13840,6 +13922,9 @@ func (m *ResumeMutation) ResetEdge(name string) error {
 		return nil
 	case resume.EdgeExperiences:
 		m.ResetExperiences()
+		return nil
+	case resume.EdgeProjects:
+		m.ResetProjects()
 		return nil
 	case resume.EdgeSkills:
 		m.ResetSkills()
@@ -14992,23 +15077,24 @@ func (m *ResumeDocumentParseMutation) ResetEdge(name string) error {
 // ResumeEducationMutation represents an operation that mutates the ResumeEducation nodes in the graph.
 type ResumeEducationMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	deleted_at    *time.Time
-	school        *string
-	degree        *string
-	major         *string
-	start_date    *time.Time
-	end_date      *time.Time
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	resume        *uuid.UUID
-	clearedresume bool
-	done          bool
-	oldValue      func(context.Context) (*ResumeEducation, error)
-	predicates    []predicate.ResumeEducation
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	deleted_at      *time.Time
+	school          *string
+	degree          *string
+	major           *string
+	university_type *consts.UniversityType
+	start_date      *time.Time
+	end_date        *time.Time
+	created_at      *time.Time
+	updated_at      *time.Time
+	clearedFields   map[string]struct{}
+	resume          *uuid.UUID
+	clearedresume   bool
+	done            bool
+	oldValue        func(context.Context) (*ResumeEducation, error)
+	predicates      []predicate.ResumeEducation
 }
 
 var _ ent.Mutation = (*ResumeEducationMutation)(nil)
@@ -15347,6 +15433,55 @@ func (m *ResumeEducationMutation) ResetMajor() {
 	delete(m.clearedFields, resumeeducation.FieldMajor)
 }
 
+// SetUniversityType sets the "university_type" field.
+func (m *ResumeEducationMutation) SetUniversityType(ct consts.UniversityType) {
+	m.university_type = &ct
+}
+
+// UniversityType returns the value of the "university_type" field in the mutation.
+func (m *ResumeEducationMutation) UniversityType() (r consts.UniversityType, exists bool) {
+	v := m.university_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUniversityType returns the old "university_type" field's value of the ResumeEducation entity.
+// If the ResumeEducation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeEducationMutation) OldUniversityType(ctx context.Context) (v consts.UniversityType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUniversityType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUniversityType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUniversityType: %w", err)
+	}
+	return oldValue.UniversityType, nil
+}
+
+// ClearUniversityType clears the value of the "university_type" field.
+func (m *ResumeEducationMutation) ClearUniversityType() {
+	m.university_type = nil
+	m.clearedFields[resumeeducation.FieldUniversityType] = struct{}{}
+}
+
+// UniversityTypeCleared returns if the "university_type" field was cleared in this mutation.
+func (m *ResumeEducationMutation) UniversityTypeCleared() bool {
+	_, ok := m.clearedFields[resumeeducation.FieldUniversityType]
+	return ok
+}
+
+// ResetUniversityType resets all changes to the "university_type" field.
+func (m *ResumeEducationMutation) ResetUniversityType() {
+	m.university_type = nil
+	delete(m.clearedFields, resumeeducation.FieldUniversityType)
+}
+
 // SetStartDate sets the "start_date" field.
 func (m *ResumeEducationMutation) SetStartDate(t time.Time) {
 	m.start_date = &t
@@ -15578,7 +15713,7 @@ func (m *ResumeEducationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResumeEducationMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.deleted_at != nil {
 		fields = append(fields, resumeeducation.FieldDeletedAt)
 	}
@@ -15593,6 +15728,9 @@ func (m *ResumeEducationMutation) Fields() []string {
 	}
 	if m.major != nil {
 		fields = append(fields, resumeeducation.FieldMajor)
+	}
+	if m.university_type != nil {
+		fields = append(fields, resumeeducation.FieldUniversityType)
 	}
 	if m.start_date != nil {
 		fields = append(fields, resumeeducation.FieldStartDate)
@@ -15624,6 +15762,8 @@ func (m *ResumeEducationMutation) Field(name string) (ent.Value, bool) {
 		return m.Degree()
 	case resumeeducation.FieldMajor:
 		return m.Major()
+	case resumeeducation.FieldUniversityType:
+		return m.UniversityType()
 	case resumeeducation.FieldStartDate:
 		return m.StartDate()
 	case resumeeducation.FieldEndDate:
@@ -15651,6 +15791,8 @@ func (m *ResumeEducationMutation) OldField(ctx context.Context, name string) (en
 		return m.OldDegree(ctx)
 	case resumeeducation.FieldMajor:
 		return m.OldMajor(ctx)
+	case resumeeducation.FieldUniversityType:
+		return m.OldUniversityType(ctx)
 	case resumeeducation.FieldStartDate:
 		return m.OldStartDate(ctx)
 	case resumeeducation.FieldEndDate:
@@ -15702,6 +15844,13 @@ func (m *ResumeEducationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetMajor(v)
+		return nil
+	case resumeeducation.FieldUniversityType:
+		v, ok := value.(consts.UniversityType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUniversityType(v)
 		return nil
 	case resumeeducation.FieldStartDate:
 		v, ok := value.(time.Time)
@@ -15773,6 +15922,9 @@ func (m *ResumeEducationMutation) ClearedFields() []string {
 	if m.FieldCleared(resumeeducation.FieldMajor) {
 		fields = append(fields, resumeeducation.FieldMajor)
 	}
+	if m.FieldCleared(resumeeducation.FieldUniversityType) {
+		fields = append(fields, resumeeducation.FieldUniversityType)
+	}
 	if m.FieldCleared(resumeeducation.FieldStartDate) {
 		fields = append(fields, resumeeducation.FieldStartDate)
 	}
@@ -15805,6 +15957,9 @@ func (m *ResumeEducationMutation) ClearField(name string) error {
 	case resumeeducation.FieldMajor:
 		m.ClearMajor()
 		return nil
+	case resumeeducation.FieldUniversityType:
+		m.ClearUniversityType()
+		return nil
 	case resumeeducation.FieldStartDate:
 		m.ClearStartDate()
 		return nil
@@ -15833,6 +15988,9 @@ func (m *ResumeEducationMutation) ResetField(name string) error {
 		return nil
 	case resumeeducation.FieldMajor:
 		m.ResetMajor()
+		return nil
+	case resumeeducation.FieldUniversityType:
+		m.ResetUniversityType()
 		return nil
 	case resumeeducation.FieldStartDate:
 		m.ResetStartDate()
@@ -17627,6 +17785,1379 @@ func (m *ResumeLogMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ResumeLog edge %s", name)
+}
+
+// ResumeProjectMutation represents an operation that mutates the ResumeProject nodes in the graph.
+type ResumeProjectMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *uuid.UUID
+	deleted_at       *time.Time
+	name             *string
+	role             *string
+	company          *string
+	start_date       *time.Time
+	end_date         *time.Time
+	description      *string
+	responsibilities *string
+	achievements     *string
+	technologies     *string
+	project_url      *string
+	project_type     *string
+	created_at       *time.Time
+	updated_at       *time.Time
+	clearedFields    map[string]struct{}
+	resume           *uuid.UUID
+	clearedresume    bool
+	done             bool
+	oldValue         func(context.Context) (*ResumeProject, error)
+	predicates       []predicate.ResumeProject
+}
+
+var _ ent.Mutation = (*ResumeProjectMutation)(nil)
+
+// resumeprojectOption allows management of the mutation configuration using functional options.
+type resumeprojectOption func(*ResumeProjectMutation)
+
+// newResumeProjectMutation creates new mutation for the ResumeProject entity.
+func newResumeProjectMutation(c config, op Op, opts ...resumeprojectOption) *ResumeProjectMutation {
+	m := &ResumeProjectMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeResumeProject,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withResumeProjectID sets the ID field of the mutation.
+func withResumeProjectID(id uuid.UUID) resumeprojectOption {
+	return func(m *ResumeProjectMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ResumeProject
+		)
+		m.oldValue = func(ctx context.Context) (*ResumeProject, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ResumeProject.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withResumeProject sets the old ResumeProject of the mutation.
+func withResumeProject(node *ResumeProject) resumeprojectOption {
+	return func(m *ResumeProjectMutation) {
+		m.oldValue = func(context.Context) (*ResumeProject, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ResumeProjectMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ResumeProjectMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ResumeProject entities.
+func (m *ResumeProjectMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ResumeProjectMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ResumeProjectMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ResumeProject.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ResumeProjectMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ResumeProjectMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ResumeProjectMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[resumeproject.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ResumeProjectMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ResumeProjectMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, resumeproject.FieldDeletedAt)
+}
+
+// SetResumeID sets the "resume_id" field.
+func (m *ResumeProjectMutation) SetResumeID(u uuid.UUID) {
+	m.resume = &u
+}
+
+// ResumeID returns the value of the "resume_id" field in the mutation.
+func (m *ResumeProjectMutation) ResumeID() (r uuid.UUID, exists bool) {
+	v := m.resume
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeID returns the old "resume_id" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldResumeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeID: %w", err)
+	}
+	return oldValue.ResumeID, nil
+}
+
+// ResetResumeID resets all changes to the "resume_id" field.
+func (m *ResumeProjectMutation) ResetResumeID() {
+	m.resume = nil
+}
+
+// SetName sets the "name" field.
+func (m *ResumeProjectMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ResumeProjectMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ClearName clears the value of the "name" field.
+func (m *ResumeProjectMutation) ClearName() {
+	m.name = nil
+	m.clearedFields[resumeproject.FieldName] = struct{}{}
+}
+
+// NameCleared returns if the "name" field was cleared in this mutation.
+func (m *ResumeProjectMutation) NameCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldName]
+	return ok
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ResumeProjectMutation) ResetName() {
+	m.name = nil
+	delete(m.clearedFields, resumeproject.FieldName)
+}
+
+// SetRole sets the "role" field.
+func (m *ResumeProjectMutation) SetRole(s string) {
+	m.role = &s
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *ResumeProjectMutation) Role() (r string, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldRole(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ClearRole clears the value of the "role" field.
+func (m *ResumeProjectMutation) ClearRole() {
+	m.role = nil
+	m.clearedFields[resumeproject.FieldRole] = struct{}{}
+}
+
+// RoleCleared returns if the "role" field was cleared in this mutation.
+func (m *ResumeProjectMutation) RoleCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldRole]
+	return ok
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *ResumeProjectMutation) ResetRole() {
+	m.role = nil
+	delete(m.clearedFields, resumeproject.FieldRole)
+}
+
+// SetCompany sets the "company" field.
+func (m *ResumeProjectMutation) SetCompany(s string) {
+	m.company = &s
+}
+
+// Company returns the value of the "company" field in the mutation.
+func (m *ResumeProjectMutation) Company() (r string, exists bool) {
+	v := m.company
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompany returns the old "company" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldCompany(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompany is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompany requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompany: %w", err)
+	}
+	return oldValue.Company, nil
+}
+
+// ClearCompany clears the value of the "company" field.
+func (m *ResumeProjectMutation) ClearCompany() {
+	m.company = nil
+	m.clearedFields[resumeproject.FieldCompany] = struct{}{}
+}
+
+// CompanyCleared returns if the "company" field was cleared in this mutation.
+func (m *ResumeProjectMutation) CompanyCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldCompany]
+	return ok
+}
+
+// ResetCompany resets all changes to the "company" field.
+func (m *ResumeProjectMutation) ResetCompany() {
+	m.company = nil
+	delete(m.clearedFields, resumeproject.FieldCompany)
+}
+
+// SetStartDate sets the "start_date" field.
+func (m *ResumeProjectMutation) SetStartDate(t time.Time) {
+	m.start_date = &t
+}
+
+// StartDate returns the value of the "start_date" field in the mutation.
+func (m *ResumeProjectMutation) StartDate() (r time.Time, exists bool) {
+	v := m.start_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartDate returns the old "start_date" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldStartDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartDate: %w", err)
+	}
+	return oldValue.StartDate, nil
+}
+
+// ClearStartDate clears the value of the "start_date" field.
+func (m *ResumeProjectMutation) ClearStartDate() {
+	m.start_date = nil
+	m.clearedFields[resumeproject.FieldStartDate] = struct{}{}
+}
+
+// StartDateCleared returns if the "start_date" field was cleared in this mutation.
+func (m *ResumeProjectMutation) StartDateCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldStartDate]
+	return ok
+}
+
+// ResetStartDate resets all changes to the "start_date" field.
+func (m *ResumeProjectMutation) ResetStartDate() {
+	m.start_date = nil
+	delete(m.clearedFields, resumeproject.FieldStartDate)
+}
+
+// SetEndDate sets the "end_date" field.
+func (m *ResumeProjectMutation) SetEndDate(t time.Time) {
+	m.end_date = &t
+}
+
+// EndDate returns the value of the "end_date" field in the mutation.
+func (m *ResumeProjectMutation) EndDate() (r time.Time, exists bool) {
+	v := m.end_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndDate returns the old "end_date" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldEndDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndDate: %w", err)
+	}
+	return oldValue.EndDate, nil
+}
+
+// ClearEndDate clears the value of the "end_date" field.
+func (m *ResumeProjectMutation) ClearEndDate() {
+	m.end_date = nil
+	m.clearedFields[resumeproject.FieldEndDate] = struct{}{}
+}
+
+// EndDateCleared returns if the "end_date" field was cleared in this mutation.
+func (m *ResumeProjectMutation) EndDateCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldEndDate]
+	return ok
+}
+
+// ResetEndDate resets all changes to the "end_date" field.
+func (m *ResumeProjectMutation) ResetEndDate() {
+	m.end_date = nil
+	delete(m.clearedFields, resumeproject.FieldEndDate)
+}
+
+// SetDescription sets the "description" field.
+func (m *ResumeProjectMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *ResumeProjectMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *ResumeProjectMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[resumeproject.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *ResumeProjectMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *ResumeProjectMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, resumeproject.FieldDescription)
+}
+
+// SetResponsibilities sets the "responsibilities" field.
+func (m *ResumeProjectMutation) SetResponsibilities(s string) {
+	m.responsibilities = &s
+}
+
+// Responsibilities returns the value of the "responsibilities" field in the mutation.
+func (m *ResumeProjectMutation) Responsibilities() (r string, exists bool) {
+	v := m.responsibilities
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResponsibilities returns the old "responsibilities" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldResponsibilities(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResponsibilities is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResponsibilities requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResponsibilities: %w", err)
+	}
+	return oldValue.Responsibilities, nil
+}
+
+// ClearResponsibilities clears the value of the "responsibilities" field.
+func (m *ResumeProjectMutation) ClearResponsibilities() {
+	m.responsibilities = nil
+	m.clearedFields[resumeproject.FieldResponsibilities] = struct{}{}
+}
+
+// ResponsibilitiesCleared returns if the "responsibilities" field was cleared in this mutation.
+func (m *ResumeProjectMutation) ResponsibilitiesCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldResponsibilities]
+	return ok
+}
+
+// ResetResponsibilities resets all changes to the "responsibilities" field.
+func (m *ResumeProjectMutation) ResetResponsibilities() {
+	m.responsibilities = nil
+	delete(m.clearedFields, resumeproject.FieldResponsibilities)
+}
+
+// SetAchievements sets the "achievements" field.
+func (m *ResumeProjectMutation) SetAchievements(s string) {
+	m.achievements = &s
+}
+
+// Achievements returns the value of the "achievements" field in the mutation.
+func (m *ResumeProjectMutation) Achievements() (r string, exists bool) {
+	v := m.achievements
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAchievements returns the old "achievements" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldAchievements(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAchievements is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAchievements requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAchievements: %w", err)
+	}
+	return oldValue.Achievements, nil
+}
+
+// ClearAchievements clears the value of the "achievements" field.
+func (m *ResumeProjectMutation) ClearAchievements() {
+	m.achievements = nil
+	m.clearedFields[resumeproject.FieldAchievements] = struct{}{}
+}
+
+// AchievementsCleared returns if the "achievements" field was cleared in this mutation.
+func (m *ResumeProjectMutation) AchievementsCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldAchievements]
+	return ok
+}
+
+// ResetAchievements resets all changes to the "achievements" field.
+func (m *ResumeProjectMutation) ResetAchievements() {
+	m.achievements = nil
+	delete(m.clearedFields, resumeproject.FieldAchievements)
+}
+
+// SetTechnologies sets the "technologies" field.
+func (m *ResumeProjectMutation) SetTechnologies(s string) {
+	m.technologies = &s
+}
+
+// Technologies returns the value of the "technologies" field in the mutation.
+func (m *ResumeProjectMutation) Technologies() (r string, exists bool) {
+	v := m.technologies
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTechnologies returns the old "technologies" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldTechnologies(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTechnologies is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTechnologies requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTechnologies: %w", err)
+	}
+	return oldValue.Technologies, nil
+}
+
+// ClearTechnologies clears the value of the "technologies" field.
+func (m *ResumeProjectMutation) ClearTechnologies() {
+	m.technologies = nil
+	m.clearedFields[resumeproject.FieldTechnologies] = struct{}{}
+}
+
+// TechnologiesCleared returns if the "technologies" field was cleared in this mutation.
+func (m *ResumeProjectMutation) TechnologiesCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldTechnologies]
+	return ok
+}
+
+// ResetTechnologies resets all changes to the "technologies" field.
+func (m *ResumeProjectMutation) ResetTechnologies() {
+	m.technologies = nil
+	delete(m.clearedFields, resumeproject.FieldTechnologies)
+}
+
+// SetProjectURL sets the "project_url" field.
+func (m *ResumeProjectMutation) SetProjectURL(s string) {
+	m.project_url = &s
+}
+
+// ProjectURL returns the value of the "project_url" field in the mutation.
+func (m *ResumeProjectMutation) ProjectURL() (r string, exists bool) {
+	v := m.project_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectURL returns the old "project_url" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldProjectURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectURL: %w", err)
+	}
+	return oldValue.ProjectURL, nil
+}
+
+// ClearProjectURL clears the value of the "project_url" field.
+func (m *ResumeProjectMutation) ClearProjectURL() {
+	m.project_url = nil
+	m.clearedFields[resumeproject.FieldProjectURL] = struct{}{}
+}
+
+// ProjectURLCleared returns if the "project_url" field was cleared in this mutation.
+func (m *ResumeProjectMutation) ProjectURLCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldProjectURL]
+	return ok
+}
+
+// ResetProjectURL resets all changes to the "project_url" field.
+func (m *ResumeProjectMutation) ResetProjectURL() {
+	m.project_url = nil
+	delete(m.clearedFields, resumeproject.FieldProjectURL)
+}
+
+// SetProjectType sets the "project_type" field.
+func (m *ResumeProjectMutation) SetProjectType(s string) {
+	m.project_type = &s
+}
+
+// ProjectType returns the value of the "project_type" field in the mutation.
+func (m *ResumeProjectMutation) ProjectType() (r string, exists bool) {
+	v := m.project_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectType returns the old "project_type" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldProjectType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectType: %w", err)
+	}
+	return oldValue.ProjectType, nil
+}
+
+// ClearProjectType clears the value of the "project_type" field.
+func (m *ResumeProjectMutation) ClearProjectType() {
+	m.project_type = nil
+	m.clearedFields[resumeproject.FieldProjectType] = struct{}{}
+}
+
+// ProjectTypeCleared returns if the "project_type" field was cleared in this mutation.
+func (m *ResumeProjectMutation) ProjectTypeCleared() bool {
+	_, ok := m.clearedFields[resumeproject.FieldProjectType]
+	return ok
+}
+
+// ResetProjectType resets all changes to the "project_type" field.
+func (m *ResumeProjectMutation) ResetProjectType() {
+	m.project_type = nil
+	delete(m.clearedFields, resumeproject.FieldProjectType)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ResumeProjectMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ResumeProjectMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ResumeProjectMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ResumeProjectMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ResumeProjectMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ResumeProject entity.
+// If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeProjectMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ResumeProjectMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearResume clears the "resume" edge to the Resume entity.
+func (m *ResumeProjectMutation) ClearResume() {
+	m.clearedresume = true
+	m.clearedFields[resumeproject.FieldResumeID] = struct{}{}
+}
+
+// ResumeCleared reports if the "resume" edge to the Resume entity was cleared.
+func (m *ResumeProjectMutation) ResumeCleared() bool {
+	return m.clearedresume
+}
+
+// ResumeIDs returns the "resume" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ResumeID instead. It exists only for internal usage by the builders.
+func (m *ResumeProjectMutation) ResumeIDs() (ids []uuid.UUID) {
+	if id := m.resume; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetResume resets all changes to the "resume" edge.
+func (m *ResumeProjectMutation) ResetResume() {
+	m.resume = nil
+	m.clearedresume = false
+}
+
+// Where appends a list predicates to the ResumeProjectMutation builder.
+func (m *ResumeProjectMutation) Where(ps ...predicate.ResumeProject) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ResumeProjectMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ResumeProjectMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ResumeProject, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ResumeProjectMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ResumeProjectMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ResumeProject).
+func (m *ResumeProjectMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ResumeProjectMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.deleted_at != nil {
+		fields = append(fields, resumeproject.FieldDeletedAt)
+	}
+	if m.resume != nil {
+		fields = append(fields, resumeproject.FieldResumeID)
+	}
+	if m.name != nil {
+		fields = append(fields, resumeproject.FieldName)
+	}
+	if m.role != nil {
+		fields = append(fields, resumeproject.FieldRole)
+	}
+	if m.company != nil {
+		fields = append(fields, resumeproject.FieldCompany)
+	}
+	if m.start_date != nil {
+		fields = append(fields, resumeproject.FieldStartDate)
+	}
+	if m.end_date != nil {
+		fields = append(fields, resumeproject.FieldEndDate)
+	}
+	if m.description != nil {
+		fields = append(fields, resumeproject.FieldDescription)
+	}
+	if m.responsibilities != nil {
+		fields = append(fields, resumeproject.FieldResponsibilities)
+	}
+	if m.achievements != nil {
+		fields = append(fields, resumeproject.FieldAchievements)
+	}
+	if m.technologies != nil {
+		fields = append(fields, resumeproject.FieldTechnologies)
+	}
+	if m.project_url != nil {
+		fields = append(fields, resumeproject.FieldProjectURL)
+	}
+	if m.project_type != nil {
+		fields = append(fields, resumeproject.FieldProjectType)
+	}
+	if m.created_at != nil {
+		fields = append(fields, resumeproject.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, resumeproject.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ResumeProjectMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case resumeproject.FieldDeletedAt:
+		return m.DeletedAt()
+	case resumeproject.FieldResumeID:
+		return m.ResumeID()
+	case resumeproject.FieldName:
+		return m.Name()
+	case resumeproject.FieldRole:
+		return m.Role()
+	case resumeproject.FieldCompany:
+		return m.Company()
+	case resumeproject.FieldStartDate:
+		return m.StartDate()
+	case resumeproject.FieldEndDate:
+		return m.EndDate()
+	case resumeproject.FieldDescription:
+		return m.Description()
+	case resumeproject.FieldResponsibilities:
+		return m.Responsibilities()
+	case resumeproject.FieldAchievements:
+		return m.Achievements()
+	case resumeproject.FieldTechnologies:
+		return m.Technologies()
+	case resumeproject.FieldProjectURL:
+		return m.ProjectURL()
+	case resumeproject.FieldProjectType:
+		return m.ProjectType()
+	case resumeproject.FieldCreatedAt:
+		return m.CreatedAt()
+	case resumeproject.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ResumeProjectMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case resumeproject.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case resumeproject.FieldResumeID:
+		return m.OldResumeID(ctx)
+	case resumeproject.FieldName:
+		return m.OldName(ctx)
+	case resumeproject.FieldRole:
+		return m.OldRole(ctx)
+	case resumeproject.FieldCompany:
+		return m.OldCompany(ctx)
+	case resumeproject.FieldStartDate:
+		return m.OldStartDate(ctx)
+	case resumeproject.FieldEndDate:
+		return m.OldEndDate(ctx)
+	case resumeproject.FieldDescription:
+		return m.OldDescription(ctx)
+	case resumeproject.FieldResponsibilities:
+		return m.OldResponsibilities(ctx)
+	case resumeproject.FieldAchievements:
+		return m.OldAchievements(ctx)
+	case resumeproject.FieldTechnologies:
+		return m.OldTechnologies(ctx)
+	case resumeproject.FieldProjectURL:
+		return m.OldProjectURL(ctx)
+	case resumeproject.FieldProjectType:
+		return m.OldProjectType(ctx)
+	case resumeproject.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case resumeproject.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ResumeProject field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeProjectMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case resumeproject.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case resumeproject.FieldResumeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeID(v)
+		return nil
+	case resumeproject.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case resumeproject.FieldRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	case resumeproject.FieldCompany:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompany(v)
+		return nil
+	case resumeproject.FieldStartDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartDate(v)
+		return nil
+	case resumeproject.FieldEndDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndDate(v)
+		return nil
+	case resumeproject.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case resumeproject.FieldResponsibilities:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResponsibilities(v)
+		return nil
+	case resumeproject.FieldAchievements:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAchievements(v)
+		return nil
+	case resumeproject.FieldTechnologies:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTechnologies(v)
+		return nil
+	case resumeproject.FieldProjectURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectURL(v)
+		return nil
+	case resumeproject.FieldProjectType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectType(v)
+		return nil
+	case resumeproject.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case resumeproject.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeProject field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ResumeProjectMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ResumeProjectMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeProjectMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ResumeProject numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ResumeProjectMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(resumeproject.FieldDeletedAt) {
+		fields = append(fields, resumeproject.FieldDeletedAt)
+	}
+	if m.FieldCleared(resumeproject.FieldName) {
+		fields = append(fields, resumeproject.FieldName)
+	}
+	if m.FieldCleared(resumeproject.FieldRole) {
+		fields = append(fields, resumeproject.FieldRole)
+	}
+	if m.FieldCleared(resumeproject.FieldCompany) {
+		fields = append(fields, resumeproject.FieldCompany)
+	}
+	if m.FieldCleared(resumeproject.FieldStartDate) {
+		fields = append(fields, resumeproject.FieldStartDate)
+	}
+	if m.FieldCleared(resumeproject.FieldEndDate) {
+		fields = append(fields, resumeproject.FieldEndDate)
+	}
+	if m.FieldCleared(resumeproject.FieldDescription) {
+		fields = append(fields, resumeproject.FieldDescription)
+	}
+	if m.FieldCleared(resumeproject.FieldResponsibilities) {
+		fields = append(fields, resumeproject.FieldResponsibilities)
+	}
+	if m.FieldCleared(resumeproject.FieldAchievements) {
+		fields = append(fields, resumeproject.FieldAchievements)
+	}
+	if m.FieldCleared(resumeproject.FieldTechnologies) {
+		fields = append(fields, resumeproject.FieldTechnologies)
+	}
+	if m.FieldCleared(resumeproject.FieldProjectURL) {
+		fields = append(fields, resumeproject.FieldProjectURL)
+	}
+	if m.FieldCleared(resumeproject.FieldProjectType) {
+		fields = append(fields, resumeproject.FieldProjectType)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ResumeProjectMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ResumeProjectMutation) ClearField(name string) error {
+	switch name {
+	case resumeproject.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case resumeproject.FieldName:
+		m.ClearName()
+		return nil
+	case resumeproject.FieldRole:
+		m.ClearRole()
+		return nil
+	case resumeproject.FieldCompany:
+		m.ClearCompany()
+		return nil
+	case resumeproject.FieldStartDate:
+		m.ClearStartDate()
+		return nil
+	case resumeproject.FieldEndDate:
+		m.ClearEndDate()
+		return nil
+	case resumeproject.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case resumeproject.FieldResponsibilities:
+		m.ClearResponsibilities()
+		return nil
+	case resumeproject.FieldAchievements:
+		m.ClearAchievements()
+		return nil
+	case resumeproject.FieldTechnologies:
+		m.ClearTechnologies()
+		return nil
+	case resumeproject.FieldProjectURL:
+		m.ClearProjectURL()
+		return nil
+	case resumeproject.FieldProjectType:
+		m.ClearProjectType()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeProject nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ResumeProjectMutation) ResetField(name string) error {
+	switch name {
+	case resumeproject.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case resumeproject.FieldResumeID:
+		m.ResetResumeID()
+		return nil
+	case resumeproject.FieldName:
+		m.ResetName()
+		return nil
+	case resumeproject.FieldRole:
+		m.ResetRole()
+		return nil
+	case resumeproject.FieldCompany:
+		m.ResetCompany()
+		return nil
+	case resumeproject.FieldStartDate:
+		m.ResetStartDate()
+		return nil
+	case resumeproject.FieldEndDate:
+		m.ResetEndDate()
+		return nil
+	case resumeproject.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case resumeproject.FieldResponsibilities:
+		m.ResetResponsibilities()
+		return nil
+	case resumeproject.FieldAchievements:
+		m.ResetAchievements()
+		return nil
+	case resumeproject.FieldTechnologies:
+		m.ResetTechnologies()
+		return nil
+	case resumeproject.FieldProjectURL:
+		m.ResetProjectURL()
+		return nil
+	case resumeproject.FieldProjectType:
+		m.ResetProjectType()
+		return nil
+	case resumeproject.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case resumeproject.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeProject field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ResumeProjectMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.resume != nil {
+		edges = append(edges, resumeproject.EdgeResume)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ResumeProjectMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case resumeproject.EdgeResume:
+		if id := m.resume; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ResumeProjectMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ResumeProjectMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ResumeProjectMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedresume {
+		edges = append(edges, resumeproject.EdgeResume)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ResumeProjectMutation) EdgeCleared(name string) bool {
+	switch name {
+	case resumeproject.EdgeResume:
+		return m.clearedresume
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ResumeProjectMutation) ClearEdge(name string) error {
+	switch name {
+	case resumeproject.EdgeResume:
+		m.ClearResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeProject unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ResumeProjectMutation) ResetEdge(name string) error {
+	switch name {
+	case resumeproject.EdgeResume:
+		m.ResetResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeProject edge %s", name)
 }
 
 // ResumeSkillMutation represents an operation that mutates the ResumeSkill nodes in the graph.
