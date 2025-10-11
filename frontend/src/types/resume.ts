@@ -72,6 +72,19 @@ export interface ResumeSkill {
   updated_at: number;
 }
 
+// 项目经历
+export interface ResumeProject {
+  id: string;
+  resume_id: string;
+  project_name: string;
+  description: string;
+  tech_stack: string;
+  start_date: string;
+  end_date: string;
+  created_at: number;
+  updated_at: number;
+}
+
 // 简历日志
 export interface ResumeLog {
   id: string;
@@ -87,6 +100,7 @@ export interface ResumeDetail extends Resume {
   experiences: ResumeExperience[];
   educations: ResumeEducation[];
   skills: ResumeSkill[];
+  projects: ResumeProject[];
   logs: ResumeLog[];
 }
 
@@ -136,6 +150,7 @@ export interface ResumeUpdateParams {
   experiences?: UpdateResumeExperience[];
   educations?: UpdateResumeEducation[];
   skills?: UpdateResumeSkill[];
+  projects?: UpdateResumeProject[];
 }
 
 // 更新工作经历参数
@@ -168,6 +183,17 @@ export interface UpdateResumeSkill {
   skill_name?: string;
   level?: string;
   description?: string;
+}
+
+// 更新项目经历参数
+export interface UpdateResumeProject {
+  id?: string; // 更新时必填
+  action: 'create' | 'update' | 'delete'; // 操作类型
+  project_name?: string;
+  description?: string;
+  tech_stack?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 // 简历解析进度 - 根据swagger ResumeParseProgress定义

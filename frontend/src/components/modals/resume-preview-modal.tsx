@@ -206,6 +206,16 @@ export function ResumePreviewModal({
             level: skill.level,
             description: skill.description,
           })) || [],
+        projects:
+          resumeDetail.projects?.map((project) => ({
+            id: project.id,
+            action: 'update' as const,
+            project_name: project.project_name,
+            description: project.description,
+            tech_stack: project.tech_stack,
+            start_date: project.start_date,
+            end_date: project.end_date,
+          })) || [],
       });
     }
   };
@@ -310,6 +320,21 @@ export function ResumePreviewModal({
       setEditFormData({
         ...editFormData,
         educations: newEducations,
+      });
+    }
+  };
+
+  // 更新项目经历
+  const updateProject = (index: number, field: string, value: string) => {
+    if (editFormData && editFormData.projects) {
+      const newProjects = [...editFormData.projects];
+      newProjects[index] = {
+        ...newProjects[index],
+        [field]: value,
+      };
+      setEditFormData({
+        ...editFormData,
+        projects: newProjects,
       });
     }
   };
@@ -607,35 +632,12 @@ export function ResumePreviewModal({
                             <span>{resumeDetail.current_city}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-1">
-                          <Github className="w-4 h-4" />
-                          <span>github.com/zhangming</span>
-                        </div>
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* 个人介绍模块 */}
-                <div className="mb-8">
-                  <div className="border-l-4 border-green-500 pl-4 mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      个人介绍
-                    </h2>
-                  </div>
-                  {isEditing ? (
-                    <textarea
-                      className="w-full p-3 border border-gray-300 rounded-md resize-none"
-                      rows={4}
-                      placeholder="请输入个人介绍..."
-                      defaultValue="拥有5年以上前端开发经验，精通React、Vue等主流框架，熟悉TypeScript、Node.js等技术栈。具备良好的代码规范意识和团队协作能力，能够独立完成复杂项目的开发和维护。"
-                    />
-                  ) : (
-                    <p className="text-gray-700 leading-relaxed">
-                      拥有5年以上前端开发经验，精通React、Vue等主流框架，熟悉TypeScript、Node.js等技术栈。具备良好的代码规范意识和团队协作能力，能够独立完成复杂项目的开发和维护。
-                    </p>
-                  )}
-                </div>
+
 
                 {/* 工作经验模块 */}
                 {((isEditing && editFormData?.experiences) ||
@@ -718,6 +720,102 @@ export function ResumePreviewModal({
                             exp.description && (
                               <div className="text-gray-700 leading-relaxed">
                                 {exp.description
+                                  .split('\n')
+                                  .map((line, lineIndex) => (
+                                    <p key={lineIndex} className="mb-2">
+                                      • {line}
+                                    </p>
+                                  ))}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 项目经历模块 */}
+                {((isEditing && editFormData?.projects) ||
+                  (!isEditing && resumeDetail.projects)) && (
+                  <div className="mb-8">
+                    <div className="border-l-4 border-green-500 pl-4 mb-6">
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        项目经历
+                      </h2>
+                    </div>
+                    <div className="space-y-6">
+                      {(isEditing
+                        ? editFormData?.projects
+                        : resumeDetail.projects
+                      )?.map((project, index) => (
+                        <div
+                          key={project.id || index}
+                          className="bg-gray-50 rounded-lg p-6"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              {isEditing ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    value={project.project_name || ''}
+                                    onChange={(e) =>
+                                      updateProject(
+                                        index,
+                                        'project_name',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="项目名称"
+                                    className="text-lg font-semibold"
+                                  />
+                                  <Input
+                                    value={project.tech_stack || ''}
+                                    onChange={(e) =>
+                                      updateProject(
+                                        index,
+                                        'tech_stack',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="技术栈"
+                                    className="text-green-600 font-medium"
+                                  />
+                                </div>
+                              ) : (
+                                <>
+                                  <h3 className="text-lg font-semibold text-gray-900">
+                                    {project.project_name}
+                                  </h3>
+                                  <p className="text-green-600 font-medium">
+                                    {project.tech_stack}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                            <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded">
+                              {formatDate(project.start_date)} -{' '}
+                              {project.end_date ? formatDate(project.end_date) : '至今'}
+                            </span>
+                          </div>
+                          {isEditing ? (
+                            <textarea
+                              value={project.description || ''}
+                              onChange={(e) =>
+                                updateProject(
+                                  index,
+                                  'description',
+                                  e.target.value
+                                )
+                              }
+                              placeholder="项目描述"
+                              className="w-full p-3 border border-gray-300 rounded-md resize-none"
+                              rows={3}
+                            />
+                          ) : (
+                            project.description && (
+                              <div className="text-gray-700 leading-relaxed">
+                                {project.description
                                   .split('\n')
                                   .map((line, lineIndex) => (
                                     <p key={lineIndex} className="mb-2">
