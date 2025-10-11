@@ -35,6 +35,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
@@ -88,6 +89,8 @@ type Client struct {
 	ResumeExperience *ResumeExperienceClient
 	// ResumeLog is the client for interacting with the ResumeLog builders.
 	ResumeLog *ResumeLogClient
+	// ResumeProject is the client for interacting with the ResumeProject builders.
+	ResumeProject *ResumeProjectClient
 	// ResumeSkill is the client for interacting with the ResumeSkill builders.
 	ResumeSkill *ResumeSkillClient
 	// Role is the client for interacting with the Role builders.
@@ -130,6 +133,7 @@ func (c *Client) init() {
 	c.ResumeEducation = NewResumeEducationClient(c.config)
 	c.ResumeExperience = NewResumeExperienceClient(c.config)
 	c.ResumeLog = NewResumeLogClient(c.config)
+	c.ResumeProject = NewResumeProjectClient(c.config)
 	c.ResumeSkill = NewResumeSkillClient(c.config)
 	c.Role = NewRoleClient(c.config)
 	c.Setting = NewSettingClient(c.config)
@@ -247,6 +251,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ResumeEducation:          NewResumeEducationClient(cfg),
 		ResumeExperience:         NewResumeExperienceClient(cfg),
 		ResumeLog:                NewResumeLogClient(cfg),
+		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
 		Setting:                  NewSettingClient(cfg),
@@ -291,6 +296,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ResumeEducation:          NewResumeEducationClient(cfg),
 		ResumeExperience:         NewResumeExperienceClient(cfg),
 		ResumeLog:                NewResumeLogClient(cfg),
+		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
 		Setting:                  NewSettingClient(cfg),
@@ -330,8 +336,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Department, c.JobEducationRequirement, c.JobExperienceRequirement,
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
-		c.ResumeExperience, c.ResumeLog, c.ResumeSkill, c.Role, c.Setting, c.User,
-		c.UserIdentity, c.UserLoginHistory,
+		c.ResumeExperience, c.ResumeLog, c.ResumeProject, c.ResumeSkill, c.Role,
+		c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Use(hooks...)
 	}
@@ -345,8 +351,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Department, c.JobEducationRequirement, c.JobExperienceRequirement,
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
-		c.ResumeExperience, c.ResumeLog, c.ResumeSkill, c.Role, c.Setting, c.User,
-		c.UserIdentity, c.UserLoginHistory,
+		c.ResumeExperience, c.ResumeLog, c.ResumeProject, c.ResumeSkill, c.Role,
+		c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -393,6 +399,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ResumeExperience.mutate(ctx, m)
 	case *ResumeLogMutation:
 		return c.ResumeLog.mutate(ctx, m)
+	case *ResumeProjectMutation:
+		return c.ResumeProject.mutate(ctx, m)
 	case *ResumeSkillMutation:
 		return c.ResumeSkill.mutate(ctx, m)
 	case *RoleMutation:
@@ -2866,6 +2874,22 @@ func (c *ResumeClient) QueryExperiences(r *Resume) *ResumeExperienceQuery {
 	return query
 }
 
+// QueryProjects queries the projects edge of a Resume.
+func (c *ResumeClient) QueryProjects(r *Resume) *ResumeProjectQuery {
+	query := (&ResumeProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, id),
+			sqlgraph.To(resumeproject.Table, resumeproject.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.ProjectsTable, resume.ProjectsColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QuerySkills queries the skills edge of a Resume.
 func (c *ResumeClient) QuerySkills(r *Resume) *ResumeSkillQuery {
 	query := (&ResumeSkillClient{config: c.config}).Query()
@@ -3542,6 +3566,157 @@ func (c *ResumeLogClient) mutate(ctx context.Context, m *ResumeLogMutation) (Val
 		return (&ResumeLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("db: unknown ResumeLog mutation op: %q", m.Op())
+	}
+}
+
+// ResumeProjectClient is a client for the ResumeProject schema.
+type ResumeProjectClient struct {
+	config
+}
+
+// NewResumeProjectClient returns a client for the ResumeProject from the given config.
+func NewResumeProjectClient(c config) *ResumeProjectClient {
+	return &ResumeProjectClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resumeproject.Hooks(f(g(h())))`.
+func (c *ResumeProjectClient) Use(hooks ...Hook) {
+	c.hooks.ResumeProject = append(c.hooks.ResumeProject, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `resumeproject.Intercept(f(g(h())))`.
+func (c *ResumeProjectClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ResumeProject = append(c.inters.ResumeProject, interceptors...)
+}
+
+// Create returns a builder for creating a ResumeProject entity.
+func (c *ResumeProjectClient) Create() *ResumeProjectCreate {
+	mutation := newResumeProjectMutation(c.config, OpCreate)
+	return &ResumeProjectCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ResumeProject entities.
+func (c *ResumeProjectClient) CreateBulk(builders ...*ResumeProjectCreate) *ResumeProjectCreateBulk {
+	return &ResumeProjectCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ResumeProjectClient) MapCreateBulk(slice any, setFunc func(*ResumeProjectCreate, int)) *ResumeProjectCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ResumeProjectCreateBulk{err: fmt.Errorf("calling to ResumeProjectClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ResumeProjectCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ResumeProjectCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ResumeProject.
+func (c *ResumeProjectClient) Update() *ResumeProjectUpdate {
+	mutation := newResumeProjectMutation(c.config, OpUpdate)
+	return &ResumeProjectUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResumeProjectClient) UpdateOne(rp *ResumeProject) *ResumeProjectUpdateOne {
+	mutation := newResumeProjectMutation(c.config, OpUpdateOne, withResumeProject(rp))
+	return &ResumeProjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResumeProjectClient) UpdateOneID(id uuid.UUID) *ResumeProjectUpdateOne {
+	mutation := newResumeProjectMutation(c.config, OpUpdateOne, withResumeProjectID(id))
+	return &ResumeProjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResumeProject.
+func (c *ResumeProjectClient) Delete() *ResumeProjectDelete {
+	mutation := newResumeProjectMutation(c.config, OpDelete)
+	return &ResumeProjectDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ResumeProjectClient) DeleteOne(rp *ResumeProject) *ResumeProjectDeleteOne {
+	return c.DeleteOneID(rp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ResumeProjectClient) DeleteOneID(id uuid.UUID) *ResumeProjectDeleteOne {
+	builder := c.Delete().Where(resumeproject.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResumeProjectDeleteOne{builder}
+}
+
+// Query returns a query builder for ResumeProject.
+func (c *ResumeProjectClient) Query() *ResumeProjectQuery {
+	return &ResumeProjectQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeResumeProject},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ResumeProject entity by its id.
+func (c *ResumeProjectClient) Get(ctx context.Context, id uuid.UUID) (*ResumeProject, error) {
+	return c.Query().Where(resumeproject.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResumeProjectClient) GetX(ctx context.Context, id uuid.UUID) *ResumeProject {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryResume queries the resume edge of a ResumeProject.
+func (c *ResumeProjectClient) QueryResume(rp *ResumeProject) *ResumeQuery {
+	query := (&ResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumeproject.Table, resumeproject.FieldID, id),
+			sqlgraph.To(resume.Table, resume.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, resumeproject.ResumeTable, resumeproject.ResumeColumn),
+		)
+		fromV = sqlgraph.Neighbors(rp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ResumeProjectClient) Hooks() []Hook {
+	hooks := c.hooks.ResumeProject
+	return append(hooks[:len(hooks):len(hooks)], resumeproject.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ResumeProjectClient) Interceptors() []Interceptor {
+	inters := c.inters.ResumeProject
+	return append(inters[:len(inters):len(inters)], resumeproject.Interceptors[:]...)
+}
+
+func (c *ResumeProjectClient) mutate(ctx context.Context, m *ResumeProjectMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ResumeProjectCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ResumeProjectUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ResumeProjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ResumeProjectDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ResumeProject mutation op: %q", m.Op())
 	}
 }
 
@@ -4515,15 +4690,17 @@ type (
 		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Department,
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
-		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill,
-		Role, Setting, User, UserIdentity, UserLoginHistory []ent.Hook
+		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog,
+		ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
+		UserLoginHistory []ent.Hook
 	}
 	inters struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Department,
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
-		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog, ResumeSkill,
-		Role, Setting, User, UserIdentity, UserLoginHistory []ent.Interceptor
+		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog,
+		ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
+		UserLoginHistory []ent.Interceptor
 	}
 )
 

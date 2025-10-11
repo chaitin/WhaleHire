@@ -14,6 +14,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/pkg/entx"
@@ -25,6 +26,11 @@ type ResumeRepo struct {
 
 func NewResumeRepo(db *db.Client) domain.ResumeRepo {
 	return &ResumeRepo{db: db}
+}
+
+// GetClient 获取数据库客户端
+func (r *ResumeRepo) GetClient() *db.Client {
+	return r.db
 }
 
 // Create 创建简历
@@ -68,6 +74,7 @@ func (r *ResumeRepo) GetByID(ctx context.Context, id string) (*db.Resume, error)
 		WithEducations().
 		WithExperiences().
 		WithSkills().
+		WithProjects().
 		WithLogs().
 		Only(ctx)
 }
@@ -128,6 +135,13 @@ func (r *ResumeRepo) Delete(ctx context.Context, id string) error {
 			resumeskill.ResumeID(resumeID),
 		).Exec(ctx); err != nil {
 			return fmt.Errorf("failed to delete resume skills: %w", err)
+		}
+
+		// 删除简历项目经验
+		if _, err := tx.ResumeProject.Delete().Where(
+			resumeproject.ResumeID(resumeID),
+		).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete resume projects: %w", err)
 		}
 
 		// 删除简历日志
@@ -284,6 +298,10 @@ func (r *ResumeRepo) CreateEducation(ctx context.Context, education *db.ResumeEd
 		SetDegree(education.Degree).
 		SetMajor(education.Major)
 
+	if education.UniversityType != "" {
+		creator = creator.SetUniversityType(education.UniversityType)
+	}
+
 	if !education.StartDate.IsZero() {
 		creator = creator.SetStartDate(education.StartDate)
 	}
@@ -321,6 +339,30 @@ func (r *ResumeRepo) CreateSkill(ctx context.Context, skill *db.ResumeSkill) (*d
 		SetLevel(skill.Level).
 		SetDescription(skill.Description).
 		Save(ctx)
+}
+
+// CreateProject 创建项目经验
+func (r *ResumeRepo) CreateProject(ctx context.Context, project *db.ResumeProject) (*db.ResumeProject, error) {
+	creator := r.db.ResumeProject.Create().
+		SetResumeID(project.ResumeID).
+		SetName(project.Name).
+		SetRole(project.Role).
+		SetCompany(project.Company).
+		SetDescription(project.Description).
+		SetResponsibilities(project.Responsibilities).
+		SetAchievements(project.Achievements).
+		SetTechnologies(project.Technologies).
+		SetProjectURL(project.ProjectURL).
+		SetProjectType(project.ProjectType)
+
+	if !project.StartDate.IsZero() {
+		creator = creator.SetStartDate(project.StartDate)
+	}
+	if !project.EndDate.IsZero() {
+		creator = creator.SetEndDate(project.EndDate)
+	}
+
+	return creator.Save(ctx)
 }
 
 // CreateLog 创建操作日志
@@ -395,6 +437,18 @@ func (r *ResumeRepo) GetSkillsByResumeID(ctx context.Context, resumeID string) (
 		All(ctx)
 }
 
+// GetProjectsByResumeID 根据简历ID获取项目经验列表
+func (r *ResumeRepo) GetProjectsByResumeID(ctx context.Context, resumeID string) ([]*db.ResumeProject, error) {
+	id, err := uuid.Parse(resumeID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid resume ID: %w", err)
+	}
+
+	return r.db.ResumeProject.Query().
+		Where(resumeproject.ResumeID(id)).
+		All(ctx)
+}
+
 // GetLogsByResumeID 根据简历ID获取操作日志
 func (r *ResumeRepo) GetLogsByResumeID(ctx context.Context, resumeID string) ([]*db.ResumeLog, error) {
 	resumeUUID, err := uuid.Parse(resumeID)
@@ -440,4 +494,44 @@ func (r *ResumeRepo) GetDocumentParseByResumeID(ctx context.Context, resumeID st
 		Where(resumedocumentparse.ResumeIDEQ(resumeUUID)).
 		Order(resumedocumentparse.ByCreatedAt(sql.OrderDesc())).
 		First(ctx)
+}
+
+// ClearParsedData 清理简历的解析数据
+func (r *ResumeRepo) ClearParsedData(ctx context.Context, resumeID string) error {
+	resumeUUID, err := uuid.Parse(resumeID)
+	if err != nil {
+		return fmt.Errorf("invalid resume ID: %w", err)
+	}
+
+	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		// 删除教育经历
+		if _, err := tx.ResumeEducation.Delete().
+			Where(resumeeducation.ResumeID(resumeUUID)).
+			Exec(ctx); err != nil {
+			return fmt.Errorf("failed to clear educations: %w", err)
+		}
+
+		// 删除工作经历
+		if _, err := tx.ResumeExperience.Delete().
+			Where(resumeexperience.ResumeID(resumeUUID)).
+			Exec(ctx); err != nil {
+			return fmt.Errorf("failed to clear experiences: %w", err)
+		}
+
+		// 删除技能
+		if _, err := tx.ResumeSkill.Delete().
+			Where(resumeskill.ResumeID(resumeUUID)).
+			Exec(ctx); err != nil {
+			return fmt.Errorf("failed to clear skills: %w", err)
+		}
+
+		// 删除项目经验
+		if _, err := tx.ResumeProject.Delete().
+			Where(resumeproject.ResumeID(resumeUUID)).
+			Exec(ctx); err != nil {
+			return fmt.Errorf("failed to clear projects: %w", err)
+		}
+
+		return nil
+	})
 }

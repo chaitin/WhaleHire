@@ -63,6 +63,9 @@ type ResumeExperience func(*sql.Selector)
 // ResumeLog is the predicate function for resumelog builders.
 type ResumeLog func(*sql.Selector)
 
+// ResumeProject is the predicate function for resumeproject builders.
+type ResumeProject func(*sql.Selector)
+
 // ResumeSkill is the predicate function for resumeskill builders.
 type ResumeSkill func(*sql.Selector)
 

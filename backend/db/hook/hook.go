@@ -237,6 +237,18 @@ func (f ResumeLogFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeLogMutation", m)
 }
 
+// The ResumeProjectFunc type is an adapter to allow the use of ordinary
+// function as ResumeProject mutator.
+type ResumeProjectFunc func(context.Context, *db.ResumeProjectMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeProjectFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeProjectMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeProjectMutation", m)
+}
+
 // The ResumeSkillFunc type is an adapter to allow the use of ordinary
 // function as ResumeSkill mutator.
 type ResumeSkillFunc func(context.Context, *db.ResumeSkillMutation) (db.Value, error)

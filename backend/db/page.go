@@ -277,6 +277,20 @@ func (rl *ResumeLogQuery) Page(ctx context.Context, page, size int) ([]*ResumeLo
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (rp *ResumeProjectQuery) Page(ctx context.Context, page, size int) ([]*ResumeProject, *PageInfo, error) {
+	cnt, err := rp.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := rp.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (rs *ResumeSkillQuery) Page(ctx context.Context, page, size int) ([]*ResumeSkill, *PageInfo, error) {
 	cnt, err := rs.Count(ctx)
 	if err != nil {

@@ -17,6 +17,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
@@ -301,6 +302,21 @@ func (rc *ResumeCreate) AddExperiences(r ...*ResumeExperience) *ResumeCreate {
 	return rc.AddExperienceIDs(ids...)
 }
 
+// AddProjectIDs adds the "projects" edge to the ResumeProject entity by IDs.
+func (rc *ResumeCreate) AddProjectIDs(ids ...uuid.UUID) *ResumeCreate {
+	rc.mutation.AddProjectIDs(ids...)
+	return rc
+}
+
+// AddProjects adds the "projects" edges to the ResumeProject entity.
+func (rc *ResumeCreate) AddProjects(r ...*ResumeProject) *ResumeCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return rc.AddProjectIDs(ids...)
+}
+
 // AddSkillIDs adds the "skills" edge to the ResumeSkill entity by IDs.
 func (rc *ResumeCreate) AddSkillIDs(ids ...uuid.UUID) *ResumeCreate {
 	rc.mutation.AddSkillIDs(ids...)
@@ -571,6 +587,22 @@ func (rc *ResumeCreate) createSpec() (*Resume, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumeexperience.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.ProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ProjectsTable,
+			Columns: []string{resume.ProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumeproject.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

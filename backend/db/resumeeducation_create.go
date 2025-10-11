@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/google/uuid"
@@ -83,6 +84,20 @@ func (rec *ResumeEducationCreate) SetMajor(s string) *ResumeEducationCreate {
 func (rec *ResumeEducationCreate) SetNillableMajor(s *string) *ResumeEducationCreate {
 	if s != nil {
 		rec.SetMajor(*s)
+	}
+	return rec
+}
+
+// SetUniversityType sets the "university_type" field.
+func (rec *ResumeEducationCreate) SetUniversityType(ct consts.UniversityType) *ResumeEducationCreate {
+	rec.mutation.SetUniversityType(ct)
+	return rec
+}
+
+// SetNillableUniversityType sets the "university_type" field if the given value is not nil.
+func (rec *ResumeEducationCreate) SetNillableUniversityType(ct *consts.UniversityType) *ResumeEducationCreate {
+	if ct != nil {
+		rec.SetUniversityType(*ct)
 	}
 	return rec
 }
@@ -289,6 +304,10 @@ func (rec *ResumeEducationCreate) createSpec() (*ResumeEducation, *sqlgraph.Crea
 		_spec.SetField(resumeeducation.FieldMajor, field.TypeString, value)
 		_node.Major = value
 	}
+	if value, ok := rec.mutation.UniversityType(); ok {
+		_spec.SetField(resumeeducation.FieldUniversityType, field.TypeString, value)
+		_node.UniversityType = value
+	}
 	if value, ok := rec.mutation.StartDate(); ok {
 		_spec.SetField(resumeeducation.FieldStartDate, field.TypeTime, value)
 		_node.StartDate = value
@@ -455,6 +474,24 @@ func (u *ResumeEducationUpsert) UpdateMajor() *ResumeEducationUpsert {
 // ClearMajor clears the value of the "major" field.
 func (u *ResumeEducationUpsert) ClearMajor() *ResumeEducationUpsert {
 	u.SetNull(resumeeducation.FieldMajor)
+	return u
+}
+
+// SetUniversityType sets the "university_type" field.
+func (u *ResumeEducationUpsert) SetUniversityType(v consts.UniversityType) *ResumeEducationUpsert {
+	u.Set(resumeeducation.FieldUniversityType, v)
+	return u
+}
+
+// UpdateUniversityType sets the "university_type" field to the value that was provided on create.
+func (u *ResumeEducationUpsert) UpdateUniversityType() *ResumeEducationUpsert {
+	u.SetExcluded(resumeeducation.FieldUniversityType)
+	return u
+}
+
+// ClearUniversityType clears the value of the "university_type" field.
+func (u *ResumeEducationUpsert) ClearUniversityType() *ResumeEducationUpsert {
+	u.SetNull(resumeeducation.FieldUniversityType)
 	return u
 }
 
@@ -661,6 +698,27 @@ func (u *ResumeEducationUpsertOne) UpdateMajor() *ResumeEducationUpsertOne {
 func (u *ResumeEducationUpsertOne) ClearMajor() *ResumeEducationUpsertOne {
 	return u.Update(func(s *ResumeEducationUpsert) {
 		s.ClearMajor()
+	})
+}
+
+// SetUniversityType sets the "university_type" field.
+func (u *ResumeEducationUpsertOne) SetUniversityType(v consts.UniversityType) *ResumeEducationUpsertOne {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.SetUniversityType(v)
+	})
+}
+
+// UpdateUniversityType sets the "university_type" field to the value that was provided on create.
+func (u *ResumeEducationUpsertOne) UpdateUniversityType() *ResumeEducationUpsertOne {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.UpdateUniversityType()
+	})
+}
+
+// ClearUniversityType clears the value of the "university_type" field.
+func (u *ResumeEducationUpsertOne) ClearUniversityType() *ResumeEducationUpsertOne {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.ClearUniversityType()
 	})
 }
 
@@ -1044,6 +1102,27 @@ func (u *ResumeEducationUpsertBulk) UpdateMajor() *ResumeEducationUpsertBulk {
 func (u *ResumeEducationUpsertBulk) ClearMajor() *ResumeEducationUpsertBulk {
 	return u.Update(func(s *ResumeEducationUpsert) {
 		s.ClearMajor()
+	})
+}
+
+// SetUniversityType sets the "university_type" field.
+func (u *ResumeEducationUpsertBulk) SetUniversityType(v consts.UniversityType) *ResumeEducationUpsertBulk {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.SetUniversityType(v)
+	})
+}
+
+// UpdateUniversityType sets the "university_type" field to the value that was provided on create.
+func (u *ResumeEducationUpsertBulk) UpdateUniversityType() *ResumeEducationUpsertBulk {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.UpdateUniversityType()
+	})
+}
+
+// ClearUniversityType clears the value of the "university_type" field.
+func (u *ResumeEducationUpsertBulk) ClearUniversityType() *ResumeEducationUpsertBulk {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.ClearUniversityType()
 	})
 }
 
