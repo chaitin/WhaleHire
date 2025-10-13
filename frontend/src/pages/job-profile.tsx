@@ -108,7 +108,6 @@ export function JobProfilePage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // 技能相关状态管理
-  const [availableSkills, setAvailableSkills] = useState<JobSkillMeta[]>([]);
   const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState(false);
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [skillsError, setSkillsError] = useState<string | null>(null);
@@ -117,9 +116,7 @@ export function JobProfilePage() {
   const [selectedRequiredSkills, setSelectedRequiredSkills] = useState<JobSkillMeta[]>([]);
   const [selectedOptionalSkills, setSelectedOptionalSkills] = useState<JobSkillMeta[]>([]);
   
-  // 技能输入框状态
-  const [requiredSkillInput, setRequiredSkillInput] = useState('');
-  const [optionalSkillInput, setOptionalSkillInput] = useState('');
+
   
   // 技能添加小弹窗状态
   const [isSkillInputModalOpen, setIsSkillInputModalOpen] = useState(false);
@@ -190,13 +187,11 @@ export function JobProfilePage() {
     try {
       setSkillsLoading(true);
       setSkillsError(null);
-      const response = await listJobSkillMetaSimple();
-      setAvailableSkills(response.skills || []);
+      await listJobSkillMetaSimple();
+      // 技能列表已获取，但不需要存储到状态中
     } catch (err) {
       console.error('获取技能列表失败:', err);
       setSkillsError(err instanceof Error ? err.message : '获取技能列表失败');
-      // 即使失败也设置为空数组，确保下拉框能正常显示
-      setAvailableSkills([]);
     } finally {
       setSkillsLoading(false);
     }
@@ -208,27 +203,13 @@ export function JobProfilePage() {
   };
 
   // 处理技能添加成功
-  const handleSkillAdded = (newSkill: JobSkillMeta) => {
-    setAvailableSkills((prev) => [...prev, newSkill]);
+  const handleSkillAdded = (_newSkill: JobSkillMeta) => {
     // 清除错误状态
     setSkillsError(null);
+    // 新技能已添加到系统中，无需在本地状态中维护
   };
 
-  // 添加必填技能
-  const handleAddRequiredSkill = (skillId: string) => {
-    const skill = availableSkills.find(s => s.id === skillId);
-    if (skill && !selectedRequiredSkills.find(s => s.id === skillId)) {
-      setSelectedRequiredSkills(prev => [...prev, skill]);
-    }
-  };
 
-  // 添加选填技能
-  const handleAddOptionalSkill = (skillId: string) => {
-    const skill = availableSkills.find(s => s.id === skillId);
-    if (skill && !selectedOptionalSkills.find(s => s.id === skillId)) {
-      setSelectedOptionalSkills(prev => [...prev, skill]);
-    }
-  };
 
   // 删除必填技能
   const handleRemoveRequiredSkill = (skillId: string) => {
@@ -240,51 +221,7 @@ export function JobProfilePage() {
     setSelectedOptionalSkills(prev => prev.filter(s => s.id !== skillId));
   };
 
-  // 从输入框添加必填技能
-  const handleAddRequiredSkillFromInput = () => {
-    const skillName = requiredSkillInput.trim();
-    if (!skillName) return;
-    
-    // 检查是否已存在
-    if (selectedRequiredSkills.find(s => s.name === skillName)) {
-      setRequiredSkillInput('');
-      return;
-    }
-    
-    // 创建新技能对象
-    const newSkill: JobSkillMeta = {
-      id: `temp_${Date.now()}_${Math.random()}`, // 临时ID
-      name: skillName,
-      created_at: Date.now(),
-      updated_at: Date.now()
-    };
-    
-    setSelectedRequiredSkills(prev => [...prev, newSkill]);
-    setRequiredSkillInput('');
-  };
 
-  // 从输入框添加选填技能
-  const handleAddOptionalSkillFromInput = () => {
-    const skillName = optionalSkillInput.trim();
-    if (!skillName) return;
-    
-    // 检查是否已存在
-    if (selectedOptionalSkills.find(s => s.name === skillName)) {
-      setOptionalSkillInput('');
-      return;
-    }
-    
-    // 创建新技能对象
-    const newSkill: JobSkillMeta = {
-      id: `temp_${Date.now()}_${Math.random()}`, // 临时ID
-      name: skillName,
-      created_at: Date.now(),
-      updated_at: Date.now()
-    };
-    
-    setSelectedOptionalSkills(prev => [...prev, newSkill]);
-    setOptionalSkillInput('');
-  };
 
   // 打开技能添加小弹窗
   const handleOpenSkillInputModal = (type: 'required' | 'optional') => {
@@ -377,8 +314,6 @@ export function JobProfilePage() {
     // 清除技能相关状态
     setSelectedRequiredSkills([]);
     setSelectedOptionalSkills([]);
-    setRequiredSkillInput('');
-    setOptionalSkillInput('');
     setIsSkillInputModalOpen(false);
     setSkillInputValue('');
     
@@ -410,10 +345,6 @@ export function JobProfilePage() {
     // 清除技能相关状态
     setSelectedRequiredSkills([]);
     setSelectedOptionalSkills([]);
-    setRequiredSkillInput('');
-    setOptionalSkillInput('');
-    setIsSkillInputModalOpen(false);
-    setSkillInputValue('');
     setIsSkillInputModalOpen(false);
     setSkillInputValue('');
   };
@@ -553,8 +484,6 @@ export function JobProfilePage() {
       setSelectedOptionalSkills(optionalSkills);
       
       // 清空输入框状态
-      setRequiredSkillInput('');
-      setOptionalSkillInput('');
       setIsSkillInputModalOpen(false);
       setSkillInputValue('');
       
@@ -581,8 +510,6 @@ export function JobProfilePage() {
       // 清空技能相关状态
       setSelectedRequiredSkills([]);
       setSelectedOptionalSkills([]);
-      setRequiredSkillInput('');
-      setOptionalSkillInput('');
       setIsSkillInputModalOpen(false);
       setSkillInputValue('');
       
@@ -614,8 +541,6 @@ export function JobProfilePage() {
     // 清除技能相关状态
     setSelectedRequiredSkills([]);
     setSelectedOptionalSkills([]);
-    setRequiredSkillInput('');
-    setOptionalSkillInput('');
     setIsSkillInputModalOpen(false);
     setSkillInputValue('');
     // 清除编辑状态

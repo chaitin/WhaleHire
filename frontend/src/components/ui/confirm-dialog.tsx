@@ -9,7 +9,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogPortal,
-  AlertDialogOverlay,
 } from '@/components/ui/alert-dialog';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { cn } from '@/lib/utils';
