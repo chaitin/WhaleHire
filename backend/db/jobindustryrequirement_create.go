@@ -51,6 +51,14 @@ func (jirc *JobIndustryRequirementCreate) SetIndustry(s string) *JobIndustryRequ
 	return jirc
 }
 
+// SetNillableIndustry sets the "industry" field if the given value is not nil.
+func (jirc *JobIndustryRequirementCreate) SetNillableIndustry(s *string) *JobIndustryRequirementCreate {
+	if s != nil {
+		jirc.SetIndustry(*s)
+	}
+	return jirc
+}
+
 // SetCompanyName sets the "company_name" field.
 func (jirc *JobIndustryRequirementCreate) SetCompanyName(s string) *JobIndustryRequirementCreate {
 	jirc.mutation.SetCompanyName(s)
@@ -62,12 +70,6 @@ func (jirc *JobIndustryRequirementCreate) SetNillableCompanyName(s *string) *Job
 	if s != nil {
 		jirc.SetCompanyName(*s)
 	}
-	return jirc
-}
-
-// SetWeight sets the "weight" field.
-func (jirc *JobIndustryRequirementCreate) SetWeight(i int) *JobIndustryRequirementCreate {
-	jirc.mutation.SetWeight(i)
 	return jirc
 }
 
@@ -184,9 +186,6 @@ func (jirc *JobIndustryRequirementCreate) check() error {
 	if _, ok := jirc.mutation.JobID(); !ok {
 		return &ValidationError{Name: "job_id", err: errors.New(`db: missing required field "JobIndustryRequirement.job_id"`)}
 	}
-	if _, ok := jirc.mutation.Industry(); !ok {
-		return &ValidationError{Name: "industry", err: errors.New(`db: missing required field "JobIndustryRequirement.industry"`)}
-	}
 	if v, ok := jirc.mutation.Industry(); ok {
 		if err := jobindustryrequirement.IndustryValidator(v); err != nil {
 			return &ValidationError{Name: "industry", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.industry": %w`, err)}
@@ -195,14 +194,6 @@ func (jirc *JobIndustryRequirementCreate) check() error {
 	if v, ok := jirc.mutation.CompanyName(); ok {
 		if err := jobindustryrequirement.CompanyNameValidator(v); err != nil {
 			return &ValidationError{Name: "company_name", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.company_name": %w`, err)}
-		}
-	}
-	if _, ok := jirc.mutation.Weight(); !ok {
-		return &ValidationError{Name: "weight", err: errors.New(`db: missing required field "JobIndustryRequirement.weight"`)}
-	}
-	if v, ok := jirc.mutation.Weight(); ok {
-		if err := jobindustryrequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.weight": %w`, err)}
 		}
 	}
 	if _, ok := jirc.mutation.CreatedAt(); !ok {
@@ -256,15 +247,11 @@ func (jirc *JobIndustryRequirementCreate) createSpec() (*JobIndustryRequirement,
 	}
 	if value, ok := jirc.mutation.Industry(); ok {
 		_spec.SetField(jobindustryrequirement.FieldIndustry, field.TypeString, value)
-		_node.Industry = value
+		_node.Industry = &value
 	}
 	if value, ok := jirc.mutation.CompanyName(); ok {
 		_spec.SetField(jobindustryrequirement.FieldCompanyName, field.TypeString, value)
 		_node.CompanyName = &value
-	}
-	if value, ok := jirc.mutation.Weight(); ok {
-		_spec.SetField(jobindustryrequirement.FieldWeight, field.TypeInt, value)
-		_node.Weight = value
 	}
 	if value, ok := jirc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobindustryrequirement.FieldCreatedAt, field.TypeTime, value)
@@ -385,6 +372,12 @@ func (u *JobIndustryRequirementUpsert) UpdateIndustry() *JobIndustryRequirementU
 	return u
 }
 
+// ClearIndustry clears the value of the "industry" field.
+func (u *JobIndustryRequirementUpsert) ClearIndustry() *JobIndustryRequirementUpsert {
+	u.SetNull(jobindustryrequirement.FieldIndustry)
+	return u
+}
+
 // SetCompanyName sets the "company_name" field.
 func (u *JobIndustryRequirementUpsert) SetCompanyName(v string) *JobIndustryRequirementUpsert {
 	u.Set(jobindustryrequirement.FieldCompanyName, v)
@@ -400,24 +393,6 @@ func (u *JobIndustryRequirementUpsert) UpdateCompanyName() *JobIndustryRequireme
 // ClearCompanyName clears the value of the "company_name" field.
 func (u *JobIndustryRequirementUpsert) ClearCompanyName() *JobIndustryRequirementUpsert {
 	u.SetNull(jobindustryrequirement.FieldCompanyName)
-	return u
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobIndustryRequirementUpsert) SetWeight(v int) *JobIndustryRequirementUpsert {
-	u.Set(jobindustryrequirement.FieldWeight, v)
-	return u
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobIndustryRequirementUpsert) UpdateWeight() *JobIndustryRequirementUpsert {
-	u.SetExcluded(jobindustryrequirement.FieldWeight)
-	return u
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobIndustryRequirementUpsert) AddWeight(v int) *JobIndustryRequirementUpsert {
-	u.Add(jobindustryrequirement.FieldWeight, v)
 	return u
 }
 
@@ -533,6 +508,13 @@ func (u *JobIndustryRequirementUpsertOne) UpdateIndustry() *JobIndustryRequireme
 	})
 }
 
+// ClearIndustry clears the value of the "industry" field.
+func (u *JobIndustryRequirementUpsertOne) ClearIndustry() *JobIndustryRequirementUpsertOne {
+	return u.Update(func(s *JobIndustryRequirementUpsert) {
+		s.ClearIndustry()
+	})
+}
+
 // SetCompanyName sets the "company_name" field.
 func (u *JobIndustryRequirementUpsertOne) SetCompanyName(v string) *JobIndustryRequirementUpsertOne {
 	return u.Update(func(s *JobIndustryRequirementUpsert) {
@@ -551,27 +533,6 @@ func (u *JobIndustryRequirementUpsertOne) UpdateCompanyName() *JobIndustryRequir
 func (u *JobIndustryRequirementUpsertOne) ClearCompanyName() *JobIndustryRequirementUpsertOne {
 	return u.Update(func(s *JobIndustryRequirementUpsert) {
 		s.ClearCompanyName()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobIndustryRequirementUpsertOne) SetWeight(v int) *JobIndustryRequirementUpsertOne {
-	return u.Update(func(s *JobIndustryRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobIndustryRequirementUpsertOne) AddWeight(v int) *JobIndustryRequirementUpsertOne {
-	return u.Update(func(s *JobIndustryRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobIndustryRequirementUpsertOne) UpdateWeight() *JobIndustryRequirementUpsertOne {
-	return u.Update(func(s *JobIndustryRequirementUpsert) {
-		s.UpdateWeight()
 	})
 }
 
@@ -856,6 +817,13 @@ func (u *JobIndustryRequirementUpsertBulk) UpdateIndustry() *JobIndustryRequirem
 	})
 }
 
+// ClearIndustry clears the value of the "industry" field.
+func (u *JobIndustryRequirementUpsertBulk) ClearIndustry() *JobIndustryRequirementUpsertBulk {
+	return u.Update(func(s *JobIndustryRequirementUpsert) {
+		s.ClearIndustry()
+	})
+}
+
 // SetCompanyName sets the "company_name" field.
 func (u *JobIndustryRequirementUpsertBulk) SetCompanyName(v string) *JobIndustryRequirementUpsertBulk {
 	return u.Update(func(s *JobIndustryRequirementUpsert) {
@@ -874,27 +842,6 @@ func (u *JobIndustryRequirementUpsertBulk) UpdateCompanyName() *JobIndustryRequi
 func (u *JobIndustryRequirementUpsertBulk) ClearCompanyName() *JobIndustryRequirementUpsertBulk {
 	return u.Update(func(s *JobIndustryRequirementUpsert) {
 		s.ClearCompanyName()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobIndustryRequirementUpsertBulk) SetWeight(v int) *JobIndustryRequirementUpsertBulk {
-	return u.Update(func(s *JobIndustryRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobIndustryRequirementUpsertBulk) AddWeight(v int) *JobIndustryRequirementUpsertBulk {
-	return u.Update(func(s *JobIndustryRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobIndustryRequirementUpsertBulk) UpdateWeight() *JobIndustryRequirementUpsertBulk {
-	return u.Update(func(s *JobIndustryRequirementUpsert) {
-		s.UpdateWeight()
 	})
 }
 

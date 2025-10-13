@@ -32,12 +32,13 @@ import {
 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { MultiSelect } from '@/components/ui/multi-select';
 import {
   listJobProfiles,
   createJobProfile,
   updateJobProfile,
   deleteJobProfile,
-  listJobSkillMeta,
+  listJobSkillMetaSimple,
   getJobProfile,
 } from '@/services/job-profile';
 import { listDepartments } from '@/services/department';
@@ -46,6 +47,11 @@ import type {
   CreateJobProfileReq,
   UpdateJobProfileReq,
   JobSkillMeta,
+  JobSkillInput,
+  JobResponsibilityInput,
+  JobIndustryRequirementInput,
+  JobEducationRequirementInput,
+  JobExperienceRequirementInput,
 } from '@/types/job-profile';
 import type { Department } from '@/services/department';
 import { AddSkillModal } from '@/components/modals/add-skill-modal';
@@ -62,6 +68,76 @@ export function JobProfilePage() {
   const [activeSearchKeyword, setActiveSearchKeyword] = useState<string>(''); // 当前生效的搜索关键词
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // 参数转换映射函数
+  const convertEducationRequirement = (education: string): string => {
+    const educationMap: Record<string, string> = {
+      不限: 'unlimited',
+      大专: 'junior_college',
+      本科: 'bachelor',
+      硕士: 'master',
+      博士: 'doctor',
+    };
+    return educationMap[education] || education;
+  };
+
+  const convertExperienceRequirement = (experience: string): string => {
+    const experienceMap: Record<string, string> = {
+      不限: 'unlimited',
+      应届毕业生: 'fresh_graduate',
+      '1年以下': 'under_one_year',
+      '1-3年': 'one_to_three_years',
+      '3-5年': 'three_to_five_years',
+      '5-10年': 'five_to_ten_years',
+      '10年以上': 'over_ten_years',
+    };
+    return experienceMap[experience] || experience;
+  };
+
+  const convertWorkType = (workType: string): string => {
+    const workTypeMap: Record<string, string> = {
+      全职: 'full_time',
+      兼职: 'part_time',
+      实习: 'internship',
+      外包: 'outsourcing',
+    };
+    return workTypeMap[workType] || workType;
+  };
+
+  // 反向转换函数 - 用于编辑时的数据回显
+  const reverseConvertEducationRequirement = (education: string): string => {
+    const reverseEducationMap: Record<string, string> = {
+      unlimited: '不限',
+      junior_college: '大专',
+      bachelor: '本科',
+      master: '硕士',
+      doctor: '博士',
+    };
+    return reverseEducationMap[education] || education;
+  };
+
+  const reverseConvertExperienceRequirement = (experience: string): string => {
+    const reverseExperienceMap: Record<string, string> = {
+      unlimited: '不限',
+      fresh_graduate: '应届毕业生',
+      under_one_year: '1年以下',
+      one_to_three_years: '1-3年',
+      three_to_five_years: '3-5年',
+      five_to_ten_years: '5-10年',
+      over_ten_years: '10年以上',
+    };
+    return reverseExperienceMap[experience] || experience;
+  };
+
+  const reverseConvertWorkType = (workType: string): string => {
+    const reverseWorkTypeMap: Record<string, string> = {
+      full_time: '全职',
+      part_time: '兼职',
+      internship: '实习',
+      outsourcing: '外包',
+    };
+    return reverseWorkTypeMap[workType] || workType;
+  };
 
   // 获取岗位画像列表
   const fetchJobProfiles = useCallback(async () => {
@@ -95,39 +171,25 @@ export function JobProfilePage() {
 
   // 新建岗位弹窗状态管理
   const [isCreateJobModalOpen, setIsCreateJobModalOpen] = useState(false);
-  
+
   // 编辑岗位弹窗状态管理
   const [isEditJobModalOpen, setIsEditJobModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<JobProfile | null>(null);
   const [editJobLoading, setEditJobLoading] = useState(false);
   const [editJobError, setEditJobError] = useState<string | null>(null);
-  
+
   // 删除岗位确认弹窗状态管理
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingJob, setDeletingJob] = useState<JobProfile | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // 技能相关状态管理
-  const [availableSkills, setAvailableSkills] = useState<JobSkillMeta[]>([]);
   const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState(false);
-  const [skillsLoading, setSkillsLoading] = useState(false);
-  const [skillsError, setSkillsError] = useState<string | null>(null);
-  
-  // 已选择的技能状态
-  const [selectedRequiredSkills, setSelectedRequiredSkills] = useState<JobSkillMeta[]>([]);
-  const [selectedOptionalSkills, setSelectedOptionalSkills] = useState<JobSkillMeta[]>([]);
-  
-  // 技能输入框状态
-  const [requiredSkillInput, setRequiredSkillInput] = useState('');
-  const [optionalSkillInput, setOptionalSkillInput] = useState('');
-  
-  // 技能添加小弹窗状态
-  const [isSkillInputModalOpen, setIsSkillInputModalOpen] = useState(false);
-  const [skillInputType, setSkillInputType] = useState<'required' | 'optional'>('required');
-  const [skillInputValue, setSkillInputValue] = useState('');
 
   // 部门相关状态管理
-  const [availableDepartments, setAvailableDepartments] = useState<Department[]>([]);
+  const [availableDepartments, setAvailableDepartments] = useState<
+    Department[]
+  >([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
   const [departmentsError, setDepartmentsError] = useState<string | null>(null);
 
@@ -141,10 +203,18 @@ export function JobProfilePage() {
     salaryMin: '', // 最低薪资
     salaryMax: '', // 最高薪资
     experience: '',
-    industry: '',
-    skills: '',
+    industryRequirements: [{ industry: '', companyName: '' }], // 行业要求和公司要求数组
     responsibilities: [''], // 改为数组类型，默认包含一个空字符串
   });
+
+  // 技能管理状态 - 改为使用技能ID数组
+  const [selectedRequiredSkillIds, setSelectedRequiredSkillIds] = useState<
+    string[]
+  >([]);
+  const [selectedOptionalSkillIds, setSelectedOptionalSkillIds] = useState<
+    string[]
+  >([]);
+  const [availableSkills, setAvailableSkills] = useState<JobSkillMeta[]>([]);
 
   // 统计数据
   const totalJobs = jobProfiles.length;
@@ -188,143 +258,18 @@ export function JobProfilePage() {
   // 获取技能列表
   const fetchSkills = async () => {
     try {
-      setSkillsLoading(true);
-      setSkillsError(null);
-      const response = await listJobSkillMeta();
-      setAvailableSkills(response.skills || []);
+      const response = await listJobSkillMetaSimple();
+      setAvailableSkills(response.skills || []); // 修复：使用 response.skills 而不是 response.items
     } catch (err) {
       console.error('获取技能列表失败:', err);
-      setSkillsError(err instanceof Error ? err.message : '获取技能列表失败');
-      // 即使失败也设置为空数组，确保下拉框能正常显示
       setAvailableSkills([]);
-    } finally {
-      setSkillsLoading(false);
     }
-  };
-
-  // 重试获取技能列表
-  const retryFetchSkills = async () => {
-    await fetchSkills();
   };
 
   // 处理技能添加成功
   const handleSkillAdded = (newSkill: JobSkillMeta) => {
+    // 将新技能添加到可用技能列表中
     setAvailableSkills((prev) => [...prev, newSkill]);
-    // 清除错误状态
-    setSkillsError(null);
-  };
-
-  // 添加必填技能
-  const handleAddRequiredSkill = (skillId: string) => {
-    const skill = availableSkills.find(s => s.id === skillId);
-    if (skill && !selectedRequiredSkills.find(s => s.id === skillId)) {
-      setSelectedRequiredSkills(prev => [...prev, skill]);
-    }
-  };
-
-  // 添加选填技能
-  const handleAddOptionalSkill = (skillId: string) => {
-    const skill = availableSkills.find(s => s.id === skillId);
-    if (skill && !selectedOptionalSkills.find(s => s.id === skillId)) {
-      setSelectedOptionalSkills(prev => [...prev, skill]);
-    }
-  };
-
-  // 删除必填技能
-  const handleRemoveRequiredSkill = (skillId: string) => {
-    setSelectedRequiredSkills(prev => prev.filter(s => s.id !== skillId));
-  };
-
-  // 删除选填技能
-  const handleRemoveOptionalSkill = (skillId: string) => {
-    setSelectedOptionalSkills(prev => prev.filter(s => s.id !== skillId));
-  };
-
-  // 从输入框添加必填技能
-  const handleAddRequiredSkillFromInput = () => {
-    const skillName = requiredSkillInput.trim();
-    if (!skillName) return;
-    
-    // 检查是否已存在
-    if (selectedRequiredSkills.find(s => s.name === skillName)) {
-      setRequiredSkillInput('');
-      return;
-    }
-    
-    // 创建新技能对象
-    const newSkill: JobSkillMeta = {
-      id: `temp_${Date.now()}_${Math.random()}`, // 临时ID
-      name: skillName,
-      created_at: Date.now(),
-      updated_at: Date.now()
-    };
-    
-    setSelectedRequiredSkills(prev => [...prev, newSkill]);
-    setRequiredSkillInput('');
-  };
-
-  // 从输入框添加选填技能
-  const handleAddOptionalSkillFromInput = () => {
-    const skillName = optionalSkillInput.trim();
-    if (!skillName) return;
-    
-    // 检查是否已存在
-    if (selectedOptionalSkills.find(s => s.name === skillName)) {
-      setOptionalSkillInput('');
-      return;
-    }
-    
-    // 创建新技能对象
-    const newSkill: JobSkillMeta = {
-      id: `temp_${Date.now()}_${Math.random()}`, // 临时ID
-      name: skillName,
-      created_at: Date.now(),
-      updated_at: Date.now()
-    };
-    
-    setSelectedOptionalSkills(prev => [...prev, newSkill]);
-    setOptionalSkillInput('');
-  };
-
-  // 打开技能添加小弹窗
-  const handleOpenSkillInputModal = (type: 'required' | 'optional') => {
-    setSkillInputType(type);
-    setSkillInputValue('');
-    setIsSkillInputModalOpen(true);
-  };
-
-  // 关闭技能添加小弹窗
-  const handleCloseSkillInputModal = () => {
-    setIsSkillInputModalOpen(false);
-    setSkillInputValue('');
-  };
-
-  // 从小弹窗保存技能
-  const handleSaveSkillFromModal = () => {
-    const skillName = skillInputValue.trim();
-    if (!skillName) return;
-    
-    // 创建新技能对象
-    const newSkill: JobSkillMeta = {
-      id: `temp_${Date.now()}_${Math.random()}`, // 临时ID
-      name: skillName,
-      created_at: Date.now(),
-      updated_at: Date.now()
-    };
-    
-    if (skillInputType === 'required') {
-      // 检查是否已存在
-      if (!selectedRequiredSkills.find(s => s.name === skillName)) {
-        setSelectedRequiredSkills(prev => [...prev, newSkill]);
-      }
-    } else {
-      // 检查是否已存在
-      if (!selectedOptionalSkills.find(s => s.name === skillName)) {
-        setSelectedOptionalSkills(prev => [...prev, newSkill]);
-      }
-    }
-    
-    handleCloseSkillInputModal();
   };
 
   // 获取部门列表（目前使用硬编码数据，可以后续扩展为API调用）
@@ -357,6 +302,11 @@ export function JobProfilePage() {
     navigate('/platform-config?openModal=true');
   };
 
+  // 处理跳转到平台配置页面的技能配置弹窗
+  const handleNavigateToSkillConfig = () => {
+    navigate('/platform-config?openSkillModal=true');
+  };
+
   // 打开新建岗位弹窗
   const handleOpenCreateJobModal = () => {
     // 重置表单数据，确保新增岗位时所有字段都为空
@@ -369,19 +319,14 @@ export function JobProfilePage() {
       salaryMin: '',
       salaryMax: '',
       experience: '',
-      industry: '',
-      skills: '',
+      industryRequirements: [{ industry: '', companyName: '' }],
       responsibilities: [''],
     });
     setEditMode('manual');
     // 清除技能相关状态
-    setSelectedRequiredSkills([]);
-    setSelectedOptionalSkills([]);
-    setRequiredSkillInput('');
-    setOptionalSkillInput('');
-    setIsSkillInputModalOpen(false);
-    setSkillInputValue('');
-    
+    setSelectedRequiredSkillIds([]);
+    setSelectedOptionalSkillIds([]);
+
     // 先打开弹窗，确保用户能看到界面
     setIsCreateJobModalOpen(true);
     // 然后异步获取数据，不阻塞弹窗显示
@@ -402,20 +347,13 @@ export function JobProfilePage() {
       salaryMin: '', // 最低薪资
       salaryMax: '', // 最高薪资
       experience: '',
-      industry: '',
-      skills: '',
+      industryRequirements: [{ industry: '', companyName: '' }],
       responsibilities: [''], // 重置为包含一个空字符串的数组
     });
     setEditMode('manual');
     // 清除技能相关状态
-    setSelectedRequiredSkills([]);
-    setSelectedOptionalSkills([]);
-    setRequiredSkillInput('');
-    setOptionalSkillInput('');
-    setIsSkillInputModalOpen(false);
-    setSkillInputValue('');
-    setIsSkillInputModalOpen(false);
-    setSkillInputValue('');
+    setSelectedRequiredSkillIds([]);
+    setSelectedOptionalSkillIds([]);
   };
 
   // 处理表单数据变化
@@ -424,6 +362,44 @@ export function JobProfilePage() {
       ...prev,
       [field]: value,
     }));
+  };
+
+  // 处理行业要求变化
+  const handleIndustryRequirementChange = (
+    index: number,
+    field: 'industry' | 'companyName',
+    value: string
+  ) => {
+    setJobFormData((prev) => ({
+      ...prev,
+      industryRequirements: prev.industryRequirements.map((req, i) =>
+        i === index ? { ...req, [field]: value } : req
+      ),
+    }));
+  };
+
+  // 添加新的行业要求
+  const addIndustryRequirement = () => {
+    setJobFormData((prev) => ({
+      ...prev,
+      industryRequirements: [
+        ...prev.industryRequirements,
+        { industry: '', companyName: '' },
+      ],
+    }));
+  };
+
+  // 删除行业要求
+  const removeIndustryRequirement = (index: number) => {
+    if (index > 0) {
+      // 保留第一个，不允许删除
+      setJobFormData((prev) => ({
+        ...prev,
+        industryRequirements: prev.industryRequirements.filter(
+          (_, i) => i !== index
+        ),
+      }));
+    }
   };
 
   // 处理岗位职责数组变化
@@ -457,17 +433,81 @@ export function JobProfilePage() {
   const handleSaveDraft = async () => {
     try {
       setLoading(true);
+
+      // 准备技能数据
+      const skillInputs: JobSkillInput[] = [
+        ...selectedRequiredSkillIds.map((skillId) => ({
+          skill_id: skillId,
+          type: 'required' as const,
+        })),
+        ...selectedOptionalSkillIds.map((skillId) => ({
+          skill_id: skillId,
+          type: 'bonus' as const,
+        })),
+      ];
+
+      // 准备职责数据
+      const responsibilityInputs: JobResponsibilityInput[] =
+        jobFormData.responsibilities
+          .filter((r) => r.trim())
+          .map((responsibility, index) => ({
+            responsibility,
+            sort_order: index + 1,
+          }));
+
+      // 准备行业要求数据
+      const industryInputs: JobIndustryRequirementInput[] =
+        jobFormData.industryRequirements
+          .filter((item) => item.industry.trim())
+          .map((item) => ({
+            industry: item.industry.trim(),
+            company_name: item.companyName.trim() || undefined,
+          }));
+
+      // 准备学历要求数据
+      const educationInputs: JobEducationRequirementInput[] =
+        jobFormData.education
+          ? [
+              {
+                education_type: convertEducationRequirement(
+                  jobFormData.education
+                ),
+              },
+            ]
+          : [];
+
+      // 准备工作经验要求数据
+      const experienceInputs: JobExperienceRequirementInput[] =
+        jobFormData.experience
+          ? [
+              {
+                experience_type: convertExperienceRequirement(
+                  jobFormData.experience
+                ),
+              },
+            ]
+          : [];
+
       const createData: CreateJobProfileReq = {
         name: jobFormData.name,
         department_id: jobFormData.department,
-        description: jobFormData.responsibilities
-          .filter((r) => r.trim())
-          .join('\n'),
+        work_type: convertWorkType(jobFormData.workType),
+        description: jobFormData.industryRequirements[0]?.companyName || '', // 第一个公司要求作为描述
         location: jobFormData.location,
-        salary_min: jobFormData.salaryMin ? parseInt(jobFormData.salaryMin) : undefined,
-        salary_max: jobFormData.salaryMax ? parseInt(jobFormData.salaryMax) : undefined,
+        salary_min: jobFormData.salaryMin
+          ? parseInt(jobFormData.salaryMin)
+          : undefined,
+        salary_max: jobFormData.salaryMax
+          ? parseInt(jobFormData.salaryMax)
+          : undefined,
         status: 'draft',
+        education_requirements: educationInputs,
+        experience_requirements: experienceInputs,
+        industry_requirements: industryInputs,
+        responsibilities: responsibilityInputs,
+        skills: skillInputs,
       };
+
       await createJobProfile(createData);
       handleCloseCreateJobModal();
       fetchJobProfiles(); // 重新获取列表
@@ -482,17 +522,81 @@ export function JobProfilePage() {
   const handleSaveAndPublish = async () => {
     try {
       setLoading(true);
+
+      // 准备技能数据
+      const skillInputs: JobSkillInput[] = [
+        ...selectedRequiredSkillIds.map((skillId) => ({
+          skill_id: skillId,
+          type: 'required' as const,
+        })),
+        ...selectedOptionalSkillIds.map((skillId) => ({
+          skill_id: skillId,
+          type: 'bonus' as const,
+        })),
+      ];
+
+      // 准备职责数据
+      const responsibilityInputs: JobResponsibilityInput[] =
+        jobFormData.responsibilities
+          .filter((r) => r.trim())
+          .map((responsibility, index) => ({
+            responsibility,
+            sort_order: index + 1,
+          }));
+
+      // 准备行业要求数据
+      const industryInputs: JobIndustryRequirementInput[] =
+        jobFormData.industryRequirements
+          .filter((item) => item.industry.trim())
+          .map((item) => ({
+            industry: item.industry.trim(),
+            company_name: item.companyName.trim() || undefined,
+          }));
+
+      // 准备学历要求数据
+      const educationInputs: JobEducationRequirementInput[] =
+        jobFormData.education
+          ? [
+              {
+                education_type: convertEducationRequirement(
+                  jobFormData.education
+                ),
+              },
+            ]
+          : [];
+
+      // 准备工作经验要求数据
+      const experienceInputs: JobExperienceRequirementInput[] =
+        jobFormData.experience
+          ? [
+              {
+                experience_type: convertExperienceRequirement(
+                  jobFormData.experience
+                ),
+              },
+            ]
+          : [];
+
       const createData: CreateJobProfileReq = {
         name: jobFormData.name,
         department_id: jobFormData.department,
-        description: jobFormData.responsibilities
-          .filter((r) => r.trim())
-          .join('\n'),
+        work_type: convertWorkType(jobFormData.workType),
+        description: jobFormData.industryRequirements[0]?.companyName || '', // 第一个公司要求作为描述
         location: jobFormData.location,
-        salary_min: jobFormData.salaryMin ? parseInt(jobFormData.salaryMin) : undefined,
-        salary_max: jobFormData.salaryMax ? parseInt(jobFormData.salaryMax) : undefined,
+        salary_min: jobFormData.salaryMin
+          ? parseInt(jobFormData.salaryMin)
+          : undefined,
+        salary_max: jobFormData.salaryMax
+          ? parseInt(jobFormData.salaryMax)
+          : undefined,
         status: 'published',
+        education_requirements: educationInputs,
+        experience_requirements: experienceInputs,
+        industry_requirements: industryInputs,
+        responsibilities: responsibilityInputs,
+        skills: skillInputs,
       };
+
       await createJobProfile(createData);
       handleCloseCreateJobModal();
       fetchJobProfiles(); // 重新获取列表
@@ -509,38 +613,89 @@ export function JobProfilePage() {
       setEditJobLoading(true);
       setEditJobError(null);
       setEditingJob(job);
-      
+
       // 调用API获取岗位详情
       const jobDetail = await getJobProfile(job.id);
-      
+
+      // 处理行业要求数据
+      let industryRequirements = [{ industry: '', companyName: '' }];
+      if (
+        jobDetail.industry_requirements &&
+        jobDetail.industry_requirements.length > 0
+      ) {
+        industryRequirements = jobDetail.industry_requirements.map((req) => ({
+          industry: req.industry || '',
+          companyName: req.company_name || '',
+        }));
+      }
+
+      // 处理教育要求数据
+      let educationValue = '';
+      if (
+        jobDetail.education_requirements &&
+        jobDetail.education_requirements.length > 0
+      ) {
+        educationValue = reverseConvertEducationRequirement(
+          jobDetail.education_requirements[0].education_type
+        );
+      }
+
+      // 处理工作经验数据
+      let experienceValue = '';
+      if (
+        jobDetail.experience_requirements &&
+        jobDetail.experience_requirements.length > 0
+      ) {
+        experienceValue = reverseConvertExperienceRequirement(
+          jobDetail.experience_requirements[0].experience_type
+        );
+      }
+
+      // 处理工作性质数据
+      let workTypeValue = '';
+      if (jobDetail.work_type) {
+        workTypeValue = reverseConvertWorkType(jobDetail.work_type);
+      }
+
+      // 处理岗位职责数据 - 使用 responsibilities 数组而不是 description
+      let responsibilitiesArray = [''];
+      if (jobDetail.responsibilities && jobDetail.responsibilities.length > 0) {
+        responsibilitiesArray = jobDetail.responsibilities
+          .map((resp) => resp.responsibility || '')
+          .filter((r) => r.trim());
+        // 确保至少有一个空项用于添加新职责
+        if (responsibilitiesArray.length === 0) {
+          responsibilitiesArray = [''];
+        }
+      }
+
       // 预填充基本信息
       setJobFormData({
         name: jobDetail.name,
         location: jobDetail.location || '',
         department: jobDetail.department_id || '',
-        workType: '',
-        education: '',
+        workType: workTypeValue,
+        education: educationValue,
         salaryMin: jobDetail.salary_min ? jobDetail.salary_min.toString() : '',
         salaryMax: jobDetail.salary_max ? jobDetail.salary_max.toString() : '',
-        experience: '',
-        industry: '',
-        skills: '',
-        responsibilities: jobDetail.description ? jobDetail.description.split('\n').filter(r => r.trim()) : [''],
+        experience: experienceValue,
+        industryRequirements: industryRequirements,
+        responsibilities: responsibilitiesArray,
       });
-      
+
       // 处理技能数据预填充
       const requiredSkills: JobSkillMeta[] = [];
       const optionalSkills: JobSkillMeta[] = [];
-      
+
       if (jobDetail.skills && jobDetail.skills.length > 0) {
-        jobDetail.skills.forEach(skill => {
-           const skillMeta: JobSkillMeta = {
-             id: skill.skill_id,
-             name: skill.skill || `技能${skill.skill_id}`,
-             created_at: 0,
-             updated_at: 0,
-           };
-          
+        jobDetail.skills.forEach((skill) => {
+          const skillMeta: JobSkillMeta = {
+            id: skill.skill_id,
+            name: skill.skill || `技能${skill.skill_id}`,
+            created_at: 0,
+            updated_at: 0,
+          };
+
           if (skill.type === 'required') {
             requiredSkills.push(skillMeta);
           } else if (skill.type === 'bonus') {
@@ -548,16 +703,10 @@ export function JobProfilePage() {
           }
         });
       }
-      
-      setSelectedRequiredSkills(requiredSkills);
-      setSelectedOptionalSkills(optionalSkills);
-      
-      // 清空输入框状态
-      setRequiredSkillInput('');
-      setOptionalSkillInput('');
-      setIsSkillInputModalOpen(false);
-      setSkillInputValue('');
-      
+
+      setSelectedRequiredSkillIds(requiredSkills.map((skill) => skill.id));
+      setSelectedOptionalSkillIds(optionalSkills.map((skill) => skill.id));
+
       setIsEditJobModalOpen(true);
     } catch (err) {
       console.error('获取岗位详情失败:', err);
@@ -573,19 +722,16 @@ export function JobProfilePage() {
         salaryMin: job.salary_min ? job.salary_min.toString() : '',
         salaryMax: job.salary_max ? job.salary_max.toString() : '',
         experience: '',
-        industry: '',
-        skills: '',
-        responsibilities: job.description ? job.description.split('\n').filter(r => r.trim()) : [''],
+        industryRequirements: [{ industry: '', companyName: '' }],
+        responsibilities: job.description
+          ? job.description.split('\n').filter((r) => r.trim())
+          : [''],
       });
-      
+
       // 清空技能相关状态
-      setSelectedRequiredSkills([]);
-      setSelectedOptionalSkills([]);
-      setRequiredSkillInput('');
-      setOptionalSkillInput('');
-      setIsSkillInputModalOpen(false);
-      setSkillInputValue('');
-      
+      setSelectedRequiredSkillIds([]);
+      setSelectedOptionalSkillIds([]);
+
       setIsEditJobModalOpen(true);
     } finally {
       setEditJobLoading(false);
@@ -606,18 +752,13 @@ export function JobProfilePage() {
       salaryMin: '',
       salaryMax: '',
       experience: '',
-      industry: '',
-      skills: '',
+      industryRequirements: [{ industry: '', companyName: '' }],
       responsibilities: [''],
     });
     setEditMode('manual');
     // 清除技能相关状态
-    setSelectedRequiredSkills([]);
-    setSelectedOptionalSkills([]);
-    setRequiredSkillInput('');
-    setOptionalSkillInput('');
-    setIsSkillInputModalOpen(false);
-    setSkillInputValue('');
+    setSelectedRequiredSkillIds([]);
+    setSelectedOptionalSkillIds([]);
     // 清除编辑状态
     setEditJobLoading(false);
     setEditJobError(null);
@@ -626,22 +767,35 @@ export function JobProfilePage() {
   // 处理更新岗位
   const handleUpdateJob = async () => {
     if (!editingJob) return;
-    
+
     try {
       setLoading(true);
-      
+
       // 准备技能数据
       const skillInputs = [
-        ...selectedRequiredSkills.map(skill => ({
-          skill_id: skill.id,
+        ...selectedRequiredSkillIds.map((skillId) => ({
+          skill_id: skillId,
           type: 'required' as const,
         })),
-        ...selectedOptionalSkills.map(skill => ({
-          skill_id: skill.id,
+        ...selectedOptionalSkillIds.map((skillId) => ({
+          skill_id: skillId,
           type: 'bonus' as const,
         })),
       ];
-      
+
+      // 准备行业要求数据
+      const industryRequirements = jobFormData.industryRequirements
+        .filter((req) => req.industry.trim() || req.companyName.trim())
+        .map((req) => ({
+          industry: req.industry,
+          company_name: req.companyName,
+        }));
+
+      // 准备岗位职责数据
+      const responsibilities = jobFormData.responsibilities
+        .filter((r) => r.trim())
+        .map((responsibility) => ({ responsibility }));
+
       const updateData: UpdateJobProfileReq = {
         id: editingJob.id,
         name: jobFormData.name,
@@ -650,8 +804,33 @@ export function JobProfilePage() {
           .filter((r) => r.trim())
           .join('\n'),
         location: jobFormData.location,
-        salary_min: jobFormData.salaryMin ? parseInt(jobFormData.salaryMin) : undefined,
-        salary_max: jobFormData.salaryMax ? parseInt(jobFormData.salaryMax) : undefined,
+        salary_min: jobFormData.salaryMin
+          ? parseInt(jobFormData.salaryMin)
+          : undefined,
+        salary_max: jobFormData.salaryMax
+          ? parseInt(jobFormData.salaryMax)
+          : undefined,
+        work_type: convertWorkType(jobFormData.workType),
+        education_requirements: jobFormData.education
+          ? [
+              {
+                education_type: convertEducationRequirement(
+                  jobFormData.education
+                ),
+              },
+            ]
+          : [],
+        experience_requirements: jobFormData.experience
+          ? [
+              {
+                experience_type: convertExperienceRequirement(
+                  jobFormData.experience
+                ),
+              },
+            ]
+          : [],
+        industry_requirements: industryRequirements,
+        responsibilities: responsibilities,
         skills: skillInputs,
       };
       await updateJobProfile(editingJob.id, updateData);
@@ -673,7 +852,7 @@ export function JobProfilePage() {
   // 确认删除岗位
   const handleDeleteConfirm = async () => {
     if (!deletingJob) return;
-    
+
     try {
       setIsDeleting(true);
       await deleteJobProfile(deletingJob.id);
@@ -1435,7 +1614,7 @@ export function JobProfilePage() {
                 </div>
               </div>
 
-              {/* 第四行：工作经验、行业要求 */}
+              {/* 第四行：工作经验 */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label
@@ -1464,171 +1643,143 @@ export function JobProfilePage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="industry"
-                    className="text-[14px] font-medium text-[#374151]"
-                  >
-                    行业要求
+                <div></div>
+              </div>
+
+              {/* 行业要求和公司要求 */}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-[14px] font-medium text-[#374151]">
+                    行业要求与公司要求
                   </Label>
-                  <Input
-                    id="industry"
-                    placeholder="例如：互联网、金融"
-                    value={jobFormData.industry}
-                    onChange={(e) =>
-                      handleFormDataChange('industry', e.target.value)
-                    }
-                    className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
-                  />
                 </div>
+
+                {jobFormData.industryRequirements.map((requirement, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="如：互联网"
+                      value={requirement.industry}
+                      onChange={(e) =>
+                        handleIndustryRequirementChange(
+                          index,
+                          'industry',
+                          e.target.value
+                        )
+                      }
+                      className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
+                    />
+                    <Input
+                      placeholder="如：阿里巴巴"
+                      value={requirement.companyName}
+                      onChange={(e) =>
+                        handleIndustryRequirementChange(
+                          index,
+                          'companyName',
+                          e.target.value
+                        )
+                      }
+                      className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
+                    />
+                    {/* 新增按钮 - 只在最后一行显示 */}
+                    {index === jobFormData.industryRequirements.length - 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addIndustryRequirement}
+                        className="h-10 w-10 p-0 border-[#22C55E] text-[#22C55E] hover:bg-[#F0FDF4] hover:border-[#16A34A] hover:text-[#16A34A]"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {/* 删除按钮 - 从第二行开始显示 */}
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeIndustryRequirement(index)}
+                        className="h-10 w-10 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* 工作技能 */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-[14px] font-medium text-[#374151]">
-                    工作技能
-                  </Label>
-                  {skillsError && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12px] text-[#EF4444]">
-                        技能加载失败
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={retryFetchSkills}
-                        disabled={skillsLoading}
-                        className="h-6 w-6 p-0 text-[#6B7280] hover:text-[#374151]"
-                        title="重试加载技能"
-                      >
-                        <RefreshCw
-                          className={`h-3 w-3 ${skillsLoading ? 'animate-spin' : ''}`}
-                        />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <Label className="text-[14px] font-medium text-[#374151]">
+                      工作技能 <span className="text-[#EF4444]">*</span>
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNavigateToSkillConfig}
+                      className="h-6 px-2 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      增加
+                    </Button>
+                  </div>
+                  <div></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   {/* 必填技能 */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Label className="text-[14px] font-medium text-[#374151]">
                       必填技能 <span className="text-[#EF4444]">*</span>
                     </Label>
-                    
-                    {/* 技能展示框 */}
-                    <div className="min-h-[100px] p-4 border-2 border-dashed border-[#D1D5DB] rounded-lg bg-[#F9FAFB] hover:border-[#9CA3AF] transition-colors">
-                      {selectedRequiredSkills.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('required')}
-                            className="flex flex-col items-center gap-2 h-auto p-4 text-[#6B7280] hover:text-[#374151] hover:bg-transparent"
-                          >
-                            <div className="w-8 h-8 rounded-full border-2 border-dashed border-current flex items-center justify-center">
-                              <Plus className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm">点击 + 进行技能新增</span>
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {/* 已添加的技能 */}
-                          <div className="flex flex-wrap gap-2">
-                            {selectedRequiredSkills.map((skill) => (
-                              <div
-                                key={skill.id}
-                                className="relative inline-flex items-center px-3 py-1.5 bg-[#EFF6FF] border border-[#BFDBFE] rounded-full text-sm text-[#1E40AF] hover:bg-[#DBEAFE] transition-colors"
-                              >
-                                <span>{skill.name}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveRequiredSkill(skill.id)}
-                                  className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-[#EF4444] text-white rounded-full hover:bg-[#DC2626] transition-colors"
-                                  title="删除技能"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {/* 添加更多技能按钮 */}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('required')}
-                            className="w-8 h-8 p-0 rounded-full border-2 border-dashed border-[#9CA3AF] text-[#6B7280] hover:text-[#374151] hover:border-[#374151] transition-colors"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    <MultiSelect
+                      options={availableSkills.map((skill) => ({
+                        value: skill.id,
+                        label: skill.name,
+                      }))}
+                      selected={selectedRequiredSkillIds}
+                      onChange={setSelectedRequiredSkillIds}
+                      placeholder="请选择必填技能"
+                      multiple={true}
+                      onSelectAll={() => {
+                        const allSkillIds = availableSkills.map(
+                          (skill) => skill.id
+                        );
+                        setSelectedRequiredSkillIds(allSkillIds);
+                      }}
+                      onClearAll={() => {
+                        setSelectedRequiredSkillIds([]);
+                      }}
+                    />
                   </div>
 
                   {/* 选填技能 */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Label className="text-[14px] font-medium text-[#374151]">
                       选填技能
                     </Label>
-                    
-                    {/* 技能展示框 */}
-                    <div className="min-h-[100px] p-4 border-2 border-dashed border-[#D1D5DB] rounded-lg bg-[#F9FAFB] hover:border-[#9CA3AF] transition-colors">
-                      {selectedOptionalSkills.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('optional')}
-                            className="flex flex-col items-center gap-2 h-auto p-4 text-[#6B7280] hover:text-[#374151] hover:bg-transparent"
-                          >
-                            <div className="w-8 h-8 rounded-full border-2 border-dashed border-current flex items-center justify-center">
-                              <Plus className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm">点击 + 进行技能新增</span>
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {/* 已添加的技能 */}
-                          <div className="flex flex-wrap gap-2">
-                            {selectedOptionalSkills.map((skill) => (
-                              <div
-                                key={skill.id}
-                                className="relative inline-flex items-center px-3 py-1.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-full text-sm text-[#166534] hover:bg-[#DCFCE7] transition-colors"
-                              >
-                                <span>{skill.name}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveOptionalSkill(skill.id)}
-                                  className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-[#EF4444] text-white rounded-full hover:bg-[#DC2626] transition-colors"
-                                  title="删除技能"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {/* 添加更多技能按钮 */}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('optional')}
-                            className="w-8 h-8 p-0 rounded-full border-2 border-dashed border-[#9CA3AF] text-[#6B7280] hover:text-[#374151] hover:border-[#374151] transition-colors"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    <MultiSelect
+                      options={availableSkills.map((skill) => ({
+                        value: skill.id,
+                        label: skill.name,
+                      }))}
+                      selected={selectedOptionalSkillIds}
+                      onChange={setSelectedOptionalSkillIds}
+                      placeholder="请选择选填技能"
+                      multiple={true}
+                      onSelectAll={() => {
+                        const allSkillIds = availableSkills.map(
+                          (skill) => skill.id
+                        );
+                        setSelectedOptionalSkillIds(allSkillIds);
+                      }}
+                      onClearAll={() => {
+                        setSelectedOptionalSkillIds([]);
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -1744,9 +1895,7 @@ export function JobProfilePage() {
                   <X className="h-5 w-5 text-red-400" />
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
-                    加载失败
-                  </h3>
+                  <h3 className="text-sm font-medium text-red-800">加载失败</h3>
                   <div className="mt-2 text-sm text-red-700">
                     {editJobError}
                   </div>
@@ -1923,8 +2072,6 @@ export function JobProfilePage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="不限">不限</SelectItem>
-                      <SelectItem value="高中及以下">高中及以下</SelectItem>
-                      <SelectItem value="中专/技校">中专/技校</SelectItem>
                       <SelectItem value="大专">大专</SelectItem>
                       <SelectItem value="本科">本科</SelectItem>
                       <SelectItem value="硕士">硕士</SelectItem>
@@ -1960,7 +2107,7 @@ export function JobProfilePage() {
                 </div>
               </div>
 
-              {/* 第四行：工作经验、行业要求 */}
+              {/* 第四行：工作经验 */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label
@@ -1989,90 +2136,123 @@ export function JobProfilePage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="industry"
-                    className="text-[14px] font-medium text-[#374151]"
-                  >
-                    行业要求
+                <div></div>
+              </div>
+
+              {/* 行业要求和公司要求 */}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-[14px] font-medium text-[#374151]">
+                    行业要求与公司要求
                   </Label>
-                  <Input
-                    id="industry"
-                    placeholder="例如：互联网、金融"
-                    value={jobFormData.industry}
-                    onChange={(e) =>
-                      handleFormDataChange('industry', e.target.value)
-                    }
-                    className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
-                  />
                 </div>
+
+                {jobFormData.industryRequirements.map((requirement, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="如：互联网"
+                      value={requirement.industry}
+                      onChange={(e) =>
+                        handleIndustryRequirementChange(
+                          index,
+                          'industry',
+                          e.target.value
+                        )
+                      }
+                      className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
+                    />
+                    <Input
+                      placeholder="如：阿里巴巴"
+                      value={requirement.companyName}
+                      onChange={(e) =>
+                        handleIndustryRequirementChange(
+                          index,
+                          'companyName',
+                          e.target.value
+                        )
+                      }
+                      className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
+                    />
+                    {/* 新增按钮 - 只在最后一行显示 */}
+                    {index === jobFormData.industryRequirements.length - 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addIndustryRequirement}
+                        className="h-10 w-10 p-0 border-[#22C55E] text-[#22C55E] hover:bg-[#F0FDF4] hover:border-[#16A34A] hover:text-[#16A34A]"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {/* 删除按钮 - 从第二行开始显示 */}
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeIndustryRequirement(index)}
+                        className="h-10 w-10 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* 工作技能 */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-[#22C55E] rounded-sm flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-sm"></div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-[#22C55E] rounded-sm flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-sm"></div>
+                    </div>
+                    <h3 className="text-[16px] font-medium text-[#1F2937]">
+                      工作技能
+                    </h3>
+                    <span className="text-[12px] text-[#6B7280]">
+                      (<span className="text-[#EF4444]">*</span>为必填项)
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNavigateToSkillConfig}
+                      className="h-6 px-2 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      增加
+                    </Button>
                   </div>
-                  <h3 className="text-[16px] font-medium text-[#1F2937]">
-                    工作技能
-                  </h3>
-                  <span className="text-[12px] text-[#6B7280]">
-                    (<span className="text-[#EF4444]">*</span>为必填项)
-                  </span>
+                  <div></div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-4">
                   {/* 必填技能 */}
                   <div className="space-y-2">
                     <Label className="text-[14px] font-medium text-[#374151]">
                       必填技能 <span className="text-[#EF4444]">*</span>
                     </Label>
-                    <div className="min-h-[120px] p-4 border-2 border-dashed border-[#D1D5DB] rounded-lg bg-[#F9FAFB]">
-                      {selectedRequiredSkills.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('required')}
-                            className="w-12 h-12 p-0 rounded-full border-2 border-dashed border-[#9CA3AF] text-[#6B7280] hover:text-[#374151] hover:border-[#374151] transition-colors"
-                          >
-                            <Plus className="h-6 w-6" />
-                          </Button>
-                          <p className="mt-2 text-[12px] text-[#6B7280]">
-                            点击添加必填技能
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap gap-2">
-                            {selectedRequiredSkills.map((skill) => (
-                              <div
-                                key={skill.id}
-                                className="inline-flex items-center gap-1 px-3 py-1 bg-[#DBEAFE] text-[#1E40AF] rounded-full text-[12px] font-medium"
-                              >
-                                <span>{skill.name}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveRequiredSkill(skill.id)}
-                                  className="ml-1 text-[#EF4444] hover:text-[#DC2626] transition-colors"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('required')}
-                            className="w-8 h-8 p-0 rounded-full border-2 border-dashed border-[#9CA3AF] text-[#6B7280] hover:text-[#374151] hover:border-[#374151] transition-colors"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    <MultiSelect
+                      options={availableSkills.map((skill) => ({
+                        value: skill.id,
+                        label: skill.name,
+                      }))}
+                      selected={selectedRequiredSkillIds}
+                      onChange={setSelectedRequiredSkillIds}
+                      placeholder="请选择必填技能"
+                      multiple={true}
+                      onSelectAll={() => {
+                        const allSkillIds = availableSkills.map(
+                          (skill) => skill.id
+                        );
+                        setSelectedRequiredSkillIds(allSkillIds);
+                      }}
+                      onClearAll={() => {
+                        setSelectedRequiredSkillIds([]);
+                      }}
+                    />
                   </div>
 
                   {/* 选填技能 */}
@@ -2080,55 +2260,27 @@ export function JobProfilePage() {
                     <Label className="text-[14px] font-medium text-[#374151]">
                       选填技能
                     </Label>
-                    <div className="min-h-[120px] p-4 border-2 border-dashed border-[#D1D5DB] rounded-lg bg-[#F9FAFB]">
-                      {selectedOptionalSkills.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('optional')}
-                            className="w-12 h-12 p-0 rounded-full border-2 border-dashed border-[#9CA3AF] text-[#6B7280] hover:text-[#374151] hover:border-[#374151] transition-colors"
-                          >
-                            <Plus className="h-6 w-6" />
-                          </Button>
-                          <p className="mt-2 text-[12px] text-[#6B7280]">
-                            点击添加选填技能
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap gap-2">
-                            {selectedOptionalSkills.map((skill) => (
-                              <div
-                                key={skill.id}
-                                className="inline-flex items-center gap-1 px-3 py-1 bg-[#DCFCE7] text-[#166534] rounded-full text-[12px] font-medium"
-                              >
-                                <span>{skill.name}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveOptionalSkill(skill.id)}
-                                  className="ml-1 text-[#EF4444] hover:text-[#DC2626] transition-colors"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleOpenSkillInputModal('optional')}
-                            className="w-8 h-8 p-0 rounded-full border-2 border-dashed border-[#9CA3AF] text-[#6B7280] hover:text-[#374151] hover:border-[#374151] transition-colors"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    <MultiSelect
+                      options={availableSkills.map((skill) => ({
+                        value: skill.id,
+                        label: skill.name,
+                      }))}
+                      selected={selectedOptionalSkillIds}
+                      onChange={setSelectedOptionalSkillIds}
+                      placeholder="请选择选填技能"
+                      multiple={true}
+                      onSelectAll={() => {
+                        const allSkillIds = availableSkills.map(
+                          (skill) => skill.id
+                        );
+                        setSelectedOptionalSkillIds(allSkillIds);
+                      }}
+                      onClearAll={() => {
+                        setSelectedOptionalSkillIds([]);
+                      }}
+                    />
                   </div>
                 </div>
-
-
               </div>
 
               {/* 岗位职责与要求 */}
@@ -2193,58 +2345,6 @@ export function JobProfilePage() {
               className="h-10 px-6 bg-[#22C55E] hover:bg-[#16A34A] text-white"
             >
               {loading ? '更新中...' : '保存更新'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 技能输入小弹窗 */}
-      <Dialog open={isSkillInputModalOpen} onOpenChange={setIsSkillInputModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-medium text-gray-900">
-              {skillInputType === 'required' ? '添加必填技能' : '添加选填技能'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="skill-name" className="text-sm font-medium text-gray-700">
-                技能名称
-              </Label>
-              <Input
-                id="skill-name"
-                placeholder="请输入技能名称"
-                value={skillInputValue}
-                onChange={(e) => setSkillInputValue(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSaveSkillFromModal();
-                  }
-                }}
-                className="border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
-                autoFocus
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCloseSkillInputModal}
-              className="h-10 px-4 border-[#D1D5DB] text-[#374151] hover:bg-[#F3F4F6]"
-            >
-              取消
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSaveSkillFromModal}
-              disabled={!skillInputValue.trim()}
-              className="h-10 px-4 bg-[#22C55E] hover:bg-[#16A34A] text-white disabled:bg-[#D1D5DB] disabled:text-[#9CA3AF]"
-            >
-              保存
             </Button>
           </div>
         </DialogContent>

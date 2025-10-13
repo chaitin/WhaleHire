@@ -83,6 +83,12 @@ func Status(v consts.JobPositionStatus) predicate.JobPosition {
 	return predicate.JobPosition(sql.FieldEQ(FieldStatus, vc))
 }
 
+// WorkType applies equality check predicate on the "work_type" field. It's identical to WorkTypeEQ.
+func WorkType(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldEQ(FieldWorkType, vc))
+}
+
 // Location applies equality check predicate on the "location" field. It's identical to LocationEQ.
 func Location(v string) predicate.JobPosition {
 	return predicate.JobPosition(sql.FieldEQ(FieldLocation, v))
@@ -360,6 +366,100 @@ func StatusEqualFold(v consts.JobPositionStatus) predicate.JobPosition {
 func StatusContainsFold(v consts.JobPositionStatus) predicate.JobPosition {
 	vc := string(v)
 	return predicate.JobPosition(sql.FieldContainsFold(FieldStatus, vc))
+}
+
+// WorkTypeEQ applies the EQ predicate on the "work_type" field.
+func WorkTypeEQ(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldEQ(FieldWorkType, vc))
+}
+
+// WorkTypeNEQ applies the NEQ predicate on the "work_type" field.
+func WorkTypeNEQ(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldNEQ(FieldWorkType, vc))
+}
+
+// WorkTypeIn applies the In predicate on the "work_type" field.
+func WorkTypeIn(vs ...consts.JobWorkType) predicate.JobPosition {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobPosition(sql.FieldIn(FieldWorkType, v...))
+}
+
+// WorkTypeNotIn applies the NotIn predicate on the "work_type" field.
+func WorkTypeNotIn(vs ...consts.JobWorkType) predicate.JobPosition {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobPosition(sql.FieldNotIn(FieldWorkType, v...))
+}
+
+// WorkTypeGT applies the GT predicate on the "work_type" field.
+func WorkTypeGT(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldGT(FieldWorkType, vc))
+}
+
+// WorkTypeGTE applies the GTE predicate on the "work_type" field.
+func WorkTypeGTE(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldGTE(FieldWorkType, vc))
+}
+
+// WorkTypeLT applies the LT predicate on the "work_type" field.
+func WorkTypeLT(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldLT(FieldWorkType, vc))
+}
+
+// WorkTypeLTE applies the LTE predicate on the "work_type" field.
+func WorkTypeLTE(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldLTE(FieldWorkType, vc))
+}
+
+// WorkTypeContains applies the Contains predicate on the "work_type" field.
+func WorkTypeContains(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldContains(FieldWorkType, vc))
+}
+
+// WorkTypeHasPrefix applies the HasPrefix predicate on the "work_type" field.
+func WorkTypeHasPrefix(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldHasPrefix(FieldWorkType, vc))
+}
+
+// WorkTypeHasSuffix applies the HasSuffix predicate on the "work_type" field.
+func WorkTypeHasSuffix(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldHasSuffix(FieldWorkType, vc))
+}
+
+// WorkTypeIsNil applies the IsNil predicate on the "work_type" field.
+func WorkTypeIsNil() predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldIsNull(FieldWorkType))
+}
+
+// WorkTypeNotNil applies the NotNil predicate on the "work_type" field.
+func WorkTypeNotNil() predicate.JobPosition {
+	return predicate.JobPosition(sql.FieldNotNull(FieldWorkType))
+}
+
+// WorkTypeEqualFold applies the EqualFold predicate on the "work_type" field.
+func WorkTypeEqualFold(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldEqualFold(FieldWorkType, vc))
+}
+
+// WorkTypeContainsFold applies the ContainsFold predicate on the "work_type" field.
+func WorkTypeContainsFold(v consts.JobWorkType) predicate.JobPosition {
+	vc := string(v)
+	return predicate.JobPosition(sql.FieldContainsFold(FieldWorkType, vc))
 }
 
 // LocationEQ applies the EQ predicate on the "location" field.

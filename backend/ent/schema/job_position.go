@@ -36,6 +36,7 @@ func (JobPosition) Fields() []ent.Field {
 		field.UUID("department_id", uuid.UUID{}),
 		field.UUID("created_by", uuid.UUID{}).Optional().Nillable(),
 		field.String("status").GoType(consts.JobPositionStatus("")).Default(string(consts.JobPositionStatusDraft)),
+		field.String("work_type").GoType(consts.JobWorkType("")).Optional(),
 		field.String("location").Optional().Nillable().MaxLen(200),
 		field.Float("salary_min").Optional().Nillable(),
 		field.Float("salary_max").Optional().Nillable(),

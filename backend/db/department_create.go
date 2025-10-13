@@ -201,11 +201,6 @@ func (dc *DepartmentCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`db: validator failed for field "Department.name": %w`, err)}
 		}
 	}
-	if v, ok := dc.mutation.Description(); ok {
-		if err := department.DescriptionValidator(v); err != nil {
-			return &ValidationError{Name: "description", err: fmt.Errorf(`db: validator failed for field "Department.description": %w`, err)}
-		}
-	}
 	if _, ok := dc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`db: missing required field "Department.created_at"`)}
 	}

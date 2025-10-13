@@ -51,20 +51,6 @@ func (jrc *JobResponsibilityCreate) SetResponsibility(s string) *JobResponsibili
 	return jrc
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (jrc *JobResponsibilityCreate) SetSortOrder(i int) *JobResponsibilityCreate {
-	jrc.mutation.SetSortOrder(i)
-	return jrc
-}
-
-// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (jrc *JobResponsibilityCreate) SetNillableSortOrder(i *int) *JobResponsibilityCreate {
-	if i != nil {
-		jrc.SetSortOrder(*i)
-	}
-	return jrc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (jrc *JobResponsibilityCreate) SetCreatedAt(t time.Time) *JobResponsibilityCreate {
 	jrc.mutation.SetCreatedAt(t)
@@ -149,10 +135,6 @@ func (jrc *JobResponsibilityCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (jrc *JobResponsibilityCreate) defaults() error {
-	if _, ok := jrc.mutation.SortOrder(); !ok {
-		v := jobresponsibility.DefaultSortOrder
-		jrc.mutation.SetSortOrder(v)
-	}
 	if _, ok := jrc.mutation.CreatedAt(); !ok {
 		if jobresponsibility.DefaultCreatedAt == nil {
 			return fmt.Errorf("db: uninitialized jobresponsibility.DefaultCreatedAt (forgotten import db/runtime?)")
@@ -184,9 +166,6 @@ func (jrc *JobResponsibilityCreate) check() error {
 	}
 	if _, ok := jrc.mutation.Responsibility(); !ok {
 		return &ValidationError{Name: "responsibility", err: errors.New(`db: missing required field "JobResponsibility.responsibility"`)}
-	}
-	if _, ok := jrc.mutation.SortOrder(); !ok {
-		return &ValidationError{Name: "sort_order", err: errors.New(`db: missing required field "JobResponsibility.sort_order"`)}
 	}
 	if _, ok := jrc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`db: missing required field "JobResponsibility.created_at"`)}
@@ -240,10 +219,6 @@ func (jrc *JobResponsibilityCreate) createSpec() (*JobResponsibility, *sqlgraph.
 	if value, ok := jrc.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
 		_node.Responsibility = value
-	}
-	if value, ok := jrc.mutation.SortOrder(); ok {
-		_spec.SetField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
-		_node.SortOrder = value
 	}
 	if value, ok := jrc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldCreatedAt, field.TypeTime, value)
@@ -364,24 +339,6 @@ func (u *JobResponsibilityUpsert) UpdateResponsibility() *JobResponsibilityUpser
 	return u
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (u *JobResponsibilityUpsert) SetSortOrder(v int) *JobResponsibilityUpsert {
-	u.Set(jobresponsibility.FieldSortOrder, v)
-	return u
-}
-
-// UpdateSortOrder sets the "sort_order" field to the value that was provided on create.
-func (u *JobResponsibilityUpsert) UpdateSortOrder() *JobResponsibilityUpsert {
-	u.SetExcluded(jobresponsibility.FieldSortOrder)
-	return u
-}
-
-// AddSortOrder adds v to the "sort_order" field.
-func (u *JobResponsibilityUpsert) AddSortOrder(v int) *JobResponsibilityUpsert {
-	u.Add(jobresponsibility.FieldSortOrder, v)
-	return u
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (u *JobResponsibilityUpsert) SetUpdatedAt(v time.Time) *JobResponsibilityUpsert {
 	u.Set(jobresponsibility.FieldUpdatedAt, v)
@@ -491,27 +448,6 @@ func (u *JobResponsibilityUpsertOne) SetResponsibility(v string) *JobResponsibil
 func (u *JobResponsibilityUpsertOne) UpdateResponsibility() *JobResponsibilityUpsertOne {
 	return u.Update(func(s *JobResponsibilityUpsert) {
 		s.UpdateResponsibility()
-	})
-}
-
-// SetSortOrder sets the "sort_order" field.
-func (u *JobResponsibilityUpsertOne) SetSortOrder(v int) *JobResponsibilityUpsertOne {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.SetSortOrder(v)
-	})
-}
-
-// AddSortOrder adds v to the "sort_order" field.
-func (u *JobResponsibilityUpsertOne) AddSortOrder(v int) *JobResponsibilityUpsertOne {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.AddSortOrder(v)
-	})
-}
-
-// UpdateSortOrder sets the "sort_order" field to the value that was provided on create.
-func (u *JobResponsibilityUpsertOne) UpdateSortOrder() *JobResponsibilityUpsertOne {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.UpdateSortOrder()
 	})
 }
 
@@ -793,27 +729,6 @@ func (u *JobResponsibilityUpsertBulk) SetResponsibility(v string) *JobResponsibi
 func (u *JobResponsibilityUpsertBulk) UpdateResponsibility() *JobResponsibilityUpsertBulk {
 	return u.Update(func(s *JobResponsibilityUpsert) {
 		s.UpdateResponsibility()
-	})
-}
-
-// SetSortOrder sets the "sort_order" field.
-func (u *JobResponsibilityUpsertBulk) SetSortOrder(v int) *JobResponsibilityUpsertBulk {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.SetSortOrder(v)
-	})
-}
-
-// AddSortOrder adds v to the "sort_order" field.
-func (u *JobResponsibilityUpsertBulk) AddSortOrder(v int) *JobResponsibilityUpsertBulk {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.AddSortOrder(v)
-	})
-}
-
-// UpdateSortOrder sets the "sort_order" field to the value that was provided on create.
-func (u *JobResponsibilityUpsertBulk) UpdateSortOrder() *JobResponsibilityUpsertBulk {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.UpdateSortOrder()
 	})
 }
 

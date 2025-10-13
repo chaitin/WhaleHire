@@ -27,6 +27,8 @@ const (
 	FieldCreatedBy = "created_by"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldWorkType holds the string denoting the work_type field in the database.
+	FieldWorkType = "work_type"
 	// FieldLocation holds the string denoting the location field in the database.
 	FieldLocation = "location"
 	// FieldSalaryMin holds the string denoting the salary_min field in the database.
@@ -114,6 +116,7 @@ var Columns = []string{
 	FieldDepartmentID,
 	FieldCreatedBy,
 	FieldStatus,
+	FieldWorkType,
 	FieldLocation,
 	FieldSalaryMin,
 	FieldSalaryMax,
@@ -187,6 +190,11 @@ func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByWorkType orders the results by the work_type field.
+func ByWorkType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkType, opts...).ToFunc()
 }
 
 // ByLocation orders the results by the location field.

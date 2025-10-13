@@ -120,6 +120,26 @@ func (jpu *JobPositionUpdate) SetNillableStatus(cps *consts.JobPositionStatus) *
 	return jpu
 }
 
+// SetWorkType sets the "work_type" field.
+func (jpu *JobPositionUpdate) SetWorkType(cwt consts.JobWorkType) *JobPositionUpdate {
+	jpu.mutation.SetWorkType(cwt)
+	return jpu
+}
+
+// SetNillableWorkType sets the "work_type" field if the given value is not nil.
+func (jpu *JobPositionUpdate) SetNillableWorkType(cwt *consts.JobWorkType) *JobPositionUpdate {
+	if cwt != nil {
+		jpu.SetWorkType(*cwt)
+	}
+	return jpu
+}
+
+// ClearWorkType clears the value of the "work_type" field.
+func (jpu *JobPositionUpdate) ClearWorkType() *JobPositionUpdate {
+	jpu.mutation.ClearWorkType()
+	return jpu
+}
+
 // SetLocation sets the "location" field.
 func (jpu *JobPositionUpdate) SetLocation(s string) *JobPositionUpdate {
 	jpu.mutation.SetLocation(s)
@@ -530,6 +550,12 @@ func (jpu *JobPositionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := jpu.mutation.Status(); ok {
 		_spec.SetField(jobposition.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := jpu.mutation.WorkType(); ok {
+		_spec.SetField(jobposition.FieldWorkType, field.TypeString, value)
+	}
+	if jpu.mutation.WorkTypeCleared() {
+		_spec.ClearField(jobposition.FieldWorkType, field.TypeString)
 	}
 	if value, ok := jpu.mutation.Location(); ok {
 		_spec.SetField(jobposition.FieldLocation, field.TypeString, value)
@@ -948,6 +974,26 @@ func (jpuo *JobPositionUpdateOne) SetNillableStatus(cps *consts.JobPositionStatu
 	if cps != nil {
 		jpuo.SetStatus(*cps)
 	}
+	return jpuo
+}
+
+// SetWorkType sets the "work_type" field.
+func (jpuo *JobPositionUpdateOne) SetWorkType(cwt consts.JobWorkType) *JobPositionUpdateOne {
+	jpuo.mutation.SetWorkType(cwt)
+	return jpuo
+}
+
+// SetNillableWorkType sets the "work_type" field if the given value is not nil.
+func (jpuo *JobPositionUpdateOne) SetNillableWorkType(cwt *consts.JobWorkType) *JobPositionUpdateOne {
+	if cwt != nil {
+		jpuo.SetWorkType(*cwt)
+	}
+	return jpuo
+}
+
+// ClearWorkType clears the value of the "work_type" field.
+func (jpuo *JobPositionUpdateOne) ClearWorkType() *JobPositionUpdateOne {
+	jpuo.mutation.ClearWorkType()
 	return jpuo
 }
 
@@ -1391,6 +1437,12 @@ func (jpuo *JobPositionUpdateOne) sqlSave(ctx context.Context) (_node *JobPositi
 	}
 	if value, ok := jpuo.mutation.Status(); ok {
 		_spec.SetField(jobposition.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := jpuo.mutation.WorkType(); ok {
+		_spec.SetField(jobposition.FieldWorkType, field.TypeString, value)
+	}
+	if jpuo.mutation.WorkTypeCleared() {
+		_spec.ClearField(jobposition.FieldWorkType, field.TypeString)
 	}
 	if value, ok := jpuo.mutation.Location(); ok {
 		_spec.SetField(jobposition.FieldLocation, field.TypeString, value)

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
@@ -27,9 +28,7 @@ type JobSkill struct {
 	// SkillID holds the value of the "skill_id" field.
 	SkillID uuid.UUID `json:"skill_id,omitempty"`
 	// Type holds the value of the "type" field.
-	Type jobskill.Type `json:"type,omitempty"`
-	// Weight holds the value of the "weight" field.
-	Weight int `json:"weight,omitempty"`
+	Type consts.JobSkillType `json:"type,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -78,8 +77,6 @@ func (*JobSkill) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case jobskill.FieldWeight:
-			values[i] = new(sql.NullInt64)
 		case jobskill.FieldType:
 			values[i] = new(sql.NullString)
 		case jobskill.FieldDeletedAt, jobskill.FieldCreatedAt, jobskill.FieldUpdatedAt:
@@ -129,13 +126,7 @@ func (js *JobSkill) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				js.Type = jobskill.Type(value.String)
-			}
-		case jobskill.FieldWeight:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field weight", values[i])
-			} else if value.Valid {
-				js.Weight = int(value.Int64)
+				js.Type = consts.JobSkillType(value.String)
 			}
 		case jobskill.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -206,9 +197,6 @@ func (js *JobSkill) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(fmt.Sprintf("%v", js.Type))
-	builder.WriteString(", ")
-	builder.WriteString("weight=")
-	builder.WriteString(fmt.Sprintf("%v", js.Weight))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(js.CreatedAt.Format(time.ANSIC))

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
@@ -32,8 +33,7 @@ func (JobEducationRequirement) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.UUID("job_id", uuid.UUID{}),
-		field.String("min_degree").MaxLen(50),
-		field.Int("weight").Range(0, 100),
+		field.String("education_type").GoType(consts.JobEducationType("")).Optional(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

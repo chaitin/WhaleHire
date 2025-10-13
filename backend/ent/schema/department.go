@@ -31,8 +31,8 @@ func (Department) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("name").MaxLen(100),
-		field.String("description").MaxLen(255).Optional(), // 部门描述，可选
-		field.UUID("parent_id", uuid.UUID{}).Optional(),    // 上级部门ID，可选
+		field.String("description").Optional(),          // 部门描述，可选
+		field.UUID("parent_id", uuid.UUID{}).Optional(), // 上级部门ID，可选
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

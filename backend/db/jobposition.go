@@ -31,6 +31,8 @@ type JobPosition struct {
 	CreatedBy *uuid.UUID `json:"created_by,omitempty"`
 	// Status holds the value of the "status" field.
 	Status consts.JobPositionStatus `json:"status,omitempty"`
+	// WorkType holds the value of the "work_type" field.
+	WorkType consts.JobWorkType `json:"work_type,omitempty"`
 	// Location holds the value of the "location" field.
 	Location *string `json:"location,omitempty"`
 	// SalaryMin holds the value of the "salary_min" field.
@@ -146,7 +148,7 @@ func (*JobPosition) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case jobposition.FieldSalaryMin, jobposition.FieldSalaryMax:
 			values[i] = new(sql.NullFloat64)
-		case jobposition.FieldName, jobposition.FieldStatus, jobposition.FieldLocation, jobposition.FieldDescription:
+		case jobposition.FieldName, jobposition.FieldStatus, jobposition.FieldWorkType, jobposition.FieldLocation, jobposition.FieldDescription:
 			values[i] = new(sql.NullString)
 		case jobposition.FieldDeletedAt, jobposition.FieldCreatedAt, jobposition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -203,6 +205,12 @@ func (jp *JobPosition) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				jp.Status = consts.JobPositionStatus(value.String)
+			}
+		case jobposition.FieldWorkType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field work_type", values[i])
+			} else if value.Valid {
+				jp.WorkType = consts.JobWorkType(value.String)
 			}
 		case jobposition.FieldLocation:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -331,6 +339,9 @@ func (jp *JobPosition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", jp.Status))
+	builder.WriteString(", ")
+	builder.WriteString("work_type=")
+	builder.WriteString(fmt.Sprintf("%v", jp.WorkType))
 	builder.WriteString(", ")
 	if v := jp.Location; v != nil {
 		builder.WriteString("location=")

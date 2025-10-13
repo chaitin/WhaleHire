@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/google/uuid"
@@ -23,10 +24,8 @@ type JobEducationRequirement struct {
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
-	// MinDegree holds the value of the "min_degree" field.
-	MinDegree string `json:"min_degree,omitempty"`
-	// Weight holds the value of the "weight" field.
-	Weight int `json:"weight,omitempty"`
+	// EducationType holds the value of the "education_type" field.
+	EducationType consts.JobEducationType `json:"education_type,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -62,9 +61,7 @@ func (*JobEducationRequirement) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case jobeducationrequirement.FieldWeight:
-			values[i] = new(sql.NullInt64)
-		case jobeducationrequirement.FieldMinDegree:
+		case jobeducationrequirement.FieldEducationType:
 			values[i] = new(sql.NullString)
 		case jobeducationrequirement.FieldDeletedAt, jobeducationrequirement.FieldCreatedAt, jobeducationrequirement.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -103,17 +100,11 @@ func (jer *JobEducationRequirement) assignValues(columns []string, values []any)
 			} else if value != nil {
 				jer.JobID = *value
 			}
-		case jobeducationrequirement.FieldMinDegree:
+		case jobeducationrequirement.FieldEducationType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field min_degree", values[i])
+				return fmt.Errorf("unexpected type %T for field education_type", values[i])
 			} else if value.Valid {
-				jer.MinDegree = value.String
-			}
-		case jobeducationrequirement.FieldWeight:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field weight", values[i])
-			} else if value.Valid {
-				jer.Weight = int(value.Int64)
+				jer.EducationType = consts.JobEducationType(value.String)
 			}
 		case jobeducationrequirement.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -174,11 +165,8 @@ func (jer *JobEducationRequirement) String() string {
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", jer.JobID))
 	builder.WriteString(", ")
-	builder.WriteString("min_degree=")
-	builder.WriteString(jer.MinDegree)
-	builder.WriteString(", ")
-	builder.WriteString("weight=")
-	builder.WriteString(fmt.Sprintf("%v", jer.Weight))
+	builder.WriteString("education_type=")
+	builder.WriteString(fmt.Sprintf("%v", jer.EducationType))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(jer.CreatedAt.Format(time.ANSIC))

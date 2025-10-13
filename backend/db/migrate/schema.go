@@ -142,7 +142,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
-		{Name: "description", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "parent_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -157,8 +157,7 @@ var (
 	JobEducationRequirementColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "min_degree", Type: field.TypeString, Size: 50},
-		{Name: "weight", Type: field.TypeInt},
+		{Name: "education_type", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "job_id", Type: field.TypeUUID},
@@ -171,7 +170,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "job_education_requirement_job_position_education_requirements",
-				Columns:    []*schema.Column{JobEducationRequirementColumns[6]},
+				Columns:    []*schema.Column{JobEducationRequirementColumns[5]},
 				RefColumns: []*schema.Column{JobPositionColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -181,9 +180,9 @@ var (
 	JobExperienceRequirementColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "min_years", Type: field.TypeInt, Default: 0},
-		{Name: "ideal_years", Type: field.TypeInt, Default: 0},
-		{Name: "weight", Type: field.TypeInt},
+		{Name: "experience_type", Type: field.TypeString, Nullable: true},
+		{Name: "min_years", Type: field.TypeInt, Nullable: true, Default: 0},
+		{Name: "ideal_years", Type: field.TypeInt, Nullable: true, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "job_id", Type: field.TypeUUID},
@@ -206,9 +205,8 @@ var (
 	JobIndustryRequirementColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "industry", Type: field.TypeString, Size: 100},
+		{Name: "industry", Type: field.TypeString, Nullable: true, Size: 200},
 		{Name: "company_name", Type: field.TypeString, Nullable: true, Size: 200},
-		{Name: "weight", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "job_id", Type: field.TypeUUID},
@@ -221,7 +219,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "job_industry_requirement_job_position_industry_requirements",
-				Columns:    []*schema.Column{JobIndustryRequirementColumns[7]},
+				Columns:    []*schema.Column{JobIndustryRequirementColumns[6]},
 				RefColumns: []*schema.Column{JobPositionColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -233,6 +231,7 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "work_type", Type: field.TypeString, Nullable: true},
 		{Name: "location", Type: field.TypeString, Nullable: true, Size: 200},
 		{Name: "salary_min", Type: field.TypeFloat64, Nullable: true},
 		{Name: "salary_max", Type: field.TypeFloat64, Nullable: true},
@@ -250,13 +249,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "job_position_department_positions",
-				Columns:    []*schema.Column{JobPositionColumns[10]},
+				Columns:    []*schema.Column{JobPositionColumns[11]},
 				RefColumns: []*schema.Column{DepartmentColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "job_position_users_created_positions",
-				Columns:    []*schema.Column{JobPositionColumns[11]},
+				Columns:    []*schema.Column{JobPositionColumns[12]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -267,7 +266,6 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "responsibility", Type: field.TypeString},
-		{Name: "sort_order", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "job_id", Type: field.TypeUUID},
@@ -280,7 +278,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "job_responsibility_job_position_responsibilities",
-				Columns:    []*schema.Column{JobResponsibilityColumns[6]},
+				Columns:    []*schema.Column{JobResponsibilityColumns[5]},
 				RefColumns: []*schema.Column{JobPositionColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -290,8 +288,7 @@ var (
 	JobSkillColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"required", "bonus"}},
-		{Name: "weight", Type: field.TypeInt},
+		{Name: "type", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "job_id", Type: field.TypeUUID},
@@ -305,13 +302,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "job_skill_job_position_skills",
-				Columns:    []*schema.Column{JobSkillColumns[6]},
+				Columns:    []*schema.Column{JobSkillColumns[5]},
 				RefColumns: []*schema.Column{JobPositionColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "job_skill_job_skillmeta_job_links",
-				Columns:    []*schema.Column{JobSkillColumns[7]},
+				Columns:    []*schema.Column{JobSkillColumns[6]},
 				RefColumns: []*schema.Column{JobSkillmetaColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -320,7 +317,7 @@ var (
 			{
 				Name:    "jobskill_job_id_skill_id_type",
 				Unique:  true,
-				Columns: []*schema.Column{JobSkillColumns[6], JobSkillColumns[7], JobSkillColumns[2]},
+				Columns: []*schema.Column{JobSkillColumns[5], JobSkillColumns[6], JobSkillColumns[2]},
 			},
 		},
 	}

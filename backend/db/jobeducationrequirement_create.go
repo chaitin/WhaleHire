@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/google/uuid"
@@ -45,15 +46,17 @@ func (jerc *JobEducationRequirementCreate) SetJobID(u uuid.UUID) *JobEducationRe
 	return jerc
 }
 
-// SetMinDegree sets the "min_degree" field.
-func (jerc *JobEducationRequirementCreate) SetMinDegree(s string) *JobEducationRequirementCreate {
-	jerc.mutation.SetMinDegree(s)
+// SetEducationType sets the "education_type" field.
+func (jerc *JobEducationRequirementCreate) SetEducationType(cet consts.JobEducationType) *JobEducationRequirementCreate {
+	jerc.mutation.SetEducationType(cet)
 	return jerc
 }
 
-// SetWeight sets the "weight" field.
-func (jerc *JobEducationRequirementCreate) SetWeight(i int) *JobEducationRequirementCreate {
-	jerc.mutation.SetWeight(i)
+// SetNillableEducationType sets the "education_type" field if the given value is not nil.
+func (jerc *JobEducationRequirementCreate) SetNillableEducationType(cet *consts.JobEducationType) *JobEducationRequirementCreate {
+	if cet != nil {
+		jerc.SetEducationType(*cet)
+	}
 	return jerc
 }
 
@@ -170,22 +173,6 @@ func (jerc *JobEducationRequirementCreate) check() error {
 	if _, ok := jerc.mutation.JobID(); !ok {
 		return &ValidationError{Name: "job_id", err: errors.New(`db: missing required field "JobEducationRequirement.job_id"`)}
 	}
-	if _, ok := jerc.mutation.MinDegree(); !ok {
-		return &ValidationError{Name: "min_degree", err: errors.New(`db: missing required field "JobEducationRequirement.min_degree"`)}
-	}
-	if v, ok := jerc.mutation.MinDegree(); ok {
-		if err := jobeducationrequirement.MinDegreeValidator(v); err != nil {
-			return &ValidationError{Name: "min_degree", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.min_degree": %w`, err)}
-		}
-	}
-	if _, ok := jerc.mutation.Weight(); !ok {
-		return &ValidationError{Name: "weight", err: errors.New(`db: missing required field "JobEducationRequirement.weight"`)}
-	}
-	if v, ok := jerc.mutation.Weight(); ok {
-		if err := jobeducationrequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.weight": %w`, err)}
-		}
-	}
 	if _, ok := jerc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`db: missing required field "JobEducationRequirement.created_at"`)}
 	}
@@ -235,13 +222,9 @@ func (jerc *JobEducationRequirementCreate) createSpec() (*JobEducationRequiremen
 		_spec.SetField(jobeducationrequirement.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = value
 	}
-	if value, ok := jerc.mutation.MinDegree(); ok {
-		_spec.SetField(jobeducationrequirement.FieldMinDegree, field.TypeString, value)
-		_node.MinDegree = value
-	}
-	if value, ok := jerc.mutation.Weight(); ok {
-		_spec.SetField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
-		_node.Weight = value
+	if value, ok := jerc.mutation.EducationType(); ok {
+		_spec.SetField(jobeducationrequirement.FieldEducationType, field.TypeString, value)
+		_node.EducationType = value
 	}
 	if value, ok := jerc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobeducationrequirement.FieldCreatedAt, field.TypeTime, value)
@@ -350,33 +333,21 @@ func (u *JobEducationRequirementUpsert) UpdateJobID() *JobEducationRequirementUp
 	return u
 }
 
-// SetMinDegree sets the "min_degree" field.
-func (u *JobEducationRequirementUpsert) SetMinDegree(v string) *JobEducationRequirementUpsert {
-	u.Set(jobeducationrequirement.FieldMinDegree, v)
+// SetEducationType sets the "education_type" field.
+func (u *JobEducationRequirementUpsert) SetEducationType(v consts.JobEducationType) *JobEducationRequirementUpsert {
+	u.Set(jobeducationrequirement.FieldEducationType, v)
 	return u
 }
 
-// UpdateMinDegree sets the "min_degree" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsert) UpdateMinDegree() *JobEducationRequirementUpsert {
-	u.SetExcluded(jobeducationrequirement.FieldMinDegree)
+// UpdateEducationType sets the "education_type" field to the value that was provided on create.
+func (u *JobEducationRequirementUpsert) UpdateEducationType() *JobEducationRequirementUpsert {
+	u.SetExcluded(jobeducationrequirement.FieldEducationType)
 	return u
 }
 
-// SetWeight sets the "weight" field.
-func (u *JobEducationRequirementUpsert) SetWeight(v int) *JobEducationRequirementUpsert {
-	u.Set(jobeducationrequirement.FieldWeight, v)
-	return u
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsert) UpdateWeight() *JobEducationRequirementUpsert {
-	u.SetExcluded(jobeducationrequirement.FieldWeight)
-	return u
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobEducationRequirementUpsert) AddWeight(v int) *JobEducationRequirementUpsert {
-	u.Add(jobeducationrequirement.FieldWeight, v)
+// ClearEducationType clears the value of the "education_type" field.
+func (u *JobEducationRequirementUpsert) ClearEducationType() *JobEducationRequirementUpsert {
+	u.SetNull(jobeducationrequirement.FieldEducationType)
 	return u
 }
 
@@ -478,38 +449,24 @@ func (u *JobEducationRequirementUpsertOne) UpdateJobID() *JobEducationRequiremen
 	})
 }
 
-// SetMinDegree sets the "min_degree" field.
-func (u *JobEducationRequirementUpsertOne) SetMinDegree(v string) *JobEducationRequirementUpsertOne {
+// SetEducationType sets the "education_type" field.
+func (u *JobEducationRequirementUpsertOne) SetEducationType(v consts.JobEducationType) *JobEducationRequirementUpsertOne {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetMinDegree(v)
+		s.SetEducationType(v)
 	})
 }
 
-// UpdateMinDegree sets the "min_degree" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertOne) UpdateMinDegree() *JobEducationRequirementUpsertOne {
+// UpdateEducationType sets the "education_type" field to the value that was provided on create.
+func (u *JobEducationRequirementUpsertOne) UpdateEducationType() *JobEducationRequirementUpsertOne {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateMinDegree()
+		s.UpdateEducationType()
 	})
 }
 
-// SetWeight sets the "weight" field.
-func (u *JobEducationRequirementUpsertOne) SetWeight(v int) *JobEducationRequirementUpsertOne {
+// ClearEducationType clears the value of the "education_type" field.
+func (u *JobEducationRequirementUpsertOne) ClearEducationType() *JobEducationRequirementUpsertOne {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobEducationRequirementUpsertOne) AddWeight(v int) *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertOne) UpdateWeight() *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateWeight()
+		s.ClearEducationType()
 	})
 }
 
@@ -780,38 +737,24 @@ func (u *JobEducationRequirementUpsertBulk) UpdateJobID() *JobEducationRequireme
 	})
 }
 
-// SetMinDegree sets the "min_degree" field.
-func (u *JobEducationRequirementUpsertBulk) SetMinDegree(v string) *JobEducationRequirementUpsertBulk {
+// SetEducationType sets the "education_type" field.
+func (u *JobEducationRequirementUpsertBulk) SetEducationType(v consts.JobEducationType) *JobEducationRequirementUpsertBulk {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetMinDegree(v)
+		s.SetEducationType(v)
 	})
 }
 
-// UpdateMinDegree sets the "min_degree" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertBulk) UpdateMinDegree() *JobEducationRequirementUpsertBulk {
+// UpdateEducationType sets the "education_type" field to the value that was provided on create.
+func (u *JobEducationRequirementUpsertBulk) UpdateEducationType() *JobEducationRequirementUpsertBulk {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateMinDegree()
+		s.UpdateEducationType()
 	})
 }
 
-// SetWeight sets the "weight" field.
-func (u *JobEducationRequirementUpsertBulk) SetWeight(v int) *JobEducationRequirementUpsertBulk {
+// ClearEducationType clears the value of the "education_type" field.
+func (u *JobEducationRequirementUpsertBulk) ClearEducationType() *JobEducationRequirementUpsertBulk {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobEducationRequirementUpsertBulk) AddWeight(v int) *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertBulk) UpdateWeight() *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateWeight()
+		s.ClearEducationType()
 	})
 }
 

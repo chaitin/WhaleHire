@@ -22,8 +22,6 @@ const (
 	FieldJobID = "job_id"
 	// FieldResponsibility holds the string denoting the responsibility field in the database.
 	FieldResponsibility = "responsibility"
-	// FieldSortOrder holds the string denoting the sort_order field in the database.
-	FieldSortOrder = "sort_order"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -47,7 +45,6 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldJobID,
 	FieldResponsibility,
-	FieldSortOrder,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -70,8 +67,6 @@ func ValidColumn(column string) bool {
 var (
 	Hooks        [1]ent.Hook
 	Interceptors [1]ent.Interceptor
-	// DefaultSortOrder holds the default value on creation for the "sort_order" field.
-	DefaultSortOrder int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -103,11 +98,6 @@ func ByJobID(opts ...sql.OrderTermOption) OrderOption {
 // ByResponsibility orders the results by the responsibility field.
 func ByResponsibility(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResponsibility, opts...).ToFunc()
-}
-
-// BySortOrder orders the results by the sort_order field.
-func BySortOrder(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSortOrder, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
@@ -81,37 +82,16 @@ func (jsu *JobSkillUpdate) SetNillableSkillID(u *uuid.UUID) *JobSkillUpdate {
 }
 
 // SetType sets the "type" field.
-func (jsu *JobSkillUpdate) SetType(j jobskill.Type) *JobSkillUpdate {
-	jsu.mutation.SetType(j)
+func (jsu *JobSkillUpdate) SetType(cst consts.JobSkillType) *JobSkillUpdate {
+	jsu.mutation.SetType(cst)
 	return jsu
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (jsu *JobSkillUpdate) SetNillableType(j *jobskill.Type) *JobSkillUpdate {
-	if j != nil {
-		jsu.SetType(*j)
+func (jsu *JobSkillUpdate) SetNillableType(cst *consts.JobSkillType) *JobSkillUpdate {
+	if cst != nil {
+		jsu.SetType(*cst)
 	}
-	return jsu
-}
-
-// SetWeight sets the "weight" field.
-func (jsu *JobSkillUpdate) SetWeight(i int) *JobSkillUpdate {
-	jsu.mutation.ResetWeight()
-	jsu.mutation.SetWeight(i)
-	return jsu
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jsu *JobSkillUpdate) SetNillableWeight(i *int) *JobSkillUpdate {
-	if i != nil {
-		jsu.SetWeight(*i)
-	}
-	return jsu
-}
-
-// AddWeight adds i to the "weight" field.
-func (jsu *JobSkillUpdate) AddWeight(i int) *JobSkillUpdate {
-	jsu.mutation.AddWeight(i)
 	return jsu
 }
 
@@ -192,16 +172,6 @@ func (jsu *JobSkillUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jsu *JobSkillUpdate) check() error {
-	if v, ok := jsu.mutation.GetType(); ok {
-		if err := jobskill.TypeValidator(v); err != nil {
-			return &ValidationError{Name: "type", err: fmt.Errorf(`db: validator failed for field "JobSkill.type": %w`, err)}
-		}
-	}
-	if v, ok := jsu.mutation.Weight(); ok {
-		if err := jobskill.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobSkill.weight": %w`, err)}
-		}
-	}
 	if jsu.mutation.JobCleared() && len(jsu.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobSkill.job"`)
 	}
@@ -236,13 +206,7 @@ func (jsu *JobSkillUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.ClearField(jobskill.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := jsu.mutation.GetType(); ok {
-		_spec.SetField(jobskill.FieldType, field.TypeEnum, value)
-	}
-	if value, ok := jsu.mutation.Weight(); ok {
-		_spec.SetField(jobskill.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jsu.mutation.AddedWeight(); ok {
-		_spec.AddField(jobskill.FieldWeight, field.TypeInt, value)
+		_spec.SetField(jobskill.FieldType, field.TypeString, value)
 	}
 	if value, ok := jsu.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobskill.FieldUpdatedAt, field.TypeTime, value)
@@ -376,37 +340,16 @@ func (jsuo *JobSkillUpdateOne) SetNillableSkillID(u *uuid.UUID) *JobSkillUpdateO
 }
 
 // SetType sets the "type" field.
-func (jsuo *JobSkillUpdateOne) SetType(j jobskill.Type) *JobSkillUpdateOne {
-	jsuo.mutation.SetType(j)
+func (jsuo *JobSkillUpdateOne) SetType(cst consts.JobSkillType) *JobSkillUpdateOne {
+	jsuo.mutation.SetType(cst)
 	return jsuo
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (jsuo *JobSkillUpdateOne) SetNillableType(j *jobskill.Type) *JobSkillUpdateOne {
-	if j != nil {
-		jsuo.SetType(*j)
+func (jsuo *JobSkillUpdateOne) SetNillableType(cst *consts.JobSkillType) *JobSkillUpdateOne {
+	if cst != nil {
+		jsuo.SetType(*cst)
 	}
-	return jsuo
-}
-
-// SetWeight sets the "weight" field.
-func (jsuo *JobSkillUpdateOne) SetWeight(i int) *JobSkillUpdateOne {
-	jsuo.mutation.ResetWeight()
-	jsuo.mutation.SetWeight(i)
-	return jsuo
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jsuo *JobSkillUpdateOne) SetNillableWeight(i *int) *JobSkillUpdateOne {
-	if i != nil {
-		jsuo.SetWeight(*i)
-	}
-	return jsuo
-}
-
-// AddWeight adds i to the "weight" field.
-func (jsuo *JobSkillUpdateOne) AddWeight(i int) *JobSkillUpdateOne {
-	jsuo.mutation.AddWeight(i)
 	return jsuo
 }
 
@@ -500,16 +443,6 @@ func (jsuo *JobSkillUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jsuo *JobSkillUpdateOne) check() error {
-	if v, ok := jsuo.mutation.GetType(); ok {
-		if err := jobskill.TypeValidator(v); err != nil {
-			return &ValidationError{Name: "type", err: fmt.Errorf(`db: validator failed for field "JobSkill.type": %w`, err)}
-		}
-	}
-	if v, ok := jsuo.mutation.Weight(); ok {
-		if err := jobskill.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobSkill.weight": %w`, err)}
-		}
-	}
 	if jsuo.mutation.JobCleared() && len(jsuo.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobSkill.job"`)
 	}
@@ -561,13 +494,7 @@ func (jsuo *JobSkillUpdateOne) sqlSave(ctx context.Context) (_node *JobSkill, er
 		_spec.ClearField(jobskill.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := jsuo.mutation.GetType(); ok {
-		_spec.SetField(jobskill.FieldType, field.TypeEnum, value)
-	}
-	if value, ok := jsuo.mutation.Weight(); ok {
-		_spec.SetField(jobskill.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jsuo.mutation.AddedWeight(); ok {
-		_spec.AddField(jobskill.FieldWeight, field.TypeInt, value)
+		_spec.SetField(jobskill.FieldType, field.TypeString, value)
 	}
 	if value, ok := jsuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobskill.FieldUpdatedAt, field.TypeTime, value)

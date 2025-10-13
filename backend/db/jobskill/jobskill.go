@@ -3,7 +3,6 @@
 package jobskill
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent"
@@ -25,8 +24,6 @@ const (
 	FieldSkillID = "skill_id"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
-	// FieldWeight holds the string denoting the weight field in the database.
-	FieldWeight = "weight"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -60,7 +57,6 @@ var Columns = []string{
 	FieldJobID,
 	FieldSkillID,
 	FieldType,
-	FieldWeight,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -83,8 +79,6 @@ func ValidColumn(column string) bool {
 var (
 	Hooks        [1]ent.Hook
 	Interceptors [1]ent.Interceptor
-	// WeightValidator is a validator for the "weight" field. It is called by the builders before save.
-	WeightValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -94,29 +88,6 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
-
-// Type defines the type for the "type" enum field.
-type Type string
-
-// Type values.
-const (
-	TypeRequired Type = "required"
-	TypeBonus    Type = "bonus"
-)
-
-func (_type Type) String() string {
-	return string(_type)
-}
-
-// TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
-func TypeValidator(_type Type) error {
-	switch _type {
-	case TypeRequired, TypeBonus:
-		return nil
-	default:
-		return fmt.Errorf("jobskill: invalid enum value for type field: %q", _type)
-	}
-}
 
 // OrderOption defines the ordering options for the JobSkill queries.
 type OrderOption func(*sql.Selector)
@@ -144,11 +115,6 @@ func BySkillID(opts ...sql.OrderTermOption) OrderOption {
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
-}
-
-// ByWeight orders the results by the weight field.
-func ByWeight(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWeight, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

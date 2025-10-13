@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
@@ -34,8 +35,7 @@ func (JobSkill) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.UUID("job_id", uuid.UUID{}),
 		field.UUID("skill_id", uuid.UUID{}),
-		field.Enum("type").Values("required", "bonus"),
-		field.Int("weight").Range(0, 100),
+		field.String("type").GoType(consts.JobSkillType("")),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

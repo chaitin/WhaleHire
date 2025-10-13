@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/db/department"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
@@ -29,51 +30,55 @@ func NewJobProfileRepo(db *db.Client) domain.JobProfileRepo {
 }
 
 func (r *JobProfileRepo) Create(ctx context.Context, job *db.JobPosition, related *domain.JobProfileRelatedEntities) (*db.JobPosition, error) {
-	if job == nil {
-		return nil, fmt.Errorf("job profile payload is required")
+	var workType *consts.JobWorkType
+	if job.WorkType != "" {
+		workType = &job.WorkType
 	}
 
 	var result *db.JobPosition
 	err := entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
-		creator := tx.JobPosition.Create().
+		// 创建主要的JobPosition记录
+		created, createErr := tx.JobPosition.Create().
 			SetName(job.Name).
 			SetDepartmentID(job.DepartmentID).
+			SetNillableCreatedBy(job.CreatedBy).
+			SetStatus(job.Status).
+			SetNillableWorkType(workType).
 			SetNillableLocation(job.Location).
 			SetNillableSalaryMin(job.SalaryMin).
 			SetNillableSalaryMax(job.SalaryMax).
 			SetNillableDescription(job.Description).
-			SetNillableCreatedBy(job.CreatedBy).
-			SetStatus(job.Status)
-
-		created, err := creator.Save(ctx)
-		if err != nil {
-			return err
+			Save(ctx)
+		if createErr != nil {
+			return fmt.Errorf("failed to create job position: %w", createErr)
 		}
 
 		jobID := created.ID
 
+		// 创建相关实体
 		if related != nil {
-			if err := createResponsibilities(ctx, tx, jobID, related.Responsibilities); err != nil {
-				return err
+			if respErr := r.createResponsibilities(ctx, tx, jobID, related.Responsibilities); respErr != nil {
+				return respErr
 			}
-			if err := createSkills(ctx, tx, jobID, related.Skills); err != nil {
-				return err
+			if skillErr := r.createSkills(ctx, tx, jobID, related.Skills); skillErr != nil {
+				return skillErr
 			}
-			if err := createEducationRequirements(ctx, tx, jobID, related.EducationRequirements); err != nil {
-				return err
+			if eduErr := r.createEducationRequirements(ctx, tx, jobID, related.EducationRequirements); eduErr != nil {
+				return eduErr
 			}
-			if err := createExperienceRequirements(ctx, tx, jobID, related.ExperienceRequirements); err != nil {
-				return err
+			if expErr := r.createExperienceRequirements(ctx, tx, jobID, related.ExperienceRequirements); expErr != nil {
+				return expErr
 			}
-			if err := createIndustryRequirements(ctx, tx, jobID, related.IndustryRequirements); err != nil {
-				return err
+			if indErr := r.createIndustryRequirements(ctx, tx, jobID, related.IndustryRequirements); indErr != nil {
+				return indErr
 			}
 		}
 
-		result, err = tx.JobPosition.Query().
+		// 查询完整的结果（包含所有关联数据）
+		var queryErr error
+		result, queryErr = tx.JobPosition.Query().
 			Where(jobposition.ID(jobID)).
 			WithDepartment().
-			WithCreator().
 			WithResponsibilities().
 			WithSkills(func(q *db.JobSkillQuery) {
 				q.WithSkill()
@@ -82,7 +87,7 @@ func (r *JobProfileRepo) Create(ctx context.Context, job *db.JobPosition, relate
 			WithExperienceRequirements().
 			WithIndustryRequirements().
 			Only(ctx)
-		return err
+		return queryErr
 	})
 
 	return result, err
@@ -96,7 +101,7 @@ func (r *JobProfileRepo) Update(ctx context.Context, id string, fn func(tx *db.T
 
 	var result *db.JobPosition
 	err = entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
-		current, err := tx.JobPosition.Query().
+		current, queryErr := tx.JobPosition.Query().
 			Where(jobposition.ID(jobID)).
 			WithResponsibilities().
 			WithSkills(func(q *db.JobSkillQuery) {
@@ -106,19 +111,20 @@ func (r *JobProfileRepo) Update(ctx context.Context, id string, fn func(tx *db.T
 			WithExperienceRequirements().
 			WithIndustryRequirements().
 			Only(ctx)
-		if err != nil {
-			return err
+		if queryErr != nil {
+			return queryErr
 		}
 
 		updater := tx.JobPosition.UpdateOneID(jobID)
-		if err := fn(tx, current, updater); err != nil {
-			return err
+		if fnErr := fn(tx, current, updater); fnErr != nil {
+			return fnErr
 		}
-		if _, err := updater.Save(ctx); err != nil {
-			return err
+		if _, saveErr := updater.Save(ctx); saveErr != nil {
+			return saveErr
 		}
 
-		result, err = tx.JobPosition.Query().
+		var finalErr error
+		result, finalErr = tx.JobPosition.Query().
 			Where(jobposition.ID(jobID)).
 			WithDepartment().
 			WithResponsibilities().
@@ -129,7 +135,7 @@ func (r *JobProfileRepo) Update(ctx context.Context, id string, fn func(tx *db.T
 			WithExperienceRequirements().
 			WithIndustryRequirements().
 			Only(ctx)
-		return err
+		return finalErr
 	})
 
 	return result, err
@@ -367,85 +373,86 @@ func (r *JobProfileRepo) Search(ctx context.Context, req *domain.SearchJobProfil
 	return query.Page(ctx, req.SearchJobProfileReq.Pagination.Page, req.SearchJobProfileReq.Pagination.Size)
 }
 
-func createResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, items []*db.JobResponsibility) error {
-	for _, item := range items {
-		if item == nil {
-			continue
-		}
-		creator := tx.JobResponsibility.Create().
-			SetJobID(jobID).
-			SetResponsibility(item.Responsibility).
-			SetSortOrder(item.SortOrder)
-		if _, err := creator.Save(ctx); err != nil {
-			return fmt.Errorf("create responsibility: %w", err)
-		}
+func (r *JobProfileRepo) createResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, responsibilities []*db.JobResponsibility) error {
+	if len(responsibilities) == 0 {
+		return nil
 	}
-	return nil
+
+	bulk := make([]*db.JobResponsibilityCreate, len(responsibilities))
+	for i, resp := range responsibilities {
+		bulk[i] = tx.JobResponsibility.Create().
+			SetJobID(jobID).
+			SetResponsibility(resp.Responsibility)
+	}
+
+	_, err := tx.JobResponsibility.CreateBulk(bulk...).Save(ctx)
+	return err
 }
 
-func createSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, items []*db.JobSkill) error {
-	for _, item := range items {
-		if item == nil {
-			continue
-		}
-		creator := tx.JobSkill.Create().
-			SetJobID(jobID).
-			SetSkillID(item.SkillID).
-			SetType(item.Type).
-			SetWeight(item.Weight)
-		if _, err := creator.Save(ctx); err != nil {
-			return fmt.Errorf("create job skill: %w", err)
-		}
+func (r *JobProfileRepo) createSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, skills []*db.JobSkill) error {
+	if len(skills) == 0 {
+		return nil
 	}
-	return nil
+
+	bulk := make([]*db.JobSkillCreate, len(skills))
+	for i, skill := range skills {
+		bulk[i] = tx.JobSkill.Create().
+			SetJobID(jobID).
+			SetSkillID(skill.SkillID).
+			SetType(consts.JobSkillType(skill.Type))
+	}
+
+	_, err := tx.JobSkill.CreateBulk(bulk...).Save(ctx)
+	return err
 }
 
-func createEducationRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, items []*db.JobEducationRequirement) error {
-	for _, item := range items {
-		if item == nil {
-			continue
-		}
-		creator := tx.JobEducationRequirement.Create().
-			SetJobID(jobID).
-			SetMinDegree(item.MinDegree).
-			SetWeight(item.Weight)
-		if _, err := creator.Save(ctx); err != nil {
-			return fmt.Errorf("create education requirement: %w", err)
-		}
+func (r *JobProfileRepo) createEducationRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, requirements []*db.JobEducationRequirement) error {
+	if len(requirements) == 0 {
+		return nil
 	}
-	return nil
+
+	bulk := make([]*db.JobEducationRequirementCreate, len(requirements))
+	for i, req := range requirements {
+		bulk[i] = tx.JobEducationRequirement.Create().
+			SetJobID(jobID).
+			SetEducationType(consts.JobEducationType(req.EducationType))
+	}
+
+	_, err := tx.JobEducationRequirement.CreateBulk(bulk...).Save(ctx)
+	return err
 }
 
-func createExperienceRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, items []*db.JobExperienceRequirement) error {
-	for _, item := range items {
-		if item == nil {
-			continue
-		}
-		creator := tx.JobExperienceRequirement.Create().
-			SetJobID(jobID).
-			SetMinYears(item.MinYears).
-			SetIdealYears(item.IdealYears).
-			SetWeight(item.Weight)
-		if _, err := creator.Save(ctx); err != nil {
-			return fmt.Errorf("create experience requirement: %w", err)
-		}
+func (r *JobProfileRepo) createExperienceRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, requirements []*db.JobExperienceRequirement) error {
+	if len(requirements) == 0 {
+		return nil
 	}
-	return nil
+
+	bulk := make([]*db.JobExperienceRequirementCreate, len(requirements))
+	for i, req := range requirements {
+		bulk[i] = tx.JobExperienceRequirement.Create().
+			SetJobID(jobID).
+			SetExperienceType(req.ExperienceType).
+			SetMinYears(req.MinYears).
+			SetIdealYears(req.IdealYears)
+	}
+
+	_, err := tx.JobExperienceRequirement.CreateBulk(bulk...).Save(ctx)
+	return err
 }
 
-func createIndustryRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, items []*db.JobIndustryRequirement) error {
-	for _, item := range items {
-		if item == nil {
-			continue
-		}
-		creator := tx.JobIndustryRequirement.Create().
-			SetJobID(jobID).
-			SetIndustry(item.Industry).
-			SetWeight(item.Weight).
-			SetNillableCompanyName(item.CompanyName)
-		if _, err := creator.Save(ctx); err != nil {
-			return fmt.Errorf("create industry requirement: %w", err)
-		}
+func (r *JobProfileRepo) createIndustryRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, requirements []*db.JobIndustryRequirement) error {
+	if len(requirements) == 0 {
+		return nil
 	}
-	return nil
+
+	bulk := make([]*db.JobIndustryRequirementCreate, len(requirements))
+	for i, req := range requirements {
+		bulk[i] = tx.JobIndustryRequirement.Create().
+			SetJobID(jobID).
+			SetNillableIndustry(req.Industry).
+			SetNillableCompanyName(req.CompanyName)
+	}
+
+	_, err := tx.JobIndustryRequirement.CreateBulk(bulk...).Save(ctx)
+	return err
 }

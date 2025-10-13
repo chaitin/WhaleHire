@@ -25,8 +25,6 @@ type JobResponsibility struct {
 	JobID uuid.UUID `json:"job_id,omitempty"`
 	// Responsibility holds the value of the "responsibility" field.
 	Responsibility string `json:"responsibility,omitempty"`
-	// SortOrder holds the value of the "sort_order" field.
-	SortOrder int `json:"sort_order,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -62,8 +60,6 @@ func (*JobResponsibility) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case jobresponsibility.FieldSortOrder:
-			values[i] = new(sql.NullInt64)
 		case jobresponsibility.FieldResponsibility:
 			values[i] = new(sql.NullString)
 		case jobresponsibility.FieldDeletedAt, jobresponsibility.FieldCreatedAt, jobresponsibility.FieldUpdatedAt:
@@ -108,12 +104,6 @@ func (jr *JobResponsibility) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field responsibility", values[i])
 			} else if value.Valid {
 				jr.Responsibility = value.String
-			}
-		case jobresponsibility.FieldSortOrder:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field sort_order", values[i])
-			} else if value.Valid {
-				jr.SortOrder = int(value.Int64)
 			}
 		case jobresponsibility.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -176,9 +166,6 @@ func (jr *JobResponsibility) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("responsibility=")
 	builder.WriteString(jr.Responsibility)
-	builder.WriteString(", ")
-	builder.WriteString("sort_order=")
-	builder.WriteString(fmt.Sprintf("%v", jr.SortOrder))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(jr.CreatedAt.Format(time.ANSIC))

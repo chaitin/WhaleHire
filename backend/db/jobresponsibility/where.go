@@ -71,11 +71,6 @@ func Responsibility(v string) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldEQ(FieldResponsibility, v))
 }
 
-// SortOrder applies equality check predicate on the "sort_order" field. It's identical to SortOrderEQ.
-func SortOrder(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldEQ(FieldSortOrder, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldEQ(FieldCreatedAt, v))
@@ -219,46 +214,6 @@ func ResponsibilityEqualFold(v string) predicate.JobResponsibility {
 // ResponsibilityContainsFold applies the ContainsFold predicate on the "responsibility" field.
 func ResponsibilityContainsFold(v string) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldContainsFold(FieldResponsibility, v))
-}
-
-// SortOrderEQ applies the EQ predicate on the "sort_order" field.
-func SortOrderEQ(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldEQ(FieldSortOrder, v))
-}
-
-// SortOrderNEQ applies the NEQ predicate on the "sort_order" field.
-func SortOrderNEQ(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldNEQ(FieldSortOrder, v))
-}
-
-// SortOrderIn applies the In predicate on the "sort_order" field.
-func SortOrderIn(vs ...int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldIn(FieldSortOrder, vs...))
-}
-
-// SortOrderNotIn applies the NotIn predicate on the "sort_order" field.
-func SortOrderNotIn(vs ...int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldNotIn(FieldSortOrder, vs...))
-}
-
-// SortOrderGT applies the GT predicate on the "sort_order" field.
-func SortOrderGT(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldGT(FieldSortOrder, v))
-}
-
-// SortOrderGTE applies the GTE predicate on the "sort_order" field.
-func SortOrderGTE(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldGTE(FieldSortOrder, v))
-}
-
-// SortOrderLT applies the LT predicate on the "sort_order" field.
-func SortOrderLT(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldLT(FieldSortOrder, v))
-}
-
-// SortOrderLTE applies the LTE predicate on the "sort_order" field.
-func SortOrderLTE(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldLTE(FieldSortOrder, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

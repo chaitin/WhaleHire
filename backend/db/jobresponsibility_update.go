@@ -79,27 +79,6 @@ func (jru *JobResponsibilityUpdate) SetNillableResponsibility(s *string) *JobRes
 	return jru
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (jru *JobResponsibilityUpdate) SetSortOrder(i int) *JobResponsibilityUpdate {
-	jru.mutation.ResetSortOrder()
-	jru.mutation.SetSortOrder(i)
-	return jru
-}
-
-// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (jru *JobResponsibilityUpdate) SetNillableSortOrder(i *int) *JobResponsibilityUpdate {
-	if i != nil {
-		jru.SetSortOrder(*i)
-	}
-	return jru
-}
-
-// AddSortOrder adds i to the "sort_order" field.
-func (jru *JobResponsibilityUpdate) AddSortOrder(i int) *JobResponsibilityUpdate {
-	jru.mutation.AddSortOrder(i)
-	return jru
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (jru *JobResponsibilityUpdate) SetUpdatedAt(t time.Time) *JobResponsibilityUpdate {
 	jru.mutation.SetUpdatedAt(t)
@@ -198,12 +177,6 @@ func (jru *JobResponsibilityUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if value, ok := jru.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
-	}
-	if value, ok := jru.mutation.SortOrder(); ok {
-		_spec.SetField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
-	}
-	if value, ok := jru.mutation.AddedSortOrder(); ok {
-		_spec.AddField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
 	}
 	if value, ok := jru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)
@@ -304,27 +277,6 @@ func (jruo *JobResponsibilityUpdateOne) SetNillableResponsibility(s *string) *Jo
 	if s != nil {
 		jruo.SetResponsibility(*s)
 	}
-	return jruo
-}
-
-// SetSortOrder sets the "sort_order" field.
-func (jruo *JobResponsibilityUpdateOne) SetSortOrder(i int) *JobResponsibilityUpdateOne {
-	jruo.mutation.ResetSortOrder()
-	jruo.mutation.SetSortOrder(i)
-	return jruo
-}
-
-// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (jruo *JobResponsibilityUpdateOne) SetNillableSortOrder(i *int) *JobResponsibilityUpdateOne {
-	if i != nil {
-		jruo.SetSortOrder(*i)
-	}
-	return jruo
-}
-
-// AddSortOrder adds i to the "sort_order" field.
-func (jruo *JobResponsibilityUpdateOne) AddSortOrder(i int) *JobResponsibilityUpdateOne {
-	jruo.mutation.AddSortOrder(i)
 	return jruo
 }
 
@@ -456,12 +408,6 @@ func (jruo *JobResponsibilityUpdateOne) sqlSave(ctx context.Context) (_node *Job
 	}
 	if value, ok := jruo.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
-	}
-	if value, ok := jruo.mutation.SortOrder(); ok {
-		_spec.SetField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
-	}
-	if value, ok := jruo.mutation.AddedSortOrder(); ok {
-		_spec.AddField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
 	}
 	if value, ok := jruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)

@@ -23,12 +23,12 @@ type JobExperienceRequirement struct {
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
+	// ExperienceType holds the value of the "experience_type" field.
+	ExperienceType string `json:"experience_type,omitempty"`
 	// MinYears holds the value of the "min_years" field.
 	MinYears int `json:"min_years,omitempty"`
 	// IdealYears holds the value of the "ideal_years" field.
 	IdealYears int `json:"ideal_years,omitempty"`
-	// Weight holds the value of the "weight" field.
-	Weight int `json:"weight,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -64,8 +64,10 @@ func (*JobExperienceRequirement) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case jobexperiencerequirement.FieldMinYears, jobexperiencerequirement.FieldIdealYears, jobexperiencerequirement.FieldWeight:
+		case jobexperiencerequirement.FieldMinYears, jobexperiencerequirement.FieldIdealYears:
 			values[i] = new(sql.NullInt64)
+		case jobexperiencerequirement.FieldExperienceType:
+			values[i] = new(sql.NullString)
 		case jobexperiencerequirement.FieldDeletedAt, jobexperiencerequirement.FieldCreatedAt, jobexperiencerequirement.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case jobexperiencerequirement.FieldID, jobexperiencerequirement.FieldJobID:
@@ -103,6 +105,12 @@ func (jer *JobExperienceRequirement) assignValues(columns []string, values []any
 			} else if value != nil {
 				jer.JobID = *value
 			}
+		case jobexperiencerequirement.FieldExperienceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field experience_type", values[i])
+			} else if value.Valid {
+				jer.ExperienceType = value.String
+			}
 		case jobexperiencerequirement.FieldMinYears:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field min_years", values[i])
@@ -114,12 +122,6 @@ func (jer *JobExperienceRequirement) assignValues(columns []string, values []any
 				return fmt.Errorf("unexpected type %T for field ideal_years", values[i])
 			} else if value.Valid {
 				jer.IdealYears = int(value.Int64)
-			}
-		case jobexperiencerequirement.FieldWeight:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field weight", values[i])
-			} else if value.Valid {
-				jer.Weight = int(value.Int64)
 			}
 		case jobexperiencerequirement.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -180,14 +182,14 @@ func (jer *JobExperienceRequirement) String() string {
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", jer.JobID))
 	builder.WriteString(", ")
+	builder.WriteString("experience_type=")
+	builder.WriteString(jer.ExperienceType)
+	builder.WriteString(", ")
 	builder.WriteString("min_years=")
 	builder.WriteString(fmt.Sprintf("%v", jer.MinYears))
 	builder.WriteString(", ")
 	builder.WriteString("ideal_years=")
 	builder.WriteString(fmt.Sprintf("%v", jer.IdealYears))
-	builder.WriteString(", ")
-	builder.WriteString("weight=")
-	builder.WriteString(fmt.Sprintf("%v", jer.Weight))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(jer.CreatedAt.Format(time.ANSIC))

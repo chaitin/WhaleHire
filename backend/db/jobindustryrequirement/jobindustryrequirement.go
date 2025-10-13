@@ -24,8 +24,6 @@ const (
 	FieldIndustry = "industry"
 	// FieldCompanyName holds the string denoting the company_name field in the database.
 	FieldCompanyName = "company_name"
-	// FieldWeight holds the string denoting the weight field in the database.
-	FieldWeight = "weight"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -50,7 +48,6 @@ var Columns = []string{
 	FieldJobID,
 	FieldIndustry,
 	FieldCompanyName,
-	FieldWeight,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -77,8 +74,6 @@ var (
 	IndustryValidator func(string) error
 	// CompanyNameValidator is a validator for the "company_name" field. It is called by the builders before save.
 	CompanyNameValidator func(string) error
-	// WeightValidator is a validator for the "weight" field. It is called by the builders before save.
-	WeightValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -115,11 +110,6 @@ func ByIndustry(opts ...sql.OrderTermOption) OrderOption {
 // ByCompanyName orders the results by the company_name field.
 func ByCompanyName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCompanyName, opts...).ToFunc()
-}
-
-// ByWeight orders the results by the weight field.
-func ByWeight(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWeight, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

@@ -79,6 +79,12 @@ func (jiru *JobIndustryRequirementUpdate) SetNillableIndustry(s *string) *JobInd
 	return jiru
 }
 
+// ClearIndustry clears the value of the "industry" field.
+func (jiru *JobIndustryRequirementUpdate) ClearIndustry() *JobIndustryRequirementUpdate {
+	jiru.mutation.ClearIndustry()
+	return jiru
+}
+
 // SetCompanyName sets the "company_name" field.
 func (jiru *JobIndustryRequirementUpdate) SetCompanyName(s string) *JobIndustryRequirementUpdate {
 	jiru.mutation.SetCompanyName(s)
@@ -96,27 +102,6 @@ func (jiru *JobIndustryRequirementUpdate) SetNillableCompanyName(s *string) *Job
 // ClearCompanyName clears the value of the "company_name" field.
 func (jiru *JobIndustryRequirementUpdate) ClearCompanyName() *JobIndustryRequirementUpdate {
 	jiru.mutation.ClearCompanyName()
-	return jiru
-}
-
-// SetWeight sets the "weight" field.
-func (jiru *JobIndustryRequirementUpdate) SetWeight(i int) *JobIndustryRequirementUpdate {
-	jiru.mutation.ResetWeight()
-	jiru.mutation.SetWeight(i)
-	return jiru
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jiru *JobIndustryRequirementUpdate) SetNillableWeight(i *int) *JobIndustryRequirementUpdate {
-	if i != nil {
-		jiru.SetWeight(*i)
-	}
-	return jiru
-}
-
-// AddWeight adds i to the "weight" field.
-func (jiru *JobIndustryRequirementUpdate) AddWeight(i int) *JobIndustryRequirementUpdate {
-	jiru.mutation.AddWeight(i)
 	return jiru
 }
 
@@ -196,11 +181,6 @@ func (jiru *JobIndustryRequirementUpdate) check() error {
 			return &ValidationError{Name: "company_name", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.company_name": %w`, err)}
 		}
 	}
-	if v, ok := jiru.mutation.Weight(); ok {
-		if err := jobindustryrequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.weight": %w`, err)}
-		}
-	}
 	if jiru.mutation.JobCleared() && len(jiru.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobIndustryRequirement.job"`)
 	}
@@ -234,17 +214,14 @@ func (jiru *JobIndustryRequirementUpdate) sqlSave(ctx context.Context) (n int, e
 	if value, ok := jiru.mutation.Industry(); ok {
 		_spec.SetField(jobindustryrequirement.FieldIndustry, field.TypeString, value)
 	}
+	if jiru.mutation.IndustryCleared() {
+		_spec.ClearField(jobindustryrequirement.FieldIndustry, field.TypeString)
+	}
 	if value, ok := jiru.mutation.CompanyName(); ok {
 		_spec.SetField(jobindustryrequirement.FieldCompanyName, field.TypeString, value)
 	}
 	if jiru.mutation.CompanyNameCleared() {
 		_spec.ClearField(jobindustryrequirement.FieldCompanyName, field.TypeString)
-	}
-	if value, ok := jiru.mutation.Weight(); ok {
-		_spec.SetField(jobindustryrequirement.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jiru.mutation.AddedWeight(); ok {
-		_spec.AddField(jobindustryrequirement.FieldWeight, field.TypeInt, value)
 	}
 	if value, ok := jiru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobindustryrequirement.FieldUpdatedAt, field.TypeTime, value)
@@ -348,6 +325,12 @@ func (jiruo *JobIndustryRequirementUpdateOne) SetNillableIndustry(s *string) *Jo
 	return jiruo
 }
 
+// ClearIndustry clears the value of the "industry" field.
+func (jiruo *JobIndustryRequirementUpdateOne) ClearIndustry() *JobIndustryRequirementUpdateOne {
+	jiruo.mutation.ClearIndustry()
+	return jiruo
+}
+
 // SetCompanyName sets the "company_name" field.
 func (jiruo *JobIndustryRequirementUpdateOne) SetCompanyName(s string) *JobIndustryRequirementUpdateOne {
 	jiruo.mutation.SetCompanyName(s)
@@ -365,27 +348,6 @@ func (jiruo *JobIndustryRequirementUpdateOne) SetNillableCompanyName(s *string) 
 // ClearCompanyName clears the value of the "company_name" field.
 func (jiruo *JobIndustryRequirementUpdateOne) ClearCompanyName() *JobIndustryRequirementUpdateOne {
 	jiruo.mutation.ClearCompanyName()
-	return jiruo
-}
-
-// SetWeight sets the "weight" field.
-func (jiruo *JobIndustryRequirementUpdateOne) SetWeight(i int) *JobIndustryRequirementUpdateOne {
-	jiruo.mutation.ResetWeight()
-	jiruo.mutation.SetWeight(i)
-	return jiruo
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jiruo *JobIndustryRequirementUpdateOne) SetNillableWeight(i *int) *JobIndustryRequirementUpdateOne {
-	if i != nil {
-		jiruo.SetWeight(*i)
-	}
-	return jiruo
-}
-
-// AddWeight adds i to the "weight" field.
-func (jiruo *JobIndustryRequirementUpdateOne) AddWeight(i int) *JobIndustryRequirementUpdateOne {
-	jiruo.mutation.AddWeight(i)
 	return jiruo
 }
 
@@ -478,11 +440,6 @@ func (jiruo *JobIndustryRequirementUpdateOne) check() error {
 			return &ValidationError{Name: "company_name", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.company_name": %w`, err)}
 		}
 	}
-	if v, ok := jiruo.mutation.Weight(); ok {
-		if err := jobindustryrequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.weight": %w`, err)}
-		}
-	}
 	if jiruo.mutation.JobCleared() && len(jiruo.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobIndustryRequirement.job"`)
 	}
@@ -533,17 +490,14 @@ func (jiruo *JobIndustryRequirementUpdateOne) sqlSave(ctx context.Context) (_nod
 	if value, ok := jiruo.mutation.Industry(); ok {
 		_spec.SetField(jobindustryrequirement.FieldIndustry, field.TypeString, value)
 	}
+	if jiruo.mutation.IndustryCleared() {
+		_spec.ClearField(jobindustryrequirement.FieldIndustry, field.TypeString)
+	}
 	if value, ok := jiruo.mutation.CompanyName(); ok {
 		_spec.SetField(jobindustryrequirement.FieldCompanyName, field.TypeString, value)
 	}
 	if jiruo.mutation.CompanyNameCleared() {
 		_spec.ClearField(jobindustryrequirement.FieldCompanyName, field.TypeString)
-	}
-	if value, ok := jiruo.mutation.Weight(); ok {
-		_spec.SetField(jobindustryrequirement.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jiruo.mutation.AddedWeight(); ok {
-		_spec.AddField(jobindustryrequirement.FieldWeight, field.TypeInt, value)
 	}
 	if value, ok := jiruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobindustryrequirement.FieldUpdatedAt, field.TypeTime, value)

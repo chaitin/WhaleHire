@@ -201,11 +201,6 @@ func (du *DepartmentUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`db: validator failed for field "Department.name": %w`, err)}
 		}
 	}
-	if v, ok := du.mutation.Description(); ok {
-		if err := department.DescriptionValidator(v); err != nil {
-			return &ValidationError{Name: "description", err: fmt.Errorf(`db: validator failed for field "Department.description": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -499,11 +494,6 @@ func (duo *DepartmentUpdateOne) check() error {
 	if v, ok := duo.mutation.Name(); ok {
 		if err := department.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`db: validator failed for field "Department.name": %w`, err)}
-		}
-	}
-	if v, ok := duo.mutation.Description(); ok {
-		if err := department.DescriptionValidator(v); err != nil {
-			return &ValidationError{Name: "description", err: fmt.Errorf(`db: validator failed for field "Department.description": %w`, err)}
 		}
 	}
 	return nil

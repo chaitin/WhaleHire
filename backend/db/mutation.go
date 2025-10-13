@@ -4831,21 +4831,19 @@ func (m *DepartmentMutation) ResetEdge(name string) error {
 // JobEducationRequirementMutation represents an operation that mutates the JobEducationRequirement nodes in the graph.
 type JobEducationRequirementMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	deleted_at    *time.Time
-	min_degree    *string
-	weight        *int
-	addweight     *int
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	job           *uuid.UUID
-	clearedjob    bool
-	done          bool
-	oldValue      func(context.Context) (*JobEducationRequirement, error)
-	predicates    []predicate.JobEducationRequirement
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	deleted_at     *time.Time
+	education_type *consts.JobEducationType
+	created_at     *time.Time
+	updated_at     *time.Time
+	clearedFields  map[string]struct{}
+	job            *uuid.UUID
+	clearedjob     bool
+	done           bool
+	oldValue       func(context.Context) (*JobEducationRequirement, error)
+	predicates     []predicate.JobEducationRequirement
 }
 
 var _ ent.Mutation = (*JobEducationRequirementMutation)(nil)
@@ -5037,96 +5035,53 @@ func (m *JobEducationRequirementMutation) ResetJobID() {
 	m.job = nil
 }
 
-// SetMinDegree sets the "min_degree" field.
-func (m *JobEducationRequirementMutation) SetMinDegree(s string) {
-	m.min_degree = &s
+// SetEducationType sets the "education_type" field.
+func (m *JobEducationRequirementMutation) SetEducationType(cet consts.JobEducationType) {
+	m.education_type = &cet
 }
 
-// MinDegree returns the value of the "min_degree" field in the mutation.
-func (m *JobEducationRequirementMutation) MinDegree() (r string, exists bool) {
-	v := m.min_degree
+// EducationType returns the value of the "education_type" field in the mutation.
+func (m *JobEducationRequirementMutation) EducationType() (r consts.JobEducationType, exists bool) {
+	v := m.education_type
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldMinDegree returns the old "min_degree" field's value of the JobEducationRequirement entity.
+// OldEducationType returns the old "education_type" field's value of the JobEducationRequirement entity.
 // If the JobEducationRequirement object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobEducationRequirementMutation) OldMinDegree(ctx context.Context) (v string, err error) {
+func (m *JobEducationRequirementMutation) OldEducationType(ctx context.Context) (v consts.JobEducationType, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldMinDegree is only allowed on UpdateOne operations")
+		return v, errors.New("OldEducationType is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldMinDegree requires an ID field in the mutation")
+		return v, errors.New("OldEducationType requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldMinDegree: %w", err)
+		return v, fmt.Errorf("querying old value for OldEducationType: %w", err)
 	}
-	return oldValue.MinDegree, nil
+	return oldValue.EducationType, nil
 }
 
-// ResetMinDegree resets all changes to the "min_degree" field.
-func (m *JobEducationRequirementMutation) ResetMinDegree() {
-	m.min_degree = nil
+// ClearEducationType clears the value of the "education_type" field.
+func (m *JobEducationRequirementMutation) ClearEducationType() {
+	m.education_type = nil
+	m.clearedFields[jobeducationrequirement.FieldEducationType] = struct{}{}
 }
 
-// SetWeight sets the "weight" field.
-func (m *JobEducationRequirementMutation) SetWeight(i int) {
-	m.weight = &i
-	m.addweight = nil
+// EducationTypeCleared returns if the "education_type" field was cleared in this mutation.
+func (m *JobEducationRequirementMutation) EducationTypeCleared() bool {
+	_, ok := m.clearedFields[jobeducationrequirement.FieldEducationType]
+	return ok
 }
 
-// Weight returns the value of the "weight" field in the mutation.
-func (m *JobEducationRequirementMutation) Weight() (r int, exists bool) {
-	v := m.weight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldWeight returns the old "weight" field's value of the JobEducationRequirement entity.
-// If the JobEducationRequirement object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobEducationRequirementMutation) OldWeight(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWeight is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWeight requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWeight: %w", err)
-	}
-	return oldValue.Weight, nil
-}
-
-// AddWeight adds i to the "weight" field.
-func (m *JobEducationRequirementMutation) AddWeight(i int) {
-	if m.addweight != nil {
-		*m.addweight += i
-	} else {
-		m.addweight = &i
-	}
-}
-
-// AddedWeight returns the value that was added to the "weight" field in this mutation.
-func (m *JobEducationRequirementMutation) AddedWeight() (r int, exists bool) {
-	v := m.addweight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetWeight resets all changes to the "weight" field.
-func (m *JobEducationRequirementMutation) ResetWeight() {
-	m.weight = nil
-	m.addweight = nil
+// ResetEducationType resets all changes to the "education_type" field.
+func (m *JobEducationRequirementMutation) ResetEducationType() {
+	m.education_type = nil
+	delete(m.clearedFields, jobeducationrequirement.FieldEducationType)
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -5262,18 +5217,15 @@ func (m *JobEducationRequirementMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *JobEducationRequirementMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 5)
 	if m.deleted_at != nil {
 		fields = append(fields, jobeducationrequirement.FieldDeletedAt)
 	}
 	if m.job != nil {
 		fields = append(fields, jobeducationrequirement.FieldJobID)
 	}
-	if m.min_degree != nil {
-		fields = append(fields, jobeducationrequirement.FieldMinDegree)
-	}
-	if m.weight != nil {
-		fields = append(fields, jobeducationrequirement.FieldWeight)
+	if m.education_type != nil {
+		fields = append(fields, jobeducationrequirement.FieldEducationType)
 	}
 	if m.created_at != nil {
 		fields = append(fields, jobeducationrequirement.FieldCreatedAt)
@@ -5293,10 +5245,8 @@ func (m *JobEducationRequirementMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case jobeducationrequirement.FieldJobID:
 		return m.JobID()
-	case jobeducationrequirement.FieldMinDegree:
-		return m.MinDegree()
-	case jobeducationrequirement.FieldWeight:
-		return m.Weight()
+	case jobeducationrequirement.FieldEducationType:
+		return m.EducationType()
 	case jobeducationrequirement.FieldCreatedAt:
 		return m.CreatedAt()
 	case jobeducationrequirement.FieldUpdatedAt:
@@ -5314,10 +5264,8 @@ func (m *JobEducationRequirementMutation) OldField(ctx context.Context, name str
 		return m.OldDeletedAt(ctx)
 	case jobeducationrequirement.FieldJobID:
 		return m.OldJobID(ctx)
-	case jobeducationrequirement.FieldMinDegree:
-		return m.OldMinDegree(ctx)
-	case jobeducationrequirement.FieldWeight:
-		return m.OldWeight(ctx)
+	case jobeducationrequirement.FieldEducationType:
+		return m.OldEducationType(ctx)
 	case jobeducationrequirement.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case jobeducationrequirement.FieldUpdatedAt:
@@ -5345,19 +5293,12 @@ func (m *JobEducationRequirementMutation) SetField(name string, value ent.Value)
 		}
 		m.SetJobID(v)
 		return nil
-	case jobeducationrequirement.FieldMinDegree:
-		v, ok := value.(string)
+	case jobeducationrequirement.FieldEducationType:
+		v, ok := value.(consts.JobEducationType)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetMinDegree(v)
-		return nil
-	case jobeducationrequirement.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetWeight(v)
+		m.SetEducationType(v)
 		return nil
 	case jobeducationrequirement.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -5380,21 +5321,13 @@ func (m *JobEducationRequirementMutation) SetField(name string, value ent.Value)
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *JobEducationRequirementMutation) AddedFields() []string {
-	var fields []string
-	if m.addweight != nil {
-		fields = append(fields, jobeducationrequirement.FieldWeight)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *JobEducationRequirementMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case jobeducationrequirement.FieldWeight:
-		return m.AddedWeight()
-	}
 	return nil, false
 }
 
@@ -5403,13 +5336,6 @@ func (m *JobEducationRequirementMutation) AddedField(name string) (ent.Value, bo
 // type.
 func (m *JobEducationRequirementMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case jobeducationrequirement.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddWeight(v)
-		return nil
 	}
 	return fmt.Errorf("unknown JobEducationRequirement numeric field %s", name)
 }
@@ -5420,6 +5346,9 @@ func (m *JobEducationRequirementMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(jobeducationrequirement.FieldDeletedAt) {
 		fields = append(fields, jobeducationrequirement.FieldDeletedAt)
+	}
+	if m.FieldCleared(jobeducationrequirement.FieldEducationType) {
+		fields = append(fields, jobeducationrequirement.FieldEducationType)
 	}
 	return fields
 }
@@ -5438,6 +5367,9 @@ func (m *JobEducationRequirementMutation) ClearField(name string) error {
 	case jobeducationrequirement.FieldDeletedAt:
 		m.ClearDeletedAt()
 		return nil
+	case jobeducationrequirement.FieldEducationType:
+		m.ClearEducationType()
+		return nil
 	}
 	return fmt.Errorf("unknown JobEducationRequirement nullable field %s", name)
 }
@@ -5452,11 +5384,8 @@ func (m *JobEducationRequirementMutation) ResetField(name string) error {
 	case jobeducationrequirement.FieldJobID:
 		m.ResetJobID()
 		return nil
-	case jobeducationrequirement.FieldMinDegree:
-		m.ResetMinDegree()
-		return nil
-	case jobeducationrequirement.FieldWeight:
-		m.ResetWeight()
+	case jobeducationrequirement.FieldEducationType:
+		m.ResetEducationType()
 		return nil
 	case jobeducationrequirement.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -5545,24 +5474,23 @@ func (m *JobEducationRequirementMutation) ResetEdge(name string) error {
 // JobExperienceRequirementMutation represents an operation that mutates the JobExperienceRequirement nodes in the graph.
 type JobExperienceRequirementMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	deleted_at     *time.Time
-	min_years      *int
-	addmin_years   *int
-	ideal_years    *int
-	addideal_years *int
-	weight         *int
-	addweight      *int
-	created_at     *time.Time
-	updated_at     *time.Time
-	clearedFields  map[string]struct{}
-	job            *uuid.UUID
-	clearedjob     bool
-	done           bool
-	oldValue       func(context.Context) (*JobExperienceRequirement, error)
-	predicates     []predicate.JobExperienceRequirement
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	deleted_at      *time.Time
+	experience_type *string
+	min_years       *int
+	addmin_years    *int
+	ideal_years     *int
+	addideal_years  *int
+	created_at      *time.Time
+	updated_at      *time.Time
+	clearedFields   map[string]struct{}
+	job             *uuid.UUID
+	clearedjob      bool
+	done            bool
+	oldValue        func(context.Context) (*JobExperienceRequirement, error)
+	predicates      []predicate.JobExperienceRequirement
 }
 
 var _ ent.Mutation = (*JobExperienceRequirementMutation)(nil)
@@ -5754,6 +5682,55 @@ func (m *JobExperienceRequirementMutation) ResetJobID() {
 	m.job = nil
 }
 
+// SetExperienceType sets the "experience_type" field.
+func (m *JobExperienceRequirementMutation) SetExperienceType(s string) {
+	m.experience_type = &s
+}
+
+// ExperienceType returns the value of the "experience_type" field in the mutation.
+func (m *JobExperienceRequirementMutation) ExperienceType() (r string, exists bool) {
+	v := m.experience_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExperienceType returns the old "experience_type" field's value of the JobExperienceRequirement entity.
+// If the JobExperienceRequirement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobExperienceRequirementMutation) OldExperienceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExperienceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExperienceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExperienceType: %w", err)
+	}
+	return oldValue.ExperienceType, nil
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (m *JobExperienceRequirementMutation) ClearExperienceType() {
+	m.experience_type = nil
+	m.clearedFields[jobexperiencerequirement.FieldExperienceType] = struct{}{}
+}
+
+// ExperienceTypeCleared returns if the "experience_type" field was cleared in this mutation.
+func (m *JobExperienceRequirementMutation) ExperienceTypeCleared() bool {
+	_, ok := m.clearedFields[jobexperiencerequirement.FieldExperienceType]
+	return ok
+}
+
+// ResetExperienceType resets all changes to the "experience_type" field.
+func (m *JobExperienceRequirementMutation) ResetExperienceType() {
+	m.experience_type = nil
+	delete(m.clearedFields, jobexperiencerequirement.FieldExperienceType)
+}
+
 // SetMinYears sets the "min_years" field.
 func (m *JobExperienceRequirementMutation) SetMinYears(i int) {
 	m.min_years = &i
@@ -5804,10 +5781,24 @@ func (m *JobExperienceRequirementMutation) AddedMinYears() (r int, exists bool) 
 	return *v, true
 }
 
+// ClearMinYears clears the value of the "min_years" field.
+func (m *JobExperienceRequirementMutation) ClearMinYears() {
+	m.min_years = nil
+	m.addmin_years = nil
+	m.clearedFields[jobexperiencerequirement.FieldMinYears] = struct{}{}
+}
+
+// MinYearsCleared returns if the "min_years" field was cleared in this mutation.
+func (m *JobExperienceRequirementMutation) MinYearsCleared() bool {
+	_, ok := m.clearedFields[jobexperiencerequirement.FieldMinYears]
+	return ok
+}
+
 // ResetMinYears resets all changes to the "min_years" field.
 func (m *JobExperienceRequirementMutation) ResetMinYears() {
 	m.min_years = nil
 	m.addmin_years = nil
+	delete(m.clearedFields, jobexperiencerequirement.FieldMinYears)
 }
 
 // SetIdealYears sets the "ideal_years" field.
@@ -5860,66 +5851,24 @@ func (m *JobExperienceRequirementMutation) AddedIdealYears() (r int, exists bool
 	return *v, true
 }
 
+// ClearIdealYears clears the value of the "ideal_years" field.
+func (m *JobExperienceRequirementMutation) ClearIdealYears() {
+	m.ideal_years = nil
+	m.addideal_years = nil
+	m.clearedFields[jobexperiencerequirement.FieldIdealYears] = struct{}{}
+}
+
+// IdealYearsCleared returns if the "ideal_years" field was cleared in this mutation.
+func (m *JobExperienceRequirementMutation) IdealYearsCleared() bool {
+	_, ok := m.clearedFields[jobexperiencerequirement.FieldIdealYears]
+	return ok
+}
+
 // ResetIdealYears resets all changes to the "ideal_years" field.
 func (m *JobExperienceRequirementMutation) ResetIdealYears() {
 	m.ideal_years = nil
 	m.addideal_years = nil
-}
-
-// SetWeight sets the "weight" field.
-func (m *JobExperienceRequirementMutation) SetWeight(i int) {
-	m.weight = &i
-	m.addweight = nil
-}
-
-// Weight returns the value of the "weight" field in the mutation.
-func (m *JobExperienceRequirementMutation) Weight() (r int, exists bool) {
-	v := m.weight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldWeight returns the old "weight" field's value of the JobExperienceRequirement entity.
-// If the JobExperienceRequirement object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobExperienceRequirementMutation) OldWeight(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWeight is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWeight requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWeight: %w", err)
-	}
-	return oldValue.Weight, nil
-}
-
-// AddWeight adds i to the "weight" field.
-func (m *JobExperienceRequirementMutation) AddWeight(i int) {
-	if m.addweight != nil {
-		*m.addweight += i
-	} else {
-		m.addweight = &i
-	}
-}
-
-// AddedWeight returns the value that was added to the "weight" field in this mutation.
-func (m *JobExperienceRequirementMutation) AddedWeight() (r int, exists bool) {
-	v := m.addweight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetWeight resets all changes to the "weight" field.
-func (m *JobExperienceRequirementMutation) ResetWeight() {
-	m.weight = nil
-	m.addweight = nil
+	delete(m.clearedFields, jobexperiencerequirement.FieldIdealYears)
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -6062,14 +6011,14 @@ func (m *JobExperienceRequirementMutation) Fields() []string {
 	if m.job != nil {
 		fields = append(fields, jobexperiencerequirement.FieldJobID)
 	}
+	if m.experience_type != nil {
+		fields = append(fields, jobexperiencerequirement.FieldExperienceType)
+	}
 	if m.min_years != nil {
 		fields = append(fields, jobexperiencerequirement.FieldMinYears)
 	}
 	if m.ideal_years != nil {
 		fields = append(fields, jobexperiencerequirement.FieldIdealYears)
-	}
-	if m.weight != nil {
-		fields = append(fields, jobexperiencerequirement.FieldWeight)
 	}
 	if m.created_at != nil {
 		fields = append(fields, jobexperiencerequirement.FieldCreatedAt)
@@ -6089,12 +6038,12 @@ func (m *JobExperienceRequirementMutation) Field(name string) (ent.Value, bool) 
 		return m.DeletedAt()
 	case jobexperiencerequirement.FieldJobID:
 		return m.JobID()
+	case jobexperiencerequirement.FieldExperienceType:
+		return m.ExperienceType()
 	case jobexperiencerequirement.FieldMinYears:
 		return m.MinYears()
 	case jobexperiencerequirement.FieldIdealYears:
 		return m.IdealYears()
-	case jobexperiencerequirement.FieldWeight:
-		return m.Weight()
 	case jobexperiencerequirement.FieldCreatedAt:
 		return m.CreatedAt()
 	case jobexperiencerequirement.FieldUpdatedAt:
@@ -6112,12 +6061,12 @@ func (m *JobExperienceRequirementMutation) OldField(ctx context.Context, name st
 		return m.OldDeletedAt(ctx)
 	case jobexperiencerequirement.FieldJobID:
 		return m.OldJobID(ctx)
+	case jobexperiencerequirement.FieldExperienceType:
+		return m.OldExperienceType(ctx)
 	case jobexperiencerequirement.FieldMinYears:
 		return m.OldMinYears(ctx)
 	case jobexperiencerequirement.FieldIdealYears:
 		return m.OldIdealYears(ctx)
-	case jobexperiencerequirement.FieldWeight:
-		return m.OldWeight(ctx)
 	case jobexperiencerequirement.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case jobexperiencerequirement.FieldUpdatedAt:
@@ -6145,6 +6094,13 @@ func (m *JobExperienceRequirementMutation) SetField(name string, value ent.Value
 		}
 		m.SetJobID(v)
 		return nil
+	case jobexperiencerequirement.FieldExperienceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExperienceType(v)
+		return nil
 	case jobexperiencerequirement.FieldMinYears:
 		v, ok := value.(int)
 		if !ok {
@@ -6158,13 +6114,6 @@ func (m *JobExperienceRequirementMutation) SetField(name string, value ent.Value
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIdealYears(v)
-		return nil
-	case jobexperiencerequirement.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetWeight(v)
 		return nil
 	case jobexperiencerequirement.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -6194,9 +6143,6 @@ func (m *JobExperienceRequirementMutation) AddedFields() []string {
 	if m.addideal_years != nil {
 		fields = append(fields, jobexperiencerequirement.FieldIdealYears)
 	}
-	if m.addweight != nil {
-		fields = append(fields, jobexperiencerequirement.FieldWeight)
-	}
 	return fields
 }
 
@@ -6209,8 +6155,6 @@ func (m *JobExperienceRequirementMutation) AddedField(name string) (ent.Value, b
 		return m.AddedMinYears()
 	case jobexperiencerequirement.FieldIdealYears:
 		return m.AddedIdealYears()
-	case jobexperiencerequirement.FieldWeight:
-		return m.AddedWeight()
 	}
 	return nil, false
 }
@@ -6234,13 +6178,6 @@ func (m *JobExperienceRequirementMutation) AddField(name string, value ent.Value
 		}
 		m.AddIdealYears(v)
 		return nil
-	case jobexperiencerequirement.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddWeight(v)
-		return nil
 	}
 	return fmt.Errorf("unknown JobExperienceRequirement numeric field %s", name)
 }
@@ -6251,6 +6188,15 @@ func (m *JobExperienceRequirementMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(jobexperiencerequirement.FieldDeletedAt) {
 		fields = append(fields, jobexperiencerequirement.FieldDeletedAt)
+	}
+	if m.FieldCleared(jobexperiencerequirement.FieldExperienceType) {
+		fields = append(fields, jobexperiencerequirement.FieldExperienceType)
+	}
+	if m.FieldCleared(jobexperiencerequirement.FieldMinYears) {
+		fields = append(fields, jobexperiencerequirement.FieldMinYears)
+	}
+	if m.FieldCleared(jobexperiencerequirement.FieldIdealYears) {
+		fields = append(fields, jobexperiencerequirement.FieldIdealYears)
 	}
 	return fields
 }
@@ -6269,6 +6215,15 @@ func (m *JobExperienceRequirementMutation) ClearField(name string) error {
 	case jobexperiencerequirement.FieldDeletedAt:
 		m.ClearDeletedAt()
 		return nil
+	case jobexperiencerequirement.FieldExperienceType:
+		m.ClearExperienceType()
+		return nil
+	case jobexperiencerequirement.FieldMinYears:
+		m.ClearMinYears()
+		return nil
+	case jobexperiencerequirement.FieldIdealYears:
+		m.ClearIdealYears()
+		return nil
 	}
 	return fmt.Errorf("unknown JobExperienceRequirement nullable field %s", name)
 }
@@ -6283,14 +6238,14 @@ func (m *JobExperienceRequirementMutation) ResetField(name string) error {
 	case jobexperiencerequirement.FieldJobID:
 		m.ResetJobID()
 		return nil
+	case jobexperiencerequirement.FieldExperienceType:
+		m.ResetExperienceType()
+		return nil
 	case jobexperiencerequirement.FieldMinYears:
 		m.ResetMinYears()
 		return nil
 	case jobexperiencerequirement.FieldIdealYears:
 		m.ResetIdealYears()
-		return nil
-	case jobexperiencerequirement.FieldWeight:
-		m.ResetWeight()
 		return nil
 	case jobexperiencerequirement.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -6385,8 +6340,6 @@ type JobIndustryRequirementMutation struct {
 	deleted_at    *time.Time
 	industry      *string
 	company_name  *string
-	weight        *int
-	addweight     *int
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
@@ -6603,7 +6556,7 @@ func (m *JobIndustryRequirementMutation) Industry() (r string, exists bool) {
 // OldIndustry returns the old "industry" field's value of the JobIndustryRequirement entity.
 // If the JobIndustryRequirement object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobIndustryRequirementMutation) OldIndustry(ctx context.Context) (v string, err error) {
+func (m *JobIndustryRequirementMutation) OldIndustry(ctx context.Context) (v *string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldIndustry is only allowed on UpdateOne operations")
 	}
@@ -6617,9 +6570,22 @@ func (m *JobIndustryRequirementMutation) OldIndustry(ctx context.Context) (v str
 	return oldValue.Industry, nil
 }
 
+// ClearIndustry clears the value of the "industry" field.
+func (m *JobIndustryRequirementMutation) ClearIndustry() {
+	m.industry = nil
+	m.clearedFields[jobindustryrequirement.FieldIndustry] = struct{}{}
+}
+
+// IndustryCleared returns if the "industry" field was cleared in this mutation.
+func (m *JobIndustryRequirementMutation) IndustryCleared() bool {
+	_, ok := m.clearedFields[jobindustryrequirement.FieldIndustry]
+	return ok
+}
+
 // ResetIndustry resets all changes to the "industry" field.
 func (m *JobIndustryRequirementMutation) ResetIndustry() {
 	m.industry = nil
+	delete(m.clearedFields, jobindustryrequirement.FieldIndustry)
 }
 
 // SetCompanyName sets the "company_name" field.
@@ -6669,62 +6635,6 @@ func (m *JobIndustryRequirementMutation) CompanyNameCleared() bool {
 func (m *JobIndustryRequirementMutation) ResetCompanyName() {
 	m.company_name = nil
 	delete(m.clearedFields, jobindustryrequirement.FieldCompanyName)
-}
-
-// SetWeight sets the "weight" field.
-func (m *JobIndustryRequirementMutation) SetWeight(i int) {
-	m.weight = &i
-	m.addweight = nil
-}
-
-// Weight returns the value of the "weight" field in the mutation.
-func (m *JobIndustryRequirementMutation) Weight() (r int, exists bool) {
-	v := m.weight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldWeight returns the old "weight" field's value of the JobIndustryRequirement entity.
-// If the JobIndustryRequirement object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobIndustryRequirementMutation) OldWeight(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWeight is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWeight requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWeight: %w", err)
-	}
-	return oldValue.Weight, nil
-}
-
-// AddWeight adds i to the "weight" field.
-func (m *JobIndustryRequirementMutation) AddWeight(i int) {
-	if m.addweight != nil {
-		*m.addweight += i
-	} else {
-		m.addweight = &i
-	}
-}
-
-// AddedWeight returns the value that was added to the "weight" field in this mutation.
-func (m *JobIndustryRequirementMutation) AddedWeight() (r int, exists bool) {
-	v := m.addweight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetWeight resets all changes to the "weight" field.
-func (m *JobIndustryRequirementMutation) ResetWeight() {
-	m.weight = nil
-	m.addweight = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -6860,7 +6770,7 @@ func (m *JobIndustryRequirementMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *JobIndustryRequirementMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 6)
 	if m.deleted_at != nil {
 		fields = append(fields, jobindustryrequirement.FieldDeletedAt)
 	}
@@ -6872,9 +6782,6 @@ func (m *JobIndustryRequirementMutation) Fields() []string {
 	}
 	if m.company_name != nil {
 		fields = append(fields, jobindustryrequirement.FieldCompanyName)
-	}
-	if m.weight != nil {
-		fields = append(fields, jobindustryrequirement.FieldWeight)
 	}
 	if m.created_at != nil {
 		fields = append(fields, jobindustryrequirement.FieldCreatedAt)
@@ -6898,8 +6805,6 @@ func (m *JobIndustryRequirementMutation) Field(name string) (ent.Value, bool) {
 		return m.Industry()
 	case jobindustryrequirement.FieldCompanyName:
 		return m.CompanyName()
-	case jobindustryrequirement.FieldWeight:
-		return m.Weight()
 	case jobindustryrequirement.FieldCreatedAt:
 		return m.CreatedAt()
 	case jobindustryrequirement.FieldUpdatedAt:
@@ -6921,8 +6826,6 @@ func (m *JobIndustryRequirementMutation) OldField(ctx context.Context, name stri
 		return m.OldIndustry(ctx)
 	case jobindustryrequirement.FieldCompanyName:
 		return m.OldCompanyName(ctx)
-	case jobindustryrequirement.FieldWeight:
-		return m.OldWeight(ctx)
 	case jobindustryrequirement.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case jobindustryrequirement.FieldUpdatedAt:
@@ -6964,13 +6867,6 @@ func (m *JobIndustryRequirementMutation) SetField(name string, value ent.Value) 
 		}
 		m.SetCompanyName(v)
 		return nil
-	case jobindustryrequirement.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetWeight(v)
-		return nil
 	case jobindustryrequirement.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -6992,21 +6888,13 @@ func (m *JobIndustryRequirementMutation) SetField(name string, value ent.Value) 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *JobIndustryRequirementMutation) AddedFields() []string {
-	var fields []string
-	if m.addweight != nil {
-		fields = append(fields, jobindustryrequirement.FieldWeight)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *JobIndustryRequirementMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case jobindustryrequirement.FieldWeight:
-		return m.AddedWeight()
-	}
 	return nil, false
 }
 
@@ -7015,13 +6903,6 @@ func (m *JobIndustryRequirementMutation) AddedField(name string) (ent.Value, boo
 // type.
 func (m *JobIndustryRequirementMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case jobindustryrequirement.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddWeight(v)
-		return nil
 	}
 	return fmt.Errorf("unknown JobIndustryRequirement numeric field %s", name)
 }
@@ -7032,6 +6913,9 @@ func (m *JobIndustryRequirementMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(jobindustryrequirement.FieldDeletedAt) {
 		fields = append(fields, jobindustryrequirement.FieldDeletedAt)
+	}
+	if m.FieldCleared(jobindustryrequirement.FieldIndustry) {
+		fields = append(fields, jobindustryrequirement.FieldIndustry)
 	}
 	if m.FieldCleared(jobindustryrequirement.FieldCompanyName) {
 		fields = append(fields, jobindustryrequirement.FieldCompanyName)
@@ -7052,6 +6936,9 @@ func (m *JobIndustryRequirementMutation) ClearField(name string) error {
 	switch name {
 	case jobindustryrequirement.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case jobindustryrequirement.FieldIndustry:
+		m.ClearIndustry()
 		return nil
 	case jobindustryrequirement.FieldCompanyName:
 		m.ClearCompanyName()
@@ -7075,9 +6962,6 @@ func (m *JobIndustryRequirementMutation) ResetField(name string) error {
 		return nil
 	case jobindustryrequirement.FieldCompanyName:
 		m.ResetCompanyName()
-		return nil
-	case jobindustryrequirement.FieldWeight:
-		m.ResetWeight()
 		return nil
 	case jobindustryrequirement.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -7172,6 +7056,7 @@ type JobPositionMutation struct {
 	deleted_at                     *time.Time
 	name                           *string
 	status                         *consts.JobPositionStatus
+	work_type                      *consts.JobWorkType
 	location                       *string
 	salary_min                     *float64
 	addsalary_min                  *float64
@@ -7513,6 +7398,55 @@ func (m *JobPositionMutation) OldStatus(ctx context.Context) (v consts.JobPositi
 // ResetStatus resets all changes to the "status" field.
 func (m *JobPositionMutation) ResetStatus() {
 	m.status = nil
+}
+
+// SetWorkType sets the "work_type" field.
+func (m *JobPositionMutation) SetWorkType(cwt consts.JobWorkType) {
+	m.work_type = &cwt
+}
+
+// WorkType returns the value of the "work_type" field in the mutation.
+func (m *JobPositionMutation) WorkType() (r consts.JobWorkType, exists bool) {
+	v := m.work_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWorkType returns the old "work_type" field's value of the JobPosition entity.
+// If the JobPosition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *JobPositionMutation) OldWorkType(ctx context.Context) (v consts.JobWorkType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWorkType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWorkType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWorkType: %w", err)
+	}
+	return oldValue.WorkType, nil
+}
+
+// ClearWorkType clears the value of the "work_type" field.
+func (m *JobPositionMutation) ClearWorkType() {
+	m.work_type = nil
+	m.clearedFields[jobposition.FieldWorkType] = struct{}{}
+}
+
+// WorkTypeCleared returns if the "work_type" field was cleared in this mutation.
+func (m *JobPositionMutation) WorkTypeCleared() bool {
+	_, ok := m.clearedFields[jobposition.FieldWorkType]
+	return ok
+}
+
+// ResetWorkType resets all changes to the "work_type" field.
+func (m *JobPositionMutation) ResetWorkType() {
+	m.work_type = nil
+	delete(m.clearedFields, jobposition.FieldWorkType)
 }
 
 // SetLocation sets the "location" field.
@@ -8196,7 +8130,7 @@ func (m *JobPositionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *JobPositionMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.deleted_at != nil {
 		fields = append(fields, jobposition.FieldDeletedAt)
 	}
@@ -8211,6 +8145,9 @@ func (m *JobPositionMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, jobposition.FieldStatus)
+	}
+	if m.work_type != nil {
+		fields = append(fields, jobposition.FieldWorkType)
 	}
 	if m.location != nil {
 		fields = append(fields, jobposition.FieldLocation)
@@ -8248,6 +8185,8 @@ func (m *JobPositionMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedBy()
 	case jobposition.FieldStatus:
 		return m.Status()
+	case jobposition.FieldWorkType:
+		return m.WorkType()
 	case jobposition.FieldLocation:
 		return m.Location()
 	case jobposition.FieldSalaryMin:
@@ -8279,6 +8218,8 @@ func (m *JobPositionMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldCreatedBy(ctx)
 	case jobposition.FieldStatus:
 		return m.OldStatus(ctx)
+	case jobposition.FieldWorkType:
+		return m.OldWorkType(ctx)
 	case jobposition.FieldLocation:
 		return m.OldLocation(ctx)
 	case jobposition.FieldSalaryMin:
@@ -8334,6 +8275,13 @@ func (m *JobPositionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case jobposition.FieldWorkType:
+		v, ok := value.(consts.JobWorkType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWorkType(v)
 		return nil
 	case jobposition.FieldLocation:
 		v, ok := value.(string)
@@ -8440,6 +8388,9 @@ func (m *JobPositionMutation) ClearedFields() []string {
 	if m.FieldCleared(jobposition.FieldCreatedBy) {
 		fields = append(fields, jobposition.FieldCreatedBy)
 	}
+	if m.FieldCleared(jobposition.FieldWorkType) {
+		fields = append(fields, jobposition.FieldWorkType)
+	}
 	if m.FieldCleared(jobposition.FieldLocation) {
 		fields = append(fields, jobposition.FieldLocation)
 	}
@@ -8471,6 +8422,9 @@ func (m *JobPositionMutation) ClearField(name string) error {
 		return nil
 	case jobposition.FieldCreatedBy:
 		m.ClearCreatedBy()
+		return nil
+	case jobposition.FieldWorkType:
+		m.ClearWorkType()
 		return nil
 	case jobposition.FieldLocation:
 		m.ClearLocation()
@@ -8506,6 +8460,9 @@ func (m *JobPositionMutation) ResetField(name string) error {
 		return nil
 	case jobposition.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case jobposition.FieldWorkType:
+		m.ResetWorkType()
 		return nil
 	case jobposition.FieldLocation:
 		m.ResetLocation()
@@ -8761,8 +8718,6 @@ type JobResponsibilityMutation struct {
 	id             *uuid.UUID
 	deleted_at     *time.Time
 	responsibility *string
-	sort_order     *int
-	addsort_order  *int
 	created_at     *time.Time
 	updated_at     *time.Time
 	clearedFields  map[string]struct{}
@@ -8998,62 +8953,6 @@ func (m *JobResponsibilityMutation) ResetResponsibility() {
 	m.responsibility = nil
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (m *JobResponsibilityMutation) SetSortOrder(i int) {
-	m.sort_order = &i
-	m.addsort_order = nil
-}
-
-// SortOrder returns the value of the "sort_order" field in the mutation.
-func (m *JobResponsibilityMutation) SortOrder() (r int, exists bool) {
-	v := m.sort_order
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSortOrder returns the old "sort_order" field's value of the JobResponsibility entity.
-// If the JobResponsibility object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobResponsibilityMutation) OldSortOrder(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSortOrder is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSortOrder requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSortOrder: %w", err)
-	}
-	return oldValue.SortOrder, nil
-}
-
-// AddSortOrder adds i to the "sort_order" field.
-func (m *JobResponsibilityMutation) AddSortOrder(i int) {
-	if m.addsort_order != nil {
-		*m.addsort_order += i
-	} else {
-		m.addsort_order = &i
-	}
-}
-
-// AddedSortOrder returns the value that was added to the "sort_order" field in this mutation.
-func (m *JobResponsibilityMutation) AddedSortOrder() (r int, exists bool) {
-	v := m.addsort_order
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetSortOrder resets all changes to the "sort_order" field.
-func (m *JobResponsibilityMutation) ResetSortOrder() {
-	m.sort_order = nil
-	m.addsort_order = nil
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (m *JobResponsibilityMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -9187,7 +9086,7 @@ func (m *JobResponsibilityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *JobResponsibilityMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 5)
 	if m.deleted_at != nil {
 		fields = append(fields, jobresponsibility.FieldDeletedAt)
 	}
@@ -9196,9 +9095,6 @@ func (m *JobResponsibilityMutation) Fields() []string {
 	}
 	if m.responsibility != nil {
 		fields = append(fields, jobresponsibility.FieldResponsibility)
-	}
-	if m.sort_order != nil {
-		fields = append(fields, jobresponsibility.FieldSortOrder)
 	}
 	if m.created_at != nil {
 		fields = append(fields, jobresponsibility.FieldCreatedAt)
@@ -9220,8 +9116,6 @@ func (m *JobResponsibilityMutation) Field(name string) (ent.Value, bool) {
 		return m.JobID()
 	case jobresponsibility.FieldResponsibility:
 		return m.Responsibility()
-	case jobresponsibility.FieldSortOrder:
-		return m.SortOrder()
 	case jobresponsibility.FieldCreatedAt:
 		return m.CreatedAt()
 	case jobresponsibility.FieldUpdatedAt:
@@ -9241,8 +9135,6 @@ func (m *JobResponsibilityMutation) OldField(ctx context.Context, name string) (
 		return m.OldJobID(ctx)
 	case jobresponsibility.FieldResponsibility:
 		return m.OldResponsibility(ctx)
-	case jobresponsibility.FieldSortOrder:
-		return m.OldSortOrder(ctx)
 	case jobresponsibility.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case jobresponsibility.FieldUpdatedAt:
@@ -9277,13 +9169,6 @@ func (m *JobResponsibilityMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetResponsibility(v)
 		return nil
-	case jobresponsibility.FieldSortOrder:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSortOrder(v)
-		return nil
 	case jobresponsibility.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -9305,21 +9190,13 @@ func (m *JobResponsibilityMutation) SetField(name string, value ent.Value) error
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *JobResponsibilityMutation) AddedFields() []string {
-	var fields []string
-	if m.addsort_order != nil {
-		fields = append(fields, jobresponsibility.FieldSortOrder)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *JobResponsibilityMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case jobresponsibility.FieldSortOrder:
-		return m.AddedSortOrder()
-	}
 	return nil, false
 }
 
@@ -9328,13 +9205,6 @@ func (m *JobResponsibilityMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *JobResponsibilityMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case jobresponsibility.FieldSortOrder:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddSortOrder(v)
-		return nil
 	}
 	return fmt.Errorf("unknown JobResponsibility numeric field %s", name)
 }
@@ -9379,9 +9249,6 @@ func (m *JobResponsibilityMutation) ResetField(name string) error {
 		return nil
 	case jobresponsibility.FieldResponsibility:
 		m.ResetResponsibility()
-		return nil
-	case jobresponsibility.FieldSortOrder:
-		m.ResetSortOrder()
 		return nil
 	case jobresponsibility.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -9474,9 +9341,7 @@ type JobSkillMutation struct {
 	typ           string
 	id            *uuid.UUID
 	deleted_at    *time.Time
-	_type         *jobskill.Type
-	weight        *int
-	addweight     *int
+	_type         *consts.JobSkillType
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
@@ -9715,12 +9580,12 @@ func (m *JobSkillMutation) ResetSkillID() {
 }
 
 // SetType sets the "type" field.
-func (m *JobSkillMutation) SetType(j jobskill.Type) {
-	m._type = &j
+func (m *JobSkillMutation) SetType(cst consts.JobSkillType) {
+	m._type = &cst
 }
 
 // GetType returns the value of the "type" field in the mutation.
-func (m *JobSkillMutation) GetType() (r jobskill.Type, exists bool) {
+func (m *JobSkillMutation) GetType() (r consts.JobSkillType, exists bool) {
 	v := m._type
 	if v == nil {
 		return
@@ -9731,7 +9596,7 @@ func (m *JobSkillMutation) GetType() (r jobskill.Type, exists bool) {
 // OldType returns the old "type" field's value of the JobSkill entity.
 // If the JobSkill object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobSkillMutation) OldType(ctx context.Context) (v jobskill.Type, err error) {
+func (m *JobSkillMutation) OldType(ctx context.Context) (v consts.JobSkillType, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldType is only allowed on UpdateOne operations")
 	}
@@ -9748,62 +9613,6 @@ func (m *JobSkillMutation) OldType(ctx context.Context) (v jobskill.Type, err er
 // ResetType resets all changes to the "type" field.
 func (m *JobSkillMutation) ResetType() {
 	m._type = nil
-}
-
-// SetWeight sets the "weight" field.
-func (m *JobSkillMutation) SetWeight(i int) {
-	m.weight = &i
-	m.addweight = nil
-}
-
-// Weight returns the value of the "weight" field in the mutation.
-func (m *JobSkillMutation) Weight() (r int, exists bool) {
-	v := m.weight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldWeight returns the old "weight" field's value of the JobSkill entity.
-// If the JobSkill object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *JobSkillMutation) OldWeight(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWeight is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWeight requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWeight: %w", err)
-	}
-	return oldValue.Weight, nil
-}
-
-// AddWeight adds i to the "weight" field.
-func (m *JobSkillMutation) AddWeight(i int) {
-	if m.addweight != nil {
-		*m.addweight += i
-	} else {
-		m.addweight = &i
-	}
-}
-
-// AddedWeight returns the value that was added to the "weight" field in this mutation.
-func (m *JobSkillMutation) AddedWeight() (r int, exists bool) {
-	v := m.addweight
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetWeight resets all changes to the "weight" field.
-func (m *JobSkillMutation) ResetWeight() {
-	m.weight = nil
-	m.addweight = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -9966,7 +9775,7 @@ func (m *JobSkillMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *JobSkillMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 6)
 	if m.deleted_at != nil {
 		fields = append(fields, jobskill.FieldDeletedAt)
 	}
@@ -9978,9 +9787,6 @@ func (m *JobSkillMutation) Fields() []string {
 	}
 	if m._type != nil {
 		fields = append(fields, jobskill.FieldType)
-	}
-	if m.weight != nil {
-		fields = append(fields, jobskill.FieldWeight)
 	}
 	if m.created_at != nil {
 		fields = append(fields, jobskill.FieldCreatedAt)
@@ -10004,8 +9810,6 @@ func (m *JobSkillMutation) Field(name string) (ent.Value, bool) {
 		return m.SkillID()
 	case jobskill.FieldType:
 		return m.GetType()
-	case jobskill.FieldWeight:
-		return m.Weight()
 	case jobskill.FieldCreatedAt:
 		return m.CreatedAt()
 	case jobskill.FieldUpdatedAt:
@@ -10027,8 +9831,6 @@ func (m *JobSkillMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldSkillID(ctx)
 	case jobskill.FieldType:
 		return m.OldType(ctx)
-	case jobskill.FieldWeight:
-		return m.OldWeight(ctx)
 	case jobskill.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case jobskill.FieldUpdatedAt:
@@ -10064,18 +9866,11 @@ func (m *JobSkillMutation) SetField(name string, value ent.Value) error {
 		m.SetSkillID(v)
 		return nil
 	case jobskill.FieldType:
-		v, ok := value.(jobskill.Type)
+		v, ok := value.(consts.JobSkillType)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetType(v)
-		return nil
-	case jobskill.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetWeight(v)
 		return nil
 	case jobskill.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -10098,21 +9893,13 @@ func (m *JobSkillMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *JobSkillMutation) AddedFields() []string {
-	var fields []string
-	if m.addweight != nil {
-		fields = append(fields, jobskill.FieldWeight)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *JobSkillMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case jobskill.FieldWeight:
-		return m.AddedWeight()
-	}
 	return nil, false
 }
 
@@ -10121,13 +9908,6 @@ func (m *JobSkillMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *JobSkillMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case jobskill.FieldWeight:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddWeight(v)
-		return nil
 	}
 	return fmt.Errorf("unknown JobSkill numeric field %s", name)
 }
@@ -10175,9 +9955,6 @@ func (m *JobSkillMutation) ResetField(name string) error {
 		return nil
 	case jobskill.FieldType:
 		m.ResetType()
-		return nil
-	case jobskill.FieldWeight:
-		m.ResetWeight()
 		return nil
 	case jobskill.FieldCreatedAt:
 		m.ResetCreatedAt()

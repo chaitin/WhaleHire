@@ -20,12 +20,12 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldJobID holds the string denoting the job_id field in the database.
 	FieldJobID = "job_id"
+	// FieldExperienceType holds the string denoting the experience_type field in the database.
+	FieldExperienceType = "experience_type"
 	// FieldMinYears holds the string denoting the min_years field in the database.
 	FieldMinYears = "min_years"
 	// FieldIdealYears holds the string denoting the ideal_years field in the database.
 	FieldIdealYears = "ideal_years"
-	// FieldWeight holds the string denoting the weight field in the database.
-	FieldWeight = "weight"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -48,9 +48,9 @@ var Columns = []string{
 	FieldID,
 	FieldDeletedAt,
 	FieldJobID,
+	FieldExperienceType,
 	FieldMinYears,
 	FieldIdealYears,
-	FieldWeight,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -81,8 +81,6 @@ var (
 	DefaultIdealYears int
 	// IdealYearsValidator is a validator for the "ideal_years" field. It is called by the builders before save.
 	IdealYearsValidator func(int) error
-	// WeightValidator is a validator for the "weight" field. It is called by the builders before save.
-	WeightValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -111,6 +109,11 @@ func ByJobID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldJobID, opts...).ToFunc()
 }
 
+// ByExperienceType orders the results by the experience_type field.
+func ByExperienceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExperienceType, opts...).ToFunc()
+}
+
 // ByMinYears orders the results by the min_years field.
 func ByMinYears(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMinYears, opts...).ToFunc()
@@ -119,11 +122,6 @@ func ByMinYears(opts ...sql.OrderTermOption) OrderOption {
 // ByIdealYears orders the results by the ideal_years field.
 func ByIdealYears(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIdealYears, opts...).ToFunc()
-}
-
-// ByWeight orders the results by the weight field.
-func ByWeight(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWeight, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

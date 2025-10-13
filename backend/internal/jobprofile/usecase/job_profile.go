@@ -64,8 +64,8 @@ func (u *JobProfileUsecase) Create(ctx context.Context, req *domain.CreateJobPro
 
 	// 设置创建者ID，需要转换为UUID
 	if req.CreatedBy != nil && *req.CreatedBy != "" {
-		createdByUUID, err := uuid.Parse(*req.CreatedBy)
-		if err != nil {
+		createdByUUID, errParse := uuid.Parse(*req.CreatedBy)
+		if errParse != nil {
 			return nil, fmt.Errorf("invalid created_by id: %w", err)
 		}
 		job.CreatedBy = &createdByUUID
@@ -76,6 +76,11 @@ func (u *JobProfileUsecase) Create(ctx context.Context, req *domain.CreateJobPro
 		job.Status = consts.JobPositionStatus(*req.Status)
 	} else {
 		job.Status = consts.JobPositionStatusDraft
+	}
+
+	// 设置工作类型
+	if req.WorkType != nil && *req.WorkType != "" {
+		job.WorkType = consts.JobWorkType(*req.WorkType)
 	}
 
 	related, err := u.buildRelatedEntities(req.Skills, req.Responsibilities, req.EducationRequirements, req.ExperienceRequirements, req.IndustryRequirements)
@@ -153,31 +158,31 @@ func (u *JobProfileUsecase) Update(ctx context.Context, req *domain.UpdateJobPro
 		jobID := current.ID
 
 		if req.Responsibilities != nil {
-			if err := rebuildResponsibilities(ctx, tx, jobID, req.Responsibilities); err != nil {
+			if err := upsertResponsibilities(ctx, tx, jobID, req.Responsibilities); err != nil {
 				return err
 			}
 		}
 
 		if req.Skills != nil {
-			if err := rebuildSkills(ctx, tx, jobID, req.Skills); err != nil {
+			if err := upsertSkills(ctx, tx, jobID, req.Skills); err != nil {
 				return err
 			}
 		}
 
 		if req.EducationRequirements != nil {
-			if err := rebuildEducationRequirements(ctx, tx, jobID, req.EducationRequirements); err != nil {
+			if err := upsertEducationRequirements(ctx, tx, jobID, req.EducationRequirements); err != nil {
 				return err
 			}
 		}
 
 		if req.ExperienceRequirements != nil {
-			if err := rebuildExperienceRequirements(ctx, tx, jobID, req.ExperienceRequirements); err != nil {
+			if err := upsertExperienceRequirements(ctx, tx, jobID, req.ExperienceRequirements); err != nil {
 				return err
 			}
 		}
 
 		if req.IndustryRequirements != nil {
-			if err := rebuildIndustryRequirements(ctx, tx, jobID, req.IndustryRequirements); err != nil {
+			if err := upsertIndustryRequirements(ctx, tx, jobID, req.IndustryRequirements); err != nil {
 				return err
 			}
 		}
@@ -352,9 +357,9 @@ func buildResponsibilities(inputs []*domain.JobResponsibilityInput) ([]*db.JobRe
 		if resp == "" {
 			return nil, fmt.Errorf("responsibility content cannot be empty")
 		}
+
 		items = append(items, &db.JobResponsibility{
 			Responsibility: resp,
-			SortOrder:      input.SortOrder,
 		})
 	}
 
@@ -377,19 +382,14 @@ func buildJobSkills(inputs []*domain.JobSkillInput) ([]*db.JobSkill, error) {
 			return nil, fmt.Errorf("invalid skill id %q: %w", input.SkillID, err)
 		}
 
-		typeVal := jobskill.Type(strings.ToLower(string(input.Type)))
-		if typeVal != jobskill.TypeRequired && typeVal != jobskill.TypeBonus {
-			return nil, fmt.Errorf("invalid skill type %q", input.Type)
-		}
-
-		if input.Weight < 0 || input.Weight > 100 {
-			return nil, fmt.Errorf("skill weight must be between 0 and 100")
+		skillType := strings.TrimSpace(input.Type)
+		if skillType == "" {
+			return nil, fmt.Errorf("skill type cannot be empty")
 		}
 
 		items = append(items, &db.JobSkill{
 			SkillID: skillID,
-			Type:    typeVal,
-			Weight:  input.Weight,
+			Type:    consts.JobSkillType(skillType),
 		})
 	}
 
@@ -406,16 +406,13 @@ func buildEducationRequirements(inputs []*domain.JobEducationRequirementInput) (
 		if input == nil {
 			continue
 		}
-		degree := strings.TrimSpace(input.MinDegree)
-		if degree == "" {
-			return nil, fmt.Errorf("education degree cannot be empty")
+		educationType := strings.TrimSpace(input.EducationType)
+		if educationType == "" {
+			return nil, fmt.Errorf("education type cannot be empty")
 		}
-		if input.Weight < 0 || input.Weight > 100 {
-			return nil, fmt.Errorf("education weight must be between 0 and 100")
-		}
+
 		items = append(items, &db.JobEducationRequirement{
-			MinDegree: degree,
-			Weight:    input.Weight,
+			EducationType: consts.JobEducationType(educationType),
 		})
 	}
 	return items, nil
@@ -431,13 +428,16 @@ func buildExperienceRequirements(inputs []*domain.JobExperienceRequirementInput)
 		if input == nil {
 			continue
 		}
-		if input.Weight < 0 || input.Weight > 100 {
-			return nil, fmt.Errorf("experience weight must be between 0 and 100")
+
+		experienceType := strings.TrimSpace(input.ExperienceType)
+		if experienceType == "" {
+			return nil, fmt.Errorf("experience type cannot be empty")
 		}
+
 		items = append(items, &db.JobExperienceRequirement{
-			MinYears:   input.MinYears,
-			IdealYears: input.IdealYears,
-			Weight:     input.Weight,
+			ExperienceType: experienceType,
+			MinYears:       input.MinYears,
+			IdealYears:     input.IdealYears,
 		})
 	}
 
@@ -454,173 +454,472 @@ func buildIndustryRequirements(inputs []*domain.JobIndustryRequirementInput) ([]
 		if input == nil {
 			continue
 		}
-		industry := strings.TrimSpace(input.Industry)
-		if industry == "" {
-			return nil, fmt.Errorf("industry cannot be empty")
+
+		var industry *string
+		if trimmed := strings.TrimSpace(input.Industry); trimmed != "" {
+			industry = &trimmed
 		}
-		if input.Weight < 0 || input.Weight > 100 {
-			return nil, fmt.Errorf("industry requirement weight must be between 0 and 100")
-		}
+
 		items = append(items, &db.JobIndustryRequirement{
-			Industry: industry,
-			Weight:   input.Weight,
+			Industry:    industry,
+			CompanyName: safeTrimPtr(input.CompanyName),
 		})
-		if trimmed := safeTrimPtr(input.CompanyName); trimmed != nil {
-			items[len(items)-1].CompanyName = trimmed
-		}
 	}
 
 	return items, nil
 }
 
-func rebuildResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobResponsibilityInput) error {
-	if _, err := tx.JobResponsibility.Delete().Where(jobresponsibility.JobID(jobID)).Exec(ctx); err != nil {
-		return fmt.Errorf("failed to clear responsibilities: %w", err)
-	}
-
-	items, err := buildResponsibilities(inputs)
+func upsertResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobResponsibilityInput) error {
+	// 获取现有记录
+	existing, err := tx.JobResponsibility.Query().Where(jobresponsibility.JobID(jobID)).All(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query existing responsibilities: %w", err)
 	}
 
-	if len(items) == 0 {
-		return nil
+	// 创建现有记录的ID映射
+	existingMap := make(map[string]*db.JobResponsibility)
+	for _, item := range existing {
+		existingMap[item.ID.String()] = item
 	}
 
-	builders := make([]*db.JobResponsibilityCreate, 0, len(items))
-	for _, item := range items {
-		builder := tx.JobResponsibility.Create().
-			SetJobID(jobID).
-			SetResponsibility(item.Responsibility).
-			SetSortOrder(item.SortOrder)
-		builders = append(builders, builder)
+	// 分类处理输入数据
+	var toUpdate []*domain.JobResponsibilityInput
+	var toCreate []*domain.JobResponsibilityInput
+	inputIDSet := make(map[string]bool)
+
+	for _, input := range inputs {
+		if input.ID != nil && *input.ID != "" {
+			// 有ID的记录，准备更新
+			toUpdate = append(toUpdate, input)
+			inputIDSet[*input.ID] = true
+		} else {
+			// 无ID的记录，准备创建
+			toCreate = append(toCreate, input)
+		}
 	}
 
-	if _, err := tx.JobResponsibility.CreateBulk(builders...).Save(ctx); err != nil {
-		return fmt.Errorf("failed to recreate responsibilities: %w", err)
+	// 找出需要删除的记录（现有记录中不在输入列表中的）
+	var toDeleteIDs []uuid.UUID
+	for id := range existingMap {
+		if !inputIDSet[id] {
+			if existingID, err := uuid.Parse(id); err == nil {
+				toDeleteIDs = append(toDeleteIDs, existingID)
+			}
+		}
+	}
+
+	// 批量删除不需要的记录
+	if len(toDeleteIDs) > 0 {
+		if _, err := tx.JobResponsibility.Delete().Where(jobresponsibility.IDIn(toDeleteIDs...)).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete responsibilities: %w", err)
+		}
+	}
+
+	// 批量更新现有记录
+	for _, input := range toUpdate {
+		if input.ID == nil || *input.ID == "" {
+			continue
+		}
+
+		id, err := uuid.Parse(*input.ID)
+		if err != nil {
+			return fmt.Errorf("invalid responsibility ID: %w", err)
+		}
+
+		updater := tx.JobResponsibility.UpdateOneID(id).
+			SetResponsibility(input.Responsibility)
+
+		if _, err := updater.Save(ctx); err != nil {
+			return fmt.Errorf("failed to update responsibility: %w", err)
+		}
+	}
+
+	// 批量创建新记录
+	if len(toCreate) > 0 {
+		builders := make([]*db.JobResponsibilityCreate, 0, len(toCreate))
+		for _, input := range toCreate {
+			builder := tx.JobResponsibility.Create().
+				SetJobID(jobID).
+				SetResponsibility(input.Responsibility)
+
+			builders = append(builders, builder)
+		}
+
+		if _, err := tx.JobResponsibility.CreateBulk(builders...).Save(ctx); err != nil {
+			return fmt.Errorf("failed to create responsibilities: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func rebuildSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobSkillInput) error {
-	if _, err := tx.JobSkill.Delete().Where(jobskill.JobID(jobID)).Exec(ctx); err != nil {
-		return fmt.Errorf("failed to clear job skills: %w", err)
-	}
-
-	items, err := buildJobSkills(inputs)
+func upsertSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobSkillInput) error {
+	// 获取现有记录
+	existing, err := tx.JobSkill.Query().Where(jobskill.JobID(jobID)).All(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query existing skills: %w", err)
 	}
 
-	if len(items) == 0 {
-		return nil
+	// 创建现有记录的ID映射
+	existingMap := make(map[string]*db.JobSkill)
+	for _, item := range existing {
+		existingMap[item.ID.String()] = item
 	}
 
-	builders := make([]*db.JobSkillCreate, 0, len(items))
-	for _, item := range items {
-		builder := tx.JobSkill.Create().
-			SetJobID(jobID).
-			SetSkillID(item.SkillID).
-			SetType(item.Type).
-			SetWeight(item.Weight)
-		builders = append(builders, builder)
+	// 分类处理输入数据
+	var toUpdate []*domain.JobSkillInput
+	var toCreate []*domain.JobSkillInput
+	inputIDSet := make(map[string]bool)
+
+	for _, input := range inputs {
+		if input.ID != nil && *input.ID != "" {
+			// 有ID的记录，准备更新
+			toUpdate = append(toUpdate, input)
+			inputIDSet[*input.ID] = true
+		} else {
+			// 无ID的记录，准备创建
+			toCreate = append(toCreate, input)
+		}
 	}
 
-	if _, err := tx.JobSkill.CreateBulk(builders...).Save(ctx); err != nil {
-		return fmt.Errorf("failed to recreate job skills: %w", err)
+	// 找出需要删除的记录（现有记录中不在输入列表中的）
+	var toDeleteIDs []uuid.UUID
+	for id := range existingMap {
+		if !inputIDSet[id] {
+			if existingID, err := uuid.Parse(id); err == nil {
+				toDeleteIDs = append(toDeleteIDs, existingID)
+			}
+		}
+	}
+
+	// 批量删除不需要的记录
+	if len(toDeleteIDs) > 0 {
+		if _, err := tx.JobSkill.Delete().Where(jobskill.IDIn(toDeleteIDs...)).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete skills: %w", err)
+		}
+	}
+
+	// 批量更新现有记录
+	for _, input := range toUpdate {
+		if input.ID == nil || *input.ID == "" {
+			continue
+		}
+
+		id, err := uuid.Parse(*input.ID)
+		if err != nil {
+			return fmt.Errorf("invalid skill ID: %w", err)
+		}
+
+		skillID, err := uuid.Parse(input.SkillID)
+		if err != nil {
+			return fmt.Errorf("invalid skill meta ID: %w", err)
+		}
+
+		updater := tx.JobSkill.UpdateOneID(id).
+			SetSkillID(skillID).
+			SetType(consts.JobSkillType(input.Type))
+
+		if _, err := updater.Save(ctx); err != nil {
+			return fmt.Errorf("failed to update skill: %w", err)
+		}
+	}
+
+	// 批量创建新记录
+	if len(toCreate) > 0 {
+		builders := make([]*db.JobSkillCreate, 0, len(toCreate))
+		for _, input := range toCreate {
+			skillID, err := uuid.Parse(input.SkillID)
+			if err != nil {
+				return fmt.Errorf("invalid skill meta ID: %w", err)
+			}
+
+			builder := tx.JobSkill.Create().
+				SetJobID(jobID).
+				SetSkillID(skillID).
+				SetType(consts.JobSkillType(input.Type))
+
+			builders = append(builders, builder)
+		}
+
+		if _, err := tx.JobSkill.CreateBulk(builders...).Save(ctx); err != nil {
+			return fmt.Errorf("failed to create skills: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func rebuildEducationRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobEducationRequirementInput) error {
-	if _, err := tx.JobEducationRequirement.Delete().Where(jobeducationrequirement.JobID(jobID)).Exec(ctx); err != nil {
-		return fmt.Errorf("failed to clear education requirements: %w", err)
-	}
-
-	items, err := buildEducationRequirements(inputs)
+func upsertEducationRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobEducationRequirementInput) error {
+	// 获取现有记录
+	existing, err := tx.JobEducationRequirement.Query().Where(jobeducationrequirement.JobID(jobID)).All(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query existing education requirements: %w", err)
 	}
 
-	if len(items) == 0 {
-		return nil
+	// 创建现有记录的ID映射
+	existingMap := make(map[string]*db.JobEducationRequirement)
+	for _, item := range existing {
+		existingMap[item.ID.String()] = item
 	}
 
-	builders := make([]*db.JobEducationRequirementCreate, 0, len(items))
-	for _, item := range items {
-		builder := tx.JobEducationRequirement.Create().
-			SetJobID(jobID).
-			SetMinDegree(item.MinDegree).
-			SetWeight(item.Weight)
-		builders = append(builders, builder)
+	// 分类处理输入数据
+	var toUpdate []*domain.JobEducationRequirementInput
+	var toCreate []*domain.JobEducationRequirementInput
+	inputIDSet := make(map[string]bool)
+
+	for _, input := range inputs {
+		if input.ID != nil && *input.ID != "" {
+			// 有ID的记录，准备更新
+			toUpdate = append(toUpdate, input)
+			inputIDSet[*input.ID] = true
+		} else {
+			// 无ID的记录，准备创建
+			toCreate = append(toCreate, input)
+		}
 	}
 
-	if _, err := tx.JobEducationRequirement.CreateBulk(builders...).Save(ctx); err != nil {
-		return fmt.Errorf("failed to recreate education requirements: %w", err)
+	// 找出需要删除的记录（现有记录中不在输入列表中的）
+	var toDeleteIDs []uuid.UUID
+	for id := range existingMap {
+		if !inputIDSet[id] {
+			if existingID, err := uuid.Parse(id); err == nil {
+				toDeleteIDs = append(toDeleteIDs, existingID)
+			}
+		}
+	}
+
+	// 批量删除不需要的记录
+	if len(toDeleteIDs) > 0 {
+		if _, err := tx.JobEducationRequirement.Delete().Where(jobeducationrequirement.IDIn(toDeleteIDs...)).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete education requirements: %w", err)
+		}
+	}
+
+	// 批量更新现有记录
+	for _, input := range toUpdate {
+		if input.ID == nil || *input.ID == "" {
+			continue
+		}
+
+		id, err := uuid.Parse(*input.ID)
+		if err != nil {
+			return fmt.Errorf("invalid education requirement ID: %w", err)
+		}
+
+		updater := tx.JobEducationRequirement.UpdateOneID(id).
+			SetEducationType(consts.JobEducationType(input.EducationType))
+
+		if _, err := updater.Save(ctx); err != nil {
+			return fmt.Errorf("failed to update education requirement: %w", err)
+		}
+	}
+
+	// 批量创建新记录
+	if len(toCreate) > 0 {
+		builders := make([]*db.JobEducationRequirementCreate, 0, len(toCreate))
+		for _, input := range toCreate {
+			builder := tx.JobEducationRequirement.Create().
+				SetJobID(jobID).
+				SetEducationType(consts.JobEducationType(input.EducationType))
+
+			builders = append(builders, builder)
+		}
+
+		if _, err := tx.JobEducationRequirement.CreateBulk(builders...).Save(ctx); err != nil {
+			return fmt.Errorf("failed to create education requirements: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func rebuildExperienceRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobExperienceRequirementInput) error {
-	if _, err := tx.JobExperienceRequirement.Delete().Where(jobexperiencerequirement.JobID(jobID)).Exec(ctx); err != nil {
-		return fmt.Errorf("failed to clear experience requirements: %w", err)
-	}
-
-	items, err := buildExperienceRequirements(inputs)
+func upsertExperienceRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobExperienceRequirementInput) error {
+	// 获取现有记录
+	existing, err := tx.JobExperienceRequirement.Query().Where(jobexperiencerequirement.JobID(jobID)).All(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query existing experience requirements: %w", err)
 	}
 
-	if len(items) == 0 {
-		return nil
+	// 创建现有记录的ID映射
+	existingMap := make(map[string]*db.JobExperienceRequirement)
+	for _, item := range existing {
+		existingMap[item.ID.String()] = item
 	}
 
-	builders := make([]*db.JobExperienceRequirementCreate, 0, len(items))
-	for _, item := range items {
-		builder := tx.JobExperienceRequirement.Create().
-			SetJobID(jobID).
-			SetMinYears(item.MinYears).
-			SetIdealYears(item.IdealYears).
-			SetWeight(item.Weight)
-		builders = append(builders, builder)
+	// 分类处理输入数据
+	var toUpdate []*domain.JobExperienceRequirementInput
+	var toCreate []*domain.JobExperienceRequirementInput
+	inputIDSet := make(map[string]bool)
+
+	for _, input := range inputs {
+		if input.ID != nil && *input.ID != "" {
+			// 有ID的记录，准备更新
+			toUpdate = append(toUpdate, input)
+			inputIDSet[*input.ID] = true
+		} else {
+			// 无ID的记录，准备创建
+			toCreate = append(toCreate, input)
+		}
 	}
 
-	if _, err := tx.JobExperienceRequirement.CreateBulk(builders...).Save(ctx); err != nil {
-		return fmt.Errorf("failed to recreate experience requirements: %w", err)
+	// 找出需要删除的记录（现有记录中不在输入列表中的）
+	var toDeleteIDs []uuid.UUID
+	for id := range existingMap {
+		if !inputIDSet[id] {
+			if existingID, err := uuid.Parse(id); err == nil {
+				toDeleteIDs = append(toDeleteIDs, existingID)
+			}
+		}
+	}
+
+	// 批量删除不需要的记录
+	if len(toDeleteIDs) > 0 {
+		if _, err := tx.JobExperienceRequirement.Delete().Where(jobexperiencerequirement.IDIn(toDeleteIDs...)).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete experience requirements: %w", err)
+		}
+	}
+
+	// 批量更新现有记录
+	for _, input := range toUpdate {
+		if input.ID == nil || *input.ID == "" {
+			continue
+		}
+
+		id, err := uuid.Parse(*input.ID)
+		if err != nil {
+			return fmt.Errorf("invalid experience requirement ID: %w", err)
+		}
+
+		updater := tx.JobExperienceRequirement.UpdateOneID(id).
+			SetExperienceType(input.ExperienceType).
+			SetMinYears(input.MinYears).
+			SetIdealYears(input.IdealYears)
+
+		if _, err := updater.Save(ctx); err != nil {
+			return fmt.Errorf("failed to update experience requirement: %w", err)
+		}
+	}
+
+	// 批量创建新记录
+	if len(toCreate) > 0 {
+		builders := make([]*db.JobExperienceRequirementCreate, 0, len(toCreate))
+		for _, input := range toCreate {
+			builder := tx.JobExperienceRequirement.Create().
+				SetJobID(jobID).
+				SetExperienceType(input.ExperienceType).
+				SetMinYears(input.MinYears).
+				SetIdealYears(input.IdealYears)
+
+			builders = append(builders, builder)
+		}
+
+		if _, err := tx.JobExperienceRequirement.CreateBulk(builders...).Save(ctx); err != nil {
+			return fmt.Errorf("failed to create experience requirements: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func rebuildIndustryRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobIndustryRequirementInput) error {
-	if _, err := tx.JobIndustryRequirement.Delete().Where(jobindustryrequirement.JobID(jobID)).Exec(ctx); err != nil {
-		return fmt.Errorf("failed to clear industry requirements: %w", err)
-	}
-
-	items, err := buildIndustryRequirements(inputs)
+func upsertIndustryRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobIndustryRequirementInput) error {
+	// 获取现有记录
+	existing, err := tx.JobIndustryRequirement.Query().Where(jobindustryrequirement.JobID(jobID)).All(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query existing industry requirements: %w", err)
 	}
 
-	if len(items) == 0 {
-		return nil
+	// 创建现有记录的ID映射
+	existingMap := make(map[string]*db.JobIndustryRequirement)
+	for _, item := range existing {
+		existingMap[item.ID.String()] = item
 	}
 
-	builders := make([]*db.JobIndustryRequirementCreate, 0, len(items))
-	for _, item := range items {
-		builder := tx.JobIndustryRequirement.Create().
-			SetJobID(jobID).
-			SetIndustry(item.Industry).
-			SetWeight(item.Weight).
-			SetNillableCompanyName(item.CompanyName)
-		builders = append(builders, builder)
+	// 分类处理输入数据
+	var toUpdate []*domain.JobIndustryRequirementInput
+	var toCreate []*domain.JobIndustryRequirementInput
+	inputIDSet := make(map[string]bool)
+
+	for _, input := range inputs {
+		if input.ID != nil && *input.ID != "" {
+			// 有ID的记录，准备更新
+			toUpdate = append(toUpdate, input)
+			inputIDSet[*input.ID] = true
+		} else {
+			// 无ID的记录，准备创建
+			toCreate = append(toCreate, input)
+		}
 	}
 
-	if _, err := tx.JobIndustryRequirement.CreateBulk(builders...).Save(ctx); err != nil {
-		return fmt.Errorf("failed to recreate industry requirements: %w", err)
+	// 找出需要删除的记录（现有记录中不在输入列表中的）
+	var toDeleteIDs []uuid.UUID
+	for id := range existingMap {
+		if !inputIDSet[id] {
+			if existingID, err := uuid.Parse(id); err == nil {
+				toDeleteIDs = append(toDeleteIDs, existingID)
+			}
+		}
+	}
+
+	// 批量删除不需要的记录
+	if len(toDeleteIDs) > 0 {
+		if _, err := tx.JobIndustryRequirement.Delete().Where(jobindustryrequirement.IDIn(toDeleteIDs...)).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete industry requirements: %w", err)
+		}
+	}
+
+	// 批量更新现有记录
+	for _, input := range toUpdate {
+		if input.ID == nil || *input.ID == "" {
+			continue
+		}
+
+		id, err := uuid.Parse(*input.ID)
+		if err != nil {
+			return fmt.Errorf("invalid industry requirement ID: %w", err)
+		}
+
+		updater := tx.JobIndustryRequirement.UpdateOneID(id)
+
+		// 处理industry字段 - 支持可选
+		if trimmed := strings.TrimSpace(input.Industry); trimmed != "" {
+			updater.SetIndustry(trimmed)
+		} else {
+			updater.ClearIndustry()
+		}
+
+		if input.CompanyName != nil && *input.CompanyName != "" {
+			updater.SetCompanyName(*input.CompanyName)
+		} else {
+			updater.ClearCompanyName()
+		}
+
+		if _, err := updater.Save(ctx); err != nil {
+			return fmt.Errorf("failed to update industry requirement: %w", err)
+		}
+	}
+
+	// 批量创建新记录
+	if len(toCreate) > 0 {
+		builders := make([]*db.JobIndustryRequirementCreate, 0, len(toCreate))
+		for _, input := range toCreate {
+			builder := tx.JobIndustryRequirement.Create().
+				SetJobID(jobID)
+
+			// 处理industry字段 - 支持可选
+			if trimmed := strings.TrimSpace(input.Industry); trimmed != "" {
+				builder.SetIndustry(trimmed)
+			}
+
+			if input.CompanyName != nil && *input.CompanyName != "" {
+				builder.SetCompanyName(*input.CompanyName)
+			}
+
+			builders = append(builders, builder)
+		}
+
+		if _, err := tx.JobIndustryRequirement.CreateBulk(builders...).Save(ctx); err != nil {
+			return fmt.Errorf("failed to create industry requirements: %w", err)
+		}
 	}
 
 	return nil
@@ -641,7 +940,6 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 				ID:             item.ID.String(),
 				JobID:          item.JobID.String(),
 				Responsibility: item.Responsibility,
-				SortOrder:      item.SortOrder,
 			})
 		}
 	}
@@ -659,8 +957,7 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 				JobID:   item.JobID.String(),
 				SkillID: item.SkillID.String(),
 				Skill:   name,
-				Type:    domain.SkillType(item.Type),
-				Weight:  item.Weight,
+				Type:    string(item.Type),
 			})
 		}
 	}
@@ -670,10 +967,9 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 		education = make([]*domain.JobEducationRequirement, 0, len(list))
 		for _, item := range list {
 			education = append(education, &domain.JobEducationRequirement{
-				ID:        item.ID.String(),
-				JobID:     item.JobID.String(),
-				MinDegree: item.MinDegree,
-				Weight:    item.Weight,
+				ID:            item.ID.String(),
+				JobID:         item.JobID.String(),
+				EducationType: string(item.EducationType),
 			})
 		}
 	}
@@ -683,11 +979,11 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 		experience = make([]*domain.JobExperienceRequirement, 0, len(list))
 		for _, item := range list {
 			experience = append(experience, &domain.JobExperienceRequirement{
-				ID:         item.ID.String(),
-				JobID:      item.JobID.String(),
-				MinYears:   item.MinYears,
-				IdealYears: item.IdealYears,
-				Weight:     item.Weight,
+				ID:             item.ID.String(),
+				JobID:          item.JobID.String(),
+				ExperienceType: item.ExperienceType,
+				MinYears:       item.MinYears,
+				IdealYears:     item.IdealYears,
 			})
 		}
 	}
@@ -696,12 +992,15 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 	if list := entity.Edges.IndustryRequirements; len(list) > 0 {
 		industry = make([]*domain.JobIndustryRequirement, 0, len(list))
 		for _, item := range list {
+			industryValue := ""
+			if item.Industry != nil {
+				industryValue = *item.Industry
+			}
 			industry = append(industry, &domain.JobIndustryRequirement{
 				ID:          item.ID.String(),
 				JobID:       item.JobID.String(),
-				Industry:    item.Industry,
+				Industry:    industryValue,
 				CompanyName: copyStringPtr(item.CompanyName),
-				Weight:      item.Weight,
 			})
 		}
 	}

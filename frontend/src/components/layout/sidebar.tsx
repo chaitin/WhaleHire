@@ -26,16 +26,16 @@ const navigationItems: NavigationItem[] = [
     path: '/dashboard',
   },
   {
-    id: 'resume-management',
-    label: '简历管理',
-    icon: FileText,
-    path: '/resume-management',
-  },
-  {
     id: 'job-profile',
     label: '岗位画像',
     icon: UserCheck,
     path: '/job-profile',
+  },
+  {
+    id: 'resume-management',
+    label: '简历管理',
+    icon: FileText,
+    path: '/resume-management',
   },
   {
     id: 'position-management',

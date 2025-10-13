@@ -20,10 +20,8 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldJobID holds the string denoting the job_id field in the database.
 	FieldJobID = "job_id"
-	// FieldMinDegree holds the string denoting the min_degree field in the database.
-	FieldMinDegree = "min_degree"
-	// FieldWeight holds the string denoting the weight field in the database.
-	FieldWeight = "weight"
+	// FieldEducationType holds the string denoting the education_type field in the database.
+	FieldEducationType = "education_type"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -46,8 +44,7 @@ var Columns = []string{
 	FieldID,
 	FieldDeletedAt,
 	FieldJobID,
-	FieldMinDegree,
-	FieldWeight,
+	FieldEducationType,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -70,10 +67,6 @@ func ValidColumn(column string) bool {
 var (
 	Hooks        [1]ent.Hook
 	Interceptors [1]ent.Interceptor
-	// MinDegreeValidator is a validator for the "min_degree" field. It is called by the builders before save.
-	MinDegreeValidator func(string) error
-	// WeightValidator is a validator for the "weight" field. It is called by the builders before save.
-	WeightValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -102,14 +95,9 @@ func ByJobID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldJobID, opts...).ToFunc()
 }
 
-// ByMinDegree orders the results by the min_degree field.
-func ByMinDegree(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldMinDegree, opts...).ToFunc()
-}
-
-// ByWeight orders the results by the weight field.
-func ByWeight(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWeight, opts...).ToFunc()
+// ByEducationType orders the results by the education_type field.
+func ByEducationType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEducationType, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
