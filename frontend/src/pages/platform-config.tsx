@@ -56,7 +56,8 @@ export default function PlatformConfig() {
   } | null>(null);
 
   // 技能删除确认弹窗状态
-  const [isSkillDeleteConfirmOpen, setIsSkillDeleteConfirmOpen] = useState(false);
+  const [isSkillDeleteConfirmOpen, setIsSkillDeleteConfirmOpen] =
+    useState(false);
   const [skillToDelete, setSkillToDelete] = useState<{
     id: string;
     name: string;
@@ -359,11 +360,13 @@ export default function PlatformConfig() {
         setSkillLoading(true);
         setSkillError(null);
         const targetPage = page || skillCurrentPage;
-        console.log(`📋 获取技能列表 - 页码: ${targetPage}, 每页: ${skillPageSize}`);
+        console.log(
+          `📋 获取技能列表 - 页码: ${targetPage}, 每页: ${skillPageSize}`
+        );
 
         const response = await listJobSkillMeta({
           page: targetPage,
-          size: skillPageSize
+          size: skillPageSize,
         });
         const skills = response.items || [];
         const pageInfo = response.page_info;
@@ -403,13 +406,13 @@ export default function PlatformConfig() {
   );
 
   // 打开技能配置弹窗
-  const handleOpenSkillModal = async () => {
+  const handleOpenSkillModal = useCallback(async () => {
     console.log('🔧 打开技能配置弹窗，重新获取最新数据...');
     setSkillCurrentPage(1);
     setSkillError(null);
     setIsSkillModalOpen(true);
     await fetchSkills(1);
-  };
+  }, [fetchSkills]);
 
   // 关闭技能配置弹窗
   const handleCloseSkillModal = () => {
@@ -430,7 +433,7 @@ export default function PlatformConfig() {
 
   // 技能表单处理函数
   const handleNewSkillFormChange = (field: string, value: string) => {
-    setNewSkillForm(prev => ({ ...prev, [field]: value }));
+    setNewSkillForm((prev) => ({ ...prev, [field]: value }));
   };
 
   // 保存新技能
@@ -457,8 +460,6 @@ export default function PlatformConfig() {
       setSkillSubmitting(false);
     }
   };
-
-
 
   // 删除技能
   const handleDeleteSkill = async (skillId: string) => {
@@ -539,10 +540,16 @@ export default function PlatformConfig() {
   // 检测URL参数，自动打开弹窗
   useEffect(() => {
     const openModal = searchParams.get('openModal');
+    const openSkillModal = searchParams.get('openSkillModal');
+
     if (openModal === 'true') {
       setIsModalOpen(true);
     }
-  }, [searchParams]);
+
+    if (openSkillModal === 'true') {
+      handleOpenSkillModal();
+    }
+  }, [searchParams, handleOpenSkillModal]);
 
   return (
     <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6">
@@ -899,8 +906,6 @@ export default function PlatformConfig() {
                 </div>
               )}
             </div>
-
-
           </div>
         </div>
       )}
@@ -1084,7 +1089,9 @@ export default function PlatformConfig() {
           >
             {/* 弹窗头部 */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <h2 className="text-lg font-medium text-gray-900">工作技能配置</h2>
+              <h2 className="text-lg font-medium text-gray-900">
+                工作技能配置
+              </h2>
               <button
                 onClick={handleCloseSkillModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors w-6 h-6"
@@ -1182,7 +1189,9 @@ export default function PlatformConfig() {
                           <button
                             className="text-[#6B7280] hover:text-[#EF4444] transition-colors"
                             onClick={() => handleDeleteSkill(skill.id)}
-                            disabled={skillSubmitting || skillDeletingId === skill.id}
+                            disabled={
+                              skillSubmitting || skillDeletingId === skill.id
+                            }
                           >
                             {skillDeletingId === skill.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -1218,7 +1227,9 @@ export default function PlatformConfig() {
                           : 0}
                       </span>{' '}
                       条，共{' '}
-                      <span className="text-[#6B7280]">{skillTotalCount || 0}</span>{' '}
+                      <span className="text-[#6B7280]">
+                        {skillTotalCount || 0}
+                      </span>{' '}
                       条结果
                     </div>
                   </div>
@@ -1229,7 +1240,9 @@ export default function PlatformConfig() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleSkillPageChange(skillCurrentPage - 1)}
+                        onClick={() =>
+                          handleSkillPageChange(skillCurrentPage - 1)
+                        }
                         disabled={skillCurrentPage === 1}
                         className={cn(
                           'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
@@ -1258,11 +1271,14 @@ export default function PlatformConfig() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleSkillPageChange(skillCurrentPage + 1)}
+                        onClick={() =>
+                          handleSkillPageChange(skillCurrentPage + 1)
+                        }
                         disabled={skillCurrentPage >= (skillTotalPages || 0)}
                         className={cn(
                           'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
-                          skillCurrentPage >= (skillTotalPages || 0) && 'opacity-50'
+                          skillCurrentPage >= (skillTotalPages || 0) &&
+                            'opacity-50'
                         )}
                       >
                         <ChevronRight className="h-4 w-4 text-[#6B7280]" />
@@ -1307,7 +1323,9 @@ export default function PlatformConfig() {
                 <input
                   type="text"
                   value={newSkillForm.name}
-                  onChange={(e) => handleNewSkillFormChange('name', e.target.value)}
+                  onChange={(e) =>
+                    handleNewSkillFormChange('name', e.target.value)
+                  }
                   placeholder="请输入技能名称，最多50个字符"
                   maxLength={50}
                   className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1342,8 +1360,6 @@ export default function PlatformConfig() {
           </div>
         </div>
       )}
-
-
 
       {/* 删除确认弹窗 */}
       <ConfirmDialog
@@ -1388,9 +1404,7 @@ export default function PlatformConfig() {
         cancelText="取消"
         onConfirm={handleConfirmDeleteSkill}
         variant="destructive"
-        loading={
-          skillToDelete ? skillDeletingId === skillToDelete.id : false
-        }
+        loading={skillToDelete ? skillDeletingId === skillToDelete.id : false}
         zIndex="z-[1002]"
       />
     </div>

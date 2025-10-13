@@ -759,7 +759,9 @@ export function ResumePreviewModal({
                               {isEditing ? (
                                 <div className="space-y-2">
                                   <Input
-                                    value={project.name || project.project_name || ''}
+                                    value={
+                                      project.name || project.project_name || ''
+                                    }
                                     onChange={(e) =>
                                       updateProject(
                                         index,
@@ -805,19 +807,25 @@ export function ResumePreviewModal({
                                   <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
                                     {project.company && (
                                       <span className="flex items-center">
-                                        <span className="font-medium">公司：</span>
+                                        <span className="font-medium">
+                                          公司：
+                                        </span>
                                         {project.company}
                                       </span>
                                     )}
                                     {project.role && (
                                       <span className="flex items-center">
-                                        <span className="font-medium">角色：</span>
+                                        <span className="font-medium">
+                                          角色：
+                                        </span>
                                         {project.role}
                                       </span>
                                     )}
                                     {project.project_type && (
                                       <span className="flex items-center">
-                                        <span className="font-medium">类型：</span>
+                                        <span className="font-medium">
+                                          类型：
+                                        </span>
                                         {project.project_type}
                                       </span>
                                     )}
@@ -838,7 +846,11 @@ export function ResumePreviewModal({
                             <div className="mb-3">
                               {isEditing ? (
                                 <Input
-                                  value={project.technologies || project.tech_stack || ''}
+                                  value={
+                                    project.technologies ||
+                                    project.tech_stack ||
+                                    ''
+                                  }
                                   onChange={(e) =>
                                     updateProject(
                                       index,
@@ -851,9 +863,13 @@ export function ResumePreviewModal({
                                 />
                               ) : (
                                 <div className="flex flex-wrap gap-2">
-                                  <span className="text-sm font-medium text-gray-700">技术栈：</span>
+                                  <span className="text-sm font-medium text-gray-700">
+                                    技术栈：
+                                  </span>
                                   <div className="flex flex-wrap gap-1">
-                                    {(project.technologies || project.tech_stack)
+                                    {(
+                                      project.technologies || project.tech_stack
+                                    )
                                       ?.split(/[,，、]/)
                                       .map((tech, techIndex) => (
                                         <span
@@ -872,7 +888,9 @@ export function ResumePreviewModal({
                           {/* 项目链接 */}
                           {project.project_url && !isEditing && (
                             <div className="mb-3">
-                              <span className="text-sm font-medium text-gray-700">项目链接：</span>
+                              <span className="text-sm font-medium text-gray-700">
+                                项目链接：
+                              </span>
                               <a
                                 href={project.project_url}
                                 target="_blank"
@@ -903,7 +921,9 @@ export function ResumePreviewModal({
                                 />
                               ) : (
                                 <div>
-                                  <span className="text-sm font-medium text-gray-700 block mb-1">项目描述：</span>
+                                  <span className="text-sm font-medium text-gray-700 block mb-1">
+                                    项目描述：
+                                  </span>
                                   <div className="text-gray-700 leading-relaxed">
                                     {project.description
                                       .split('\n')
@@ -937,7 +957,9 @@ export function ResumePreviewModal({
                                 />
                               ) : (
                                 <div>
-                                  <span className="text-sm font-medium text-gray-700 block mb-1">项目职责：</span>
+                                  <span className="text-sm font-medium text-gray-700 block mb-1">
+                                    项目职责：
+                                  </span>
                                   <div className="text-gray-700 leading-relaxed">
                                     {project.responsibilities
                                       .split('\n')
@@ -971,7 +993,9 @@ export function ResumePreviewModal({
                                 />
                               ) : (
                                 <div>
-                                  <span className="text-sm font-medium text-gray-700 block mb-1">项目成就：</span>
+                                  <span className="text-sm font-medium text-gray-700 block mb-1">
+                                    项目成就：
+                                  </span>
                                   <div className="text-gray-700 leading-relaxed">
                                     {project.achievements
                                       .split('\n')
@@ -1085,7 +1109,10 @@ export function ResumePreviewModal({
                                       updateEducation(
                                         index,
                                         'university_type',
-                                        e.target.value as 'ordinary' | '211' | '985'
+                                        e.target.value as
+                                          | 'ordinary'
+                                          | '211'
+                                          | '985'
                                       )
                                     }
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"

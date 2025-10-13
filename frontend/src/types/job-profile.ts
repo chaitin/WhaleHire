@@ -3,6 +3,34 @@
 // 技能类型枚举
 export type SkillType = 'required' | 'bonus';
 
+// 工作性质选项
+export const WORK_TYPE_OPTIONS = [
+  { value: 'full_time', label: '全职' },
+  { value: 'part_time', label: '兼职' },
+  { value: 'internship', label: '实习' },
+  { value: 'outsourcing', label: '外包' },
+];
+
+// 学历要求选项
+export const EDUCATION_TYPE_OPTIONS = [
+  { value: 'unlimited', label: '不限' },
+  { value: 'junior_college', label: '大专' },
+  { value: 'bachelor', label: '本科' },
+  { value: 'master', label: '硕士' },
+  { value: 'doctor', label: '博士' },
+];
+
+// 工作经验选项
+export const EXPERIENCE_TYPE_OPTIONS = [
+  { value: 'unlimited', label: '不限' },
+  { value: 'fresh_graduate', label: '应届毕业生' },
+  { value: 'under_one_year', label: '1年以下' },
+  { value: 'one_to_three_years', label: '1-3年' },
+  { value: 'three_to_five_years', label: '3-5年' },
+  { value: 'five_to_ten_years', label: '5-10年' },
+  { value: 'over_ten_years', label: '10年以上' },
+];
+
 // 基础岗位画像信息
 export interface JobProfile {
   id: string;
@@ -24,21 +52,21 @@ export interface JobProfile {
 export interface JobEducationRequirement {
   id: string;
   job_id: string;
-  min_degree: string;
+  education_type: string;
   weight?: number;
 }
 
 // 教育要求输入
 export interface JobEducationRequirementInput {
   id?: string;
-  min_degree: string;
-  weight?: number;
+  education_type: string; // 学历要求: unlimited/junior_college/bachelor/master/doctor
 }
 
 // 工作经验要求
 export interface JobExperienceRequirement {
   id: string;
   job_id: string;
+  experience_type: string;
   min_years?: number;
   ideal_years?: number;
   weight?: number;
@@ -47,9 +75,9 @@ export interface JobExperienceRequirement {
 // 工作经验要求输入
 export interface JobExperienceRequirementInput {
   id?: string;
+  experience_type: string; // 工作经验: unlimited/fresh_graduate/under_one_year/one_to_three_years/three_to_five_years/five_to_ten_years/over_ten_years
   min_years?: number;
   ideal_years?: number;
-  weight?: number;
 }
 
 // 行业要求
@@ -117,6 +145,7 @@ export interface JobProfileDetail {
   description?: string;
   department: string;
   department_id: string;
+  work_type?: string; // 工作性质: full_time/part_time/internship/outsourcing
   location?: string;
   salary_min?: number;
   salary_max?: number;
@@ -136,6 +165,7 @@ export interface JobProfileDetail {
 export interface CreateJobProfileReq {
   name: string;
   department_id: string;
+  work_type?: string; // 工作性质: full_time/part_time/internship/outsourcing
   description?: string;
   location?: string;
   salary_min?: number;
@@ -154,6 +184,7 @@ export interface UpdateJobProfileReq {
   id: string;
   name?: string;
   department_id?: string;
+  work_type?: string; // 工作性质: full_time/part_time/internship/outsourcing
   description?: string;
   location?: string;
   salary_min?: number;

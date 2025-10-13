@@ -75,7 +75,9 @@ export function ConfirmDialog({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
+              <AlertDialogCancel disabled={loading}>
+                {cancelText}
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleConfirm}
                 disabled={loading}
@@ -103,7 +105,9 @@ export function ConfirmDialog({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
+            <AlertDialogCancel disabled={loading}>
+              {cancelText}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               disabled={loading}
