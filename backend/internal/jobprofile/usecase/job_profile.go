@@ -358,14 +358,8 @@ func buildResponsibilities(inputs []*domain.JobResponsibilityInput) ([]*db.JobRe
 			return nil, fmt.Errorf("responsibility content cannot be empty")
 		}
 
-		weight := 0
-		if input.Weight != nil {
-			weight = *input.Weight
-		}
-
 		items = append(items, &db.JobResponsibility{
 			Responsibility: resp,
-			Weight:         weight,
 		})
 	}
 
@@ -393,18 +387,9 @@ func buildJobSkills(inputs []*domain.JobSkillInput) ([]*db.JobSkill, error) {
 			return nil, fmt.Errorf("skill type cannot be empty")
 		}
 
-		weight := 0
-		if input.Weight != nil {
-			if *input.Weight < 0 || *input.Weight > 100 {
-				return nil, fmt.Errorf("skill weight must be between 0 and 100")
-			}
-			weight = *input.Weight
-		}
-
 		items = append(items, &db.JobSkill{
 			SkillID: skillID,
 			Type:    consts.JobSkillType(skillType),
-			Weight:  weight,
 		})
 	}
 
@@ -426,17 +411,8 @@ func buildEducationRequirements(inputs []*domain.JobEducationRequirementInput) (
 			return nil, fmt.Errorf("education type cannot be empty")
 		}
 
-		weight := 0
-		if input.Weight != nil {
-			if *input.Weight < 0 || *input.Weight > 100 {
-				return nil, fmt.Errorf("education weight must be between 0 and 100")
-			}
-			weight = *input.Weight
-		}
-
 		items = append(items, &db.JobEducationRequirement{
 			EducationType: consts.JobEducationType(educationType),
-			Weight:        weight,
 		})
 	}
 	return items, nil
@@ -458,19 +434,10 @@ func buildExperienceRequirements(inputs []*domain.JobExperienceRequirementInput)
 			return nil, fmt.Errorf("experience type cannot be empty")
 		}
 
-		weight := 0
-		if input.Weight != nil {
-			if *input.Weight < 0 || *input.Weight > 100 {
-				return nil, fmt.Errorf("experience weight must be between 0 and 100")
-			}
-			weight = *input.Weight
-		}
-
 		items = append(items, &db.JobExperienceRequirement{
 			ExperienceType: experienceType,
 			MinYears:       input.MinYears,
 			IdealYears:     input.IdealYears,
-			Weight:         weight,
 		})
 	}
 
@@ -487,23 +454,15 @@ func buildIndustryRequirements(inputs []*domain.JobIndustryRequirementInput) ([]
 		if input == nil {
 			continue
 		}
-		industry := strings.TrimSpace(input.Industry)
-		if industry == "" {
-			return nil, fmt.Errorf("industry cannot be empty")
-		}
 
-		weight := 0
-		if input.Weight != nil {
-			if *input.Weight < 0 || *input.Weight > 100 {
-				return nil, fmt.Errorf("industry weight must be between 0 and 100")
-			}
-			weight = *input.Weight
+		var industry *string
+		if trimmed := strings.TrimSpace(input.Industry); trimmed != "" {
+			industry = &trimmed
 		}
 
 		items = append(items, &db.JobIndustryRequirement{
 			Industry:    industry,
 			CompanyName: safeTrimPtr(input.CompanyName),
-			Weight:      weight,
 		})
 	}
 
@@ -541,7 +500,7 @@ func upsertResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inp
 
 	// 找出需要删除的记录（现有记录中不在输入列表中的）
 	var toDeleteIDs []uuid.UUID
-	for id, _ := range existingMap {
+	for id := range existingMap {
 		if !inputIDSet[id] {
 			if existingID, err := uuid.Parse(id); err == nil {
 				toDeleteIDs = append(toDeleteIDs, existingID)
@@ -570,12 +529,6 @@ func upsertResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inp
 		updater := tx.JobResponsibility.UpdateOneID(id).
 			SetResponsibility(input.Responsibility)
 
-		if input.Weight != nil {
-			updater.SetWeight(*input.Weight)
-		} else {
-			updater.ClearWeight()
-		}
-
 		if _, err := updater.Save(ctx); err != nil {
 			return fmt.Errorf("failed to update responsibility: %w", err)
 		}
@@ -588,10 +541,6 @@ func upsertResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inp
 			builder := tx.JobResponsibility.Create().
 				SetJobID(jobID).
 				SetResponsibility(input.Responsibility)
-
-			if input.Weight != nil {
-				builder.SetWeight(*input.Weight)
-			}
 
 			builders = append(builders, builder)
 		}
@@ -635,7 +584,7 @@ func upsertSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*dom
 
 	// 找出需要删除的记录（现有记录中不在输入列表中的）
 	var toDeleteIDs []uuid.UUID
-	for id, _ := range existingMap {
+	for id := range existingMap {
 		if !inputIDSet[id] {
 			if existingID, err := uuid.Parse(id); err == nil {
 				toDeleteIDs = append(toDeleteIDs, existingID)
@@ -670,12 +619,6 @@ func upsertSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*dom
 			SetSkillID(skillID).
 			SetType(consts.JobSkillType(input.Type))
 
-		if input.Weight != nil {
-			updater.SetWeight(*input.Weight)
-		} else {
-			updater.ClearWeight()
-		}
-
 		if _, err := updater.Save(ctx); err != nil {
 			return fmt.Errorf("failed to update skill: %w", err)
 		}
@@ -694,10 +637,6 @@ func upsertSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*dom
 				SetJobID(jobID).
 				SetSkillID(skillID).
 				SetType(consts.JobSkillType(input.Type))
-
-			if input.Weight != nil {
-				builder.SetWeight(*input.Weight)
-			}
 
 			builders = append(builders, builder)
 		}
@@ -741,7 +680,7 @@ func upsertEducationRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID
 
 	// 找出需要删除的记录（现有记录中不在输入列表中的）
 	var toDeleteIDs []uuid.UUID
-	for id, _ := range existingMap {
+	for id := range existingMap {
 		if !inputIDSet[id] {
 			if existingID, err := uuid.Parse(id); err == nil {
 				toDeleteIDs = append(toDeleteIDs, existingID)
@@ -770,12 +709,6 @@ func upsertEducationRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID
 		updater := tx.JobEducationRequirement.UpdateOneID(id).
 			SetEducationType(consts.JobEducationType(input.EducationType))
 
-		if input.Weight != nil {
-			updater.SetWeight(*input.Weight)
-		} else {
-			updater.ClearWeight()
-		}
-
 		if _, err := updater.Save(ctx); err != nil {
 			return fmt.Errorf("failed to update education requirement: %w", err)
 		}
@@ -788,10 +721,6 @@ func upsertEducationRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID
 			builder := tx.JobEducationRequirement.Create().
 				SetJobID(jobID).
 				SetEducationType(consts.JobEducationType(input.EducationType))
-
-			if input.Weight != nil {
-				builder.SetWeight(*input.Weight)
-			}
 
 			builders = append(builders, builder)
 		}
@@ -835,7 +764,7 @@ func upsertExperienceRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUI
 
 	// 找出需要删除的记录（现有记录中不在输入列表中的）
 	var toDeleteIDs []uuid.UUID
-	for id, _ := range existingMap {
+	for id := range existingMap {
 		if !inputIDSet[id] {
 			if existingID, err := uuid.Parse(id); err == nil {
 				toDeleteIDs = append(toDeleteIDs, existingID)
@@ -866,12 +795,6 @@ func upsertExperienceRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUI
 			SetMinYears(input.MinYears).
 			SetIdealYears(input.IdealYears)
 
-		if input.Weight != nil {
-			updater.SetWeight(*input.Weight)
-		} else {
-			updater.ClearWeight()
-		}
-
 		if _, err := updater.Save(ctx); err != nil {
 			return fmt.Errorf("failed to update experience requirement: %w", err)
 		}
@@ -886,10 +809,6 @@ func upsertExperienceRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUI
 				SetExperienceType(input.ExperienceType).
 				SetMinYears(input.MinYears).
 				SetIdealYears(input.IdealYears)
-
-			if input.Weight != nil {
-				builder.SetWeight(*input.Weight)
-			}
 
 			builders = append(builders, builder)
 		}
@@ -933,7 +852,7 @@ func upsertIndustryRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID,
 
 	// 找出需要删除的记录（现有记录中不在输入列表中的）
 	var toDeleteIDs []uuid.UUID
-	for id, _ := range existingMap {
+	for id := range existingMap {
 		if !inputIDSet[id] {
 			if existingID, err := uuid.Parse(id); err == nil {
 				toDeleteIDs = append(toDeleteIDs, existingID)
@@ -959,19 +878,19 @@ func upsertIndustryRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID,
 			return fmt.Errorf("invalid industry requirement ID: %w", err)
 		}
 
-		updater := tx.JobIndustryRequirement.UpdateOneID(id).
-			SetIndustry(input.Industry)
+		updater := tx.JobIndustryRequirement.UpdateOneID(id)
+
+		// 处理industry字段 - 支持可选
+		if trimmed := strings.TrimSpace(input.Industry); trimmed != "" {
+			updater.SetIndustry(trimmed)
+		} else {
+			updater.ClearIndustry()
+		}
 
 		if input.CompanyName != nil && *input.CompanyName != "" {
 			updater.SetCompanyName(*input.CompanyName)
 		} else {
 			updater.ClearCompanyName()
-		}
-
-		if input.Weight != nil {
-			updater.SetWeight(*input.Weight)
-		} else {
-			updater.ClearWeight()
 		}
 
 		if _, err := updater.Save(ctx); err != nil {
@@ -984,15 +903,15 @@ func upsertIndustryRequirements(ctx context.Context, tx *db.Tx, jobID uuid.UUID,
 		builders := make([]*db.JobIndustryRequirementCreate, 0, len(toCreate))
 		for _, input := range toCreate {
 			builder := tx.JobIndustryRequirement.Create().
-				SetJobID(jobID).
-				SetIndustry(input.Industry)
+				SetJobID(jobID)
+
+			// 处理industry字段 - 支持可选
+			if trimmed := strings.TrimSpace(input.Industry); trimmed != "" {
+				builder.SetIndustry(trimmed)
+			}
 
 			if input.CompanyName != nil && *input.CompanyName != "" {
 				builder.SetCompanyName(*input.CompanyName)
-			}
-
-			if input.Weight != nil {
-				builder.SetWeight(*input.Weight)
 			}
 
 			builders = append(builders, builder)
@@ -1017,12 +936,10 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 	if list := entity.Edges.Responsibilities; len(list) > 0 {
 		responsibilities = make([]*domain.JobResponsibility, 0, len(list))
 		for _, item := range list {
-			weight := &item.Weight
 			responsibilities = append(responsibilities, &domain.JobResponsibility{
 				ID:             item.ID.String(),
 				JobID:          item.JobID.String(),
 				Responsibility: item.Responsibility,
-				Weight:         weight,
 			})
 		}
 	}
@@ -1035,14 +952,12 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 			if item.Edges.Skill != nil {
 				name = item.Edges.Skill.Name
 			}
-			weight := &item.Weight
 			skills = append(skills, &domain.JobSkill{
 				ID:      item.ID.String(),
 				JobID:   item.JobID.String(),
 				SkillID: item.SkillID.String(),
 				Skill:   name,
 				Type:    string(item.Type),
-				Weight:  weight,
 			})
 		}
 	}
@@ -1051,12 +966,10 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 	if list := entity.Edges.EducationRequirements; len(list) > 0 {
 		education = make([]*domain.JobEducationRequirement, 0, len(list))
 		for _, item := range list {
-			weight := &item.Weight
 			education = append(education, &domain.JobEducationRequirement{
 				ID:            item.ID.String(),
 				JobID:         item.JobID.String(),
 				EducationType: string(item.EducationType),
-				Weight:        weight,
 			})
 		}
 	}
@@ -1065,14 +978,12 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 	if list := entity.Edges.ExperienceRequirements; len(list) > 0 {
 		experience = make([]*domain.JobExperienceRequirement, 0, len(list))
 		for _, item := range list {
-			weight := &item.Weight
 			experience = append(experience, &domain.JobExperienceRequirement{
 				ID:             item.ID.String(),
 				JobID:          item.JobID.String(),
 				ExperienceType: item.ExperienceType,
 				MinYears:       item.MinYears,
 				IdealYears:     item.IdealYears,
-				Weight:         weight,
 			})
 		}
 	}
@@ -1081,13 +992,15 @@ func toJobProfileDetail(entity *db.JobPosition) *domain.JobProfileDetail {
 	if list := entity.Edges.IndustryRequirements; len(list) > 0 {
 		industry = make([]*domain.JobIndustryRequirement, 0, len(list))
 		for _, item := range list {
-			weight := &item.Weight
+			industryValue := ""
+			if item.Industry != nil {
+				industryValue = *item.Industry
+			}
 			industry = append(industry, &domain.JobIndustryRequirement{
 				ID:          item.ID.String(),
 				JobID:       item.JobID.String(),
-				Industry:    item.Industry,
+				Industry:    industryValue,
 				CompanyName: copyStringPtr(item.CompanyName),
-				Weight:      weight,
 			})
 		}
 	}

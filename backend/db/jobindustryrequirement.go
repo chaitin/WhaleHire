@@ -24,11 +24,9 @@ type JobIndustryRequirement struct {
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
 	// Industry holds the value of the "industry" field.
-	Industry string `json:"industry,omitempty"`
+	Industry *string `json:"industry,omitempty"`
 	// CompanyName holds the value of the "company_name" field.
 	CompanyName *string `json:"company_name,omitempty"`
-	// Weight holds the value of the "weight" field.
-	Weight int `json:"weight,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -64,8 +62,6 @@ func (*JobIndustryRequirement) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case jobindustryrequirement.FieldWeight:
-			values[i] = new(sql.NullInt64)
 		case jobindustryrequirement.FieldIndustry, jobindustryrequirement.FieldCompanyName:
 			values[i] = new(sql.NullString)
 		case jobindustryrequirement.FieldDeletedAt, jobindustryrequirement.FieldCreatedAt, jobindustryrequirement.FieldUpdatedAt:
@@ -109,7 +105,8 @@ func (jir *JobIndustryRequirement) assignValues(columns []string, values []any) 
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field industry", values[i])
 			} else if value.Valid {
-				jir.Industry = value.String
+				jir.Industry = new(string)
+				*jir.Industry = value.String
 			}
 		case jobindustryrequirement.FieldCompanyName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -117,12 +114,6 @@ func (jir *JobIndustryRequirement) assignValues(columns []string, values []any) 
 			} else if value.Valid {
 				jir.CompanyName = new(string)
 				*jir.CompanyName = value.String
-			}
-		case jobindustryrequirement.FieldWeight:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field weight", values[i])
-			} else if value.Valid {
-				jir.Weight = int(value.Int64)
 			}
 		case jobindustryrequirement.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -183,16 +174,15 @@ func (jir *JobIndustryRequirement) String() string {
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", jir.JobID))
 	builder.WriteString(", ")
-	builder.WriteString("industry=")
-	builder.WriteString(jir.Industry)
+	if v := jir.Industry; v != nil {
+		builder.WriteString("industry=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	if v := jir.CompanyName; v != nil {
 		builder.WriteString("company_name=")
 		builder.WriteString(*v)
 	}
-	builder.WriteString(", ")
-	builder.WriteString("weight=")
-	builder.WriteString(fmt.Sprintf("%v", jir.Weight))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(jir.CreatedAt.Format(time.ANSIC))

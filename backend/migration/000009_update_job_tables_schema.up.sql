@@ -8,42 +8,44 @@ ALTER TABLE "department" ALTER COLUMN "description" TYPE text;
 ALTER TABLE "job_position" ADD COLUMN "work_type" character varying(50) NULL;
 
 -- 3. 修改 job_responsibility 表：
--- 3.1 添加 weight 字段（可选，范围 0-100）
-ALTER TABLE "job_responsibility" ADD COLUMN "weight" integer NULL;
-ALTER TABLE "job_responsibility" ADD CONSTRAINT "job_responsibility_weight_check" CHECK ("weight" >= 0 AND "weight" <= 100);
-
--- 3.2 移除 sort_order 字段（如果存在）
+-- 3.1 移除 sort_order 字段（如果存在）
 ALTER TABLE "job_responsibility" DROP COLUMN IF EXISTS "sort_order";
 
 -- 4. 修改 job_skill 表：
--- 4.1 修改 type 字段为支持中文值
+-- 4.1 删除 weight 字段相关约束
+ALTER TABLE "job_skill" DROP CONSTRAINT IF EXISTS "job_skill_weight_check";
+-- 4.2 删除 weight 字段
+ALTER TABLE "job_skill" DROP COLUMN IF EXISTS "weight";
+-- 4.3 修改 type 字段为支持中文值
 ALTER TABLE "job_skill" DROP CONSTRAINT IF EXISTS "job_skill_type_check";
 ALTER TABLE "job_skill" ALTER COLUMN "type" TYPE character varying(50);
 
--- 4.2 修改 weight 字段为可选
-ALTER TABLE "job_skill" ALTER COLUMN "weight" DROP NOT NULL;
-
 -- 5. 修改 job_education_requirement 表：
--- 5.1 重命名 min_degree 字段为 education_type
+-- 5.1 删除 weight 字段相关约束
+ALTER TABLE "job_education_requirement" DROP CONSTRAINT IF EXISTS "job_education_requirement_weight_check";
+-- 5.2 删除 weight 字段
+ALTER TABLE "job_education_requirement" DROP COLUMN IF EXISTS "weight";
+-- 5.3 重命名 min_degree 字段为 education_type
 ALTER TABLE "job_education_requirement" RENAME COLUMN "min_degree" TO "education_type";
-
--- 5.2 修改 education_type 字段为可选，支持中文值
+-- 5.4 修改 education_type 字段为可选，支持中文值
 ALTER TABLE "job_education_requirement" ALTER COLUMN "education_type" DROP NOT NULL;
 ALTER TABLE "job_education_requirement" ALTER COLUMN "education_type" TYPE character varying(50);
 
--- 5.3 修改 weight 字段为可选
-ALTER TABLE "job_education_requirement" ALTER COLUMN "weight" DROP NOT NULL;
-
 -- 6. 修改 job_experience_requirement 表：
--- 6.1 添加 experience_type 字段（可选）
+-- 6.1 删除 weight 字段相关约束
+ALTER TABLE "job_experience_requirement" DROP CONSTRAINT IF EXISTS "job_experience_requirement_weight_check";
+-- 6.2 删除 weight 字段
+ALTER TABLE "job_experience_requirement" DROP COLUMN IF EXISTS "weight";
+-- 6.3 添加 experience_type 字段（可选）
 ALTER TABLE "job_experience_requirement" ADD COLUMN "experience_type" character varying(50) NULL;
 
--- 6.2 修改 weight 字段为可选
-ALTER TABLE "job_experience_requirement" ALTER COLUMN "weight" DROP NOT NULL;
-
 -- 7. 修改 job_industry_requirement 表：
--- 7.1 修改 weight 字段为可选
-ALTER TABLE "job_industry_requirement" ALTER COLUMN "weight" DROP NOT NULL;
+-- 7.1 删除 weight 字段相关约束
+ALTER TABLE "job_industry_requirement" DROP CONSTRAINT IF EXISTS "job_industry_requirement_weight_check";
+-- 7.2 删除 weight 字段
+ALTER TABLE "job_industry_requirement" DROP COLUMN IF EXISTS "weight";
+-- 7.3 修改 industry 字段为可选
+ALTER TABLE "job_industry_requirement" ALTER COLUMN "industry" DROP NOT NULL;
 
 -- 更新索引和约束
 -- 为新增的字段创建索引

@@ -81,11 +81,6 @@ func IdealYears(v int) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldIdealYears, v))
 }
 
-// Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
-func Weight(v int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldWeight, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldCreatedAt, v))
@@ -339,56 +334,6 @@ func IdealYearsIsNil() predicate.JobExperienceRequirement {
 // IdealYearsNotNil applies the NotNil predicate on the "ideal_years" field.
 func IdealYearsNotNil() predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldIdealYears))
-}
-
-// WeightEQ applies the EQ predicate on the "weight" field.
-func WeightEQ(v int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldWeight, v))
-}
-
-// WeightNEQ applies the NEQ predicate on the "weight" field.
-func WeightNEQ(v int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldNEQ(FieldWeight, v))
-}
-
-// WeightIn applies the In predicate on the "weight" field.
-func WeightIn(vs ...int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldIn(FieldWeight, vs...))
-}
-
-// WeightNotIn applies the NotIn predicate on the "weight" field.
-func WeightNotIn(vs ...int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldNotIn(FieldWeight, vs...))
-}
-
-// WeightGT applies the GT predicate on the "weight" field.
-func WeightGT(v int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldGT(FieldWeight, v))
-}
-
-// WeightGTE applies the GTE predicate on the "weight" field.
-func WeightGTE(v int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldGTE(FieldWeight, v))
-}
-
-// WeightLT applies the LT predicate on the "weight" field.
-func WeightLT(v int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldLT(FieldWeight, v))
-}
-
-// WeightLTE applies the LTE predicate on the "weight" field.
-func WeightLTE(v int) predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldWeight, v))
-}
-
-// WeightIsNil applies the IsNil predicate on the "weight" field.
-func WeightIsNil() predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldIsNull(FieldWeight))
-}
-
-// WeightNotNil applies the NotNil predicate on the "weight" field.
-func WeightNotNil() predicate.JobExperienceRequirement {
-	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

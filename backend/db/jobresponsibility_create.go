@@ -51,20 +51,6 @@ func (jrc *JobResponsibilityCreate) SetResponsibility(s string) *JobResponsibili
 	return jrc
 }
 
-// SetWeight sets the "weight" field.
-func (jrc *JobResponsibilityCreate) SetWeight(i int) *JobResponsibilityCreate {
-	jrc.mutation.SetWeight(i)
-	return jrc
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jrc *JobResponsibilityCreate) SetNillableWeight(i *int) *JobResponsibilityCreate {
-	if i != nil {
-		jrc.SetWeight(*i)
-	}
-	return jrc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (jrc *JobResponsibilityCreate) SetCreatedAt(t time.Time) *JobResponsibilityCreate {
 	jrc.mutation.SetCreatedAt(t)
@@ -181,11 +167,6 @@ func (jrc *JobResponsibilityCreate) check() error {
 	if _, ok := jrc.mutation.Responsibility(); !ok {
 		return &ValidationError{Name: "responsibility", err: errors.New(`db: missing required field "JobResponsibility.responsibility"`)}
 	}
-	if v, ok := jrc.mutation.Weight(); ok {
-		if err := jobresponsibility.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobResponsibility.weight": %w`, err)}
-		}
-	}
 	if _, ok := jrc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`db: missing required field "JobResponsibility.created_at"`)}
 	}
@@ -238,10 +219,6 @@ func (jrc *JobResponsibilityCreate) createSpec() (*JobResponsibility, *sqlgraph.
 	if value, ok := jrc.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
 		_node.Responsibility = value
-	}
-	if value, ok := jrc.mutation.Weight(); ok {
-		_spec.SetField(jobresponsibility.FieldWeight, field.TypeInt, value)
-		_node.Weight = value
 	}
 	if value, ok := jrc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldCreatedAt, field.TypeTime, value)
@@ -362,30 +339,6 @@ func (u *JobResponsibilityUpsert) UpdateResponsibility() *JobResponsibilityUpser
 	return u
 }
 
-// SetWeight sets the "weight" field.
-func (u *JobResponsibilityUpsert) SetWeight(v int) *JobResponsibilityUpsert {
-	u.Set(jobresponsibility.FieldWeight, v)
-	return u
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobResponsibilityUpsert) UpdateWeight() *JobResponsibilityUpsert {
-	u.SetExcluded(jobresponsibility.FieldWeight)
-	return u
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobResponsibilityUpsert) AddWeight(v int) *JobResponsibilityUpsert {
-	u.Add(jobresponsibility.FieldWeight, v)
-	return u
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobResponsibilityUpsert) ClearWeight() *JobResponsibilityUpsert {
-	u.SetNull(jobresponsibility.FieldWeight)
-	return u
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (u *JobResponsibilityUpsert) SetUpdatedAt(v time.Time) *JobResponsibilityUpsert {
 	u.Set(jobresponsibility.FieldUpdatedAt, v)
@@ -495,34 +448,6 @@ func (u *JobResponsibilityUpsertOne) SetResponsibility(v string) *JobResponsibil
 func (u *JobResponsibilityUpsertOne) UpdateResponsibility() *JobResponsibilityUpsertOne {
 	return u.Update(func(s *JobResponsibilityUpsert) {
 		s.UpdateResponsibility()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobResponsibilityUpsertOne) SetWeight(v int) *JobResponsibilityUpsertOne {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobResponsibilityUpsertOne) AddWeight(v int) *JobResponsibilityUpsertOne {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobResponsibilityUpsertOne) UpdateWeight() *JobResponsibilityUpsertOne {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.UpdateWeight()
-	})
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobResponsibilityUpsertOne) ClearWeight() *JobResponsibilityUpsertOne {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.ClearWeight()
 	})
 }
 
@@ -804,34 +729,6 @@ func (u *JobResponsibilityUpsertBulk) SetResponsibility(v string) *JobResponsibi
 func (u *JobResponsibilityUpsertBulk) UpdateResponsibility() *JobResponsibilityUpsertBulk {
 	return u.Update(func(s *JobResponsibilityUpsert) {
 		s.UpdateResponsibility()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobResponsibilityUpsertBulk) SetWeight(v int) *JobResponsibilityUpsertBulk {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobResponsibilityUpsertBulk) AddWeight(v int) *JobResponsibilityUpsertBulk {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobResponsibilityUpsertBulk) UpdateWeight() *JobResponsibilityUpsertBulk {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.UpdateWeight()
-	})
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobResponsibilityUpsertBulk) ClearWeight() *JobResponsibilityUpsertBulk {
-	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.ClearWeight()
 	})
 }
 

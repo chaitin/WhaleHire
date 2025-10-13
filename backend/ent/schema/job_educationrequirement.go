@@ -34,7 +34,6 @@ func (JobEducationRequirement) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.UUID("job_id", uuid.UUID{}),
 		field.String("education_type").GoType(consts.JobEducationType("")).Optional(),
-		field.Int("weight").Range(0, 100).Optional(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

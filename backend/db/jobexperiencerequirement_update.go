@@ -139,33 +139,6 @@ func (jeru *JobExperienceRequirementUpdate) ClearIdealYears() *JobExperienceRequ
 	return jeru
 }
 
-// SetWeight sets the "weight" field.
-func (jeru *JobExperienceRequirementUpdate) SetWeight(i int) *JobExperienceRequirementUpdate {
-	jeru.mutation.ResetWeight()
-	jeru.mutation.SetWeight(i)
-	return jeru
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jeru *JobExperienceRequirementUpdate) SetNillableWeight(i *int) *JobExperienceRequirementUpdate {
-	if i != nil {
-		jeru.SetWeight(*i)
-	}
-	return jeru
-}
-
-// AddWeight adds i to the "weight" field.
-func (jeru *JobExperienceRequirementUpdate) AddWeight(i int) *JobExperienceRequirementUpdate {
-	jeru.mutation.AddWeight(i)
-	return jeru
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (jeru *JobExperienceRequirementUpdate) ClearWeight() *JobExperienceRequirementUpdate {
-	jeru.mutation.ClearWeight()
-	return jeru
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (jeru *JobExperienceRequirementUpdate) SetUpdatedAt(t time.Time) *JobExperienceRequirementUpdate {
 	jeru.mutation.SetUpdatedAt(t)
@@ -242,11 +215,6 @@ func (jeru *JobExperienceRequirementUpdate) check() error {
 			return &ValidationError{Name: "ideal_years", err: fmt.Errorf(`db: validator failed for field "JobExperienceRequirement.ideal_years": %w`, err)}
 		}
 	}
-	if v, ok := jeru.mutation.Weight(); ok {
-		if err := jobexperiencerequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobExperienceRequirement.weight": %w`, err)}
-		}
-	}
 	if jeru.mutation.JobCleared() && len(jeru.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobExperienceRequirement.job"`)
 	}
@@ -300,15 +268,6 @@ func (jeru *JobExperienceRequirementUpdate) sqlSave(ctx context.Context) (n int,
 	}
 	if jeru.mutation.IdealYearsCleared() {
 		_spec.ClearField(jobexperiencerequirement.FieldIdealYears, field.TypeInt)
-	}
-	if value, ok := jeru.mutation.Weight(); ok {
-		_spec.SetField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jeru.mutation.AddedWeight(); ok {
-		_spec.AddField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
-	}
-	if jeru.mutation.WeightCleared() {
-		_spec.ClearField(jobexperiencerequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldUpdatedAt, field.TypeTime, value)
@@ -472,33 +431,6 @@ func (jeruo *JobExperienceRequirementUpdateOne) ClearIdealYears() *JobExperience
 	return jeruo
 }
 
-// SetWeight sets the "weight" field.
-func (jeruo *JobExperienceRequirementUpdateOne) SetWeight(i int) *JobExperienceRequirementUpdateOne {
-	jeruo.mutation.ResetWeight()
-	jeruo.mutation.SetWeight(i)
-	return jeruo
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jeruo *JobExperienceRequirementUpdateOne) SetNillableWeight(i *int) *JobExperienceRequirementUpdateOne {
-	if i != nil {
-		jeruo.SetWeight(*i)
-	}
-	return jeruo
-}
-
-// AddWeight adds i to the "weight" field.
-func (jeruo *JobExperienceRequirementUpdateOne) AddWeight(i int) *JobExperienceRequirementUpdateOne {
-	jeruo.mutation.AddWeight(i)
-	return jeruo
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (jeruo *JobExperienceRequirementUpdateOne) ClearWeight() *JobExperienceRequirementUpdateOne {
-	jeruo.mutation.ClearWeight()
-	return jeruo
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (jeruo *JobExperienceRequirementUpdateOne) SetUpdatedAt(t time.Time) *JobExperienceRequirementUpdateOne {
 	jeruo.mutation.SetUpdatedAt(t)
@@ -588,11 +520,6 @@ func (jeruo *JobExperienceRequirementUpdateOne) check() error {
 			return &ValidationError{Name: "ideal_years", err: fmt.Errorf(`db: validator failed for field "JobExperienceRequirement.ideal_years": %w`, err)}
 		}
 	}
-	if v, ok := jeruo.mutation.Weight(); ok {
-		if err := jobexperiencerequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobExperienceRequirement.weight": %w`, err)}
-		}
-	}
 	if jeruo.mutation.JobCleared() && len(jeruo.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobExperienceRequirement.job"`)
 	}
@@ -663,15 +590,6 @@ func (jeruo *JobExperienceRequirementUpdateOne) sqlSave(ctx context.Context) (_n
 	}
 	if jeruo.mutation.IdealYearsCleared() {
 		_spec.ClearField(jobexperiencerequirement.FieldIdealYears, field.TypeInt)
-	}
-	if value, ok := jeruo.mutation.Weight(); ok {
-		_spec.SetField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jeruo.mutation.AddedWeight(); ok {
-		_spec.AddField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
-	}
-	if jeruo.mutation.WeightCleared() {
-		_spec.ClearField(jobexperiencerequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldUpdatedAt, field.TypeTime, value)

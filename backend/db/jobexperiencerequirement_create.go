@@ -87,20 +87,6 @@ func (jerc *JobExperienceRequirementCreate) SetNillableIdealYears(i *int) *JobEx
 	return jerc
 }
 
-// SetWeight sets the "weight" field.
-func (jerc *JobExperienceRequirementCreate) SetWeight(i int) *JobExperienceRequirementCreate {
-	jerc.mutation.SetWeight(i)
-	return jerc
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jerc *JobExperienceRequirementCreate) SetNillableWeight(i *int) *JobExperienceRequirementCreate {
-	if i != nil {
-		jerc.SetWeight(*i)
-	}
-	return jerc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (jerc *JobExperienceRequirementCreate) SetCreatedAt(t time.Time) *JobExperienceRequirementCreate {
 	jerc.mutation.SetCreatedAt(t)
@@ -232,11 +218,6 @@ func (jerc *JobExperienceRequirementCreate) check() error {
 			return &ValidationError{Name: "ideal_years", err: fmt.Errorf(`db: validator failed for field "JobExperienceRequirement.ideal_years": %w`, err)}
 		}
 	}
-	if v, ok := jerc.mutation.Weight(); ok {
-		if err := jobexperiencerequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobExperienceRequirement.weight": %w`, err)}
-		}
-	}
 	if _, ok := jerc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`db: missing required field "JobExperienceRequirement.created_at"`)}
 	}
@@ -297,10 +278,6 @@ func (jerc *JobExperienceRequirementCreate) createSpec() (*JobExperienceRequirem
 	if value, ok := jerc.mutation.IdealYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldIdealYears, field.TypeInt, value)
 		_node.IdealYears = value
-	}
-	if value, ok := jerc.mutation.Weight(); ok {
-		_spec.SetField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
-		_node.Weight = value
 	}
 	if value, ok := jerc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldCreatedAt, field.TypeTime, value)
@@ -472,30 +449,6 @@ func (u *JobExperienceRequirementUpsert) AddIdealYears(v int) *JobExperienceRequ
 // ClearIdealYears clears the value of the "ideal_years" field.
 func (u *JobExperienceRequirementUpsert) ClearIdealYears() *JobExperienceRequirementUpsert {
 	u.SetNull(jobexperiencerequirement.FieldIdealYears)
-	return u
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobExperienceRequirementUpsert) SetWeight(v int) *JobExperienceRequirementUpsert {
-	u.Set(jobexperiencerequirement.FieldWeight, v)
-	return u
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobExperienceRequirementUpsert) UpdateWeight() *JobExperienceRequirementUpsert {
-	u.SetExcluded(jobexperiencerequirement.FieldWeight)
-	return u
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobExperienceRequirementUpsert) AddWeight(v int) *JobExperienceRequirementUpsert {
-	u.Add(jobexperiencerequirement.FieldWeight, v)
-	return u
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobExperienceRequirementUpsert) ClearWeight() *JobExperienceRequirementUpsert {
-	u.SetNull(jobexperiencerequirement.FieldWeight)
 	return u
 }
 
@@ -671,34 +624,6 @@ func (u *JobExperienceRequirementUpsertOne) UpdateIdealYears() *JobExperienceReq
 func (u *JobExperienceRequirementUpsertOne) ClearIdealYears() *JobExperienceRequirementUpsertOne {
 	return u.Update(func(s *JobExperienceRequirementUpsert) {
 		s.ClearIdealYears()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobExperienceRequirementUpsertOne) SetWeight(v int) *JobExperienceRequirementUpsertOne {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobExperienceRequirementUpsertOne) AddWeight(v int) *JobExperienceRequirementUpsertOne {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobExperienceRequirementUpsertOne) UpdateWeight() *JobExperienceRequirementUpsertOne {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.UpdateWeight()
-	})
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobExperienceRequirementUpsertOne) ClearWeight() *JobExperienceRequirementUpsertOne {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.ClearWeight()
 	})
 }
 
@@ -1043,34 +968,6 @@ func (u *JobExperienceRequirementUpsertBulk) UpdateIdealYears() *JobExperienceRe
 func (u *JobExperienceRequirementUpsertBulk) ClearIdealYears() *JobExperienceRequirementUpsertBulk {
 	return u.Update(func(s *JobExperienceRequirementUpsert) {
 		s.ClearIdealYears()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobExperienceRequirementUpsertBulk) SetWeight(v int) *JobExperienceRequirementUpsertBulk {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobExperienceRequirementUpsertBulk) AddWeight(v int) *JobExperienceRequirementUpsertBulk {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobExperienceRequirementUpsertBulk) UpdateWeight() *JobExperienceRequirementUpsertBulk {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.UpdateWeight()
-	})
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobExperienceRequirementUpsertBulk) ClearWeight() *JobExperienceRequirementUpsertBulk {
-	return u.Update(func(s *JobExperienceRequirementUpsert) {
-		s.ClearWeight()
 	})
 }
 

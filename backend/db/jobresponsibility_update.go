@@ -79,33 +79,6 @@ func (jru *JobResponsibilityUpdate) SetNillableResponsibility(s *string) *JobRes
 	return jru
 }
 
-// SetWeight sets the "weight" field.
-func (jru *JobResponsibilityUpdate) SetWeight(i int) *JobResponsibilityUpdate {
-	jru.mutation.ResetWeight()
-	jru.mutation.SetWeight(i)
-	return jru
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jru *JobResponsibilityUpdate) SetNillableWeight(i *int) *JobResponsibilityUpdate {
-	if i != nil {
-		jru.SetWeight(*i)
-	}
-	return jru
-}
-
-// AddWeight adds i to the "weight" field.
-func (jru *JobResponsibilityUpdate) AddWeight(i int) *JobResponsibilityUpdate {
-	jru.mutation.AddWeight(i)
-	return jru
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (jru *JobResponsibilityUpdate) ClearWeight() *JobResponsibilityUpdate {
-	jru.mutation.ClearWeight()
-	return jru
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (jru *JobResponsibilityUpdate) SetUpdatedAt(t time.Time) *JobResponsibilityUpdate {
 	jru.mutation.SetUpdatedAt(t)
@@ -172,11 +145,6 @@ func (jru *JobResponsibilityUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jru *JobResponsibilityUpdate) check() error {
-	if v, ok := jru.mutation.Weight(); ok {
-		if err := jobresponsibility.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobResponsibility.weight": %w`, err)}
-		}
-	}
 	if jru.mutation.JobCleared() && len(jru.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobResponsibility.job"`)
 	}
@@ -209,15 +177,6 @@ func (jru *JobResponsibilityUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if value, ok := jru.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
-	}
-	if value, ok := jru.mutation.Weight(); ok {
-		_spec.SetField(jobresponsibility.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jru.mutation.AddedWeight(); ok {
-		_spec.AddField(jobresponsibility.FieldWeight, field.TypeInt, value)
-	}
-	if jru.mutation.WeightCleared() {
-		_spec.ClearField(jobresponsibility.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)
@@ -321,33 +280,6 @@ func (jruo *JobResponsibilityUpdateOne) SetNillableResponsibility(s *string) *Jo
 	return jruo
 }
 
-// SetWeight sets the "weight" field.
-func (jruo *JobResponsibilityUpdateOne) SetWeight(i int) *JobResponsibilityUpdateOne {
-	jruo.mutation.ResetWeight()
-	jruo.mutation.SetWeight(i)
-	return jruo
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jruo *JobResponsibilityUpdateOne) SetNillableWeight(i *int) *JobResponsibilityUpdateOne {
-	if i != nil {
-		jruo.SetWeight(*i)
-	}
-	return jruo
-}
-
-// AddWeight adds i to the "weight" field.
-func (jruo *JobResponsibilityUpdateOne) AddWeight(i int) *JobResponsibilityUpdateOne {
-	jruo.mutation.AddWeight(i)
-	return jruo
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (jruo *JobResponsibilityUpdateOne) ClearWeight() *JobResponsibilityUpdateOne {
-	jruo.mutation.ClearWeight()
-	return jruo
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (jruo *JobResponsibilityUpdateOne) SetUpdatedAt(t time.Time) *JobResponsibilityUpdateOne {
 	jruo.mutation.SetUpdatedAt(t)
@@ -427,11 +359,6 @@ func (jruo *JobResponsibilityUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jruo *JobResponsibilityUpdateOne) check() error {
-	if v, ok := jruo.mutation.Weight(); ok {
-		if err := jobresponsibility.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobResponsibility.weight": %w`, err)}
-		}
-	}
 	if jruo.mutation.JobCleared() && len(jruo.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobResponsibility.job"`)
 	}
@@ -481,15 +408,6 @@ func (jruo *JobResponsibilityUpdateOne) sqlSave(ctx context.Context) (_node *Job
 	}
 	if value, ok := jruo.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
-	}
-	if value, ok := jruo.mutation.Weight(); ok {
-		_spec.SetField(jobresponsibility.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jruo.mutation.AddedWeight(); ok {
-		_spec.AddField(jobresponsibility.FieldWeight, field.TypeInt, value)
-	}
-	if jruo.mutation.WeightCleared() {
-		_spec.ClearField(jobresponsibility.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)

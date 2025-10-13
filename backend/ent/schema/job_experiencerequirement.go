@@ -36,7 +36,6 @@ func (JobExperienceRequirement) Fields() []ent.Field {
 		// 用于数值计算和筛选的字段（可以根据experience_type自动计算）
 		field.Int("min_years").Default(0).NonNegative().Optional(),
 		field.Int("ideal_years").Default(0).NonNegative().Optional(),
-		field.Int("weight").Range(0, 100).Optional(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

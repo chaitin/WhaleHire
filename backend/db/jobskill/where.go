@@ -78,11 +78,6 @@ func Type(v consts.JobSkillType) predicate.JobSkill {
 	return predicate.JobSkill(sql.FieldEQ(FieldType, vc))
 }
 
-// Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
-func Weight(v int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldEQ(FieldWeight, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.JobSkill {
 	return predicate.JobSkill(sql.FieldEQ(FieldCreatedAt, v))
@@ -265,56 +260,6 @@ func TypeEqualFold(v consts.JobSkillType) predicate.JobSkill {
 func TypeContainsFold(v consts.JobSkillType) predicate.JobSkill {
 	vc := string(v)
 	return predicate.JobSkill(sql.FieldContainsFold(FieldType, vc))
-}
-
-// WeightEQ applies the EQ predicate on the "weight" field.
-func WeightEQ(v int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldEQ(FieldWeight, v))
-}
-
-// WeightNEQ applies the NEQ predicate on the "weight" field.
-func WeightNEQ(v int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldNEQ(FieldWeight, v))
-}
-
-// WeightIn applies the In predicate on the "weight" field.
-func WeightIn(vs ...int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldIn(FieldWeight, vs...))
-}
-
-// WeightNotIn applies the NotIn predicate on the "weight" field.
-func WeightNotIn(vs ...int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldNotIn(FieldWeight, vs...))
-}
-
-// WeightGT applies the GT predicate on the "weight" field.
-func WeightGT(v int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldGT(FieldWeight, v))
-}
-
-// WeightGTE applies the GTE predicate on the "weight" field.
-func WeightGTE(v int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldGTE(FieldWeight, v))
-}
-
-// WeightLT applies the LT predicate on the "weight" field.
-func WeightLT(v int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldLT(FieldWeight, v))
-}
-
-// WeightLTE applies the LTE predicate on the "weight" field.
-func WeightLTE(v int) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldLTE(FieldWeight, v))
-}
-
-// WeightIsNil applies the IsNil predicate on the "weight" field.
-func WeightIsNil() predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldIsNull(FieldWeight))
-}
-
-// WeightNotNil applies the NotNil predicate on the "weight" field.
-func WeightNotNil() predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

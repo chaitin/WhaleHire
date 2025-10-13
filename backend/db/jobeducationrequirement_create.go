@@ -60,20 +60,6 @@ func (jerc *JobEducationRequirementCreate) SetNillableEducationType(cet *consts.
 	return jerc
 }
 
-// SetWeight sets the "weight" field.
-func (jerc *JobEducationRequirementCreate) SetWeight(i int) *JobEducationRequirementCreate {
-	jerc.mutation.SetWeight(i)
-	return jerc
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jerc *JobEducationRequirementCreate) SetNillableWeight(i *int) *JobEducationRequirementCreate {
-	if i != nil {
-		jerc.SetWeight(*i)
-	}
-	return jerc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (jerc *JobEducationRequirementCreate) SetCreatedAt(t time.Time) *JobEducationRequirementCreate {
 	jerc.mutation.SetCreatedAt(t)
@@ -187,11 +173,6 @@ func (jerc *JobEducationRequirementCreate) check() error {
 	if _, ok := jerc.mutation.JobID(); !ok {
 		return &ValidationError{Name: "job_id", err: errors.New(`db: missing required field "JobEducationRequirement.job_id"`)}
 	}
-	if v, ok := jerc.mutation.Weight(); ok {
-		if err := jobeducationrequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.weight": %w`, err)}
-		}
-	}
 	if _, ok := jerc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`db: missing required field "JobEducationRequirement.created_at"`)}
 	}
@@ -244,10 +225,6 @@ func (jerc *JobEducationRequirementCreate) createSpec() (*JobEducationRequiremen
 	if value, ok := jerc.mutation.EducationType(); ok {
 		_spec.SetField(jobeducationrequirement.FieldEducationType, field.TypeString, value)
 		_node.EducationType = value
-	}
-	if value, ok := jerc.mutation.Weight(); ok {
-		_spec.SetField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
-		_node.Weight = value
 	}
 	if value, ok := jerc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobeducationrequirement.FieldCreatedAt, field.TypeTime, value)
@@ -374,30 +351,6 @@ func (u *JobEducationRequirementUpsert) ClearEducationType() *JobEducationRequir
 	return u
 }
 
-// SetWeight sets the "weight" field.
-func (u *JobEducationRequirementUpsert) SetWeight(v int) *JobEducationRequirementUpsert {
-	u.Set(jobeducationrequirement.FieldWeight, v)
-	return u
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsert) UpdateWeight() *JobEducationRequirementUpsert {
-	u.SetExcluded(jobeducationrequirement.FieldWeight)
-	return u
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobEducationRequirementUpsert) AddWeight(v int) *JobEducationRequirementUpsert {
-	u.Add(jobeducationrequirement.FieldWeight, v)
-	return u
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobEducationRequirementUpsert) ClearWeight() *JobEducationRequirementUpsert {
-	u.SetNull(jobeducationrequirement.FieldWeight)
-	return u
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (u *JobEducationRequirementUpsert) SetUpdatedAt(v time.Time) *JobEducationRequirementUpsert {
 	u.Set(jobeducationrequirement.FieldUpdatedAt, v)
@@ -514,34 +467,6 @@ func (u *JobEducationRequirementUpsertOne) UpdateEducationType() *JobEducationRe
 func (u *JobEducationRequirementUpsertOne) ClearEducationType() *JobEducationRequirementUpsertOne {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
 		s.ClearEducationType()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobEducationRequirementUpsertOne) SetWeight(v int) *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobEducationRequirementUpsertOne) AddWeight(v int) *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertOne) UpdateWeight() *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateWeight()
-	})
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobEducationRequirementUpsertOne) ClearWeight() *JobEducationRequirementUpsertOne {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.ClearWeight()
 	})
 }
 
@@ -830,34 +755,6 @@ func (u *JobEducationRequirementUpsertBulk) UpdateEducationType() *JobEducationR
 func (u *JobEducationRequirementUpsertBulk) ClearEducationType() *JobEducationRequirementUpsertBulk {
 	return u.Update(func(s *JobEducationRequirementUpsert) {
 		s.ClearEducationType()
-	})
-}
-
-// SetWeight sets the "weight" field.
-func (u *JobEducationRequirementUpsertBulk) SetWeight(v int) *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.SetWeight(v)
-	})
-}
-
-// AddWeight adds v to the "weight" field.
-func (u *JobEducationRequirementUpsertBulk) AddWeight(v int) *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.AddWeight(v)
-	})
-}
-
-// UpdateWeight sets the "weight" field to the value that was provided on create.
-func (u *JobEducationRequirementUpsertBulk) UpdateWeight() *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.UpdateWeight()
-	})
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (u *JobEducationRequirementUpsertBulk) ClearWeight() *JobEducationRequirementUpsertBulk {
-	return u.Update(func(s *JobEducationRequirementUpsert) {
-		s.ClearWeight()
 	})
 }
 

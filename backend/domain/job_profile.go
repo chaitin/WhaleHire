@@ -120,53 +120,43 @@ type JobProfileDetail struct {
 }
 
 // JobResponsibility represents a responsibility row.
-// JobResponsibility struct updated to remove SortOrder and add Weight
 type JobResponsibility struct {
 	ID             string `json:"id"`
 	JobID          string `json:"job_id"`
 	Responsibility string `json:"responsibility"`
-	Weight         *int   `json:"weight,omitempty"`
 }
 
 // JobSkill represents a skill linked to a job.
-// JobSkill struct updated to use string constants for Type and optional Weight
 type JobSkill struct {
 	ID      string `json:"id"`
 	JobID   string `json:"job_id"`
 	SkillID string `json:"skill_id"`
 	Skill   string `json:"skill"`
 	Type    string `json:"type"`
-	Weight  *int   `json:"weight,omitempty"`
 }
 
 // JobEducationRequirement models education expectations.
-// JobEducationRequirement struct updated to rename MinDegree to EducationType and make Weight optional
 type JobEducationRequirement struct {
 	ID            string `json:"id"`
 	JobID         string `json:"job_id"`
 	EducationType string `json:"education_type"`
-	Weight        *int   `json:"weight,omitempty"`
 }
 
 // JobExperienceRequirement models experience expectations.
-// JobExperienceRequirement struct updated to add ExperienceType and make Weight optional
 type JobExperienceRequirement struct {
 	ID             string `json:"id"`
 	JobID          string `json:"job_id"`
 	ExperienceType string `json:"experience_type"`
 	MinYears       int    `json:"min_years"`
 	IdealYears     int    `json:"ideal_years"`
-	Weight         *int   `json:"weight,omitempty"`
 }
 
 // JobIndustryRequirement models target industries or companies.
-// JobIndustryRequirement struct updated to make Weight optional
 type JobIndustryRequirement struct {
 	ID          string  `json:"id"`
 	JobID       string  `json:"job_id"`
 	Industry    string  `json:"industry"`
 	CompanyName *string `json:"company_name,omitempty"`
-	Weight      *int    `json:"weight,omitempty"`
 }
 
 // JobSkillMeta represents dictionary entries for skills.
@@ -314,7 +304,6 @@ func (req *UpdateJobProfileReq) Validate() error {
 type JobResponsibilityInput struct {
 	ID             *string `json:"id,omitempty"`
 	Responsibility string  `json:"responsibility" validate:"required"`
-	Weight         *int    `json:"weight,omitempty"`
 }
 
 // JobSkillInput is used for upserting skills.
@@ -322,7 +311,6 @@ type JobSkillInput struct {
 	ID      *string `json:"id,omitempty"`
 	SkillID string  `json:"skill_id" validate:"required"`
 	Type    string  `json:"type" validate:"required" enums:"required,bonus"` // 技能类型: 必需技能/加分技能
-	Weight  *int    `json:"weight,omitempty"`
 }
 
 // Validate validates the JobSkillInput fields against constants
@@ -340,7 +328,6 @@ func (input *JobSkillInput) Validate() error {
 type JobEducationRequirementInput struct {
 	ID            *string `json:"id,omitempty"`
 	EducationType string  `json:"education_type" validate:"required" enums:"unlimited,junior_college,bachelor,master,doctor"` // 学历要求: 不限/大专/本科/硕士/博士
-	Weight        *int    `json:"weight,omitempty"`
 }
 
 // Validate validates the JobEducationRequirementInput fields against constants
@@ -360,7 +347,6 @@ type JobExperienceRequirementInput struct {
 	ExperienceType string  `json:"experience_type" validate:"required" enums:"unlimited,fresh_graduate,under_one_year,one_to_three_years,three_to_five_years,five_to_ten_years,over_ten_years"` // 工作经验: 不限/应届毕业生/1年以下/1-3年/3-5年/5-10年/10年以上
 	MinYears       int     `json:"min_years"`
 	IdealYears     int     `json:"ideal_years"`
-	Weight         *int    `json:"weight,omitempty"`
 }
 
 // Validate validates the JobExperienceRequirementInput fields against constants
@@ -379,7 +365,6 @@ type JobIndustryRequirementInput struct {
 	ID          *string `json:"id,omitempty"`
 	Industry    string  `json:"industry" validate:"required"`
 	CompanyName *string `json:"company_name,omitempty"`
-	Weight      *int    `json:"weight,omitempty"`
 }
 
 // ListJobProfileReq filters job profile listing.

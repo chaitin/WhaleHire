@@ -380,14 +380,9 @@ func (r *JobProfileRepo) createResponsibilities(ctx context.Context, tx *db.Tx, 
 
 	bulk := make([]*db.JobResponsibilityCreate, len(responsibilities))
 	for i, resp := range responsibilities {
-		var weight *int
-		if resp.Weight != 0 {
-			weight = &resp.Weight
-		}
 		bulk[i] = tx.JobResponsibility.Create().
 			SetJobID(jobID).
-			SetResponsibility(resp.Responsibility).
-			SetNillableWeight(weight)
+			SetResponsibility(resp.Responsibility)
 	}
 
 	_, err := tx.JobResponsibility.CreateBulk(bulk...).Save(ctx)
@@ -401,15 +396,10 @@ func (r *JobProfileRepo) createSkills(ctx context.Context, tx *db.Tx, jobID uuid
 
 	bulk := make([]*db.JobSkillCreate, len(skills))
 	for i, skill := range skills {
-		var weight *int
-		if skill.Weight != 0 {
-			weight = &skill.Weight
-		}
 		bulk[i] = tx.JobSkill.Create().
 			SetJobID(jobID).
 			SetSkillID(skill.SkillID).
-			SetType(consts.JobSkillType(skill.Type)).
-			SetNillableWeight(weight)
+			SetType(consts.JobSkillType(skill.Type))
 	}
 
 	_, err := tx.JobSkill.CreateBulk(bulk...).Save(ctx)
@@ -423,14 +413,9 @@ func (r *JobProfileRepo) createEducationRequirements(ctx context.Context, tx *db
 
 	bulk := make([]*db.JobEducationRequirementCreate, len(requirements))
 	for i, req := range requirements {
-		var weight *int
-		if req.Weight != 0 {
-			weight = &req.Weight
-		}
 		bulk[i] = tx.JobEducationRequirement.Create().
 			SetJobID(jobID).
-			SetEducationType(consts.JobEducationType(req.EducationType)).
-			SetNillableWeight(weight)
+			SetEducationType(consts.JobEducationType(req.EducationType))
 	}
 
 	_, err := tx.JobEducationRequirement.CreateBulk(bulk...).Save(ctx)
@@ -444,16 +429,11 @@ func (r *JobProfileRepo) createExperienceRequirements(ctx context.Context, tx *d
 
 	bulk := make([]*db.JobExperienceRequirementCreate, len(requirements))
 	for i, req := range requirements {
-		var weight *int
-		if req.Weight != 0 {
-			weight = &req.Weight
-		}
 		bulk[i] = tx.JobExperienceRequirement.Create().
 			SetJobID(jobID).
 			SetExperienceType(req.ExperienceType).
 			SetMinYears(req.MinYears).
-			SetIdealYears(req.IdealYears).
-			SetNillableWeight(weight)
+			SetIdealYears(req.IdealYears)
 	}
 
 	_, err := tx.JobExperienceRequirement.CreateBulk(bulk...).Save(ctx)
@@ -467,15 +447,10 @@ func (r *JobProfileRepo) createIndustryRequirements(ctx context.Context, tx *db.
 
 	bulk := make([]*db.JobIndustryRequirementCreate, len(requirements))
 	for i, req := range requirements {
-		var weight *int
-		if req.Weight != 0 {
-			weight = &req.Weight
-		}
 		bulk[i] = tx.JobIndustryRequirement.Create().
 			SetJobID(jobID).
-			SetIndustry(req.Industry).
-			SetNillableCompanyName(req.CompanyName).
-			SetNillableWeight(weight)
+			SetNillableIndustry(req.Industry).
+			SetNillableCompanyName(req.CompanyName)
 	}
 
 	_, err := tx.JobIndustryRequirement.CreateBulk(bulk...).Save(ctx)

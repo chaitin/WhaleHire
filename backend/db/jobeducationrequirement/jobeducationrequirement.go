@@ -22,8 +22,6 @@ const (
 	FieldJobID = "job_id"
 	// FieldEducationType holds the string denoting the education_type field in the database.
 	FieldEducationType = "education_type"
-	// FieldWeight holds the string denoting the weight field in the database.
-	FieldWeight = "weight"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -47,7 +45,6 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldJobID,
 	FieldEducationType,
-	FieldWeight,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -70,8 +67,6 @@ func ValidColumn(column string) bool {
 var (
 	Hooks        [1]ent.Hook
 	Interceptors [1]ent.Interceptor
-	// WeightValidator is a validator for the "weight" field. It is called by the builders before save.
-	WeightValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -103,11 +98,6 @@ func ByJobID(opts ...sql.OrderTermOption) OrderOption {
 // ByEducationType orders the results by the education_type field.
 func ByEducationType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEducationType, opts...).ToFunc()
-}
-
-// ByWeight orders the results by the weight field.
-func ByWeight(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWeight, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

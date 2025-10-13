@@ -76,11 +76,6 @@ func CompanyName(v string) predicate.JobIndustryRequirement {
 	return predicate.JobIndustryRequirement(sql.FieldEQ(FieldCompanyName, v))
 }
 
-// Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
-func Weight(v int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldEQ(FieldWeight, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.JobIndustryRequirement {
 	return predicate.JobIndustryRequirement(sql.FieldEQ(FieldCreatedAt, v))
@@ -216,6 +211,16 @@ func IndustryHasSuffix(v string) predicate.JobIndustryRequirement {
 	return predicate.JobIndustryRequirement(sql.FieldHasSuffix(FieldIndustry, v))
 }
 
+// IndustryIsNil applies the IsNil predicate on the "industry" field.
+func IndustryIsNil() predicate.JobIndustryRequirement {
+	return predicate.JobIndustryRequirement(sql.FieldIsNull(FieldIndustry))
+}
+
+// IndustryNotNil applies the NotNil predicate on the "industry" field.
+func IndustryNotNil() predicate.JobIndustryRequirement {
+	return predicate.JobIndustryRequirement(sql.FieldNotNull(FieldIndustry))
+}
+
 // IndustryEqualFold applies the EqualFold predicate on the "industry" field.
 func IndustryEqualFold(v string) predicate.JobIndustryRequirement {
 	return predicate.JobIndustryRequirement(sql.FieldEqualFold(FieldIndustry, v))
@@ -299,56 +304,6 @@ func CompanyNameEqualFold(v string) predicate.JobIndustryRequirement {
 // CompanyNameContainsFold applies the ContainsFold predicate on the "company_name" field.
 func CompanyNameContainsFold(v string) predicate.JobIndustryRequirement {
 	return predicate.JobIndustryRequirement(sql.FieldContainsFold(FieldCompanyName, v))
-}
-
-// WeightEQ applies the EQ predicate on the "weight" field.
-func WeightEQ(v int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldEQ(FieldWeight, v))
-}
-
-// WeightNEQ applies the NEQ predicate on the "weight" field.
-func WeightNEQ(v int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldNEQ(FieldWeight, v))
-}
-
-// WeightIn applies the In predicate on the "weight" field.
-func WeightIn(vs ...int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldIn(FieldWeight, vs...))
-}
-
-// WeightNotIn applies the NotIn predicate on the "weight" field.
-func WeightNotIn(vs ...int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldNotIn(FieldWeight, vs...))
-}
-
-// WeightGT applies the GT predicate on the "weight" field.
-func WeightGT(v int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldGT(FieldWeight, v))
-}
-
-// WeightGTE applies the GTE predicate on the "weight" field.
-func WeightGTE(v int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldGTE(FieldWeight, v))
-}
-
-// WeightLT applies the LT predicate on the "weight" field.
-func WeightLT(v int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldLT(FieldWeight, v))
-}
-
-// WeightLTE applies the LTE predicate on the "weight" field.
-func WeightLTE(v int) predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldLTE(FieldWeight, v))
-}
-
-// WeightIsNil applies the IsNil predicate on the "weight" field.
-func WeightIsNil() predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldIsNull(FieldWeight))
-}
-
-// WeightNotNil applies the NotNil predicate on the "weight" field.
-func WeightNotNil() predicate.JobIndustryRequirement {
-	return predicate.JobIndustryRequirement(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

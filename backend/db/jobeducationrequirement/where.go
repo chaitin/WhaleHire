@@ -73,11 +73,6 @@ func EducationType(v consts.JobEducationType) predicate.JobEducationRequirement 
 	return predicate.JobEducationRequirement(sql.FieldEQ(FieldEducationType, vc))
 }
 
-// Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
-func Weight(v int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldEQ(FieldWeight, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.JobEducationRequirement {
 	return predicate.JobEducationRequirement(sql.FieldEQ(FieldCreatedAt, v))
@@ -250,56 +245,6 @@ func EducationTypeEqualFold(v consts.JobEducationType) predicate.JobEducationReq
 func EducationTypeContainsFold(v consts.JobEducationType) predicate.JobEducationRequirement {
 	vc := string(v)
 	return predicate.JobEducationRequirement(sql.FieldContainsFold(FieldEducationType, vc))
-}
-
-// WeightEQ applies the EQ predicate on the "weight" field.
-func WeightEQ(v int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldEQ(FieldWeight, v))
-}
-
-// WeightNEQ applies the NEQ predicate on the "weight" field.
-func WeightNEQ(v int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldNEQ(FieldWeight, v))
-}
-
-// WeightIn applies the In predicate on the "weight" field.
-func WeightIn(vs ...int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldIn(FieldWeight, vs...))
-}
-
-// WeightNotIn applies the NotIn predicate on the "weight" field.
-func WeightNotIn(vs ...int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldNotIn(FieldWeight, vs...))
-}
-
-// WeightGT applies the GT predicate on the "weight" field.
-func WeightGT(v int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldGT(FieldWeight, v))
-}
-
-// WeightGTE applies the GTE predicate on the "weight" field.
-func WeightGTE(v int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldGTE(FieldWeight, v))
-}
-
-// WeightLT applies the LT predicate on the "weight" field.
-func WeightLT(v int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldLT(FieldWeight, v))
-}
-
-// WeightLTE applies the LTE predicate on the "weight" field.
-func WeightLTE(v int) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldLTE(FieldWeight, v))
-}
-
-// WeightIsNil applies the IsNil predicate on the "weight" field.
-func WeightIsNil() predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldIsNull(FieldWeight))
-}
-
-// WeightNotNil applies the NotNil predicate on the "weight" field.
-func WeightNotNil() predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

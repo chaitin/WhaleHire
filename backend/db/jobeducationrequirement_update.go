@@ -86,33 +86,6 @@ func (jeru *JobEducationRequirementUpdate) ClearEducationType() *JobEducationReq
 	return jeru
 }
 
-// SetWeight sets the "weight" field.
-func (jeru *JobEducationRequirementUpdate) SetWeight(i int) *JobEducationRequirementUpdate {
-	jeru.mutation.ResetWeight()
-	jeru.mutation.SetWeight(i)
-	return jeru
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jeru *JobEducationRequirementUpdate) SetNillableWeight(i *int) *JobEducationRequirementUpdate {
-	if i != nil {
-		jeru.SetWeight(*i)
-	}
-	return jeru
-}
-
-// AddWeight adds i to the "weight" field.
-func (jeru *JobEducationRequirementUpdate) AddWeight(i int) *JobEducationRequirementUpdate {
-	jeru.mutation.AddWeight(i)
-	return jeru
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (jeru *JobEducationRequirementUpdate) ClearWeight() *JobEducationRequirementUpdate {
-	jeru.mutation.ClearWeight()
-	return jeru
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (jeru *JobEducationRequirementUpdate) SetUpdatedAt(t time.Time) *JobEducationRequirementUpdate {
 	jeru.mutation.SetUpdatedAt(t)
@@ -179,11 +152,6 @@ func (jeru *JobEducationRequirementUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jeru *JobEducationRequirementUpdate) check() error {
-	if v, ok := jeru.mutation.Weight(); ok {
-		if err := jobeducationrequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.weight": %w`, err)}
-		}
-	}
 	if jeru.mutation.JobCleared() && len(jeru.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobEducationRequirement.job"`)
 	}
@@ -219,15 +187,6 @@ func (jeru *JobEducationRequirementUpdate) sqlSave(ctx context.Context) (n int, 
 	}
 	if jeru.mutation.EducationTypeCleared() {
 		_spec.ClearField(jobeducationrequirement.FieldEducationType, field.TypeString)
-	}
-	if value, ok := jeru.mutation.Weight(); ok {
-		_spec.SetField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jeru.mutation.AddedWeight(); ok {
-		_spec.AddField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
-	}
-	if jeru.mutation.WeightCleared() {
-		_spec.ClearField(jobeducationrequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobeducationrequirement.FieldUpdatedAt, field.TypeTime, value)
@@ -337,33 +296,6 @@ func (jeruo *JobEducationRequirementUpdateOne) ClearEducationType() *JobEducatio
 	return jeruo
 }
 
-// SetWeight sets the "weight" field.
-func (jeruo *JobEducationRequirementUpdateOne) SetWeight(i int) *JobEducationRequirementUpdateOne {
-	jeruo.mutation.ResetWeight()
-	jeruo.mutation.SetWeight(i)
-	return jeruo
-}
-
-// SetNillableWeight sets the "weight" field if the given value is not nil.
-func (jeruo *JobEducationRequirementUpdateOne) SetNillableWeight(i *int) *JobEducationRequirementUpdateOne {
-	if i != nil {
-		jeruo.SetWeight(*i)
-	}
-	return jeruo
-}
-
-// AddWeight adds i to the "weight" field.
-func (jeruo *JobEducationRequirementUpdateOne) AddWeight(i int) *JobEducationRequirementUpdateOne {
-	jeruo.mutation.AddWeight(i)
-	return jeruo
-}
-
-// ClearWeight clears the value of the "weight" field.
-func (jeruo *JobEducationRequirementUpdateOne) ClearWeight() *JobEducationRequirementUpdateOne {
-	jeruo.mutation.ClearWeight()
-	return jeruo
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (jeruo *JobEducationRequirementUpdateOne) SetUpdatedAt(t time.Time) *JobEducationRequirementUpdateOne {
 	jeruo.mutation.SetUpdatedAt(t)
@@ -443,11 +375,6 @@ func (jeruo *JobEducationRequirementUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jeruo *JobEducationRequirementUpdateOne) check() error {
-	if v, ok := jeruo.mutation.Weight(); ok {
-		if err := jobeducationrequirement.WeightValidator(v); err != nil {
-			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.weight": %w`, err)}
-		}
-	}
 	if jeruo.mutation.JobCleared() && len(jeruo.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobEducationRequirement.job"`)
 	}
@@ -500,15 +427,6 @@ func (jeruo *JobEducationRequirementUpdateOne) sqlSave(ctx context.Context) (_no
 	}
 	if jeruo.mutation.EducationTypeCleared() {
 		_spec.ClearField(jobeducationrequirement.FieldEducationType, field.TypeString)
-	}
-	if value, ok := jeruo.mutation.Weight(); ok {
-		_spec.SetField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
-	}
-	if value, ok := jeruo.mutation.AddedWeight(); ok {
-		_spec.AddField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
-	}
-	if jeruo.mutation.WeightCleared() {
-		_spec.ClearField(jobeducationrequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobeducationrequirement.FieldUpdatedAt, field.TypeTime, value)
