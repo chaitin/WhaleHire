@@ -37,7 +37,7 @@ import {
   createJobProfile,
   updateJobProfile,
   deleteJobProfile,
-  listJobSkillMeta,
+  listJobSkillMetaSimple,
   getJobProfile,
 } from '@/services/job-profile';
 import { listDepartments } from '@/services/department';
@@ -190,7 +190,7 @@ export function JobProfilePage() {
     try {
       setSkillsLoading(true);
       setSkillsError(null);
-      const response = await listJobSkillMeta();
+      const response = await listJobSkillMetaSimple();
       setAvailableSkills(response.skills || []);
     } catch (err) {
       console.error('获取技能列表失败:', err);

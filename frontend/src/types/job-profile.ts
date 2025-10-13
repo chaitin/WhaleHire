@@ -198,3 +198,17 @@ export interface JobProfileQueryParams {
   salary_max?: number;
   next_token?: string;
 }
+
+// 技能元数据查询参数
+export interface SkillMetaQueryParams {
+  page?: number;
+  size?: number;
+  keyword?: string;
+  next_token?: string;
+}
+
+// 技能元数据列表响应
+export interface ListSkillMetaResp {
+  items: JobSkillMeta[];
+  page_info: PageInfo;
+}
