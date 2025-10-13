@@ -7,6 +7,8 @@ import type {
   SearchJobProfilesResp,
   JobProfileQueryParams,
   JobSkillMeta,
+  SkillMetaQueryParams,
+  ListSkillMetaResp,
 } from '@/types/job-profile';
 
 // 获取岗位画像列表
@@ -120,10 +122,34 @@ export const deleteJobProfile = async (id: string): Promise<void> => {
 };
 
 // 获取技能元数据列表
-export const listJobSkillMeta = async (): Promise<{
+export const listJobSkillMeta = async (
+  params?: SkillMetaQueryParams
+): Promise<ListSkillMetaResp> => {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page) {
+    queryParams.append('page', params.page.toString());
+  }
+  if (params?.size) {
+    queryParams.append('size', params.size.toString());
+  }
+  if (params?.keyword) {
+    queryParams.append('keyword', params.keyword);
+  }
+  if (params?.next_token) {
+    queryParams.append('next_token', params.next_token);
+  }
+
+  const url = `/v1/job-skills/meta${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  return await apiGet<ListSkillMetaResp>(url);
+};
+
+// 获取技能元数据列表（向后兼容的简化版本）
+export const listJobSkillMetaSimple = async (): Promise<{
   skills: JobSkillMeta[];
 }> => {
-  return await apiGet<{ skills: JobSkillMeta[] }>('/v1/job-skills/meta');
+  const response = await listJobSkillMeta();
+  return { skills: response.items };
 };
 
 // 创建技能元数据
@@ -131,4 +157,17 @@ export const createJobSkillMeta = async (data: {
   name: string;
 }): Promise<JobSkillMeta> => {
   return await apiPost<JobSkillMeta>('/v1/job-skills/meta', data);
+};
+
+// 更新技能元数据
+export const updateJobSkillMeta = async (
+  id: string,
+  data: { name: string }
+): Promise<JobSkillMeta> => {
+  return await apiPut<JobSkillMeta>(`/v1/job-skills/meta/${id}`, data);
+};
+
+// 删除技能元数据
+export const deleteJobSkillMeta = async (id: string): Promise<void> => {
+  return await apiDelete<void>(`/v1/job-skills/meta/${id}`);
 };
