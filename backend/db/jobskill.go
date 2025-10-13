@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
@@ -27,7 +28,7 @@ type JobSkill struct {
 	// SkillID holds the value of the "skill_id" field.
 	SkillID uuid.UUID `json:"skill_id,omitempty"`
 	// Type holds the value of the "type" field.
-	Type jobskill.Type `json:"type,omitempty"`
+	Type consts.JobSkillType `json:"type,omitempty"`
 	// Weight holds the value of the "weight" field.
 	Weight int `json:"weight,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -129,7 +130,7 @@ func (js *JobSkill) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				js.Type = jobskill.Type(value.String)
+				js.Type = consts.JobSkillType(value.String)
 			}
 		case jobskill.FieldWeight:
 			if value, ok := values[i].(*sql.NullInt64); !ok {

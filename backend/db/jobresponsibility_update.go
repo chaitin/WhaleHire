@@ -79,24 +79,30 @@ func (jru *JobResponsibilityUpdate) SetNillableResponsibility(s *string) *JobRes
 	return jru
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (jru *JobResponsibilityUpdate) SetSortOrder(i int) *JobResponsibilityUpdate {
-	jru.mutation.ResetSortOrder()
-	jru.mutation.SetSortOrder(i)
+// SetWeight sets the "weight" field.
+func (jru *JobResponsibilityUpdate) SetWeight(i int) *JobResponsibilityUpdate {
+	jru.mutation.ResetWeight()
+	jru.mutation.SetWeight(i)
 	return jru
 }
 
-// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (jru *JobResponsibilityUpdate) SetNillableSortOrder(i *int) *JobResponsibilityUpdate {
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (jru *JobResponsibilityUpdate) SetNillableWeight(i *int) *JobResponsibilityUpdate {
 	if i != nil {
-		jru.SetSortOrder(*i)
+		jru.SetWeight(*i)
 	}
 	return jru
 }
 
-// AddSortOrder adds i to the "sort_order" field.
-func (jru *JobResponsibilityUpdate) AddSortOrder(i int) *JobResponsibilityUpdate {
-	jru.mutation.AddSortOrder(i)
+// AddWeight adds i to the "weight" field.
+func (jru *JobResponsibilityUpdate) AddWeight(i int) *JobResponsibilityUpdate {
+	jru.mutation.AddWeight(i)
+	return jru
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (jru *JobResponsibilityUpdate) ClearWeight() *JobResponsibilityUpdate {
+	jru.mutation.ClearWeight()
 	return jru
 }
 
@@ -166,6 +172,11 @@ func (jru *JobResponsibilityUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jru *JobResponsibilityUpdate) check() error {
+	if v, ok := jru.mutation.Weight(); ok {
+		if err := jobresponsibility.WeightValidator(v); err != nil {
+			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobResponsibility.weight": %w`, err)}
+		}
+	}
 	if jru.mutation.JobCleared() && len(jru.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobResponsibility.job"`)
 	}
@@ -199,11 +210,14 @@ func (jru *JobResponsibilityUpdate) sqlSave(ctx context.Context) (n int, err err
 	if value, ok := jru.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
 	}
-	if value, ok := jru.mutation.SortOrder(); ok {
-		_spec.SetField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
+	if value, ok := jru.mutation.Weight(); ok {
+		_spec.SetField(jobresponsibility.FieldWeight, field.TypeInt, value)
 	}
-	if value, ok := jru.mutation.AddedSortOrder(); ok {
-		_spec.AddField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
+	if value, ok := jru.mutation.AddedWeight(); ok {
+		_spec.AddField(jobresponsibility.FieldWeight, field.TypeInt, value)
+	}
+	if jru.mutation.WeightCleared() {
+		_spec.ClearField(jobresponsibility.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)
@@ -307,24 +321,30 @@ func (jruo *JobResponsibilityUpdateOne) SetNillableResponsibility(s *string) *Jo
 	return jruo
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (jruo *JobResponsibilityUpdateOne) SetSortOrder(i int) *JobResponsibilityUpdateOne {
-	jruo.mutation.ResetSortOrder()
-	jruo.mutation.SetSortOrder(i)
+// SetWeight sets the "weight" field.
+func (jruo *JobResponsibilityUpdateOne) SetWeight(i int) *JobResponsibilityUpdateOne {
+	jruo.mutation.ResetWeight()
+	jruo.mutation.SetWeight(i)
 	return jruo
 }
 
-// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (jruo *JobResponsibilityUpdateOne) SetNillableSortOrder(i *int) *JobResponsibilityUpdateOne {
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (jruo *JobResponsibilityUpdateOne) SetNillableWeight(i *int) *JobResponsibilityUpdateOne {
 	if i != nil {
-		jruo.SetSortOrder(*i)
+		jruo.SetWeight(*i)
 	}
 	return jruo
 }
 
-// AddSortOrder adds i to the "sort_order" field.
-func (jruo *JobResponsibilityUpdateOne) AddSortOrder(i int) *JobResponsibilityUpdateOne {
-	jruo.mutation.AddSortOrder(i)
+// AddWeight adds i to the "weight" field.
+func (jruo *JobResponsibilityUpdateOne) AddWeight(i int) *JobResponsibilityUpdateOne {
+	jruo.mutation.AddWeight(i)
+	return jruo
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (jruo *JobResponsibilityUpdateOne) ClearWeight() *JobResponsibilityUpdateOne {
+	jruo.mutation.ClearWeight()
 	return jruo
 }
 
@@ -407,6 +427,11 @@ func (jruo *JobResponsibilityUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jruo *JobResponsibilityUpdateOne) check() error {
+	if v, ok := jruo.mutation.Weight(); ok {
+		if err := jobresponsibility.WeightValidator(v); err != nil {
+			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobResponsibility.weight": %w`, err)}
+		}
+	}
 	if jruo.mutation.JobCleared() && len(jruo.mutation.JobIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "JobResponsibility.job"`)
 	}
@@ -457,11 +482,14 @@ func (jruo *JobResponsibilityUpdateOne) sqlSave(ctx context.Context) (_node *Job
 	if value, ok := jruo.mutation.Responsibility(); ok {
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
 	}
-	if value, ok := jruo.mutation.SortOrder(); ok {
-		_spec.SetField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
+	if value, ok := jruo.mutation.Weight(); ok {
+		_spec.SetField(jobresponsibility.FieldWeight, field.TypeInt, value)
 	}
-	if value, ok := jruo.mutation.AddedSortOrder(); ok {
-		_spec.AddField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
+	if value, ok := jruo.mutation.AddedWeight(); ok {
+		_spec.AddField(jobresponsibility.FieldWeight, field.TypeInt, value)
+	}
+	if jruo.mutation.WeightCleared() {
+		_spec.ClearField(jobresponsibility.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldUpdatedAt, field.TypeTime, value)

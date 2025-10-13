@@ -22,8 +22,8 @@ const (
 	FieldJobID = "job_id"
 	// FieldResponsibility holds the string denoting the responsibility field in the database.
 	FieldResponsibility = "responsibility"
-	// FieldSortOrder holds the string denoting the sort_order field in the database.
-	FieldSortOrder = "sort_order"
+	// FieldWeight holds the string denoting the weight field in the database.
+	FieldWeight = "weight"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -47,7 +47,7 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldJobID,
 	FieldResponsibility,
-	FieldSortOrder,
+	FieldWeight,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -70,8 +70,8 @@ func ValidColumn(column string) bool {
 var (
 	Hooks        [1]ent.Hook
 	Interceptors [1]ent.Interceptor
-	// DefaultSortOrder holds the default value on creation for the "sort_order" field.
-	DefaultSortOrder int
+	// WeightValidator is a validator for the "weight" field. It is called by the builders before save.
+	WeightValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -105,9 +105,9 @@ func ByResponsibility(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResponsibility, opts...).ToFunc()
 }
 
-// BySortOrder orders the results by the sort_order field.
-func BySortOrder(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSortOrder, opts...).ToFunc()
+// ByWeight orders the results by the weight field.
+func ByWeight(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWeight, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

@@ -341,6 +341,16 @@ func WeightLTE(v int) predicate.JobIndustryRequirement {
 	return predicate.JobIndustryRequirement(sql.FieldLTE(FieldWeight, v))
 }
 
+// WeightIsNil applies the IsNil predicate on the "weight" field.
+func WeightIsNil() predicate.JobIndustryRequirement {
+	return predicate.JobIndustryRequirement(sql.FieldIsNull(FieldWeight))
+}
+
+// WeightNotNil applies the NotNil predicate on the "weight" field.
+func WeightNotNil() predicate.JobIndustryRequirement {
+	return predicate.JobIndustryRequirement(sql.FieldNotNull(FieldWeight))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.JobIndustryRequirement {
 	return predicate.JobIndustryRequirement(sql.FieldEQ(FieldCreatedAt, v))

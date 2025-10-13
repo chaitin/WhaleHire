@@ -48,3 +48,6 @@ other = " Jobprofile ID is required"
 
 [err-jobskillmeta-required]
 other = " JobSkillMeta ID is required"
+
+[err-invalid-param]
+other = "Invalid Param"

@@ -20,6 +20,8 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldJobID holds the string denoting the job_id field in the database.
 	FieldJobID = "job_id"
+	// FieldExperienceType holds the string denoting the experience_type field in the database.
+	FieldExperienceType = "experience_type"
 	// FieldMinYears holds the string denoting the min_years field in the database.
 	FieldMinYears = "min_years"
 	// FieldIdealYears holds the string denoting the ideal_years field in the database.
@@ -48,6 +50,7 @@ var Columns = []string{
 	FieldID,
 	FieldDeletedAt,
 	FieldJobID,
+	FieldExperienceType,
 	FieldMinYears,
 	FieldIdealYears,
 	FieldWeight,
@@ -109,6 +112,11 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByJobID orders the results by the job_id field.
 func ByJobID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldJobID, opts...).ToFunc()
+}
+
+// ByExperienceType orders the results by the experience_type field.
+func ByExperienceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExperienceType, opts...).ToFunc()
 }
 
 // ByMinYears orders the results by the min_years field.

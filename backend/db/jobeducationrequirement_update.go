@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
@@ -65,17 +66,23 @@ func (jeru *JobEducationRequirementUpdate) SetNillableJobID(u *uuid.UUID) *JobEd
 	return jeru
 }
 
-// SetMinDegree sets the "min_degree" field.
-func (jeru *JobEducationRequirementUpdate) SetMinDegree(s string) *JobEducationRequirementUpdate {
-	jeru.mutation.SetMinDegree(s)
+// SetEducationType sets the "education_type" field.
+func (jeru *JobEducationRequirementUpdate) SetEducationType(cet consts.JobEducationType) *JobEducationRequirementUpdate {
+	jeru.mutation.SetEducationType(cet)
 	return jeru
 }
 
-// SetNillableMinDegree sets the "min_degree" field if the given value is not nil.
-func (jeru *JobEducationRequirementUpdate) SetNillableMinDegree(s *string) *JobEducationRequirementUpdate {
-	if s != nil {
-		jeru.SetMinDegree(*s)
+// SetNillableEducationType sets the "education_type" field if the given value is not nil.
+func (jeru *JobEducationRequirementUpdate) SetNillableEducationType(cet *consts.JobEducationType) *JobEducationRequirementUpdate {
+	if cet != nil {
+		jeru.SetEducationType(*cet)
 	}
+	return jeru
+}
+
+// ClearEducationType clears the value of the "education_type" field.
+func (jeru *JobEducationRequirementUpdate) ClearEducationType() *JobEducationRequirementUpdate {
+	jeru.mutation.ClearEducationType()
 	return jeru
 }
 
@@ -97,6 +104,12 @@ func (jeru *JobEducationRequirementUpdate) SetNillableWeight(i *int) *JobEducati
 // AddWeight adds i to the "weight" field.
 func (jeru *JobEducationRequirementUpdate) AddWeight(i int) *JobEducationRequirementUpdate {
 	jeru.mutation.AddWeight(i)
+	return jeru
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (jeru *JobEducationRequirementUpdate) ClearWeight() *JobEducationRequirementUpdate {
+	jeru.mutation.ClearWeight()
 	return jeru
 }
 
@@ -166,11 +179,6 @@ func (jeru *JobEducationRequirementUpdate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jeru *JobEducationRequirementUpdate) check() error {
-	if v, ok := jeru.mutation.MinDegree(); ok {
-		if err := jobeducationrequirement.MinDegreeValidator(v); err != nil {
-			return &ValidationError{Name: "min_degree", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.min_degree": %w`, err)}
-		}
-	}
 	if v, ok := jeru.mutation.Weight(); ok {
 		if err := jobeducationrequirement.WeightValidator(v); err != nil {
 			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.weight": %w`, err)}
@@ -206,14 +214,20 @@ func (jeru *JobEducationRequirementUpdate) sqlSave(ctx context.Context) (n int, 
 	if jeru.mutation.DeletedAtCleared() {
 		_spec.ClearField(jobeducationrequirement.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := jeru.mutation.MinDegree(); ok {
-		_spec.SetField(jobeducationrequirement.FieldMinDegree, field.TypeString, value)
+	if value, ok := jeru.mutation.EducationType(); ok {
+		_spec.SetField(jobeducationrequirement.FieldEducationType, field.TypeString, value)
+	}
+	if jeru.mutation.EducationTypeCleared() {
+		_spec.ClearField(jobeducationrequirement.FieldEducationType, field.TypeString)
 	}
 	if value, ok := jeru.mutation.Weight(); ok {
 		_spec.SetField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
 	}
 	if value, ok := jeru.mutation.AddedWeight(); ok {
 		_spec.AddField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
+	}
+	if jeru.mutation.WeightCleared() {
+		_spec.ClearField(jobeducationrequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobeducationrequirement.FieldUpdatedAt, field.TypeTime, value)
@@ -303,17 +317,23 @@ func (jeruo *JobEducationRequirementUpdateOne) SetNillableJobID(u *uuid.UUID) *J
 	return jeruo
 }
 
-// SetMinDegree sets the "min_degree" field.
-func (jeruo *JobEducationRequirementUpdateOne) SetMinDegree(s string) *JobEducationRequirementUpdateOne {
-	jeruo.mutation.SetMinDegree(s)
+// SetEducationType sets the "education_type" field.
+func (jeruo *JobEducationRequirementUpdateOne) SetEducationType(cet consts.JobEducationType) *JobEducationRequirementUpdateOne {
+	jeruo.mutation.SetEducationType(cet)
 	return jeruo
 }
 
-// SetNillableMinDegree sets the "min_degree" field if the given value is not nil.
-func (jeruo *JobEducationRequirementUpdateOne) SetNillableMinDegree(s *string) *JobEducationRequirementUpdateOne {
-	if s != nil {
-		jeruo.SetMinDegree(*s)
+// SetNillableEducationType sets the "education_type" field if the given value is not nil.
+func (jeruo *JobEducationRequirementUpdateOne) SetNillableEducationType(cet *consts.JobEducationType) *JobEducationRequirementUpdateOne {
+	if cet != nil {
+		jeruo.SetEducationType(*cet)
 	}
+	return jeruo
+}
+
+// ClearEducationType clears the value of the "education_type" field.
+func (jeruo *JobEducationRequirementUpdateOne) ClearEducationType() *JobEducationRequirementUpdateOne {
+	jeruo.mutation.ClearEducationType()
 	return jeruo
 }
 
@@ -335,6 +355,12 @@ func (jeruo *JobEducationRequirementUpdateOne) SetNillableWeight(i *int) *JobEdu
 // AddWeight adds i to the "weight" field.
 func (jeruo *JobEducationRequirementUpdateOne) AddWeight(i int) *JobEducationRequirementUpdateOne {
 	jeruo.mutation.AddWeight(i)
+	return jeruo
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (jeruo *JobEducationRequirementUpdateOne) ClearWeight() *JobEducationRequirementUpdateOne {
+	jeruo.mutation.ClearWeight()
 	return jeruo
 }
 
@@ -417,11 +443,6 @@ func (jeruo *JobEducationRequirementUpdateOne) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (jeruo *JobEducationRequirementUpdateOne) check() error {
-	if v, ok := jeruo.mutation.MinDegree(); ok {
-		if err := jobeducationrequirement.MinDegreeValidator(v); err != nil {
-			return &ValidationError{Name: "min_degree", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.min_degree": %w`, err)}
-		}
-	}
 	if v, ok := jeruo.mutation.Weight(); ok {
 		if err := jobeducationrequirement.WeightValidator(v); err != nil {
 			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobEducationRequirement.weight": %w`, err)}
@@ -474,14 +495,20 @@ func (jeruo *JobEducationRequirementUpdateOne) sqlSave(ctx context.Context) (_no
 	if jeruo.mutation.DeletedAtCleared() {
 		_spec.ClearField(jobeducationrequirement.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := jeruo.mutation.MinDegree(); ok {
-		_spec.SetField(jobeducationrequirement.FieldMinDegree, field.TypeString, value)
+	if value, ok := jeruo.mutation.EducationType(); ok {
+		_spec.SetField(jobeducationrequirement.FieldEducationType, field.TypeString, value)
+	}
+	if jeruo.mutation.EducationTypeCleared() {
+		_spec.ClearField(jobeducationrequirement.FieldEducationType, field.TypeString)
 	}
 	if value, ok := jeruo.mutation.Weight(); ok {
 		_spec.SetField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
 	}
 	if value, ok := jeruo.mutation.AddedWeight(); ok {
 		_spec.AddField(jobeducationrequirement.FieldWeight, field.TypeInt, value)
+	}
+	if jeruo.mutation.WeightCleared() {
+		_spec.ClearField(jobeducationrequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobeducationrequirement.FieldUpdatedAt, field.TypeTime, value)

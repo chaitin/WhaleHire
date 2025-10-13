@@ -120,6 +120,12 @@ func (jiru *JobIndustryRequirementUpdate) AddWeight(i int) *JobIndustryRequireme
 	return jiru
 }
 
+// ClearWeight clears the value of the "weight" field.
+func (jiru *JobIndustryRequirementUpdate) ClearWeight() *JobIndustryRequirementUpdate {
+	jiru.mutation.ClearWeight()
+	return jiru
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (jiru *JobIndustryRequirementUpdate) SetUpdatedAt(t time.Time) *JobIndustryRequirementUpdate {
 	jiru.mutation.SetUpdatedAt(t)
@@ -245,6 +251,9 @@ func (jiru *JobIndustryRequirementUpdate) sqlSave(ctx context.Context) (n int, e
 	}
 	if value, ok := jiru.mutation.AddedWeight(); ok {
 		_spec.AddField(jobindustryrequirement.FieldWeight, field.TypeInt, value)
+	}
+	if jiru.mutation.WeightCleared() {
+		_spec.ClearField(jobindustryrequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jiru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobindustryrequirement.FieldUpdatedAt, field.TypeTime, value)
@@ -386,6 +395,12 @@ func (jiruo *JobIndustryRequirementUpdateOne) SetNillableWeight(i *int) *JobIndu
 // AddWeight adds i to the "weight" field.
 func (jiruo *JobIndustryRequirementUpdateOne) AddWeight(i int) *JobIndustryRequirementUpdateOne {
 	jiruo.mutation.AddWeight(i)
+	return jiruo
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (jiruo *JobIndustryRequirementUpdateOne) ClearWeight() *JobIndustryRequirementUpdateOne {
+	jiruo.mutation.ClearWeight()
 	return jiruo
 }
 
@@ -544,6 +559,9 @@ func (jiruo *JobIndustryRequirementUpdateOne) sqlSave(ctx context.Context) (_nod
 	}
 	if value, ok := jiruo.mutation.AddedWeight(); ok {
 		_spec.AddField(jobindustryrequirement.FieldWeight, field.TypeInt, value)
+	}
+	if jiruo.mutation.WeightCleared() {
+		_spec.ClearField(jobindustryrequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jiruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobindustryrequirement.FieldUpdatedAt, field.TypeTime, value)

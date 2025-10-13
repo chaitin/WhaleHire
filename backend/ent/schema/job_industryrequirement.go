@@ -34,7 +34,7 @@ func (JobIndustryRequirement) Fields() []ent.Field {
 		field.UUID("job_id", uuid.UUID{}),
 		field.String("industry").MaxLen(100),
 		field.String("company_name").Optional().Nillable().MaxLen(200),
-		field.Int("weight").Range(0, 100),
+		field.Int("weight").Range(0, 100).Optional(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

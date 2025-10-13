@@ -71,6 +71,14 @@ func (jirc *JobIndustryRequirementCreate) SetWeight(i int) *JobIndustryRequireme
 	return jirc
 }
 
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (jirc *JobIndustryRequirementCreate) SetNillableWeight(i *int) *JobIndustryRequirementCreate {
+	if i != nil {
+		jirc.SetWeight(*i)
+	}
+	return jirc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (jirc *JobIndustryRequirementCreate) SetCreatedAt(t time.Time) *JobIndustryRequirementCreate {
 	jirc.mutation.SetCreatedAt(t)
@@ -196,9 +204,6 @@ func (jirc *JobIndustryRequirementCreate) check() error {
 		if err := jobindustryrequirement.CompanyNameValidator(v); err != nil {
 			return &ValidationError{Name: "company_name", err: fmt.Errorf(`db: validator failed for field "JobIndustryRequirement.company_name": %w`, err)}
 		}
-	}
-	if _, ok := jirc.mutation.Weight(); !ok {
-		return &ValidationError{Name: "weight", err: errors.New(`db: missing required field "JobIndustryRequirement.weight"`)}
 	}
 	if v, ok := jirc.mutation.Weight(); ok {
 		if err := jobindustryrequirement.WeightValidator(v); err != nil {
@@ -421,6 +426,12 @@ func (u *JobIndustryRequirementUpsert) AddWeight(v int) *JobIndustryRequirementU
 	return u
 }
 
+// ClearWeight clears the value of the "weight" field.
+func (u *JobIndustryRequirementUpsert) ClearWeight() *JobIndustryRequirementUpsert {
+	u.SetNull(jobindustryrequirement.FieldWeight)
+	return u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (u *JobIndustryRequirementUpsert) SetUpdatedAt(v time.Time) *JobIndustryRequirementUpsert {
 	u.Set(jobindustryrequirement.FieldUpdatedAt, v)
@@ -572,6 +583,13 @@ func (u *JobIndustryRequirementUpsertOne) AddWeight(v int) *JobIndustryRequireme
 func (u *JobIndustryRequirementUpsertOne) UpdateWeight() *JobIndustryRequirementUpsertOne {
 	return u.Update(func(s *JobIndustryRequirementUpsert) {
 		s.UpdateWeight()
+	})
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobIndustryRequirementUpsertOne) ClearWeight() *JobIndustryRequirementUpsertOne {
+	return u.Update(func(s *JobIndustryRequirementUpsert) {
+		s.ClearWeight()
 	})
 }
 
@@ -895,6 +913,13 @@ func (u *JobIndustryRequirementUpsertBulk) AddWeight(v int) *JobIndustryRequirem
 func (u *JobIndustryRequirementUpsertBulk) UpdateWeight() *JobIndustryRequirementUpsertBulk {
 	return u.Update(func(s *JobIndustryRequirementUpsert) {
 		s.UpdateWeight()
+	})
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobIndustryRequirementUpsertBulk) ClearWeight() *JobIndustryRequirementUpsertBulk {
+	return u.Update(func(s *JobIndustryRequirementUpsert) {
+		s.ClearWeight()
 	})
 }
 

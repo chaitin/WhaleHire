@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -69,6 +70,12 @@ func JobID(v uuid.UUID) predicate.JobSkill {
 // SkillID applies equality check predicate on the "skill_id" field. It's identical to SkillIDEQ.
 func SkillID(v uuid.UUID) predicate.JobSkill {
 	return predicate.JobSkill(sql.FieldEQ(FieldSkillID, v))
+}
+
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldEQ(FieldType, vc))
 }
 
 // Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
@@ -177,23 +184,87 @@ func SkillIDNotIn(vs ...uuid.UUID) predicate.JobSkill {
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v Type) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldEQ(FieldType, v))
+func TypeEQ(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldEQ(FieldType, vc))
 }
 
 // TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v Type) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldNEQ(FieldType, v))
+func TypeNEQ(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldNEQ(FieldType, vc))
 }
 
 // TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...Type) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldIn(FieldType, vs...))
+func TypeIn(vs ...consts.JobSkillType) predicate.JobSkill {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobSkill(sql.FieldIn(FieldType, v...))
 }
 
 // TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...Type) predicate.JobSkill {
-	return predicate.JobSkill(sql.FieldNotIn(FieldType, vs...))
+func TypeNotIn(vs ...consts.JobSkillType) predicate.JobSkill {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobSkill(sql.FieldNotIn(FieldType, v...))
+}
+
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldGT(FieldType, vc))
+}
+
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldGTE(FieldType, vc))
+}
+
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldLT(FieldType, vc))
+}
+
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldLTE(FieldType, vc))
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldContains(FieldType, vc))
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldHasPrefix(FieldType, vc))
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldHasSuffix(FieldType, vc))
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldEqualFold(FieldType, vc))
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v consts.JobSkillType) predicate.JobSkill {
+	vc := string(v)
+	return predicate.JobSkill(sql.FieldContainsFold(FieldType, vc))
 }
 
 // WeightEQ applies the EQ predicate on the "weight" field.
@@ -234,6 +305,16 @@ func WeightLT(v int) predicate.JobSkill {
 // WeightLTE applies the LTE predicate on the "weight" field.
 func WeightLTE(v int) predicate.JobSkill {
 	return predicate.JobSkill(sql.FieldLTE(FieldWeight, v))
+}
+
+// WeightIsNil applies the IsNil predicate on the "weight" field.
+func WeightIsNil() predicate.JobSkill {
+	return predicate.JobSkill(sql.FieldIsNull(FieldWeight))
+}
+
+// WeightNotNil applies the NotNil predicate on the "weight" field.
+func WeightNotNil() predicate.JobSkill {
+	return predicate.JobSkill(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

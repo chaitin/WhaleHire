@@ -86,6 +86,20 @@ func (jpc *JobPositionCreate) SetNillableStatus(cps *consts.JobPositionStatus) *
 	return jpc
 }
 
+// SetWorkType sets the "work_type" field.
+func (jpc *JobPositionCreate) SetWorkType(cwt consts.JobWorkType) *JobPositionCreate {
+	jpc.mutation.SetWorkType(cwt)
+	return jpc
+}
+
+// SetNillableWorkType sets the "work_type" field if the given value is not nil.
+func (jpc *JobPositionCreate) SetNillableWorkType(cwt *consts.JobWorkType) *JobPositionCreate {
+	if cwt != nil {
+		jpc.SetWorkType(*cwt)
+	}
+	return jpc
+}
+
 // SetLocation sets the "location" field.
 func (jpc *JobPositionCreate) SetLocation(s string) *JobPositionCreate {
 	jpc.mutation.SetLocation(s)
@@ -426,6 +440,10 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 		_spec.SetField(jobposition.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
+	if value, ok := jpc.mutation.WorkType(); ok {
+		_spec.SetField(jobposition.FieldWorkType, field.TypeString, value)
+		_node.WorkType = value
+	}
 	if value, ok := jpc.mutation.Location(); ok {
 		_spec.SetField(jobposition.FieldLocation, field.TypeString, value)
 		_node.Location = &value
@@ -688,6 +706,24 @@ func (u *JobPositionUpsert) UpdateStatus() *JobPositionUpsert {
 	return u
 }
 
+// SetWorkType sets the "work_type" field.
+func (u *JobPositionUpsert) SetWorkType(v consts.JobWorkType) *JobPositionUpsert {
+	u.Set(jobposition.FieldWorkType, v)
+	return u
+}
+
+// UpdateWorkType sets the "work_type" field to the value that was provided on create.
+func (u *JobPositionUpsert) UpdateWorkType() *JobPositionUpsert {
+	u.SetExcluded(jobposition.FieldWorkType)
+	return u
+}
+
+// ClearWorkType clears the value of the "work_type" field.
+func (u *JobPositionUpsert) ClearWorkType() *JobPositionUpsert {
+	u.SetNull(jobposition.FieldWorkType)
+	return u
+}
+
 // SetLocation sets the "location" field.
 func (u *JobPositionUpsert) SetLocation(v string) *JobPositionUpsert {
 	u.Set(jobposition.FieldLocation, v)
@@ -916,6 +952,27 @@ func (u *JobPositionUpsertOne) SetStatus(v consts.JobPositionStatus) *JobPositio
 func (u *JobPositionUpsertOne) UpdateStatus() *JobPositionUpsertOne {
 	return u.Update(func(s *JobPositionUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetWorkType sets the "work_type" field.
+func (u *JobPositionUpsertOne) SetWorkType(v consts.JobWorkType) *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetWorkType(v)
+	})
+}
+
+// UpdateWorkType sets the "work_type" field to the value that was provided on create.
+func (u *JobPositionUpsertOne) UpdateWorkType() *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateWorkType()
+	})
+}
+
+// ClearWorkType clears the value of the "work_type" field.
+func (u *JobPositionUpsertOne) ClearWorkType() *JobPositionUpsertOne {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.ClearWorkType()
 	})
 }
 
@@ -1330,6 +1387,27 @@ func (u *JobPositionUpsertBulk) SetStatus(v consts.JobPositionStatus) *JobPositi
 func (u *JobPositionUpsertBulk) UpdateStatus() *JobPositionUpsertBulk {
 	return u.Update(func(s *JobPositionUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetWorkType sets the "work_type" field.
+func (u *JobPositionUpsertBulk) SetWorkType(v consts.JobWorkType) *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.SetWorkType(v)
+	})
+}
+
+// UpdateWorkType sets the "work_type" field to the value that was provided on create.
+func (u *JobPositionUpsertBulk) UpdateWorkType() *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.UpdateWorkType()
+	})
+}
+
+// ClearWorkType clears the value of the "work_type" field.
+func (u *JobPositionUpsertBulk) ClearWorkType() *JobPositionUpsertBulk {
+	return u.Update(func(s *JobPositionUpsert) {
+		s.ClearWorkType()
 	})
 }
 

@@ -32,9 +32,11 @@ func (JobExperienceRequirement) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.UUID("job_id", uuid.UUID{}),
-		field.Int("min_years").Default(0).NonNegative(),
-		field.Int("ideal_years").Default(0).NonNegative(),
-		field.Int("weight").Range(0, 100),
+		field.String("experience_type").Optional(),
+		// 用于数值计算和筛选的字段（可以根据experience_type自动计算）
+		field.Int("min_years").Default(0).NonNegative().Optional(),
+		field.Int("ideal_years").Default(0).NonNegative().Optional(),
+		field.Int("weight").Range(0, 100).Optional(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

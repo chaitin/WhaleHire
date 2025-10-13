@@ -28,4 +28,5 @@ var (
 	ErrDepartmentRequired   = web.NewBadRequestErr("err-department-required")
 	ErrJobProfileRequired   = web.NewBadRequestErr("err-jobprofile-required")
 	ErrJobSkillMetaRequired = web.NewBadRequestErr("err-jobskillmeta-required")
+	ErrInvalidParam         = web.NewBadRequestErr("err-invalid-param")
 )

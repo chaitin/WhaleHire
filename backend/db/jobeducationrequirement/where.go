@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -66,9 +67,10 @@ func JobID(v uuid.UUID) predicate.JobEducationRequirement {
 	return predicate.JobEducationRequirement(sql.FieldEQ(FieldJobID, v))
 }
 
-// MinDegree applies equality check predicate on the "min_degree" field. It's identical to MinDegreeEQ.
-func MinDegree(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldEQ(FieldMinDegree, v))
+// EducationType applies equality check predicate on the "education_type" field. It's identical to EducationTypeEQ.
+func EducationType(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldEQ(FieldEducationType, vc))
 }
 
 // Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
@@ -156,69 +158,98 @@ func JobIDNotIn(vs ...uuid.UUID) predicate.JobEducationRequirement {
 	return predicate.JobEducationRequirement(sql.FieldNotIn(FieldJobID, vs...))
 }
 
-// MinDegreeEQ applies the EQ predicate on the "min_degree" field.
-func MinDegreeEQ(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldEQ(FieldMinDegree, v))
+// EducationTypeEQ applies the EQ predicate on the "education_type" field.
+func EducationTypeEQ(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldEQ(FieldEducationType, vc))
 }
 
-// MinDegreeNEQ applies the NEQ predicate on the "min_degree" field.
-func MinDegreeNEQ(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldNEQ(FieldMinDegree, v))
+// EducationTypeNEQ applies the NEQ predicate on the "education_type" field.
+func EducationTypeNEQ(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldNEQ(FieldEducationType, vc))
 }
 
-// MinDegreeIn applies the In predicate on the "min_degree" field.
-func MinDegreeIn(vs ...string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldIn(FieldMinDegree, vs...))
+// EducationTypeIn applies the In predicate on the "education_type" field.
+func EducationTypeIn(vs ...consts.JobEducationType) predicate.JobEducationRequirement {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobEducationRequirement(sql.FieldIn(FieldEducationType, v...))
 }
 
-// MinDegreeNotIn applies the NotIn predicate on the "min_degree" field.
-func MinDegreeNotIn(vs ...string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldNotIn(FieldMinDegree, vs...))
+// EducationTypeNotIn applies the NotIn predicate on the "education_type" field.
+func EducationTypeNotIn(vs ...consts.JobEducationType) predicate.JobEducationRequirement {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.JobEducationRequirement(sql.FieldNotIn(FieldEducationType, v...))
 }
 
-// MinDegreeGT applies the GT predicate on the "min_degree" field.
-func MinDegreeGT(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldGT(FieldMinDegree, v))
+// EducationTypeGT applies the GT predicate on the "education_type" field.
+func EducationTypeGT(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldGT(FieldEducationType, vc))
 }
 
-// MinDegreeGTE applies the GTE predicate on the "min_degree" field.
-func MinDegreeGTE(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldGTE(FieldMinDegree, v))
+// EducationTypeGTE applies the GTE predicate on the "education_type" field.
+func EducationTypeGTE(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldGTE(FieldEducationType, vc))
 }
 
-// MinDegreeLT applies the LT predicate on the "min_degree" field.
-func MinDegreeLT(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldLT(FieldMinDegree, v))
+// EducationTypeLT applies the LT predicate on the "education_type" field.
+func EducationTypeLT(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldLT(FieldEducationType, vc))
 }
 
-// MinDegreeLTE applies the LTE predicate on the "min_degree" field.
-func MinDegreeLTE(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldLTE(FieldMinDegree, v))
+// EducationTypeLTE applies the LTE predicate on the "education_type" field.
+func EducationTypeLTE(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldLTE(FieldEducationType, vc))
 }
 
-// MinDegreeContains applies the Contains predicate on the "min_degree" field.
-func MinDegreeContains(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldContains(FieldMinDegree, v))
+// EducationTypeContains applies the Contains predicate on the "education_type" field.
+func EducationTypeContains(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldContains(FieldEducationType, vc))
 }
 
-// MinDegreeHasPrefix applies the HasPrefix predicate on the "min_degree" field.
-func MinDegreeHasPrefix(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldHasPrefix(FieldMinDegree, v))
+// EducationTypeHasPrefix applies the HasPrefix predicate on the "education_type" field.
+func EducationTypeHasPrefix(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldHasPrefix(FieldEducationType, vc))
 }
 
-// MinDegreeHasSuffix applies the HasSuffix predicate on the "min_degree" field.
-func MinDegreeHasSuffix(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldHasSuffix(FieldMinDegree, v))
+// EducationTypeHasSuffix applies the HasSuffix predicate on the "education_type" field.
+func EducationTypeHasSuffix(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldHasSuffix(FieldEducationType, vc))
 }
 
-// MinDegreeEqualFold applies the EqualFold predicate on the "min_degree" field.
-func MinDegreeEqualFold(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldEqualFold(FieldMinDegree, v))
+// EducationTypeIsNil applies the IsNil predicate on the "education_type" field.
+func EducationTypeIsNil() predicate.JobEducationRequirement {
+	return predicate.JobEducationRequirement(sql.FieldIsNull(FieldEducationType))
 }
 
-// MinDegreeContainsFold applies the ContainsFold predicate on the "min_degree" field.
-func MinDegreeContainsFold(v string) predicate.JobEducationRequirement {
-	return predicate.JobEducationRequirement(sql.FieldContainsFold(FieldMinDegree, v))
+// EducationTypeNotNil applies the NotNil predicate on the "education_type" field.
+func EducationTypeNotNil() predicate.JobEducationRequirement {
+	return predicate.JobEducationRequirement(sql.FieldNotNull(FieldEducationType))
+}
+
+// EducationTypeEqualFold applies the EqualFold predicate on the "education_type" field.
+func EducationTypeEqualFold(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldEqualFold(FieldEducationType, vc))
+}
+
+// EducationTypeContainsFold applies the ContainsFold predicate on the "education_type" field.
+func EducationTypeContainsFold(v consts.JobEducationType) predicate.JobEducationRequirement {
+	vc := string(v)
+	return predicate.JobEducationRequirement(sql.FieldContainsFold(FieldEducationType, vc))
 }
 
 // WeightEQ applies the EQ predicate on the "weight" field.
@@ -259,6 +290,16 @@ func WeightLT(v int) predicate.JobEducationRequirement {
 // WeightLTE applies the LTE predicate on the "weight" field.
 func WeightLTE(v int) predicate.JobEducationRequirement {
 	return predicate.JobEducationRequirement(sql.FieldLTE(FieldWeight, v))
+}
+
+// WeightIsNil applies the IsNil predicate on the "weight" field.
+func WeightIsNil() predicate.JobEducationRequirement {
+	return predicate.JobEducationRequirement(sql.FieldIsNull(FieldWeight))
+}
+
+// WeightNotNil applies the NotNil predicate on the "weight" field.
+func WeightNotNil() predicate.JobEducationRequirement {
+	return predicate.JobEducationRequirement(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

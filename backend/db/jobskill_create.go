@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
@@ -53,14 +54,22 @@ func (jsc *JobSkillCreate) SetSkillID(u uuid.UUID) *JobSkillCreate {
 }
 
 // SetType sets the "type" field.
-func (jsc *JobSkillCreate) SetType(j jobskill.Type) *JobSkillCreate {
-	jsc.mutation.SetType(j)
+func (jsc *JobSkillCreate) SetType(cst consts.JobSkillType) *JobSkillCreate {
+	jsc.mutation.SetType(cst)
 	return jsc
 }
 
 // SetWeight sets the "weight" field.
 func (jsc *JobSkillCreate) SetWeight(i int) *JobSkillCreate {
 	jsc.mutation.SetWeight(i)
+	return jsc
+}
+
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (jsc *JobSkillCreate) SetNillableWeight(i *int) *JobSkillCreate {
+	if i != nil {
+		jsc.SetWeight(*i)
+	}
 	return jsc
 }
 
@@ -188,14 +197,6 @@ func (jsc *JobSkillCreate) check() error {
 	if _, ok := jsc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`db: missing required field "JobSkill.type"`)}
 	}
-	if v, ok := jsc.mutation.GetType(); ok {
-		if err := jobskill.TypeValidator(v); err != nil {
-			return &ValidationError{Name: "type", err: fmt.Errorf(`db: validator failed for field "JobSkill.type": %w`, err)}
-		}
-	}
-	if _, ok := jsc.mutation.Weight(); !ok {
-		return &ValidationError{Name: "weight", err: errors.New(`db: missing required field "JobSkill.weight"`)}
-	}
 	if v, ok := jsc.mutation.Weight(); ok {
 		if err := jobskill.WeightValidator(v); err != nil {
 			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobSkill.weight": %w`, err)}
@@ -254,7 +255,7 @@ func (jsc *JobSkillCreate) createSpec() (*JobSkill, *sqlgraph.CreateSpec) {
 		_node.DeletedAt = value
 	}
 	if value, ok := jsc.mutation.GetType(); ok {
-		_spec.SetField(jobskill.FieldType, field.TypeEnum, value)
+		_spec.SetField(jobskill.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
 	if value, ok := jsc.mutation.Weight(); ok {
@@ -398,7 +399,7 @@ func (u *JobSkillUpsert) UpdateSkillID() *JobSkillUpsert {
 }
 
 // SetType sets the "type" field.
-func (u *JobSkillUpsert) SetType(v jobskill.Type) *JobSkillUpsert {
+func (u *JobSkillUpsert) SetType(v consts.JobSkillType) *JobSkillUpsert {
 	u.Set(jobskill.FieldType, v)
 	return u
 }
@@ -424,6 +425,12 @@ func (u *JobSkillUpsert) UpdateWeight() *JobSkillUpsert {
 // AddWeight adds v to the "weight" field.
 func (u *JobSkillUpsert) AddWeight(v int) *JobSkillUpsert {
 	u.Add(jobskill.FieldWeight, v)
+	return u
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobSkillUpsert) ClearWeight() *JobSkillUpsert {
+	u.SetNull(jobskill.FieldWeight)
 	return u
 }
 
@@ -540,7 +547,7 @@ func (u *JobSkillUpsertOne) UpdateSkillID() *JobSkillUpsertOne {
 }
 
 // SetType sets the "type" field.
-func (u *JobSkillUpsertOne) SetType(v jobskill.Type) *JobSkillUpsertOne {
+func (u *JobSkillUpsertOne) SetType(v consts.JobSkillType) *JobSkillUpsertOne {
 	return u.Update(func(s *JobSkillUpsert) {
 		s.SetType(v)
 	})
@@ -571,6 +578,13 @@ func (u *JobSkillUpsertOne) AddWeight(v int) *JobSkillUpsertOne {
 func (u *JobSkillUpsertOne) UpdateWeight() *JobSkillUpsertOne {
 	return u.Update(func(s *JobSkillUpsert) {
 		s.UpdateWeight()
+	})
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobSkillUpsertOne) ClearWeight() *JobSkillUpsertOne {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.ClearWeight()
 	})
 }
 
@@ -856,7 +870,7 @@ func (u *JobSkillUpsertBulk) UpdateSkillID() *JobSkillUpsertBulk {
 }
 
 // SetType sets the "type" field.
-func (u *JobSkillUpsertBulk) SetType(v jobskill.Type) *JobSkillUpsertBulk {
+func (u *JobSkillUpsertBulk) SetType(v consts.JobSkillType) *JobSkillUpsertBulk {
 	return u.Update(func(s *JobSkillUpsert) {
 		s.SetType(v)
 	})
@@ -887,6 +901,13 @@ func (u *JobSkillUpsertBulk) AddWeight(v int) *JobSkillUpsertBulk {
 func (u *JobSkillUpsertBulk) UpdateWeight() *JobSkillUpsertBulk {
 	return u.Update(func(s *JobSkillUpsert) {
 		s.UpdateWeight()
+	})
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobSkillUpsertBulk) ClearWeight() *JobSkillUpsertBulk {
+	return u.Update(func(s *JobSkillUpsert) {
+		s.ClearWeight()
 	})
 }
 

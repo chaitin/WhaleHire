@@ -23,6 +23,8 @@ type JobExperienceRequirement struct {
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// JobID holds the value of the "job_id" field.
 	JobID uuid.UUID `json:"job_id,omitempty"`
+	// ExperienceType holds the value of the "experience_type" field.
+	ExperienceType string `json:"experience_type,omitempty"`
 	// MinYears holds the value of the "min_years" field.
 	MinYears int `json:"min_years,omitempty"`
 	// IdealYears holds the value of the "ideal_years" field.
@@ -66,6 +68,8 @@ func (*JobExperienceRequirement) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case jobexperiencerequirement.FieldMinYears, jobexperiencerequirement.FieldIdealYears, jobexperiencerequirement.FieldWeight:
 			values[i] = new(sql.NullInt64)
+		case jobexperiencerequirement.FieldExperienceType:
+			values[i] = new(sql.NullString)
 		case jobexperiencerequirement.FieldDeletedAt, jobexperiencerequirement.FieldCreatedAt, jobexperiencerequirement.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case jobexperiencerequirement.FieldID, jobexperiencerequirement.FieldJobID:
@@ -102,6 +106,12 @@ func (jer *JobExperienceRequirement) assignValues(columns []string, values []any
 				return fmt.Errorf("unexpected type %T for field job_id", values[i])
 			} else if value != nil {
 				jer.JobID = *value
+			}
+		case jobexperiencerequirement.FieldExperienceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field experience_type", values[i])
+			} else if value.Valid {
+				jer.ExperienceType = value.String
 			}
 		case jobexperiencerequirement.FieldMinYears:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -179,6 +189,9 @@ func (jer *JobExperienceRequirement) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("job_id=")
 	builder.WriteString(fmt.Sprintf("%v", jer.JobID))
+	builder.WriteString(", ")
+	builder.WriteString("experience_type=")
+	builder.WriteString(jer.ExperienceType)
 	builder.WriteString(", ")
 	builder.WriteString("min_years=")
 	builder.WriteString(fmt.Sprintf("%v", jer.MinYears))

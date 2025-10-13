@@ -71,9 +71,9 @@ func Responsibility(v string) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldEQ(FieldResponsibility, v))
 }
 
-// SortOrder applies equality check predicate on the "sort_order" field. It's identical to SortOrderEQ.
-func SortOrder(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldEQ(FieldSortOrder, v))
+// Weight applies equality check predicate on the "weight" field. It's identical to WeightEQ.
+func Weight(v int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldEQ(FieldWeight, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -221,44 +221,54 @@ func ResponsibilityContainsFold(v string) predicate.JobResponsibility {
 	return predicate.JobResponsibility(sql.FieldContainsFold(FieldResponsibility, v))
 }
 
-// SortOrderEQ applies the EQ predicate on the "sort_order" field.
-func SortOrderEQ(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldEQ(FieldSortOrder, v))
+// WeightEQ applies the EQ predicate on the "weight" field.
+func WeightEQ(v int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldEQ(FieldWeight, v))
 }
 
-// SortOrderNEQ applies the NEQ predicate on the "sort_order" field.
-func SortOrderNEQ(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldNEQ(FieldSortOrder, v))
+// WeightNEQ applies the NEQ predicate on the "weight" field.
+func WeightNEQ(v int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldNEQ(FieldWeight, v))
 }
 
-// SortOrderIn applies the In predicate on the "sort_order" field.
-func SortOrderIn(vs ...int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldIn(FieldSortOrder, vs...))
+// WeightIn applies the In predicate on the "weight" field.
+func WeightIn(vs ...int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldIn(FieldWeight, vs...))
 }
 
-// SortOrderNotIn applies the NotIn predicate on the "sort_order" field.
-func SortOrderNotIn(vs ...int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldNotIn(FieldSortOrder, vs...))
+// WeightNotIn applies the NotIn predicate on the "weight" field.
+func WeightNotIn(vs ...int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldNotIn(FieldWeight, vs...))
 }
 
-// SortOrderGT applies the GT predicate on the "sort_order" field.
-func SortOrderGT(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldGT(FieldSortOrder, v))
+// WeightGT applies the GT predicate on the "weight" field.
+func WeightGT(v int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldGT(FieldWeight, v))
 }
 
-// SortOrderGTE applies the GTE predicate on the "sort_order" field.
-func SortOrderGTE(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldGTE(FieldSortOrder, v))
+// WeightGTE applies the GTE predicate on the "weight" field.
+func WeightGTE(v int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldGTE(FieldWeight, v))
 }
 
-// SortOrderLT applies the LT predicate on the "sort_order" field.
-func SortOrderLT(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldLT(FieldSortOrder, v))
+// WeightLT applies the LT predicate on the "weight" field.
+func WeightLT(v int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldLT(FieldWeight, v))
 }
 
-// SortOrderLTE applies the LTE predicate on the "sort_order" field.
-func SortOrderLTE(v int) predicate.JobResponsibility {
-	return predicate.JobResponsibility(sql.FieldLTE(FieldSortOrder, v))
+// WeightLTE applies the LTE predicate on the "weight" field.
+func WeightLTE(v int) predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldLTE(FieldWeight, v))
+}
+
+// WeightIsNil applies the IsNil predicate on the "weight" field.
+func WeightIsNil() predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldIsNull(FieldWeight))
+}
+
+// WeightNotNil applies the NotNil predicate on the "weight" field.
+func WeightNotNil() predicate.JobResponsibility {
+	return predicate.JobResponsibility(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

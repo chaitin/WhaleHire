@@ -49,7 +49,7 @@ func NewJobProfileHandler(
 //
 //	@Tags			JobProfile
 //	@Summary		创建岗位画像
-//	@Description	创建岗位画像并返回详情
+//	@Description	创建岗位画像并返回详情。工作性质可选值：full_time/part_time/internship/outsourcing；职位状态可选值：draft/published
 //	@ID				create-job-profile
 //	@Accept			json
 //	@Produce		json
@@ -57,6 +57,12 @@ func NewJobProfileHandler(
 //	@Success		200		{object}	web.Resp{data=domain.JobProfileDetail}
 //	@Router			/api/v1/job-profiles [post]
 func (h *JobProfileHandler) Create(c *web.Context, req domain.CreateJobProfileReq) error {
+	// 校验请求参数中的常量值
+	if err := req.Validate(); err != nil {
+		h.logger.Error("invalid request parameters", "error", err)
+		return errcode.ErrInvalidParam.Wrap(err)
+	}
+
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
@@ -78,7 +84,7 @@ func (h *JobProfileHandler) Create(c *web.Context, req domain.CreateJobProfileRe
 //
 //	@Tags			JobProfile
 //	@Summary		更新岗位画像
-//	@Description	根据ID更新岗位画像及相关信息
+//	@Description	根据ID更新岗位画像及相关信息。工作性质可选值：full_time/part_time/internship/outsourcing；职位状态可选值：draft/published
 //	@ID				update-job-profile
 //	@Accept			json
 //	@Produce		json
@@ -90,6 +96,12 @@ func (h *JobProfileHandler) Update(c *web.Context, req domain.UpdateJobProfileRe
 	req.ID = c.Param("id")
 	if req.ID == "" {
 		return errcode.ErrJobProfileRequired
+	}
+
+	// 校验请求参数中的常量值
+	if err := req.Validate(); err != nil {
+		h.logger.Error("invalid request parameters", "error", err, "job_id", req.ID)
+		return errcode.ErrInvalidParam.Wrap(err)
 	}
 
 	profile, err := h.usecase.Update(c.Request().Context(), &req)

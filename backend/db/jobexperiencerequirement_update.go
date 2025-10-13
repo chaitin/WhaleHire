@@ -65,6 +65,26 @@ func (jeru *JobExperienceRequirementUpdate) SetNillableJobID(u *uuid.UUID) *JobE
 	return jeru
 }
 
+// SetExperienceType sets the "experience_type" field.
+func (jeru *JobExperienceRequirementUpdate) SetExperienceType(s string) *JobExperienceRequirementUpdate {
+	jeru.mutation.SetExperienceType(s)
+	return jeru
+}
+
+// SetNillableExperienceType sets the "experience_type" field if the given value is not nil.
+func (jeru *JobExperienceRequirementUpdate) SetNillableExperienceType(s *string) *JobExperienceRequirementUpdate {
+	if s != nil {
+		jeru.SetExperienceType(*s)
+	}
+	return jeru
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (jeru *JobExperienceRequirementUpdate) ClearExperienceType() *JobExperienceRequirementUpdate {
+	jeru.mutation.ClearExperienceType()
+	return jeru
+}
+
 // SetMinYears sets the "min_years" field.
 func (jeru *JobExperienceRequirementUpdate) SetMinYears(i int) *JobExperienceRequirementUpdate {
 	jeru.mutation.ResetMinYears()
@@ -83,6 +103,12 @@ func (jeru *JobExperienceRequirementUpdate) SetNillableMinYears(i *int) *JobExpe
 // AddMinYears adds i to the "min_years" field.
 func (jeru *JobExperienceRequirementUpdate) AddMinYears(i int) *JobExperienceRequirementUpdate {
 	jeru.mutation.AddMinYears(i)
+	return jeru
+}
+
+// ClearMinYears clears the value of the "min_years" field.
+func (jeru *JobExperienceRequirementUpdate) ClearMinYears() *JobExperienceRequirementUpdate {
+	jeru.mutation.ClearMinYears()
 	return jeru
 }
 
@@ -107,6 +133,12 @@ func (jeru *JobExperienceRequirementUpdate) AddIdealYears(i int) *JobExperienceR
 	return jeru
 }
 
+// ClearIdealYears clears the value of the "ideal_years" field.
+func (jeru *JobExperienceRequirementUpdate) ClearIdealYears() *JobExperienceRequirementUpdate {
+	jeru.mutation.ClearIdealYears()
+	return jeru
+}
+
 // SetWeight sets the "weight" field.
 func (jeru *JobExperienceRequirementUpdate) SetWeight(i int) *JobExperienceRequirementUpdate {
 	jeru.mutation.ResetWeight()
@@ -125,6 +157,12 @@ func (jeru *JobExperienceRequirementUpdate) SetNillableWeight(i *int) *JobExperi
 // AddWeight adds i to the "weight" field.
 func (jeru *JobExperienceRequirementUpdate) AddWeight(i int) *JobExperienceRequirementUpdate {
 	jeru.mutation.AddWeight(i)
+	return jeru
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (jeru *JobExperienceRequirementUpdate) ClearWeight() *JobExperienceRequirementUpdate {
+	jeru.mutation.ClearWeight()
 	return jeru
 }
 
@@ -239,11 +277,20 @@ func (jeru *JobExperienceRequirementUpdate) sqlSave(ctx context.Context) (n int,
 	if jeru.mutation.DeletedAtCleared() {
 		_spec.ClearField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime)
 	}
+	if value, ok := jeru.mutation.ExperienceType(); ok {
+		_spec.SetField(jobexperiencerequirement.FieldExperienceType, field.TypeString, value)
+	}
+	if jeru.mutation.ExperienceTypeCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldExperienceType, field.TypeString)
+	}
 	if value, ok := jeru.mutation.MinYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldMinYears, field.TypeInt, value)
 	}
 	if value, ok := jeru.mutation.AddedMinYears(); ok {
 		_spec.AddField(jobexperiencerequirement.FieldMinYears, field.TypeInt, value)
+	}
+	if jeru.mutation.MinYearsCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldMinYears, field.TypeInt)
 	}
 	if value, ok := jeru.mutation.IdealYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldIdealYears, field.TypeInt, value)
@@ -251,11 +298,17 @@ func (jeru *JobExperienceRequirementUpdate) sqlSave(ctx context.Context) (n int,
 	if value, ok := jeru.mutation.AddedIdealYears(); ok {
 		_spec.AddField(jobexperiencerequirement.FieldIdealYears, field.TypeInt, value)
 	}
+	if jeru.mutation.IdealYearsCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldIdealYears, field.TypeInt)
+	}
 	if value, ok := jeru.mutation.Weight(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
 	}
 	if value, ok := jeru.mutation.AddedWeight(); ok {
 		_spec.AddField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
+	}
+	if jeru.mutation.WeightCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeru.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldUpdatedAt, field.TypeTime, value)
@@ -345,6 +398,26 @@ func (jeruo *JobExperienceRequirementUpdateOne) SetNillableJobID(u *uuid.UUID) *
 	return jeruo
 }
 
+// SetExperienceType sets the "experience_type" field.
+func (jeruo *JobExperienceRequirementUpdateOne) SetExperienceType(s string) *JobExperienceRequirementUpdateOne {
+	jeruo.mutation.SetExperienceType(s)
+	return jeruo
+}
+
+// SetNillableExperienceType sets the "experience_type" field if the given value is not nil.
+func (jeruo *JobExperienceRequirementUpdateOne) SetNillableExperienceType(s *string) *JobExperienceRequirementUpdateOne {
+	if s != nil {
+		jeruo.SetExperienceType(*s)
+	}
+	return jeruo
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (jeruo *JobExperienceRequirementUpdateOne) ClearExperienceType() *JobExperienceRequirementUpdateOne {
+	jeruo.mutation.ClearExperienceType()
+	return jeruo
+}
+
 // SetMinYears sets the "min_years" field.
 func (jeruo *JobExperienceRequirementUpdateOne) SetMinYears(i int) *JobExperienceRequirementUpdateOne {
 	jeruo.mutation.ResetMinYears()
@@ -363,6 +436,12 @@ func (jeruo *JobExperienceRequirementUpdateOne) SetNillableMinYears(i *int) *Job
 // AddMinYears adds i to the "min_years" field.
 func (jeruo *JobExperienceRequirementUpdateOne) AddMinYears(i int) *JobExperienceRequirementUpdateOne {
 	jeruo.mutation.AddMinYears(i)
+	return jeruo
+}
+
+// ClearMinYears clears the value of the "min_years" field.
+func (jeruo *JobExperienceRequirementUpdateOne) ClearMinYears() *JobExperienceRequirementUpdateOne {
+	jeruo.mutation.ClearMinYears()
 	return jeruo
 }
 
@@ -387,6 +466,12 @@ func (jeruo *JobExperienceRequirementUpdateOne) AddIdealYears(i int) *JobExperie
 	return jeruo
 }
 
+// ClearIdealYears clears the value of the "ideal_years" field.
+func (jeruo *JobExperienceRequirementUpdateOne) ClearIdealYears() *JobExperienceRequirementUpdateOne {
+	jeruo.mutation.ClearIdealYears()
+	return jeruo
+}
+
 // SetWeight sets the "weight" field.
 func (jeruo *JobExperienceRequirementUpdateOne) SetWeight(i int) *JobExperienceRequirementUpdateOne {
 	jeruo.mutation.ResetWeight()
@@ -405,6 +490,12 @@ func (jeruo *JobExperienceRequirementUpdateOne) SetNillableWeight(i *int) *JobEx
 // AddWeight adds i to the "weight" field.
 func (jeruo *JobExperienceRequirementUpdateOne) AddWeight(i int) *JobExperienceRequirementUpdateOne {
 	jeruo.mutation.AddWeight(i)
+	return jeruo
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (jeruo *JobExperienceRequirementUpdateOne) ClearWeight() *JobExperienceRequirementUpdateOne {
+	jeruo.mutation.ClearWeight()
 	return jeruo
 }
 
@@ -549,11 +640,20 @@ func (jeruo *JobExperienceRequirementUpdateOne) sqlSave(ctx context.Context) (_n
 	if jeruo.mutation.DeletedAtCleared() {
 		_spec.ClearField(jobexperiencerequirement.FieldDeletedAt, field.TypeTime)
 	}
+	if value, ok := jeruo.mutation.ExperienceType(); ok {
+		_spec.SetField(jobexperiencerequirement.FieldExperienceType, field.TypeString, value)
+	}
+	if jeruo.mutation.ExperienceTypeCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldExperienceType, field.TypeString)
+	}
 	if value, ok := jeruo.mutation.MinYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldMinYears, field.TypeInt, value)
 	}
 	if value, ok := jeruo.mutation.AddedMinYears(); ok {
 		_spec.AddField(jobexperiencerequirement.FieldMinYears, field.TypeInt, value)
+	}
+	if jeruo.mutation.MinYearsCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldMinYears, field.TypeInt)
 	}
 	if value, ok := jeruo.mutation.IdealYears(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldIdealYears, field.TypeInt, value)
@@ -561,11 +661,17 @@ func (jeruo *JobExperienceRequirementUpdateOne) sqlSave(ctx context.Context) (_n
 	if value, ok := jeruo.mutation.AddedIdealYears(); ok {
 		_spec.AddField(jobexperiencerequirement.FieldIdealYears, field.TypeInt, value)
 	}
+	if jeruo.mutation.IdealYearsCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldIdealYears, field.TypeInt)
+	}
 	if value, ok := jeruo.mutation.Weight(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
 	}
 	if value, ok := jeruo.mutation.AddedWeight(); ok {
 		_spec.AddField(jobexperiencerequirement.FieldWeight, field.TypeInt, value)
+	}
+	if jeruo.mutation.WeightCleared() {
+		_spec.ClearField(jobexperiencerequirement.FieldWeight, field.TypeInt)
 	}
 	if value, ok := jeruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(jobexperiencerequirement.FieldUpdatedAt, field.TypeTime, value)

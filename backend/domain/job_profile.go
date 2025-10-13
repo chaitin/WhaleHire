@@ -2,9 +2,11 @@ package domain
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/GoYoko/web"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 )
 
@@ -54,6 +56,7 @@ type JobProfile struct {
 	Name          string   `json:"name"`
 	DepartmentID  string   `json:"department_id"`
 	Department    string   `json:"department,omitempty"`
+	WorkType      *string  `json:"work_type,omitempty"`
 	Location      *string  `json:"location,omitempty"`
 	SalaryMin     *float64 `json:"salary_min,omitempty"`
 	SalaryMax     *float64 `json:"salary_max,omitempty"`
@@ -76,6 +79,9 @@ func (jp *JobProfile) From(entity *db.JobPosition) *JobProfile {
 	if entity.Edges.Department != nil {
 		jp.Department = entity.Edges.Department.Name
 	}
+	if entity.WorkType != "" {
+		jp.WorkType = ptrString(string(entity.WorkType))
+	}
 	if entity.Location != nil {
 		jp.Location = ptrString(*entity.Location)
 	}
@@ -90,6 +96,9 @@ func (jp *JobProfile) From(entity *db.JobPosition) *JobProfile {
 	}
 	if entity.CreatedBy != nil {
 		jp.CreatedBy = ptrString(entity.CreatedBy.String())
+	}
+	if entity.Edges.Creator != nil {
+		jp.CreatorName = ptrString(entity.Edges.Creator.Username)
 	}
 	if entity.Edges.Creator != nil {
 		jp.CreatorName = ptrString(entity.Edges.Creator.Username)
@@ -111,47 +120,53 @@ type JobProfileDetail struct {
 }
 
 // JobResponsibility represents a responsibility row.
+// JobResponsibility struct updated to remove SortOrder and add Weight
 type JobResponsibility struct {
 	ID             string `json:"id"`
 	JobID          string `json:"job_id"`
 	Responsibility string `json:"responsibility"`
-	SortOrder      int    `json:"sort_order"`
+	Weight         *int   `json:"weight,omitempty"`
 }
 
 // JobSkill represents a skill linked to a job.
+// JobSkill struct updated to use string constants for Type and optional Weight
 type JobSkill struct {
-	ID      string    `json:"id"`
-	JobID   string    `json:"job_id"`
-	SkillID string    `json:"skill_id"`
-	Skill   string    `json:"skill"`
-	Type    SkillType `json:"type"`
-	Weight  int       `json:"weight"`
+	ID      string `json:"id"`
+	JobID   string `json:"job_id"`
+	SkillID string `json:"skill_id"`
+	Skill   string `json:"skill"`
+	Type    string `json:"type"`
+	Weight  *int   `json:"weight,omitempty"`
 }
 
 // JobEducationRequirement models education expectations.
+// JobEducationRequirement struct updated to rename MinDegree to EducationType and make Weight optional
 type JobEducationRequirement struct {
-	ID        string `json:"id"`
-	JobID     string `json:"job_id"`
-	MinDegree string `json:"min_degree"`
-	Weight    int    `json:"weight"`
+	ID            string `json:"id"`
+	JobID         string `json:"job_id"`
+	EducationType string `json:"education_type"`
+	Weight        *int   `json:"weight,omitempty"`
 }
 
 // JobExperienceRequirement models experience expectations.
+// JobExperienceRequirement struct updated to add ExperienceType and make Weight optional
 type JobExperienceRequirement struct {
-	ID         string `json:"id"`
-	JobID      string `json:"job_id"`
-	MinYears   int    `json:"min_years"`
-	IdealYears int    `json:"ideal_years"`
-	Weight     int    `json:"weight"`
+	ID             string `json:"id"`
+	JobID          string `json:"job_id"`
+	ExperienceType string `json:"experience_type"`
+	MinYears       int    `json:"min_years"`
+	IdealYears     int    `json:"ideal_years"`
+	Weight         *int   `json:"weight,omitempty"`
 }
 
 // JobIndustryRequirement models target industries or companies.
+// JobIndustryRequirement struct updated to make Weight optional
 type JobIndustryRequirement struct {
 	ID          string  `json:"id"`
 	JobID       string  `json:"job_id"`
 	Industry    string  `json:"industry"`
 	CompanyName *string `json:"company_name,omitempty"`
-	Weight      int     `json:"weight"`
+	Weight      *int    `json:"weight,omitempty"`
 }
 
 // JobSkillMeta represents dictionary entries for skills.
@@ -178,17 +193,60 @@ func (m *JobSkillMeta) From(entity *db.JobSkillMeta) *JobSkillMeta {
 type CreateJobProfileReq struct {
 	Name                   string                           `json:"name" validate:"required"`
 	DepartmentID           string                           `json:"department_id" validate:"required"`
+	WorkType               *string                          `json:"work_type,omitempty" enums:"full_time,part_time,internship,outsourcing"` // 工作性质: 全职/兼职/实习/外包
 	Location               *string                          `json:"location,omitempty"`
 	SalaryMin              *float64                         `json:"salary_min,omitempty"`
 	SalaryMax              *float64                         `json:"salary_max,omitempty"`
 	Description            *string                          `json:"description,omitempty"`
 	CreatedBy              *string                          `json:"created_by,omitempty"`
-	Status                 *string                          `json:"status,omitempty"`
+	Status                 *string                          `json:"status,omitempty" enums:"draft,published"` // 职位状态: draft/published
 	Responsibilities       []*JobResponsibilityInput        `json:"responsibilities"`
 	Skills                 []*JobSkillInput                 `json:"skills"`
 	EducationRequirements  []*JobEducationRequirementInput  `json:"education_requirements"`
 	ExperienceRequirements []*JobExperienceRequirementInput `json:"experience_requirements"`
 	IndustryRequirements   []*JobIndustryRequirementInput   `json:"industry_requirements"`
+}
+
+// Validate validates the CreateJobProfileReq fields against constants
+func (req *CreateJobProfileReq) Validate() error {
+	// Validate WorkType
+	if req.WorkType != nil && *req.WorkType != "" {
+		workType := consts.JobWorkType(*req.WorkType)
+		if !workType.IsValid() {
+			return fmt.Errorf("invalid work_type: %s", *req.WorkType)
+		}
+	}
+
+	// Validate Status
+	if req.Status != nil && *req.Status != "" {
+		status := consts.JobPositionStatus(*req.Status)
+		if !status.IsValid() {
+			return fmt.Errorf("invalid status: %s", *req.Status)
+		}
+	}
+
+	// Validate Skills
+	for i, skill := range req.Skills {
+		if err := skill.Validate(); err != nil {
+			return fmt.Errorf("invalid skill at index %d: %w", i, err)
+		}
+	}
+
+	// Validate EducationRequirements
+	for i, edu := range req.EducationRequirements {
+		if err := edu.Validate(); err != nil {
+			return fmt.Errorf("invalid education requirement at index %d: %w", i, err)
+		}
+	}
+
+	// Validate ExperienceRequirements
+	for i, exp := range req.ExperienceRequirements {
+		if err := exp.Validate(); err != nil {
+			return fmt.Errorf("invalid experience requirement at index %d: %w", i, err)
+		}
+	}
+
+	return nil
 }
 
 // UpdateJobProfileReq updates base info and related collections.
@@ -196,12 +254,13 @@ type UpdateJobProfileReq struct {
 	ID                     string                           `json:"id" validate:"required"`
 	Name                   *string                          `json:"name,omitempty"`
 	DepartmentID           *string                          `json:"department_id,omitempty"`
+	WorkType               *string                          `json:"work_type,omitempty" enums:"full_time,part_time,internship,outsourcing"` // 工作性质: 全职/兼职/实习/外包
 	Location               *string                          `json:"location,omitempty"`
 	SalaryMin              *float64                         `json:"salary_min,omitempty"`
 	SalaryMax              *float64                         `json:"salary_max,omitempty"`
 	Description            *string                          `json:"description,omitempty"`
 	CreatedBy              *string                          `json:"created_by,omitempty"`
-	Status                 *string                          `json:"status,omitempty"`
+	Status                 *string                          `json:"status,omitempty" enums:"draft,published"` // 职位状态: draft/published
 	Responsibilities       []*JobResponsibilityInput        `json:"responsibilities"`
 	Skills                 []*JobSkillInput                 `json:"skills"`
 	EducationRequirements  []*JobEducationRequirementInput  `json:"education_requirements"`
@@ -209,34 +268,110 @@ type UpdateJobProfileReq struct {
 	IndustryRequirements   []*JobIndustryRequirementInput   `json:"industry_requirements"`
 }
 
+// Validate validates the UpdateJobProfileReq fields against constants
+func (req *UpdateJobProfileReq) Validate() error {
+	// Validate WorkType
+	if req.WorkType != nil && *req.WorkType != "" {
+		workType := consts.JobWorkType(*req.WorkType)
+		if !workType.IsValid() {
+			return fmt.Errorf("invalid work_type: %s", *req.WorkType)
+		}
+	}
+
+	// Validate Status
+	if req.Status != nil && *req.Status != "" {
+		status := consts.JobPositionStatus(*req.Status)
+		if !status.IsValid() {
+			return fmt.Errorf("invalid status: %s", *req.Status)
+		}
+	}
+
+	// Validate Skills
+	for i, skill := range req.Skills {
+		if err := skill.Validate(); err != nil {
+			return fmt.Errorf("invalid skill at index %d: %w", i, err)
+		}
+	}
+
+	// Validate EducationRequirements
+	for i, edu := range req.EducationRequirements {
+		if err := edu.Validate(); err != nil {
+			return fmt.Errorf("invalid education requirement at index %d: %w", i, err)
+		}
+	}
+
+	// Validate ExperienceRequirements
+	for i, exp := range req.ExperienceRequirements {
+		if err := exp.Validate(); err != nil {
+			return fmt.Errorf("invalid experience requirement at index %d: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 // JobResponsibilityInput is used for upserting responsibilities.
 type JobResponsibilityInput struct {
 	ID             *string `json:"id,omitempty"`
 	Responsibility string  `json:"responsibility" validate:"required"`
-	SortOrder      int     `json:"sort_order"`
+	Weight         *int    `json:"weight,omitempty"`
 }
 
 // JobSkillInput is used for upserting skills.
 type JobSkillInput struct {
-	ID      *string   `json:"id,omitempty"`
-	SkillID string    `json:"skill_id" validate:"required"`
-	Type    SkillType `json:"type" validate:"required,oneof=required bonus"`
-	Weight  int       `json:"weight"`
+	ID      *string `json:"id,omitempty"`
+	SkillID string  `json:"skill_id" validate:"required"`
+	Type    string  `json:"type" validate:"required" enums:"required,bonus"` // 技能类型: 必需技能/加分技能
+	Weight  *int    `json:"weight,omitempty"`
+}
+
+// Validate validates the JobSkillInput fields against constants
+func (input *JobSkillInput) Validate() error {
+	if input.Type != "" {
+		skillType := consts.JobSkillType(input.Type)
+		if !skillType.IsValid() {
+			return fmt.Errorf("invalid skill type: %s", input.Type)
+		}
+	}
+	return nil
 }
 
 // JobEducationRequirementInput upserts education expectations.
 type JobEducationRequirementInput struct {
-	ID        *string `json:"id,omitempty"`
-	MinDegree string  `json:"min_degree" validate:"required"`
-	Weight    int     `json:"weight"`
+	ID            *string `json:"id,omitempty"`
+	EducationType string  `json:"education_type" validate:"required" enums:"unlimited,junior_college,bachelor,master,doctor"` // 学历要求: 不限/大专/本科/硕士/博士
+	Weight        *int    `json:"weight,omitempty"`
+}
+
+// Validate validates the JobEducationRequirementInput fields against constants
+func (input *JobEducationRequirementInput) Validate() error {
+	if input.EducationType != "" {
+		educationType := consts.JobEducationType(input.EducationType)
+		if !educationType.IsValid() {
+			return fmt.Errorf("invalid education type: %s", input.EducationType)
+		}
+	}
+	return nil
 }
 
 // JobExperienceRequirementInput upserts experienc expectations.
 type JobExperienceRequirementInput struct {
-	ID         *string `json:"id,omitempty"`
-	MinYears   int     `json:"min_years"`
-	IdealYears int     `json:"ideal_years"`
-	Weight     int     `json:"weight"`
+	ID             *string `json:"id,omitempty"`
+	ExperienceType string  `json:"experience_type" validate:"required" enums:"unlimited,fresh_graduate,under_one_year,one_to_three_years,three_to_five_years,five_to_ten_years,over_ten_years"` // 工作经验: 不限/应届毕业生/1年以下/1-3年/3-5年/5-10年/10年以上
+	MinYears       int     `json:"min_years"`
+	IdealYears     int     `json:"ideal_years"`
+	Weight         *int    `json:"weight,omitempty"`
+}
+
+// Validate validates the JobExperienceRequirementInput fields against constants
+func (input *JobExperienceRequirementInput) Validate() error {
+	if input.ExperienceType != "" {
+		experienceType := consts.JobExperienceType(input.ExperienceType)
+		if !experienceType.IsValid() {
+			return fmt.Errorf("invalid experience type: %s", input.ExperienceType)
+		}
+	}
+	return nil
 }
 
 // JobIndustryRequirementInput upserts industry expectations.
@@ -244,7 +379,7 @@ type JobIndustryRequirementInput struct {
 	ID          *string `json:"id,omitempty"`
 	Industry    string  `json:"industry" validate:"required"`
 	CompanyName *string `json:"company_name,omitempty"`
-	Weight      int     `json:"weight"`
+	Weight      *int    `json:"weight,omitempty"`
 }
 
 // ListJobProfileReq filters job profile listing.

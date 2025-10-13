@@ -66,6 +66,11 @@ func JobID(v uuid.UUID) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldJobID, v))
 }
 
+// ExperienceType applies equality check predicate on the "experience_type" field. It's identical to ExperienceTypeEQ.
+func ExperienceType(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldExperienceType, v))
+}
+
 // MinYears applies equality check predicate on the "min_years" field. It's identical to MinYearsEQ.
 func MinYears(v int) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldMinYears, v))
@@ -161,6 +166,81 @@ func JobIDNotIn(vs ...uuid.UUID) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldNotIn(FieldJobID, vs...))
 }
 
+// ExperienceTypeEQ applies the EQ predicate on the "experience_type" field.
+func ExperienceTypeEQ(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldExperienceType, v))
+}
+
+// ExperienceTypeNEQ applies the NEQ predicate on the "experience_type" field.
+func ExperienceTypeNEQ(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNEQ(FieldExperienceType, v))
+}
+
+// ExperienceTypeIn applies the In predicate on the "experience_type" field.
+func ExperienceTypeIn(vs ...string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldIn(FieldExperienceType, vs...))
+}
+
+// ExperienceTypeNotIn applies the NotIn predicate on the "experience_type" field.
+func ExperienceTypeNotIn(vs ...string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNotIn(FieldExperienceType, vs...))
+}
+
+// ExperienceTypeGT applies the GT predicate on the "experience_type" field.
+func ExperienceTypeGT(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldGT(FieldExperienceType, v))
+}
+
+// ExperienceTypeGTE applies the GTE predicate on the "experience_type" field.
+func ExperienceTypeGTE(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldGTE(FieldExperienceType, v))
+}
+
+// ExperienceTypeLT applies the LT predicate on the "experience_type" field.
+func ExperienceTypeLT(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldLT(FieldExperienceType, v))
+}
+
+// ExperienceTypeLTE applies the LTE predicate on the "experience_type" field.
+func ExperienceTypeLTE(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldExperienceType, v))
+}
+
+// ExperienceTypeContains applies the Contains predicate on the "experience_type" field.
+func ExperienceTypeContains(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldContains(FieldExperienceType, v))
+}
+
+// ExperienceTypeHasPrefix applies the HasPrefix predicate on the "experience_type" field.
+func ExperienceTypeHasPrefix(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldHasPrefix(FieldExperienceType, v))
+}
+
+// ExperienceTypeHasSuffix applies the HasSuffix predicate on the "experience_type" field.
+func ExperienceTypeHasSuffix(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldHasSuffix(FieldExperienceType, v))
+}
+
+// ExperienceTypeIsNil applies the IsNil predicate on the "experience_type" field.
+func ExperienceTypeIsNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldIsNull(FieldExperienceType))
+}
+
+// ExperienceTypeNotNil applies the NotNil predicate on the "experience_type" field.
+func ExperienceTypeNotNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldExperienceType))
+}
+
+// ExperienceTypeEqualFold applies the EqualFold predicate on the "experience_type" field.
+func ExperienceTypeEqualFold(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldEqualFold(FieldExperienceType, v))
+}
+
+// ExperienceTypeContainsFold applies the ContainsFold predicate on the "experience_type" field.
+func ExperienceTypeContainsFold(v string) predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldContainsFold(FieldExperienceType, v))
+}
+
 // MinYearsEQ applies the EQ predicate on the "min_years" field.
 func MinYearsEQ(v int) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldMinYears, v))
@@ -199,6 +279,16 @@ func MinYearsLT(v int) predicate.JobExperienceRequirement {
 // MinYearsLTE applies the LTE predicate on the "min_years" field.
 func MinYearsLTE(v int) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldMinYears, v))
+}
+
+// MinYearsIsNil applies the IsNil predicate on the "min_years" field.
+func MinYearsIsNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldIsNull(FieldMinYears))
+}
+
+// MinYearsNotNil applies the NotNil predicate on the "min_years" field.
+func MinYearsNotNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldMinYears))
 }
 
 // IdealYearsEQ applies the EQ predicate on the "ideal_years" field.
@@ -241,6 +331,16 @@ func IdealYearsLTE(v int) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldIdealYears, v))
 }
 
+// IdealYearsIsNil applies the IsNil predicate on the "ideal_years" field.
+func IdealYearsIsNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldIsNull(FieldIdealYears))
+}
+
+// IdealYearsNotNil applies the NotNil predicate on the "ideal_years" field.
+func IdealYearsNotNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldIdealYears))
+}
+
 // WeightEQ applies the EQ predicate on the "weight" field.
 func WeightEQ(v int) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldEQ(FieldWeight, v))
@@ -279,6 +379,16 @@ func WeightLT(v int) predicate.JobExperienceRequirement {
 // WeightLTE applies the LTE predicate on the "weight" field.
 func WeightLTE(v int) predicate.JobExperienceRequirement {
 	return predicate.JobExperienceRequirement(sql.FieldLTE(FieldWeight, v))
+}
+
+// WeightIsNil applies the IsNil predicate on the "weight" field.
+func WeightIsNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldIsNull(FieldWeight))
+}
+
+// WeightNotNil applies the NotNil predicate on the "weight" field.
+func WeightNotNil() predicate.JobExperienceRequirement {
+	return predicate.JobExperienceRequirement(sql.FieldNotNull(FieldWeight))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

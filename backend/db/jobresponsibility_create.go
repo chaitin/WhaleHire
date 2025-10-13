@@ -51,16 +51,16 @@ func (jrc *JobResponsibilityCreate) SetResponsibility(s string) *JobResponsibili
 	return jrc
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (jrc *JobResponsibilityCreate) SetSortOrder(i int) *JobResponsibilityCreate {
-	jrc.mutation.SetSortOrder(i)
+// SetWeight sets the "weight" field.
+func (jrc *JobResponsibilityCreate) SetWeight(i int) *JobResponsibilityCreate {
+	jrc.mutation.SetWeight(i)
 	return jrc
 }
 
-// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (jrc *JobResponsibilityCreate) SetNillableSortOrder(i *int) *JobResponsibilityCreate {
+// SetNillableWeight sets the "weight" field if the given value is not nil.
+func (jrc *JobResponsibilityCreate) SetNillableWeight(i *int) *JobResponsibilityCreate {
 	if i != nil {
-		jrc.SetSortOrder(*i)
+		jrc.SetWeight(*i)
 	}
 	return jrc
 }
@@ -149,10 +149,6 @@ func (jrc *JobResponsibilityCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (jrc *JobResponsibilityCreate) defaults() error {
-	if _, ok := jrc.mutation.SortOrder(); !ok {
-		v := jobresponsibility.DefaultSortOrder
-		jrc.mutation.SetSortOrder(v)
-	}
 	if _, ok := jrc.mutation.CreatedAt(); !ok {
 		if jobresponsibility.DefaultCreatedAt == nil {
 			return fmt.Errorf("db: uninitialized jobresponsibility.DefaultCreatedAt (forgotten import db/runtime?)")
@@ -185,8 +181,10 @@ func (jrc *JobResponsibilityCreate) check() error {
 	if _, ok := jrc.mutation.Responsibility(); !ok {
 		return &ValidationError{Name: "responsibility", err: errors.New(`db: missing required field "JobResponsibility.responsibility"`)}
 	}
-	if _, ok := jrc.mutation.SortOrder(); !ok {
-		return &ValidationError{Name: "sort_order", err: errors.New(`db: missing required field "JobResponsibility.sort_order"`)}
+	if v, ok := jrc.mutation.Weight(); ok {
+		if err := jobresponsibility.WeightValidator(v); err != nil {
+			return &ValidationError{Name: "weight", err: fmt.Errorf(`db: validator failed for field "JobResponsibility.weight": %w`, err)}
+		}
 	}
 	if _, ok := jrc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`db: missing required field "JobResponsibility.created_at"`)}
@@ -241,9 +239,9 @@ func (jrc *JobResponsibilityCreate) createSpec() (*JobResponsibility, *sqlgraph.
 		_spec.SetField(jobresponsibility.FieldResponsibility, field.TypeString, value)
 		_node.Responsibility = value
 	}
-	if value, ok := jrc.mutation.SortOrder(); ok {
-		_spec.SetField(jobresponsibility.FieldSortOrder, field.TypeInt, value)
-		_node.SortOrder = value
+	if value, ok := jrc.mutation.Weight(); ok {
+		_spec.SetField(jobresponsibility.FieldWeight, field.TypeInt, value)
+		_node.Weight = value
 	}
 	if value, ok := jrc.mutation.CreatedAt(); ok {
 		_spec.SetField(jobresponsibility.FieldCreatedAt, field.TypeTime, value)
@@ -364,21 +362,27 @@ func (u *JobResponsibilityUpsert) UpdateResponsibility() *JobResponsibilityUpser
 	return u
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (u *JobResponsibilityUpsert) SetSortOrder(v int) *JobResponsibilityUpsert {
-	u.Set(jobresponsibility.FieldSortOrder, v)
+// SetWeight sets the "weight" field.
+func (u *JobResponsibilityUpsert) SetWeight(v int) *JobResponsibilityUpsert {
+	u.Set(jobresponsibility.FieldWeight, v)
 	return u
 }
 
-// UpdateSortOrder sets the "sort_order" field to the value that was provided on create.
-func (u *JobResponsibilityUpsert) UpdateSortOrder() *JobResponsibilityUpsert {
-	u.SetExcluded(jobresponsibility.FieldSortOrder)
+// UpdateWeight sets the "weight" field to the value that was provided on create.
+func (u *JobResponsibilityUpsert) UpdateWeight() *JobResponsibilityUpsert {
+	u.SetExcluded(jobresponsibility.FieldWeight)
 	return u
 }
 
-// AddSortOrder adds v to the "sort_order" field.
-func (u *JobResponsibilityUpsert) AddSortOrder(v int) *JobResponsibilityUpsert {
-	u.Add(jobresponsibility.FieldSortOrder, v)
+// AddWeight adds v to the "weight" field.
+func (u *JobResponsibilityUpsert) AddWeight(v int) *JobResponsibilityUpsert {
+	u.Add(jobresponsibility.FieldWeight, v)
+	return u
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobResponsibilityUpsert) ClearWeight() *JobResponsibilityUpsert {
+	u.SetNull(jobresponsibility.FieldWeight)
 	return u
 }
 
@@ -494,24 +498,31 @@ func (u *JobResponsibilityUpsertOne) UpdateResponsibility() *JobResponsibilityUp
 	})
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (u *JobResponsibilityUpsertOne) SetSortOrder(v int) *JobResponsibilityUpsertOne {
+// SetWeight sets the "weight" field.
+func (u *JobResponsibilityUpsertOne) SetWeight(v int) *JobResponsibilityUpsertOne {
 	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.SetSortOrder(v)
+		s.SetWeight(v)
 	})
 }
 
-// AddSortOrder adds v to the "sort_order" field.
-func (u *JobResponsibilityUpsertOne) AddSortOrder(v int) *JobResponsibilityUpsertOne {
+// AddWeight adds v to the "weight" field.
+func (u *JobResponsibilityUpsertOne) AddWeight(v int) *JobResponsibilityUpsertOne {
 	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.AddSortOrder(v)
+		s.AddWeight(v)
 	})
 }
 
-// UpdateSortOrder sets the "sort_order" field to the value that was provided on create.
-func (u *JobResponsibilityUpsertOne) UpdateSortOrder() *JobResponsibilityUpsertOne {
+// UpdateWeight sets the "weight" field to the value that was provided on create.
+func (u *JobResponsibilityUpsertOne) UpdateWeight() *JobResponsibilityUpsertOne {
 	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.UpdateSortOrder()
+		s.UpdateWeight()
+	})
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobResponsibilityUpsertOne) ClearWeight() *JobResponsibilityUpsertOne {
+	return u.Update(func(s *JobResponsibilityUpsert) {
+		s.ClearWeight()
 	})
 }
 
@@ -796,24 +807,31 @@ func (u *JobResponsibilityUpsertBulk) UpdateResponsibility() *JobResponsibilityU
 	})
 }
 
-// SetSortOrder sets the "sort_order" field.
-func (u *JobResponsibilityUpsertBulk) SetSortOrder(v int) *JobResponsibilityUpsertBulk {
+// SetWeight sets the "weight" field.
+func (u *JobResponsibilityUpsertBulk) SetWeight(v int) *JobResponsibilityUpsertBulk {
 	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.SetSortOrder(v)
+		s.SetWeight(v)
 	})
 }
 
-// AddSortOrder adds v to the "sort_order" field.
-func (u *JobResponsibilityUpsertBulk) AddSortOrder(v int) *JobResponsibilityUpsertBulk {
+// AddWeight adds v to the "weight" field.
+func (u *JobResponsibilityUpsertBulk) AddWeight(v int) *JobResponsibilityUpsertBulk {
 	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.AddSortOrder(v)
+		s.AddWeight(v)
 	})
 }
 
-// UpdateSortOrder sets the "sort_order" field to the value that was provided on create.
-func (u *JobResponsibilityUpsertBulk) UpdateSortOrder() *JobResponsibilityUpsertBulk {
+// UpdateWeight sets the "weight" field to the value that was provided on create.
+func (u *JobResponsibilityUpsertBulk) UpdateWeight() *JobResponsibilityUpsertBulk {
 	return u.Update(func(s *JobResponsibilityUpsert) {
-		s.UpdateSortOrder()
+		s.UpdateWeight()
+	})
+}
+
+// ClearWeight clears the value of the "weight" field.
+func (u *JobResponsibilityUpsertBulk) ClearWeight() *JobResponsibilityUpsertBulk {
+	return u.Update(func(s *JobResponsibilityUpsert) {
+		s.ClearWeight()
 	})
 }
 
