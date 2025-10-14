@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { X, Search, ChevronLeft, ChevronRight, Briefcase, User, Scale, Settings, BarChart3 } from 'lucide-react';
+import {
+  X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Briefcase,
+  User,
+  Scale,
+  Settings,
+  BarChart3,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -124,7 +134,7 @@ export function SelectJobModal({
     const maxVisiblePages = 5;
 
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage < maxVisiblePages - 1) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -139,7 +149,8 @@ export function SelectJobModal({
           onClick={() => setCurrentPage(i)}
           className={cn(
             'h-8 w-8 p-0',
-            i === currentPage && 'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+            i === currentPage &&
+              'bg-primary text-white border-primary hover:bg-primary hover:text-white'
           )}
         >
           {i}
@@ -162,7 +173,9 @@ export function SelectJobModal({
         <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl overflow-hidden">
           {/* 头部 */}
           <div className="flex items-center justify-between border-b border-[#E8E8E8] px-6 py-5">
-            <h2 className="text-lg font-semibold text-[#333333]">创建新匹配任务</h2>
+            <h2 className="text-lg font-semibold text-[#333333]">
+              创建新匹配任务
+            </h2>
             <Button
               variant="ghost"
               size="sm"
@@ -180,39 +193,54 @@ export function SelectJobModal({
               <h3 className="text-base font-semibold text-[#333333] mb-6">
                 匹配任务创建流程
               </h3>
-              
+
               <div className="relative flex items-center justify-between">
                 {/* 连接线 */}
-                <div className="absolute top-7 left-0 right-0 h-0.5 bg-[#E8E8E8]" style={{ marginLeft: '28px', marginRight: '28px' }} />
-                
+                <div
+                  className="absolute top-7 left-0 right-0 h-0.5 bg-[#E8E8E8]"
+                  style={{ marginLeft: '28px', marginRight: '28px' }}
+                />
+
                 {/* 步骤项 */}
                 {STEPS.map((step, index) => {
                   const IconComponent = step.icon;
                   return (
-                    <div key={step.id} className="relative flex flex-col items-center z-10" style={{ width: '108.5px' }}>
+                    <div
+                      key={step.id}
+                      className="relative flex flex-col items-center z-10"
+                      style={{ width: '108.5px' }}
+                    >
                       {/* 图标 */}
-                      <div className={cn(
-                        'w-14 h-14 rounded-full flex items-center justify-center mb-3',
-                        step.active
-                          ? 'bg-[#D1FAE5] shadow-[0_0_0_4px_rgba(16,185,129,0.1)]'
-                          : 'bg-[#E8E8E8]'
-                      )}>
-                        <div className={cn(
-                          'w-8 h-8 rounded-2xl flex items-center justify-center',
-                          step.active ? 'bg-white' : 'bg-white opacity-60'
-                        )}>
+                      <div
+                        className={cn(
+                          'w-14 h-14 rounded-full flex items-center justify-center mb-3',
+                          step.active
+                            ? 'bg-[#D1FAE5] shadow-[0_0_0_4px_rgba(16,185,129,0.1)]'
+                            : 'bg-[#E8E8E8]'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-2xl flex items-center justify-center',
+                            step.active ? 'bg-white' : 'bg-white opacity-60'
+                          )}
+                        >
                           <IconComponent className="h-5 w-5 text-[#999999]" />
                         </div>
                       </div>
-                      
+
                       {/* 步骤名称 */}
-                      <span className={cn(
-                        'text-sm text-center',
-                        step.active ? 'text-[#10B981] font-semibold' : 'text-[#666666]'
-                      )}>
+                      <span
+                        className={cn(
+                          'text-sm text-center',
+                          step.active
+                            ? 'text-[#10B981] font-semibold'
+                            : 'text-[#666666]'
+                        )}
+                      >
                         {step.name}
                       </span>
-                      
+
                       {/* 描述 */}
                       <span className="text-xs text-center text-[#999999] mt-0.5">
                         {index === 0 && '选择需要匹配的岗位'}
@@ -232,7 +260,10 @@ export function SelectJobModal({
               <div className="flex items-center justify-between gap-3 mb-4">
                 {/* 筛选器 */}
                 <div className="flex items-center gap-3">
-                  <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                  <Select
+                    value={departmentFilter}
+                    onValueChange={setDepartmentFilter}
+                  >
                     <SelectTrigger className="w-[144px] h-[33.5px] text-sm">
                       <SelectValue placeholder="请选择所属部门" />
                     </SelectTrigger>
@@ -244,7 +275,10 @@ export function SelectJobModal({
                     </SelectContent>
                   </Select>
 
-                  <Select value={locationFilter} onValueChange={setLocationFilter}>
+                  <Select
+                    value={locationFilter}
+                    onValueChange={setLocationFilter}
+                  >
                     <SelectTrigger className="w-[144px] h-[33.5px] text-sm">
                       <SelectValue placeholder="请选择工作地点" />
                     </SelectTrigger>
@@ -308,8 +342,8 @@ export function SelectJobModal({
                   </thead>
                   <tbody>
                     {mockJobs.map((job) => (
-                      <tr 
-                        key={job.id} 
+                      <tr
+                        key={job.id}
                         className="border-b border-[#F0F0F0] last:border-b-0 hover:bg-[#FAFAFA] cursor-pointer transition-colors"
                         onClick={() => setSelectedJobId(job.id)}
                       >
@@ -352,7 +386,10 @@ export function SelectJobModal({
                 {/* 分页按钮 */}
                 <div className="flex items-center gap-2">
                   {/* 每页条数 */}
-                  <Select value={pageSize.toString()} onValueChange={(val) => console.log(val)}>
+                  <Select
+                    value={pageSize.toString()}
+                    onValueChange={(val) => console.log(val)}
+                  >
                     <SelectTrigger className="w-[85.5px] h-[25px] text-[13px]">
                       <SelectValue placeholder="20条/页" />
                     </SelectTrigger>
@@ -368,7 +405,9 @@ export function SelectJobModal({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      onClick={() =>
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                      }
                       disabled={currentPage === 1}
                       className="h-8 w-8 p-0"
                     >
@@ -380,7 +419,9 @@ export function SelectJobModal({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      onClick={() =>
+                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                      }
                       disabled={currentPage >= totalPages}
                       className="h-8 w-8 p-0"
                     >
@@ -416,4 +457,3 @@ export function SelectJobModal({
     </Dialog>
   );
 }
-

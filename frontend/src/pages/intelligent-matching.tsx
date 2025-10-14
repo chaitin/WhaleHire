@@ -33,7 +33,10 @@ import {
 import { MatchingDetailDrawer } from '@/components/matching/matching-detail-drawer';
 import { SelectJobModal } from '@/components/matching/select-job-modal';
 import { SelectResumeModal } from '@/components/matching/select-resume-modal';
-import { ConfigWeightModal, WeightConfig } from '@/components/matching/config-weight-modal';
+import {
+  ConfigWeightModal,
+  WeightConfig,
+} from '@/components/matching/config-weight-modal';
 import { MatchingProcessModal } from '@/components/matching/matching-process-modal';
 import { MatchingResultModal } from '@/components/matching/matching-result-modal';
 
@@ -61,31 +64,40 @@ export function IntelligentMatchingPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectResumeModalOpen, setIsSelectResumeModalOpen] = useState(false);
   const [isConfigWeightModalOpen, setIsConfigWeightModalOpen] = useState(false);
-  const [isMatchingProcessModalOpen, setIsMatchingProcessModalOpen] = useState(false);
-  const [isMatchingResultModalOpen, setIsMatchingResultModalOpen] = useState(false);
+  const [isMatchingProcessModalOpen, setIsMatchingProcessModalOpen] =
+    useState(false);
+  const [isMatchingResultModalOpen, setIsMatchingResultModalOpen] =
+    useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [selectedResumeIds, setSelectedResumeIds] = useState<string[]>([]);
 
   // 加载数据
   useEffect(() => {
-    loadData();
-  }, [pagination.current, filters]);
-
-  const loadData = () => {
     // 加载统计数据
     const statsData = getMockMatchingStats();
     setStats(statsData);
 
     // 加载任务列表
-    const result = getMockMatchingTasks(pagination.current, pagination.pageSize, {
-      position: filters.position !== 'all' ? filters.position : undefined,
-      status: filters.status !== 'all' ? filters.status : undefined,
-      keywords: filters.keywords,
-    });
+    const result = getMockMatchingTasks(
+      pagination.current,
+      pagination.pageSize,
+      {
+        position: filters.position !== 'all' ? filters.position : undefined,
+        status: filters.status !== 'all' ? filters.status : undefined,
+        keywords: filters.keywords,
+      }
+    );
 
     setTasks(result.data);
     setPagination(result.pagination);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    pagination.current,
+    pagination.pageSize,
+    filters.position,
+    filters.status,
+    filters.keywords,
+  ]);
 
   // 处理搜索
   const handleSearch = () => {
@@ -191,12 +203,18 @@ export function IntelligentMatchingPage() {
     const halfVisible = Math.floor(maxVisiblePages / 2);
 
     let startPage = Math.max(1, pagination.current - halfVisible);
-    let endPage = Math.min(pagination.totalPages, pagination.current + halfVisible);
+    let endPage = Math.min(
+      pagination.totalPages,
+      pagination.current + halfVisible
+    );
 
     // 调整起始页和结束页，确保显示足够的页码
     if (endPage - startPage + 1 < maxVisiblePages) {
       if (startPage === 1) {
-        endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+        endPage = Math.min(
+          pagination.totalPages,
+          startPage + maxVisiblePages - 1
+        );
       } else if (endPage === pagination.totalPages) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1);
       }
@@ -249,7 +267,9 @@ export function IntelligentMatchingPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">匹配总数</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">{stats.total}</p>
+              <p className="text-2xl font-bold text-blue-600 mt-1">
+                {stats.total}
+              </p>
             </div>
             <div className="rounded-lg bg-blue-50 p-3">
               <Users className="h-5 w-5 text-blue-600" />
@@ -295,7 +315,9 @@ export function IntelligentMatchingPage() {
             {/* 状态筛选 */}
             <Select
               value={filters.status}
-              onValueChange={(value) => setFilters({ ...filters, status: value })}
+              onValueChange={(value) =>
+                setFilters({ ...filters, status: value })
+              }
             >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="全部状态" />
@@ -408,7 +430,9 @@ export function IntelligentMatchingPage() {
                           />
                         </svg>
                       </div>
-                      <div className="text-sm text-gray-500">暂无匹配任务数据</div>
+                      <div className="text-sm text-gray-500">
+                        暂无匹配任务数据
+                      </div>
                       <div className="text-xs text-gray-400">
                         请尝试调整搜索条件或创建新的匹配任务
                       </div>
@@ -425,8 +449,8 @@ export function IntelligentMatchingPage() {
                         {task.taskId}
                       </td>
                       <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
-                        <div 
-                          className="inline-block max-w-[5em] truncate cursor-help" 
+                        <div
+                          className="inline-block max-w-[5em] truncate cursor-help"
                           title={task.jobPositions.join(', ')}
                         >
                           {task.jobPositions.join(', ')}
@@ -451,7 +475,9 @@ export function IntelligentMatchingPage() {
                         {task.creator}
                       </td>
                       <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
-                        {new Date(task.createdAt * 1000).toLocaleDateString('zh-CN')}
+                        {new Date(task.createdAt * 1000).toLocaleDateString(
+                          'zh-CN'
+                        )}
                       </td>
                       <td className="px-8 py-5 text-sm font-medium whitespace-nowrap">
                         <div className="flex items-center gap-2">
@@ -494,16 +520,20 @@ export function IntelligentMatchingPage() {
             <div className="text-sm text-[#6B7280]">
               显示
               <span className="text-[#6B7280]">
-                {tasks.length > 0 ? (pagination.current - 1) * pagination.pageSize + 1 : 0}
+                {tasks.length > 0
+                  ? (pagination.current - 1) * pagination.pageSize + 1
+                  : 0}
               </span>{' '}
               到{' '}
               <span className="text-[#6B7280]">
                 {tasks.length > 0
-                  ? Math.min(pagination.current * pagination.pageSize, pagination.total)
+                  ? Math.min(
+                      pagination.current * pagination.pageSize,
+                      pagination.total
+                    )
                   : 0}
               </span>{' '}
-              条，共{' '}
-              <span className="text-[#6B7280]">{pagination.total}</span>{' '}
+              条，共 <span className="text-[#6B7280]">{pagination.total}</span>{' '}
               条结果
             </div>
 
@@ -595,4 +625,3 @@ export function IntelligentMatchingPage() {
     </div>
   );
 }
-

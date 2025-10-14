@@ -218,7 +218,7 @@ export function JobProfilePage() {
     string[]
   >([]);
   const [availableSkills, setAvailableSkills] = useState<JobSkillMeta[]>([]);
-  
+
   // 技能加载状态
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [skillsHasMore, setSkillsHasMore] = useState(false);
@@ -272,13 +272,13 @@ export function JobProfilePage() {
         size: 20,
         keyword: keyword || undefined,
       });
-      
+
       if (reset) {
         setAvailableSkills(response.items || []);
       } else {
-        setAvailableSkills(prev => [...prev, ...(response.items || [])]);
+        setAvailableSkills((prev) => [...prev, ...(response.items || [])]);
       }
-      
+
       setSkillsHasMore(!!response.page_info?.next_token);
       setSkillsNextToken(response.page_info?.next_token);
     } catch (err) {
@@ -288,11 +288,11 @@ export function JobProfilePage() {
       setSkillsLoading(false);
     }
   };
-  
+
   // 加载更多技能
   const loadMoreSkills = async () => {
     if (!skillsNextToken || skillsLoading) return;
-    
+
     try {
       setSkillsLoading(true);
       const response = await listJobSkillMeta({
@@ -300,8 +300,8 @@ export function JobProfilePage() {
         next_token: skillsNextToken,
         keyword: skillsKeyword || undefined,
       });
-      
-      setAvailableSkills(prev => [...prev, ...(response.items || [])]);
+
+      setAvailableSkills((prev) => [...prev, ...(response.items || [])]);
       setSkillsHasMore(!!response.page_info?.next_token);
       setSkillsNextToken(response.page_info?.next_token);
     } catch (err) {
@@ -310,7 +310,7 @@ export function JobProfilePage() {
       setSkillsLoading(false);
     }
   };
-  
+
   // 搜索技能
   const handleSkillSearch = async (keyword: string) => {
     setSkillsKeyword(keyword);
@@ -910,34 +910,52 @@ export function JobProfilePage() {
       setDeleteConfirmOpen(false);
       setDeletingJob(null);
       fetchJobProfiles(); // 重新获取列表
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 关闭删除确认弹窗
       setDeleteConfirmOpen(false);
-      
+
+      // 类型守卫：检查错误对象结构
+      const isErrorWithData = (
+        error: unknown
+      ): error is {
+        data?: { code?: number };
+        code?: number;
+        message?: string;
+      } => {
+        return typeof error === 'object' && error !== null;
+      };
+
       // 调试信息：打印错误结构
-      console.log('Delete error:', {
-        err,
-        code: err?.code,
-        dataCode: err?.data?.code,
-        message: err?.message,
-        data: err?.data
-      });
-      
-      // 检查是否是岗位已关联简历的错误（错误码 40002）
-      // 业务错误码通常在 err.data.code 中
-      const businessErrorCode = err?.data?.code;
-      if (businessErrorCode === 40002) {
-        setDeleteErrorMessage('当前岗位已关联简历无法删除，请取消关联后重试。');
-        setDeleteErrorOpen(true);
+      if (isErrorWithData(err)) {
+        console.log('Delete error:', {
+          err,
+          code: err.code,
+          dataCode: err.data?.code,
+          message: err.message,
+          data: err.data,
+        });
+
+        // 检查是否是岗位已关联简历的错误（错误码 40002）
+        // 业务错误码通常在 err.data.code 中
+        const businessErrorCode = err.data?.code;
+        if (businessErrorCode === 40002) {
+          setDeleteErrorMessage(
+            '当前岗位已关联简历无法删除，请取消关联后重试。'
+          );
+          setDeleteErrorOpen(true);
+        } else {
+          // 其他错误使用通用错误提示
+          setError(err instanceof Error ? err.message : '删除岗位失败');
+        }
       } else {
-        // 其他错误使用通用错误提示
+        // 未知错误结构
+        console.log('Delete error:', err);
         setError(err instanceof Error ? err.message : '删除岗位失败');
       }
     } finally {
       setIsDeleting(false);
     }
   };
-
 
   // 生成页码数组
   const generatePageNumbers = () => {
@@ -1209,7 +1227,9 @@ export function JobProfilePage() {
                           />
                         </svg>
                       </div>
-                      <div className="text-sm text-gray-500">暂无岗位画像数据</div>
+                      <div className="text-sm text-gray-500">
+                        暂无岗位画像数据
+                      </div>
                       <div className="text-xs text-gray-400">
                         请尝试调整搜索条件或创建新的岗位画像
                       </div>

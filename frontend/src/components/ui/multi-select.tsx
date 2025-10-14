@@ -67,20 +67,23 @@ export function MultiSelect({
   const searchTimeoutRef = React.useRef<NodeJS.Timeout>();
 
   // 搜索处理（带防抖）
-  const handleSearchChange = React.useCallback((value: string) => {
-    setSearchValue(value);
-    
-    if (onSearch) {
-      // 清除之前的定时器
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+  const handleSearchChange = React.useCallback(
+    (value: string) => {
+      setSearchValue(value);
+
+      if (onSearch) {
+        // 清除之前的定时器
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current);
+        }
+        // 设置新的防抖定时器
+        searchTimeoutRef.current = setTimeout(() => {
+          onSearch(value);
+        }, 300);
       }
-      // 设置新的防抖定时器
-      searchTimeoutRef.current = setTimeout(() => {
-        onSearch(value);
-      }, 300);
-    }
-  }, [onSearch]);
+    },
+    [onSearch]
+  );
 
   // 清理定时器
   React.useEffect(() => {
@@ -165,7 +168,9 @@ export function MultiSelect({
   const handleClearAll = () => {
     if (searchValue.trim()) {
       const filteredValues = filteredOptions.map((opt) => opt.value);
-      const newSelected = selected.filter((val) => !filteredValues.includes(val));
+      const newSelected = selected.filter(
+        (val) => !filteredValues.includes(val)
+      );
       onChange(newSelected);
     } else {
       if (onClearAll) {
@@ -204,23 +209,25 @@ export function MultiSelect({
               </span>
             ) : (
               <div className="flex flex-wrap gap-1">
-                {selectedLabels.slice(0, maxDisplayCount).map((label, index) => (
-                  <Badge
-                    key={selected[index]}
-                    variant="secondary"
-                    className="px-2 py-0.5 text-xs bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
-                  >
-                    {label}
-                    {multiple && (
-                      <button
-                        className="ml-1 hover:text-[#EF4444]"
-                        onClick={(e) => handleRemove(selected[index], e)}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </Badge>
-                ))}
+                {selectedLabels
+                  .slice(0, maxDisplayCount)
+                  .map((label, index) => (
+                    <Badge
+                      key={selected[index]}
+                      variant="secondary"
+                      className="px-2 py-0.5 text-xs bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
+                    >
+                      {label}
+                      {multiple && (
+                        <button
+                          className="ml-1 hover:text-[#EF4444]"
+                          onClick={(e) => handleRemove(selected[index], e)}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </Badge>
+                  ))}
                 {selected.length > maxDisplayCount && (
                   <span className="text-[#6B7280] text-xs font-medium py-1">
                     +{selected.length - maxDisplayCount} 更多
@@ -232,7 +239,7 @@ export function MultiSelect({
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
+      <DropdownMenuContent
         className="w-[var(--radix-dropdown-menu-trigger-width)] p-0"
         align="start"
         style={{ maxHeight }}
@@ -287,7 +294,11 @@ export function MultiSelect({
         )}
 
         {/* 选项列表 */}
-        <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: `calc(${maxHeight} - 120px)` }}>
+        <div
+          ref={scrollRef}
+          className="overflow-y-auto"
+          style={{ maxHeight: `calc(${maxHeight} - 120px)` }}
+        >
           {filteredOptions.length === 0 && !loading ? (
             <div className="py-6 text-center text-sm text-[#6B7280]">
               {emptyText}
@@ -323,7 +334,9 @@ export function MultiSelect({
                               : 'bg-white border-[#D1D5DB] hover:border-[#22C55E]'
                           )}
                         >
-                          {isSelected && <Check className="h-3 w-3 text-white stroke-[3]" />}
+                          {isSelected && (
+                            <Check className="h-3 w-3 text-white stroke-[3]" />
+                          )}
                         </div>
                       ) : (
                         <div
@@ -343,7 +356,9 @@ export function MultiSelect({
                       <span
                         className={cn(
                           'flex-1 text-sm',
-                          isSelected ? 'text-[#374151] font-medium' : 'text-[#6B7280]'
+                          isSelected
+                            ? 'text-[#374151] font-medium'
+                            : 'text-[#6B7280]'
                         )}
                       >
                         {option.label}

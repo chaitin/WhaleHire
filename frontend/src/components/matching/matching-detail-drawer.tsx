@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { User, ChevronLeft, ChevronRight, FileText, Download } from 'lucide-react';
 import {
-  Sheet,
-  SheetContent,
-} from '@/components/ui/sheet';
+  User,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Download,
+} from 'lucide-react';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MatchingTaskDetail } from '@/types/matching';
@@ -84,7 +87,7 @@ export function MatchingDetailDrawer({
     const maxVisiblePages = 5;
 
     let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage < maxVisiblePages - 1) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -99,7 +102,8 @@ export function MatchingDetailDrawer({
           onClick={() => handlePageChange(i)}
           className={cn(
             'h-[30px] w-[33px] rounded-md border border-[#C9CDD4] bg-white p-0 text-sm text-[#374151] hover:border-[#10B981] hover:text-[#10B981]',
-            i === currentPage && 'border-[#10B981] bg-[#10B981] text-white hover:bg-[#10B981] hover:text-white'
+            i === currentPage &&
+              'border-[#10B981] bg-[#10B981] text-white hover:bg-[#10B981] hover:text-white'
           )}
         >
           {i}
@@ -132,15 +136,18 @@ export function MatchingDetailDrawer({
                 </span>
               </div>
               <p className="text-sm text-[#4E5969]">
-                创建时间: {new Date(taskDetail.createdAt * 1000).toLocaleString('zh-CN', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                }).replace(/\//g, '-')}
+                创建时间:{' '}
+                {new Date(taskDetail.createdAt * 1000)
+                  .toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                  })
+                  .replace(/\//g, '-')}
               </p>
             </div>
           </div>
@@ -201,7 +208,8 @@ export function MatchingDetailDrawer({
                             {result.resume.name}
                           </div>
                           <div className="text-sm text-[#4E5969]">
-                            {result.resume.age}岁 · {result.resume.education} · {result.resume.experience}
+                            {result.resume.age}岁 · {result.resume.education} ·{' '}
+                            {result.resume.experience}
                           </div>
                         </div>
                       </div>
@@ -290,7 +298,9 @@ export function MatchingDetailDrawer({
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= taskDetail.resultsPagination.totalPages}
+                disabled={
+                  currentPage >= taskDetail.resultsPagination.totalPages
+                }
                 className={cn(
                   'h-[30px] w-[34px] rounded-md border border-[#C9CDD4] bg-white p-0 hover:border-[#10B981] hover:text-[#10B981]',
                   currentPage >= taskDetail.resultsPagination.totalPages &&
@@ -306,4 +316,3 @@ export function MatchingDetailDrawer({
     </Sheet>
   );
 }
-

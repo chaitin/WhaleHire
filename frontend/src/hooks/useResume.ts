@@ -361,7 +361,11 @@ export const useResumeUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const uploadFile = useCallback(
-    async (file: File, jobPositionIds?: string[], position?: string): Promise<Resume> => {
+    async (
+      file: File,
+      jobPositionIds?: string[],
+      position?: string
+    ): Promise<Resume> => {
       setUploading(true);
       setError(null);
       setUploadProgress(0);

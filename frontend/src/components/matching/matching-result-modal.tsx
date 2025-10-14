@@ -69,15 +69,18 @@ export function MatchingResultModal({
   const lowMatchCount = 104;
 
   // 模拟匹配结果数据
-  const matchingResults: MatchingResult[] = Array.from({ length: 24 }, (_, i) => ({
-    id: `result-${i + 1}`,
-    rank: i + 1,
-    candidateName: `候选人${i + 1}`,
-    position: '前端开发工程师',
-    totalScore: 95 - i * 2,
-    matchLevel: i < 8 ? '高' : i < 16 ? '中' : '低',
-    highlights: ['技能匹配度高', '工作经验丰富', '学历背景优秀'],
-  }));
+  const matchingResults: MatchingResult[] = Array.from(
+    { length: 24 },
+    (_, i) => ({
+      id: `result-${i + 1}`,
+      rank: i + 1,
+      candidateName: `候选人${i + 1}`,
+      position: '前端开发工程师',
+      totalScore: 95 - i * 2,
+      matchLevel: i < 8 ? '高' : i < 16 ? '中' : '低',
+      highlights: ['技能匹配度高', '工作经验丰富', '学历背景优秀'],
+    })
+  );
 
   const totalPages = Math.ceil(matchingResults.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
@@ -96,7 +99,7 @@ export function MatchingResultModal({
     const maxVisiblePages = 5;
 
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage < maxVisiblePages - 1) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -111,7 +114,8 @@ export function MatchingResultModal({
           onClick={() => setCurrentPage(i)}
           className={cn(
             'h-8 w-8 p-0',
-            i === currentPage && 'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+            i === currentPage &&
+              'bg-primary text-white border-primary hover:bg-primary hover:text-white'
           )}
         >
           {i}
@@ -140,7 +144,9 @@ export function MatchingResultModal({
         <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl overflow-hidden">
           {/* 头部 */}
           <div className="flex items-center justify-between border-b border-[#E8E8E8] px-6 py-5">
-            <h2 className="text-lg font-semibold text-[#333333]">创建新匹配任务</h2>
+            <h2 className="text-lg font-semibold text-[#333333]">
+              创建新匹配任务
+            </h2>
             <Button
               variant="ghost"
               size="sm"
@@ -158,39 +164,54 @@ export function MatchingResultModal({
               <h3 className="text-base font-semibold text-[#333333] mb-6">
                 匹配任务创建流程
               </h3>
-              
+
               <div className="relative flex items-center justify-between">
                 {/* 连接线 */}
-                <div className="absolute top-7 left-0 right-0 h-0.5 bg-[#E8E8E8]" style={{ marginLeft: '28px', marginRight: '28px' }} />
-                
+                <div
+                  className="absolute top-7 left-0 right-0 h-0.5 bg-[#E8E8E8]"
+                  style={{ marginLeft: '28px', marginRight: '28px' }}
+                />
+
                 {/* 步骤项 */}
                 {STEPS.map((step, index) => {
                   const IconComponent = step.icon;
                   return (
-                    <div key={step.id} className="relative flex flex-col items-center z-10" style={{ width: '108.5px' }}>
+                    <div
+                      key={step.id}
+                      className="relative flex flex-col items-center z-10"
+                      style={{ width: '108.5px' }}
+                    >
                       {/* 图标 */}
-                      <div className={cn(
-                        'w-14 h-14 rounded-full flex items-center justify-center mb-3',
-                        step.active
-                          ? 'bg-[#D1FAE5] shadow-[0_0_0_4px_rgba(16,185,129,0.1)]'
-                          : 'bg-[#E8E8E8]'
-                      )}>
-                        <div className={cn(
-                          'w-8 h-8 rounded-2xl flex items-center justify-center',
-                          step.active ? 'bg-white' : 'bg-white opacity-60'
-                        )}>
+                      <div
+                        className={cn(
+                          'w-14 h-14 rounded-full flex items-center justify-center mb-3',
+                          step.active
+                            ? 'bg-[#D1FAE5] shadow-[0_0_0_4px_rgba(16,185,129,0.1)]'
+                            : 'bg-[#E8E8E8]'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-2xl flex items-center justify-center',
+                            step.active ? 'bg-white' : 'bg-white opacity-60'
+                          )}
+                        >
                           <IconComponent className="h-5 w-5 text-[#999999]" />
                         </div>
                       </div>
-                      
+
                       {/* 步骤名称 */}
-                      <span className={cn(
-                        'text-sm text-center',
-                        step.active ? 'text-[#10B981] font-semibold' : 'text-[#666666]'
-                      )}>
+                      <span
+                        className={cn(
+                          'text-sm text-center',
+                          step.active
+                            ? 'text-[#10B981] font-semibold'
+                            : 'text-[#666666]'
+                        )}
+                      >
                         {step.name}
                       </span>
-                      
+
                       {/* 描述 */}
                       <span className="text-xs text-center text-[#999999] mt-0.5">
                         {index === 0 && '选择需要匹配的岗位'}
@@ -217,9 +238,13 @@ export function MatchingResultModal({
                     <FileText className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <div className="text-2xl font-bold leading-tight text-[#333333]">{totalMatches}</div>
+                    <div className="text-2xl font-bold leading-tight text-[#333333]">
+                      {totalMatches}
+                    </div>
                     <div className="text-xs text-[#666666]">匹配总数</div>
-                    <div className="text-[11px] font-medium text-[#999999]">100%</div>
+                    <div className="text-[11px] font-medium text-[#999999]">
+                      100%
+                    </div>
                   </div>
                 </div>
 
@@ -229,7 +254,9 @@ export function MatchingResultModal({
                     <Target className="h-5 w-5 text-[#3B82F6]" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <div className="text-2xl font-bold leading-tight text-[#333333]">{highMatchCount}</div>
+                    <div className="text-2xl font-bold leading-tight text-[#333333]">
+                      {highMatchCount}
+                    </div>
                     <div className="text-xs text-[#666666]">高匹配度</div>
                     <div className="text-[11px] font-medium text-[#999999]">
                       {((highMatchCount / totalMatches) * 100).toFixed(1)}%
@@ -243,9 +270,13 @@ export function MatchingResultModal({
                     <Award className="h-5 w-5 text-[#F59E0B]" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <div className="text-2xl font-bold leading-tight text-[#333333]">0</div>
+                    <div className="text-2xl font-bold leading-tight text-[#333333]">
+                      0
+                    </div>
                     <div className="text-xs text-[#666666]">中匹配度</div>
-                    <div className="text-[11px] font-medium text-[#999999]">0%</div>
+                    <div className="text-[11px] font-medium text-[#999999]">
+                      0%
+                    </div>
                   </div>
                 </div>
 
@@ -255,7 +286,9 @@ export function MatchingResultModal({
                     <TrendingUp className="h-5 w-5 text-[#10B981]" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <div className="text-2xl font-bold leading-tight text-[#333333]">{lowMatchCount}</div>
+                    <div className="text-2xl font-bold leading-tight text-[#333333]">
+                      {lowMatchCount}
+                    </div>
                     <div className="text-xs text-[#666666]">低匹配度</div>
                     <div className="text-[11px] font-medium text-[#999999]">
                       {((lowMatchCount / totalMatches) * 100).toFixed(1)}%
@@ -267,7 +300,9 @@ export function MatchingResultModal({
 
             {/* 匹配结果详情 */}
             <div className="bg-[#FAFAFA] rounded-lg p-5 mb-4">
-              <h3 className="text-base font-semibold text-[#333333] mb-4">匹配结果详情</h3>
+              <h3 className="text-base font-semibold text-[#333333] mb-4">
+                匹配结果详情
+              </h3>
 
               {/* 表格 */}
               <div className="bg-white rounded-md border border-[#E8E8E8] overflow-hidden mb-4">
@@ -299,8 +334,8 @@ export function MatchingResultModal({
                   </thead>
                   <tbody>
                     {currentResults.map((result) => (
-                      <tr 
-                        key={result.id} 
+                      <tr
+                        key={result.id}
                         className="border-b border-[#F0F0F0] last:border-b-0 hover:bg-[#FAFAFA] transition-colors"
                       >
                         <td className="px-3 py-4 text-sm text-[#333333]">
@@ -313,7 +348,9 @@ export function MatchingResultModal({
                           {result.position}
                         </td>
                         <td className="px-3 py-4">
-                          <span className="text-lg font-bold text-[#10B981]">{result.totalScore}</span>
+                          <span className="text-lg font-bold text-[#10B981]">
+                            {result.totalScore}
+                          </span>
                         </td>
                         <td className="px-3 py-4">
                           <span
@@ -327,18 +364,24 @@ export function MatchingResultModal({
                         </td>
                         <td className="px-3 py-4">
                           <div className="flex flex-wrap gap-1">
-                            {result.highlights.slice(0, 2).map((highlight, idx) => (
-                              <span
-                                key={idx}
-                                className="rounded bg-[#E6F0FF] px-2 py-0.5 text-xs text-[#2563EB]"
-                              >
-                                {highlight}
-                              </span>
-                            ))}
+                            {result.highlights
+                              .slice(0, 2)
+                              .map((highlight, idx) => (
+                                <span
+                                  key={idx}
+                                  className="rounded bg-[#E6F0FF] px-2 py-0.5 text-xs text-[#2563EB]"
+                                >
+                                  {highlight}
+                                </span>
+                              ))}
                           </div>
                         </td>
                         <td className="px-3 py-4">
-                          <Button variant="link" size="sm" className="h-auto p-0 text-sm text-primary hover:text-primary/90">
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-sm text-primary hover:text-primary/90"
+                          >
                             查看详情
                           </Button>
                         </td>
@@ -353,13 +396,17 @@ export function MatchingResultModal({
                 {/* 分页信息 */}
                 <div className="text-[13px] text-[#666666]">
                   显示第 {startIndex + 1} 到{' '}
-                  {Math.min(endIndex, matchingResults.length)} 条，共 {matchingResults.length} 条结果
+                  {Math.min(endIndex, matchingResults.length)} 条，共{' '}
+                  {matchingResults.length} 条结果
                 </div>
 
                 {/* 分页按钮 */}
                 <div className="flex items-center gap-2">
                   {/* 每页条数 */}
-                  <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(value) => setPageSize(Number(value))}
+                  >
                     <SelectTrigger className="w-[85.5px] h-[25px] text-[13px]">
                       <SelectValue placeholder="20条/页" />
                     </SelectTrigger>

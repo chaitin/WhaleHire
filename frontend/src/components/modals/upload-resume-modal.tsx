@@ -75,7 +75,7 @@ export function UploadResumeModal({
         page: 1,
         page_size: 100, // 获取足够多的岗位供选择
       });
-      
+
       // 转换为 MultiSelect 所需的选项格式
       const options: Option[] = response.items.map((job) => ({
         value: job.id,
@@ -149,7 +149,11 @@ export function UploadResumeModal({
       if (file) {
         try {
           // 将选中的岗位ID作为数组传递给上传函数
-          const resume = await uploadFile(file, selectedJobIds, position || undefined);
+          const resume = await uploadFile(
+            file,
+            selectedJobIds,
+            position || undefined
+          );
           setUploadedResume(resume);
           setCurrentStep('preview');
           onSuccess?.(resume);
@@ -793,11 +797,13 @@ export function UploadResumeModal({
               {(selectedJobIds.length === 0 || uploadMethod !== 'local') && (
                 <div className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
                   {selectedJobIds.length === 0 && '⚠️ 请先选择岗位'}
-                  {selectedJobIds.length === 0 && uploadMethod !== 'local' && '，并'}
+                  {selectedJobIds.length === 0 &&
+                    uploadMethod !== 'local' &&
+                    '，并'}
                   {uploadMethod !== 'local' && '⚠️ 请选择上传方式'}
                 </div>
               )}
-              
+
               <div className="flex justify-end">
                 <Button
                   onClick={handleNext}

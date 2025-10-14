@@ -83,4 +83,3 @@ export interface MatchingTaskDetail extends MatchingTask {
   results: MatchResult[]; // 匹配结果列表
   resultsPagination: Pagination; // 结果分页信息
 }
-

@@ -134,7 +134,9 @@ export function getMockMatchingTasks(
 
   // 应用筛选条件
   if (filters?.status && filters.status !== 'all') {
-    filteredTasks = filteredTasks.filter((task) => task.status === filters.status);
+    filteredTasks = filteredTasks.filter(
+      (task) => task.status === filters.status
+    );
   }
 
   if (filters?.position && filters.position !== 'all') {
@@ -468,4 +470,3 @@ export function getMockMatchingTaskDetail(
     },
   };
 }
-

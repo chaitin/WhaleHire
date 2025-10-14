@@ -75,7 +75,7 @@ export function ResumePreviewModal({
     message: string;
   } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  
+
   // 岗位相关状态
   const [jobOptions, setJobOptions] = useState<Option[]>([]);
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
@@ -89,7 +89,7 @@ export function ResumePreviewModal({
         page: 1,
         page_size: 100,
       });
-      
+
       const options: Option[] = response.items.map((job) => ({
         value: job.id,
         label: job.name,
@@ -111,7 +111,9 @@ export function ResumePreviewModal({
       const detail = await getResumeDetail(resumeId);
       setResumeDetail(detail);
       // 初始化已选岗位 - 从 job_positions 中提取岗位ID
-      const jobIds = detail.job_positions?.map(jp => jp.job_position_id).filter(Boolean) || [];
+      const jobIds =
+        detail.job_positions?.map((jp) => jp.job_position_id).filter(Boolean) ||
+        [];
       setSelectedJobIds(jobIds);
     } catch (err) {
       console.error('获取简历详情失败:', err);
@@ -616,7 +618,9 @@ export function ResumePreviewModal({
                           options={jobOptions}
                           selected={selectedJobIds}
                           onChange={setSelectedJobIds}
-                          placeholder={loadingJobs ? '加载岗位中...' : '请选择岗位'}
+                          placeholder={
+                            loadingJobs ? '加载岗位中...' : '请选择岗位'
+                          }
                           multiple={true}
                           searchPlaceholder="搜索岗位名称..."
                           disabled={loadingJobs}
@@ -633,38 +637,52 @@ export function ResumePreviewModal({
                   )}
 
                   {/* 岗位显示 - 使用 job_positions 获取 job_title */}
-                  {!isEditing && resumeDetail.job_positions && resumeDetail.job_positions.length > 0 && (
-                    <div className="flex items-center justify-center gap-2 text-sm mb-3">
-                      <Briefcase className="w-4 h-4 text-emerald-500" />
-                      {resumeDetail.job_positions.length === 1 ? (
-                        <span className="text-emerald-600">{resumeDetail.job_positions[0].job_title}</span>
-                      ) : (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-pointer text-emerald-600">
-                                {resumeDetail.job_positions[0].job_title}等
-                                <span className="font-medium underline decoration-dotted mx-1">
-                                  {resumeDetail.job_positions.length - 1}
+                  {!isEditing &&
+                    resumeDetail.job_positions &&
+                    resumeDetail.job_positions.length > 0 && (
+                      <div className="flex items-center justify-center gap-2 text-sm mb-3">
+                        <Briefcase className="w-4 h-4 text-emerald-500" />
+                        {resumeDetail.job_positions.length === 1 ? (
+                          <span className="text-emerald-600">
+                            {resumeDetail.job_positions[0].job_title}
+                          </span>
+                        ) : (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-pointer text-emerald-600">
+                                  {resumeDetail.job_positions[0].job_title}等
+                                  <span className="font-medium underline decoration-dotted mx-1">
+                                    {resumeDetail.job_positions.length - 1}
+                                  </span>
+                                  个岗位
                                 </span>
-                                个岗位
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-xs">
-                              <div className="space-y-1">
-                                <div className="font-semibold text-xs text-gray-500 mb-2">所有岗位：</div>
-                                {resumeDetail.job_positions.map((jobPos, idx) => (
-                                  <div key={jobPos.id || idx} className="text-sm">
-                                    {jobPos.job_title}
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="bottom"
+                                className="max-w-xs"
+                              >
+                                <div className="space-y-1">
+                                  <div className="font-semibold text-xs text-gray-500 mb-2">
+                                    所有岗位：
                                   </div>
-                                ))}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
-                  )}
+                                  {resumeDetail.job_positions.map(
+                                    (jobPos, idx) => (
+                                      <div
+                                        key={jobPos.id || idx}
+                                        className="text-sm"
+                                      >
+                                        {jobPos.job_title}
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    )}
 
                   <div className="flex items-center justify-center gap-6 text-sm text-gray-600">
                     {isEditing ? (
