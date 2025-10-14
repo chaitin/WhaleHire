@@ -1262,6 +1262,29 @@ func HasDocumentParseWith(preds ...predicate.ResumeDocumentParse) predicate.Resu
 	})
 }
 
+// HasJobApplications applies the HasEdge predicate on the "job_applications" edge.
+func HasJobApplications() predicate.Resume {
+	return predicate.Resume(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, JobApplicationsTable, JobApplicationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasJobApplicationsWith applies the HasEdge predicate on the "job_applications" edge with a given conditions (other predicates).
+func HasJobApplicationsWith(preds ...predicate.ResumeJobApplication) predicate.Resume {
+	return predicate.Resume(func(s *sql.Selector) {
+		step := newJobApplicationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Resume) predicate.Resume {
 	return predicate.Resume(sql.AndPredicates(predicates...))

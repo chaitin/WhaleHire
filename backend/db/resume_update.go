@@ -16,6 +16,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -433,6 +434,21 @@ func (ru *ResumeUpdate) AddDocumentParse(r ...*ResumeDocumentParse) *ResumeUpdat
 	return ru.AddDocumentParseIDs(ids...)
 }
 
+// AddJobApplicationIDs adds the "job_applications" edge to the ResumeJobApplication entity by IDs.
+func (ru *ResumeUpdate) AddJobApplicationIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.AddJobApplicationIDs(ids...)
+	return ru
+}
+
+// AddJobApplications adds the "job_applications" edges to the ResumeJobApplication entity.
+func (ru *ResumeUpdate) AddJobApplications(r ...*ResumeJobApplication) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.AddJobApplicationIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (ru *ResumeUpdate) Mutation() *ResumeMutation {
 	return ru.mutation
@@ -568,6 +584,27 @@ func (ru *ResumeUpdate) RemoveDocumentParse(r ...*ResumeDocumentParse) *ResumeUp
 		ids[i] = r[i].ID
 	}
 	return ru.RemoveDocumentParseIDs(ids...)
+}
+
+// ClearJobApplications clears all "job_applications" edges to the ResumeJobApplication entity.
+func (ru *ResumeUpdate) ClearJobApplications() *ResumeUpdate {
+	ru.mutation.ClearJobApplications()
+	return ru
+}
+
+// RemoveJobApplicationIDs removes the "job_applications" edge to ResumeJobApplication entities by IDs.
+func (ru *ResumeUpdate) RemoveJobApplicationIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.RemoveJobApplicationIDs(ids...)
+	return ru
+}
+
+// RemoveJobApplications removes "job_applications" edges to ResumeJobApplication entities.
+func (ru *ResumeUpdate) RemoveJobApplications(r ...*ResumeJobApplication) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ru.RemoveJobApplicationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1026,6 +1063,51 @@ func (ru *ResumeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ru.mutation.JobApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.JobApplicationsTable,
+			Columns: []string{resume.JobApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedJobApplicationsIDs(); len(nodes) > 0 && !ru.mutation.JobApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.JobApplicationsTable,
+			Columns: []string{resume.JobApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.JobApplicationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.JobApplicationsTable,
+			Columns: []string{resume.JobApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(ru.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1444,6 +1526,21 @@ func (ruo *ResumeUpdateOne) AddDocumentParse(r ...*ResumeDocumentParse) *ResumeU
 	return ruo.AddDocumentParseIDs(ids...)
 }
 
+// AddJobApplicationIDs adds the "job_applications" edge to the ResumeJobApplication entity by IDs.
+func (ruo *ResumeUpdateOne) AddJobApplicationIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.AddJobApplicationIDs(ids...)
+	return ruo
+}
+
+// AddJobApplications adds the "job_applications" edges to the ResumeJobApplication entity.
+func (ruo *ResumeUpdateOne) AddJobApplications(r ...*ResumeJobApplication) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.AddJobApplicationIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (ruo *ResumeUpdateOne) Mutation() *ResumeMutation {
 	return ruo.mutation
@@ -1579,6 +1676,27 @@ func (ruo *ResumeUpdateOne) RemoveDocumentParse(r ...*ResumeDocumentParse) *Resu
 		ids[i] = r[i].ID
 	}
 	return ruo.RemoveDocumentParseIDs(ids...)
+}
+
+// ClearJobApplications clears all "job_applications" edges to the ResumeJobApplication entity.
+func (ruo *ResumeUpdateOne) ClearJobApplications() *ResumeUpdateOne {
+	ruo.mutation.ClearJobApplications()
+	return ruo
+}
+
+// RemoveJobApplicationIDs removes the "job_applications" edge to ResumeJobApplication entities by IDs.
+func (ruo *ResumeUpdateOne) RemoveJobApplicationIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.RemoveJobApplicationIDs(ids...)
+	return ruo
+}
+
+// RemoveJobApplications removes "job_applications" edges to ResumeJobApplication entities.
+func (ruo *ResumeUpdateOne) RemoveJobApplications(r ...*ResumeJobApplication) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ruo.RemoveJobApplicationIDs(ids...)
 }
 
 // Where appends a list predicates to the ResumeUpdate builder.
@@ -2060,6 +2178,51 @@ func (ruo *ResumeUpdateOne) sqlSave(ctx context.Context) (_node *Resume, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.JobApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.JobApplicationsTable,
+			Columns: []string{resume.JobApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedJobApplicationsIDs(); len(nodes) > 0 && !ruo.mutation.JobApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.JobApplicationsTable,
+			Columns: []string{resume.JobApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.JobApplicationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.JobApplicationsTable,
+			Columns: []string{resume.JobApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

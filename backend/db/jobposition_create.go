@@ -20,6 +20,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -295,6 +296,21 @@ func (jpc *JobPositionCreate) AddIndustryRequirements(j ...*JobIndustryRequireme
 		ids[i] = j[i].ID
 	}
 	return jpc.AddIndustryRequirementIDs(ids...)
+}
+
+// AddResumeApplicationIDs adds the "resume_applications" edge to the ResumeJobApplication entity by IDs.
+func (jpc *JobPositionCreate) AddResumeApplicationIDs(ids ...uuid.UUID) *JobPositionCreate {
+	jpc.mutation.AddResumeApplicationIDs(ids...)
+	return jpc
+}
+
+// AddResumeApplications adds the "resume_applications" edges to the ResumeJobApplication entity.
+func (jpc *JobPositionCreate) AddResumeApplications(r ...*ResumeJobApplication) *JobPositionCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return jpc.AddResumeApplicationIDs(ids...)
 }
 
 // Mutation returns the JobPositionMutation object of the builder.
@@ -575,6 +591,22 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(jobindustryrequirement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := jpc.mutation.ResumeApplicationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ResumeApplicationsTable,
+			Columns: []string{jobposition.ResumeApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

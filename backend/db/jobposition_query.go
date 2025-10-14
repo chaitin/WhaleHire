@@ -21,6 +21,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -39,6 +40,7 @@ type JobPositionQuery struct {
 	withEducationRequirements  *JobEducationRequirementQuery
 	withExperienceRequirements *JobExperienceRequirementQuery
 	withIndustryRequirements   *JobIndustryRequirementQuery
+	withResumeApplications     *ResumeJobApplicationQuery
 	modifiers                  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -223,6 +225,28 @@ func (jpq *JobPositionQuery) QueryIndustryRequirements() *JobIndustryRequirement
 			sqlgraph.From(jobposition.Table, jobposition.FieldID, selector),
 			sqlgraph.To(jobindustryrequirement.Table, jobindustryrequirement.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.IndustryRequirementsTable, jobposition.IndustryRequirementsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(jpq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryResumeApplications chains the current query on the "resume_applications" edge.
+func (jpq *JobPositionQuery) QueryResumeApplications() *ResumeJobApplicationQuery {
+	query := (&ResumeJobApplicationClient{config: jpq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := jpq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := jpq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, selector),
+			sqlgraph.To(resumejobapplication.Table, resumejobapplication.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ResumeApplicationsTable, jobposition.ResumeApplicationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(jpq.driver.Dialect(), step)
 		return fromU, nil
@@ -429,6 +453,7 @@ func (jpq *JobPositionQuery) Clone() *JobPositionQuery {
 		withEducationRequirements:  jpq.withEducationRequirements.Clone(),
 		withExperienceRequirements: jpq.withExperienceRequirements.Clone(),
 		withIndustryRequirements:   jpq.withIndustryRequirements.Clone(),
+		withResumeApplications:     jpq.withResumeApplications.Clone(),
 		// clone intermediate query.
 		sql:       jpq.sql.Clone(),
 		path:      jpq.path,
@@ -513,6 +538,17 @@ func (jpq *JobPositionQuery) WithIndustryRequirements(opts ...func(*JobIndustryR
 	return jpq
 }
 
+// WithResumeApplications tells the query-builder to eager-load the nodes that are connected to
+// the "resume_applications" edge. The optional arguments are used to configure the query builder of the edge.
+func (jpq *JobPositionQuery) WithResumeApplications(opts ...func(*ResumeJobApplicationQuery)) *JobPositionQuery {
+	query := (&ResumeJobApplicationClient{config: jpq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	jpq.withResumeApplications = query
+	return jpq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -591,7 +627,7 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*JobPosition{}
 		_spec       = jpq.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			jpq.withDepartment != nil,
 			jpq.withCreator != nil,
 			jpq.withResponsibilities != nil,
@@ -599,6 +635,7 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			jpq.withEducationRequirements != nil,
 			jpq.withExperienceRequirements != nil,
 			jpq.withIndustryRequirements != nil,
+			jpq.withResumeApplications != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -673,6 +710,15 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			func(n *JobPosition) { n.Edges.IndustryRequirements = []*JobIndustryRequirement{} },
 			func(n *JobPosition, e *JobIndustryRequirement) {
 				n.Edges.IndustryRequirements = append(n.Edges.IndustryRequirements, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := jpq.withResumeApplications; query != nil {
+		if err := jpq.loadResumeApplications(ctx, query, nodes,
+			func(n *JobPosition) { n.Edges.ResumeApplications = []*ResumeJobApplication{} },
+			func(n *JobPosition, e *ResumeJobApplication) {
+				n.Edges.ResumeApplications = append(n.Edges.ResumeApplications, e)
 			}); err != nil {
 			return nil, err
 		}
@@ -886,6 +932,36 @@ func (jpq *JobPositionQuery) loadIndustryRequirements(ctx context.Context, query
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "job_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (jpq *JobPositionQuery) loadResumeApplications(ctx context.Context, query *ResumeJobApplicationQuery, nodes []*JobPosition, init func(*JobPosition), assign func(*JobPosition, *ResumeJobApplication)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*JobPosition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(resumejobapplication.FieldJobPositionID)
+	}
+	query.Where(predicate.ResumeJobApplication(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(jobposition.ResumeApplicationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.JobPositionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "job_position_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

@@ -31,6 +31,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -70,6 +71,7 @@ const (
 	TypeResumeDocumentParse      = "ResumeDocumentParse"
 	TypeResumeEducation          = "ResumeEducation"
 	TypeResumeExperience         = "ResumeExperience"
+	TypeResumeJobApplication     = "ResumeJobApplication"
 	TypeResumeLog                = "ResumeLog"
 	TypeResumeProject            = "ResumeProject"
 	TypeResumeSkill              = "ResumeSkill"
@@ -7085,6 +7087,9 @@ type JobPositionMutation struct {
 	industry_requirements          map[uuid.UUID]struct{}
 	removedindustry_requirements   map[uuid.UUID]struct{}
 	clearedindustry_requirements   bool
+	resume_applications            map[uuid.UUID]struct{}
+	removedresume_applications     map[uuid.UUID]struct{}
+	clearedresume_applications     bool
 	done                           bool
 	oldValue                       func(context.Context) (*JobPosition, error)
 	predicates                     []predicate.JobPosition
@@ -8096,6 +8101,60 @@ func (m *JobPositionMutation) ResetIndustryRequirements() {
 	m.removedindustry_requirements = nil
 }
 
+// AddResumeApplicationIDs adds the "resume_applications" edge to the ResumeJobApplication entity by ids.
+func (m *JobPositionMutation) AddResumeApplicationIDs(ids ...uuid.UUID) {
+	if m.resume_applications == nil {
+		m.resume_applications = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.resume_applications[ids[i]] = struct{}{}
+	}
+}
+
+// ClearResumeApplications clears the "resume_applications" edge to the ResumeJobApplication entity.
+func (m *JobPositionMutation) ClearResumeApplications() {
+	m.clearedresume_applications = true
+}
+
+// ResumeApplicationsCleared reports if the "resume_applications" edge to the ResumeJobApplication entity was cleared.
+func (m *JobPositionMutation) ResumeApplicationsCleared() bool {
+	return m.clearedresume_applications
+}
+
+// RemoveResumeApplicationIDs removes the "resume_applications" edge to the ResumeJobApplication entity by IDs.
+func (m *JobPositionMutation) RemoveResumeApplicationIDs(ids ...uuid.UUID) {
+	if m.removedresume_applications == nil {
+		m.removedresume_applications = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.resume_applications, ids[i])
+		m.removedresume_applications[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedResumeApplications returns the removed IDs of the "resume_applications" edge to the ResumeJobApplication entity.
+func (m *JobPositionMutation) RemovedResumeApplicationsIDs() (ids []uuid.UUID) {
+	for id := range m.removedresume_applications {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResumeApplicationsIDs returns the "resume_applications" edge IDs in the mutation.
+func (m *JobPositionMutation) ResumeApplicationsIDs() (ids []uuid.UUID) {
+	for id := range m.resume_applications {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetResumeApplications resets all changes to the "resume_applications" edge.
+func (m *JobPositionMutation) ResetResumeApplications() {
+	m.resume_applications = nil
+	m.clearedresume_applications = false
+	m.removedresume_applications = nil
+}
+
 // Where appends a list predicates to the JobPositionMutation builder.
 func (m *JobPositionMutation) Where(ps ...predicate.JobPosition) {
 	m.predicates = append(m.predicates, ps...)
@@ -8488,7 +8547,7 @@ func (m *JobPositionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *JobPositionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.department != nil {
 		edges = append(edges, jobposition.EdgeDepartment)
 	}
@@ -8509,6 +8568,9 @@ func (m *JobPositionMutation) AddedEdges() []string {
 	}
 	if m.industry_requirements != nil {
 		edges = append(edges, jobposition.EdgeIndustryRequirements)
+	}
+	if m.resume_applications != nil {
+		edges = append(edges, jobposition.EdgeResumeApplications)
 	}
 	return edges
 }
@@ -8555,13 +8617,19 @@ func (m *JobPositionMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case jobposition.EdgeResumeApplications:
+		ids := make([]ent.Value, 0, len(m.resume_applications))
+		for id := range m.resume_applications {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *JobPositionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.removedresponsibilities != nil {
 		edges = append(edges, jobposition.EdgeResponsibilities)
 	}
@@ -8576,6 +8644,9 @@ func (m *JobPositionMutation) RemovedEdges() []string {
 	}
 	if m.removedindustry_requirements != nil {
 		edges = append(edges, jobposition.EdgeIndustryRequirements)
+	}
+	if m.removedresume_applications != nil {
+		edges = append(edges, jobposition.EdgeResumeApplications)
 	}
 	return edges
 }
@@ -8614,13 +8685,19 @@ func (m *JobPositionMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case jobposition.EdgeResumeApplications:
+		ids := make([]ent.Value, 0, len(m.removedresume_applications))
+		for id := range m.removedresume_applications {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *JobPositionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.cleareddepartment {
 		edges = append(edges, jobposition.EdgeDepartment)
 	}
@@ -8641,6 +8718,9 @@ func (m *JobPositionMutation) ClearedEdges() []string {
 	}
 	if m.clearedindustry_requirements {
 		edges = append(edges, jobposition.EdgeIndustryRequirements)
+	}
+	if m.clearedresume_applications {
+		edges = append(edges, jobposition.EdgeResumeApplications)
 	}
 	return edges
 }
@@ -8663,6 +8743,8 @@ func (m *JobPositionMutation) EdgeCleared(name string) bool {
 		return m.clearedexperience_requirements
 	case jobposition.EdgeIndustryRequirements:
 		return m.clearedindustry_requirements
+	case jobposition.EdgeResumeApplications:
+		return m.clearedresume_applications
 	}
 	return false
 }
@@ -8705,6 +8787,9 @@ func (m *JobPositionMutation) ResetEdge(name string) error {
 		return nil
 	case jobposition.EdgeIndustryRequirements:
 		m.ResetIndustryRequirements()
+		return nil
+	case jobposition.EdgeResumeApplications:
+		m.ResetResumeApplications()
 		return nil
 	}
 	return fmt.Errorf("unknown JobPosition edge %s", name)
@@ -11742,49 +11827,52 @@ func (m *MessageMutation) ResetEdge(name string) error {
 // ResumeMutation represents an operation that mutates the Resume nodes in the graph.
 type ResumeMutation struct {
 	config
-	op                    Op
-	typ                   string
-	id                    *uuid.UUID
-	deleted_at            *time.Time
-	name                  *string
-	gender                *string
-	birthday              *time.Time
-	email                 *string
-	phone                 *string
-	current_city          *string
-	highest_education     *string
-	years_experience      *float64
-	addyears_experience   *float64
-	resume_file_url       *string
-	status                *string
-	error_message         *string
-	parsed_at             *time.Time
-	created_at            *time.Time
-	updated_at            *time.Time
-	clearedFields         map[string]struct{}
-	user                  *uuid.UUID
-	cleareduser           bool
-	educations            map[uuid.UUID]struct{}
-	removededucations     map[uuid.UUID]struct{}
-	clearededucations     bool
-	experiences           map[uuid.UUID]struct{}
-	removedexperiences    map[uuid.UUID]struct{}
-	clearedexperiences    bool
-	projects              map[uuid.UUID]struct{}
-	removedprojects       map[uuid.UUID]struct{}
-	clearedprojects       bool
-	skills                map[uuid.UUID]struct{}
-	removedskills         map[uuid.UUID]struct{}
-	clearedskills         bool
-	logs                  map[uuid.UUID]struct{}
-	removedlogs           map[uuid.UUID]struct{}
-	clearedlogs           bool
-	document_parse        map[uuid.UUID]struct{}
-	removeddocument_parse map[uuid.UUID]struct{}
-	cleareddocument_parse bool
-	done                  bool
-	oldValue              func(context.Context) (*Resume, error)
-	predicates            []predicate.Resume
+	op                      Op
+	typ                     string
+	id                      *uuid.UUID
+	deleted_at              *time.Time
+	name                    *string
+	gender                  *string
+	birthday                *time.Time
+	email                   *string
+	phone                   *string
+	current_city            *string
+	highest_education       *string
+	years_experience        *float64
+	addyears_experience     *float64
+	resume_file_url         *string
+	status                  *string
+	error_message           *string
+	parsed_at               *time.Time
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	user                    *uuid.UUID
+	cleareduser             bool
+	educations              map[uuid.UUID]struct{}
+	removededucations       map[uuid.UUID]struct{}
+	clearededucations       bool
+	experiences             map[uuid.UUID]struct{}
+	removedexperiences      map[uuid.UUID]struct{}
+	clearedexperiences      bool
+	projects                map[uuid.UUID]struct{}
+	removedprojects         map[uuid.UUID]struct{}
+	clearedprojects         bool
+	skills                  map[uuid.UUID]struct{}
+	removedskills           map[uuid.UUID]struct{}
+	clearedskills           bool
+	logs                    map[uuid.UUID]struct{}
+	removedlogs             map[uuid.UUID]struct{}
+	clearedlogs             bool
+	document_parse          map[uuid.UUID]struct{}
+	removeddocument_parse   map[uuid.UUID]struct{}
+	cleareddocument_parse   bool
+	job_applications        map[uuid.UUID]struct{}
+	removedjob_applications map[uuid.UUID]struct{}
+	clearedjob_applications bool
+	done                    bool
+	oldValue                func(context.Context) (*Resume, error)
+	predicates              []predicate.Resume
 }
 
 var _ ent.Mutation = (*ResumeMutation)(nil)
@@ -13008,6 +13096,60 @@ func (m *ResumeMutation) ResetDocumentParse() {
 	m.removeddocument_parse = nil
 }
 
+// AddJobApplicationIDs adds the "job_applications" edge to the ResumeJobApplication entity by ids.
+func (m *ResumeMutation) AddJobApplicationIDs(ids ...uuid.UUID) {
+	if m.job_applications == nil {
+		m.job_applications = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.job_applications[ids[i]] = struct{}{}
+	}
+}
+
+// ClearJobApplications clears the "job_applications" edge to the ResumeJobApplication entity.
+func (m *ResumeMutation) ClearJobApplications() {
+	m.clearedjob_applications = true
+}
+
+// JobApplicationsCleared reports if the "job_applications" edge to the ResumeJobApplication entity was cleared.
+func (m *ResumeMutation) JobApplicationsCleared() bool {
+	return m.clearedjob_applications
+}
+
+// RemoveJobApplicationIDs removes the "job_applications" edge to the ResumeJobApplication entity by IDs.
+func (m *ResumeMutation) RemoveJobApplicationIDs(ids ...uuid.UUID) {
+	if m.removedjob_applications == nil {
+		m.removedjob_applications = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.job_applications, ids[i])
+		m.removedjob_applications[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedJobApplications returns the removed IDs of the "job_applications" edge to the ResumeJobApplication entity.
+func (m *ResumeMutation) RemovedJobApplicationsIDs() (ids []uuid.UUID) {
+	for id := range m.removedjob_applications {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// JobApplicationsIDs returns the "job_applications" edge IDs in the mutation.
+func (m *ResumeMutation) JobApplicationsIDs() (ids []uuid.UUID) {
+	for id := range m.job_applications {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetJobApplications resets all changes to the "job_applications" edge.
+func (m *ResumeMutation) ResetJobApplications() {
+	m.job_applications = nil
+	m.clearedjob_applications = false
+	m.removedjob_applications = nil
+}
+
 // Where appends a list predicates to the ResumeMutation builder.
 func (m *ResumeMutation) Where(ps ...predicate.Resume) {
 	m.predicates = append(m.predicates, ps...)
@@ -13486,7 +13628,7 @@ func (m *ResumeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ResumeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.user != nil {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -13507,6 +13649,9 @@ func (m *ResumeMutation) AddedEdges() []string {
 	}
 	if m.document_parse != nil {
 		edges = append(edges, resume.EdgeDocumentParse)
+	}
+	if m.job_applications != nil {
+		edges = append(edges, resume.EdgeJobApplications)
 	}
 	return edges
 }
@@ -13555,13 +13700,19 @@ func (m *ResumeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeJobApplications:
+		ids := make([]ent.Value, 0, len(m.job_applications))
+		for id := range m.job_applications {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ResumeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.removededucations != nil {
 		edges = append(edges, resume.EdgeEducations)
 	}
@@ -13579,6 +13730,9 @@ func (m *ResumeMutation) RemovedEdges() []string {
 	}
 	if m.removeddocument_parse != nil {
 		edges = append(edges, resume.EdgeDocumentParse)
+	}
+	if m.removedjob_applications != nil {
+		edges = append(edges, resume.EdgeJobApplications)
 	}
 	return edges
 }
@@ -13623,13 +13777,19 @@ func (m *ResumeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeJobApplications:
+		ids := make([]ent.Value, 0, len(m.removedjob_applications))
+		for id := range m.removedjob_applications {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ResumeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.cleareduser {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -13650,6 +13810,9 @@ func (m *ResumeMutation) ClearedEdges() []string {
 	}
 	if m.cleareddocument_parse {
 		edges = append(edges, resume.EdgeDocumentParse)
+	}
+	if m.clearedjob_applications {
+		edges = append(edges, resume.EdgeJobApplications)
 	}
 	return edges
 }
@@ -13672,6 +13835,8 @@ func (m *ResumeMutation) EdgeCleared(name string) bool {
 		return m.clearedlogs
 	case resume.EdgeDocumentParse:
 		return m.cleareddocument_parse
+	case resume.EdgeJobApplications:
+		return m.clearedjob_applications
 	}
 	return false
 }
@@ -13711,6 +13876,9 @@ func (m *ResumeMutation) ResetEdge(name string) error {
 		return nil
 	case resume.EdgeDocumentParse:
 		m.ResetDocumentParse()
+		return nil
+	case resume.EdgeJobApplications:
+		m.ResetJobApplications()
 		return nil
 	}
 	return fmt.Errorf("unknown Resume edge %s", name)
@@ -16865,6 +17033,930 @@ func (m *ResumeExperienceMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ResumeExperience edge %s", name)
+}
+
+// ResumeJobApplicationMutation represents an operation that mutates the ResumeJobApplication nodes in the graph.
+type ResumeJobApplicationMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	deleted_at          *time.Time
+	status              *string
+	source              *string
+	notes               *string
+	applied_at          *time.Time
+	created_at          *time.Time
+	updated_at          *time.Time
+	clearedFields       map[string]struct{}
+	resume              *uuid.UUID
+	clearedresume       bool
+	job_position        *uuid.UUID
+	clearedjob_position bool
+	done                bool
+	oldValue            func(context.Context) (*ResumeJobApplication, error)
+	predicates          []predicate.ResumeJobApplication
+}
+
+var _ ent.Mutation = (*ResumeJobApplicationMutation)(nil)
+
+// resumejobapplicationOption allows management of the mutation configuration using functional options.
+type resumejobapplicationOption func(*ResumeJobApplicationMutation)
+
+// newResumeJobApplicationMutation creates new mutation for the ResumeJobApplication entity.
+func newResumeJobApplicationMutation(c config, op Op, opts ...resumejobapplicationOption) *ResumeJobApplicationMutation {
+	m := &ResumeJobApplicationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeResumeJobApplication,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withResumeJobApplicationID sets the ID field of the mutation.
+func withResumeJobApplicationID(id uuid.UUID) resumejobapplicationOption {
+	return func(m *ResumeJobApplicationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ResumeJobApplication
+		)
+		m.oldValue = func(ctx context.Context) (*ResumeJobApplication, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ResumeJobApplication.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withResumeJobApplication sets the old ResumeJobApplication of the mutation.
+func withResumeJobApplication(node *ResumeJobApplication) resumejobapplicationOption {
+	return func(m *ResumeJobApplicationMutation) {
+		m.oldValue = func(context.Context) (*ResumeJobApplication, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ResumeJobApplicationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ResumeJobApplicationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ResumeJobApplication entities.
+func (m *ResumeJobApplicationMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ResumeJobApplicationMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ResumeJobApplicationMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ResumeJobApplication.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ResumeJobApplicationMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ResumeJobApplicationMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ResumeJobApplicationMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[resumejobapplication.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ResumeJobApplicationMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[resumejobapplication.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ResumeJobApplicationMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, resumejobapplication.FieldDeletedAt)
+}
+
+// SetResumeID sets the "resume_id" field.
+func (m *ResumeJobApplicationMutation) SetResumeID(u uuid.UUID) {
+	m.resume = &u
+}
+
+// ResumeID returns the value of the "resume_id" field in the mutation.
+func (m *ResumeJobApplicationMutation) ResumeID() (r uuid.UUID, exists bool) {
+	v := m.resume
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeID returns the old "resume_id" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldResumeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeID: %w", err)
+	}
+	return oldValue.ResumeID, nil
+}
+
+// ResetResumeID resets all changes to the "resume_id" field.
+func (m *ResumeJobApplicationMutation) ResetResumeID() {
+	m.resume = nil
+}
+
+// SetJobPositionID sets the "job_position_id" field.
+func (m *ResumeJobApplicationMutation) SetJobPositionID(u uuid.UUID) {
+	m.job_position = &u
+}
+
+// JobPositionID returns the value of the "job_position_id" field in the mutation.
+func (m *ResumeJobApplicationMutation) JobPositionID() (r uuid.UUID, exists bool) {
+	v := m.job_position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJobPositionID returns the old "job_position_id" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldJobPositionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJobPositionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJobPositionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJobPositionID: %w", err)
+	}
+	return oldValue.JobPositionID, nil
+}
+
+// ResetJobPositionID resets all changes to the "job_position_id" field.
+func (m *ResumeJobApplicationMutation) ResetJobPositionID() {
+	m.job_position = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ResumeJobApplicationMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ResumeJobApplicationMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ResumeJobApplicationMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetSource sets the "source" field.
+func (m *ResumeJobApplicationMutation) SetSource(s string) {
+	m.source = &s
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *ResumeJobApplicationMutation) Source() (r string, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ClearSource clears the value of the "source" field.
+func (m *ResumeJobApplicationMutation) ClearSource() {
+	m.source = nil
+	m.clearedFields[resumejobapplication.FieldSource] = struct{}{}
+}
+
+// SourceCleared returns if the "source" field was cleared in this mutation.
+func (m *ResumeJobApplicationMutation) SourceCleared() bool {
+	_, ok := m.clearedFields[resumejobapplication.FieldSource]
+	return ok
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *ResumeJobApplicationMutation) ResetSource() {
+	m.source = nil
+	delete(m.clearedFields, resumejobapplication.FieldSource)
+}
+
+// SetNotes sets the "notes" field.
+func (m *ResumeJobApplicationMutation) SetNotes(s string) {
+	m.notes = &s
+}
+
+// Notes returns the value of the "notes" field in the mutation.
+func (m *ResumeJobApplicationMutation) Notes() (r string, exists bool) {
+	v := m.notes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotes returns the old "notes" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldNotes(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotes: %w", err)
+	}
+	return oldValue.Notes, nil
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (m *ResumeJobApplicationMutation) ClearNotes() {
+	m.notes = nil
+	m.clearedFields[resumejobapplication.FieldNotes] = struct{}{}
+}
+
+// NotesCleared returns if the "notes" field was cleared in this mutation.
+func (m *ResumeJobApplicationMutation) NotesCleared() bool {
+	_, ok := m.clearedFields[resumejobapplication.FieldNotes]
+	return ok
+}
+
+// ResetNotes resets all changes to the "notes" field.
+func (m *ResumeJobApplicationMutation) ResetNotes() {
+	m.notes = nil
+	delete(m.clearedFields, resumejobapplication.FieldNotes)
+}
+
+// SetAppliedAt sets the "applied_at" field.
+func (m *ResumeJobApplicationMutation) SetAppliedAt(t time.Time) {
+	m.applied_at = &t
+}
+
+// AppliedAt returns the value of the "applied_at" field in the mutation.
+func (m *ResumeJobApplicationMutation) AppliedAt() (r time.Time, exists bool) {
+	v := m.applied_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAppliedAt returns the old "applied_at" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldAppliedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAppliedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAppliedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAppliedAt: %w", err)
+	}
+	return oldValue.AppliedAt, nil
+}
+
+// ResetAppliedAt resets all changes to the "applied_at" field.
+func (m *ResumeJobApplicationMutation) ResetAppliedAt() {
+	m.applied_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ResumeJobApplicationMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ResumeJobApplicationMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ResumeJobApplicationMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ResumeJobApplicationMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ResumeJobApplicationMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ResumeJobApplication entity.
+// If the ResumeJobApplication object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeJobApplicationMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ResumeJobApplicationMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearResume clears the "resume" edge to the Resume entity.
+func (m *ResumeJobApplicationMutation) ClearResume() {
+	m.clearedresume = true
+	m.clearedFields[resumejobapplication.FieldResumeID] = struct{}{}
+}
+
+// ResumeCleared reports if the "resume" edge to the Resume entity was cleared.
+func (m *ResumeJobApplicationMutation) ResumeCleared() bool {
+	return m.clearedresume
+}
+
+// ResumeIDs returns the "resume" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ResumeID instead. It exists only for internal usage by the builders.
+func (m *ResumeJobApplicationMutation) ResumeIDs() (ids []uuid.UUID) {
+	if id := m.resume; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetResume resets all changes to the "resume" edge.
+func (m *ResumeJobApplicationMutation) ResetResume() {
+	m.resume = nil
+	m.clearedresume = false
+}
+
+// ClearJobPosition clears the "job_position" edge to the JobPosition entity.
+func (m *ResumeJobApplicationMutation) ClearJobPosition() {
+	m.clearedjob_position = true
+	m.clearedFields[resumejobapplication.FieldJobPositionID] = struct{}{}
+}
+
+// JobPositionCleared reports if the "job_position" edge to the JobPosition entity was cleared.
+func (m *ResumeJobApplicationMutation) JobPositionCleared() bool {
+	return m.clearedjob_position
+}
+
+// JobPositionIDs returns the "job_position" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// JobPositionID instead. It exists only for internal usage by the builders.
+func (m *ResumeJobApplicationMutation) JobPositionIDs() (ids []uuid.UUID) {
+	if id := m.job_position; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetJobPosition resets all changes to the "job_position" edge.
+func (m *ResumeJobApplicationMutation) ResetJobPosition() {
+	m.job_position = nil
+	m.clearedjob_position = false
+}
+
+// Where appends a list predicates to the ResumeJobApplicationMutation builder.
+func (m *ResumeJobApplicationMutation) Where(ps ...predicate.ResumeJobApplication) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ResumeJobApplicationMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ResumeJobApplicationMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ResumeJobApplication, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ResumeJobApplicationMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ResumeJobApplicationMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ResumeJobApplication).
+func (m *ResumeJobApplicationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ResumeJobApplicationMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.deleted_at != nil {
+		fields = append(fields, resumejobapplication.FieldDeletedAt)
+	}
+	if m.resume != nil {
+		fields = append(fields, resumejobapplication.FieldResumeID)
+	}
+	if m.job_position != nil {
+		fields = append(fields, resumejobapplication.FieldJobPositionID)
+	}
+	if m.status != nil {
+		fields = append(fields, resumejobapplication.FieldStatus)
+	}
+	if m.source != nil {
+		fields = append(fields, resumejobapplication.FieldSource)
+	}
+	if m.notes != nil {
+		fields = append(fields, resumejobapplication.FieldNotes)
+	}
+	if m.applied_at != nil {
+		fields = append(fields, resumejobapplication.FieldAppliedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, resumejobapplication.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, resumejobapplication.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ResumeJobApplicationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case resumejobapplication.FieldDeletedAt:
+		return m.DeletedAt()
+	case resumejobapplication.FieldResumeID:
+		return m.ResumeID()
+	case resumejobapplication.FieldJobPositionID:
+		return m.JobPositionID()
+	case resumejobapplication.FieldStatus:
+		return m.Status()
+	case resumejobapplication.FieldSource:
+		return m.Source()
+	case resumejobapplication.FieldNotes:
+		return m.Notes()
+	case resumejobapplication.FieldAppliedAt:
+		return m.AppliedAt()
+	case resumejobapplication.FieldCreatedAt:
+		return m.CreatedAt()
+	case resumejobapplication.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ResumeJobApplicationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case resumejobapplication.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case resumejobapplication.FieldResumeID:
+		return m.OldResumeID(ctx)
+	case resumejobapplication.FieldJobPositionID:
+		return m.OldJobPositionID(ctx)
+	case resumejobapplication.FieldStatus:
+		return m.OldStatus(ctx)
+	case resumejobapplication.FieldSource:
+		return m.OldSource(ctx)
+	case resumejobapplication.FieldNotes:
+		return m.OldNotes(ctx)
+	case resumejobapplication.FieldAppliedAt:
+		return m.OldAppliedAt(ctx)
+	case resumejobapplication.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case resumejobapplication.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ResumeJobApplication field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeJobApplicationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case resumejobapplication.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case resumejobapplication.FieldResumeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeID(v)
+		return nil
+	case resumejobapplication.FieldJobPositionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJobPositionID(v)
+		return nil
+	case resumejobapplication.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case resumejobapplication.FieldSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case resumejobapplication.FieldNotes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotes(v)
+		return nil
+	case resumejobapplication.FieldAppliedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAppliedAt(v)
+		return nil
+	case resumejobapplication.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case resumejobapplication.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeJobApplication field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ResumeJobApplicationMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ResumeJobApplicationMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeJobApplicationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ResumeJobApplication numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ResumeJobApplicationMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(resumejobapplication.FieldDeletedAt) {
+		fields = append(fields, resumejobapplication.FieldDeletedAt)
+	}
+	if m.FieldCleared(resumejobapplication.FieldSource) {
+		fields = append(fields, resumejobapplication.FieldSource)
+	}
+	if m.FieldCleared(resumejobapplication.FieldNotes) {
+		fields = append(fields, resumejobapplication.FieldNotes)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ResumeJobApplicationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ResumeJobApplicationMutation) ClearField(name string) error {
+	switch name {
+	case resumejobapplication.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case resumejobapplication.FieldSource:
+		m.ClearSource()
+		return nil
+	case resumejobapplication.FieldNotes:
+		m.ClearNotes()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeJobApplication nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ResumeJobApplicationMutation) ResetField(name string) error {
+	switch name {
+	case resumejobapplication.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case resumejobapplication.FieldResumeID:
+		m.ResetResumeID()
+		return nil
+	case resumejobapplication.FieldJobPositionID:
+		m.ResetJobPositionID()
+		return nil
+	case resumejobapplication.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case resumejobapplication.FieldSource:
+		m.ResetSource()
+		return nil
+	case resumejobapplication.FieldNotes:
+		m.ResetNotes()
+		return nil
+	case resumejobapplication.FieldAppliedAt:
+		m.ResetAppliedAt()
+		return nil
+	case resumejobapplication.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case resumejobapplication.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeJobApplication field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ResumeJobApplicationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.resume != nil {
+		edges = append(edges, resumejobapplication.EdgeResume)
+	}
+	if m.job_position != nil {
+		edges = append(edges, resumejobapplication.EdgeJobPosition)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ResumeJobApplicationMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case resumejobapplication.EdgeResume:
+		if id := m.resume; id != nil {
+			return []ent.Value{*id}
+		}
+	case resumejobapplication.EdgeJobPosition:
+		if id := m.job_position; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ResumeJobApplicationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ResumeJobApplicationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ResumeJobApplicationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedresume {
+		edges = append(edges, resumejobapplication.EdgeResume)
+	}
+	if m.clearedjob_position {
+		edges = append(edges, resumejobapplication.EdgeJobPosition)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ResumeJobApplicationMutation) EdgeCleared(name string) bool {
+	switch name {
+	case resumejobapplication.EdgeResume:
+		return m.clearedresume
+	case resumejobapplication.EdgeJobPosition:
+		return m.clearedjob_position
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ResumeJobApplicationMutation) ClearEdge(name string) error {
+	switch name {
+	case resumejobapplication.EdgeResume:
+		m.ClearResume()
+		return nil
+	case resumejobapplication.EdgeJobPosition:
+		m.ClearJobPosition()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeJobApplication unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ResumeJobApplicationMutation) ResetEdge(name string) error {
+	switch name {
+	case resumejobapplication.EdgeResume:
+		m.ResetResume()
+		return nil
+	case resumejobapplication.EdgeJobPosition:
+		m.ResetJobPosition()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeJobApplication edge %s", name)
 }
 
 // ResumeLogMutation represents an operation that mutates the ResumeLog nodes in the graph.

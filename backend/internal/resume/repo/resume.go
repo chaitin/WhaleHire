@@ -13,6 +13,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -76,6 +77,9 @@ func (r *ResumeRepo) GetByID(ctx context.Context, id string) (*db.Resume, error)
 		WithSkills().
 		WithProjects().
 		WithLogs().
+		WithJobApplications(func(q *db.ResumeJobApplicationQuery) {
+			q.WithJobPosition()
+		}).
 		Only(ctx)
 }
 
@@ -116,6 +120,13 @@ func (r *ResumeRepo) Delete(ctx context.Context, id string) error {
 
 	// 使用事务确保级联删除的原子性
 	return entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		// 删除简历与岗位的关联关系
+		if _, err := tx.ResumeJobApplication.Delete().Where(
+			resumejobapplication.ResumeID(resumeID),
+		).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to delete resume job applications: %w", err)
+		}
+
 		// 删除简历教育经历
 		if _, err := tx.ResumeEducation.Delete().Where(
 			resumeeducation.ResumeID(resumeID),
@@ -169,7 +180,11 @@ func (r *ResumeRepo) Delete(ctx context.Context, id string) error {
 
 // List 获取简历列表
 func (r *ResumeRepo) List(ctx context.Context, req *domain.ListResumeReq) ([]*db.Resume, *db.PageInfo, error) {
-	query := r.db.Resume.Query().WithUser()
+	query := r.db.Resume.Query().
+		WithUser().
+		WithJobApplications(func(q *db.ResumeJobApplicationQuery) {
+			q.WithJobPosition()
+		})
 
 	// 应用过滤条件
 	if req.UploaderID != nil {
@@ -193,6 +208,20 @@ func (r *ResumeRepo) List(ctx context.Context, req *domain.ListResumeReq) ([]*db
 				resume.CurrentCityContains(*req.Search),
 			),
 		)
+	}
+
+	// 按岗位ID筛选
+	if req.JobPositionID != nil {
+		jobPositionID, err := uuid.Parse(*req.JobPositionID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid job position ID: %w", err)
+		}
+		query = query.Where(resume.HasJobApplicationsWith(resumejobapplication.JobPositionID(jobPositionID)))
+	}
+
+	// 按申请来源筛选
+	if req.Source != nil {
+		query = query.Where(resume.HasJobApplicationsWith(resumejobapplication.SourceEQ(*req.Source)))
 	}
 
 	if req.DateFrom != nil {

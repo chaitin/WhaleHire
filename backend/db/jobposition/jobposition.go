@@ -55,6 +55,8 @@ const (
 	EdgeExperienceRequirements = "experience_requirements"
 	// EdgeIndustryRequirements holds the string denoting the industry_requirements edge name in mutations.
 	EdgeIndustryRequirements = "industry_requirements"
+	// EdgeResumeApplications holds the string denoting the resume_applications edge name in mutations.
+	EdgeResumeApplications = "resume_applications"
 	// Table holds the table name of the jobposition in the database.
 	Table = "job_position"
 	// DepartmentTable is the table that holds the department relation/edge.
@@ -106,6 +108,13 @@ const (
 	IndustryRequirementsInverseTable = "job_industry_requirement"
 	// IndustryRequirementsColumn is the table column denoting the industry_requirements relation/edge.
 	IndustryRequirementsColumn = "job_id"
+	// ResumeApplicationsTable is the table that holds the resume_applications relation/edge.
+	ResumeApplicationsTable = "resume_job_applications"
+	// ResumeApplicationsInverseTable is the table name for the ResumeJobApplication entity.
+	// It exists in this package in order to avoid circular dependency with the "resumejobapplication" package.
+	ResumeApplicationsInverseTable = "resume_job_applications"
+	// ResumeApplicationsColumn is the table column denoting the resume_applications relation/edge.
+	ResumeApplicationsColumn = "job_position_id"
 )
 
 // Columns holds all SQL columns for jobposition fields.
@@ -310,6 +319,20 @@ func ByIndustryRequirements(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpt
 		sqlgraph.OrderByNeighborTerms(s, newIndustryRequirementsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByResumeApplicationsCount orders the results by resume_applications count.
+func ByResumeApplicationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newResumeApplicationsStep(), opts...)
+	}
+}
+
+// ByResumeApplications orders the results by resume_applications terms.
+func ByResumeApplications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newResumeApplicationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -357,5 +380,12 @@ func newIndustryRequirementsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(IndustryRequirementsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, IndustryRequirementsTable, IndustryRequirementsColumn),
+	)
+}
+func newResumeApplicationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ResumeApplicationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ResumeApplicationsTable, ResumeApplicationsColumn),
 	)
 }

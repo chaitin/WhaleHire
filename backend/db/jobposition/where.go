@@ -953,6 +953,29 @@ func HasIndustryRequirementsWith(preds ...predicate.JobIndustryRequirement) pred
 	})
 }
 
+// HasResumeApplications applies the HasEdge predicate on the "resume_applications" edge.
+func HasResumeApplications() predicate.JobPosition {
+	return predicate.JobPosition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ResumeApplicationsTable, ResumeApplicationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasResumeApplicationsWith applies the HasEdge predicate on the "resume_applications" edge with a given conditions (other predicates).
+func HasResumeApplicationsWith(preds ...predicate.ResumeJobApplication) predicate.JobPosition {
+	return predicate.JobPosition(func(s *sql.Selector) {
+		step := newResumeApplicationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.JobPosition) predicate.JobPosition {
 	return predicate.JobPosition(sql.AndPredicates(predicates...))

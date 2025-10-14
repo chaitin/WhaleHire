@@ -13,21 +13,24 @@ import (
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
 	v1_5 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
-	repo5 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
-	usecase5 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
-	v1_6 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
-	usecase6 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
+	repo6 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
+	usecase6 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
+	v1_7 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
+	usecase7 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	v1_3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
-	repo3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
-	usecase3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
+	repo5 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
+	usecase4 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
+	v1_6 "github.com/chaitin/WhaleHire/backend/internal/job_application/handler/v1"
+	repo3 "github.com/chaitin/WhaleHire/backend/internal/job_application/repo"
+	usecase2 "github.com/chaitin/WhaleHire/backend/internal/job_application/usecase"
 	v1_4 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
 	repo4 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
-	usecase4 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
+	usecase5 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
 	v1_2 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
-	usecase2 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	usecase3 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
 	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
@@ -73,33 +76,37 @@ func newServer() (*Server, error) {
 		return nil, err
 	}
 	storageService := service.NewStorageService(minioClient, configConfig, slogLogger, userRepo)
-	resumeUsecase := usecase2.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, slogLogger)
-	resumeHandler := v1_2.NewResumeHandler(web, resumeUsecase, authMiddleware, slogLogger)
-	generalAgentRepo := repo3.NewGeneralAgentRepo(client)
-	generalAgentUsecase := usecase3.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
-	generalAgentHandler := v1_3.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
+	jobApplicationRepo := repo3.NewJobApplicationRepo(client)
 	jobProfileRepo := repo4.NewJobProfileRepo(client)
+	jobApplicationUsecase := usecase2.NewJobApplicationUsecase(jobApplicationRepo, jobProfileRepo)
+	resumeUsecase := usecase3.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, jobApplicationUsecase, slogLogger)
+	resumeHandler := v1_2.NewResumeHandler(web, resumeUsecase, jobApplicationUsecase, authMiddleware, slogLogger)
+	generalAgentRepo := repo5.NewGeneralAgentRepo(client)
+	generalAgentUsecase := usecase4.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
+	generalAgentHandler := v1_3.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
 	jobSkillMetaRepo := repo4.NewJobSkillMetaRepo(client)
-	jobProfileUsecase := usecase4.NewJobProfileUsecase(jobProfileRepo, jobSkillMetaRepo, slogLogger)
+	jobProfileUsecase := usecase5.NewJobProfileUsecase(jobProfileRepo, jobSkillMetaRepo, slogLogger)
 	jobProfileHandler := v1_4.NewJobProfileHandler(web, jobProfileUsecase, authMiddleware, slogLogger)
-	departmentRepo := repo5.NewDepartmentRepo(client)
-	departmentUsecase := usecase5.NewDepartmentUsecase(departmentRepo, slogLogger)
+	departmentRepo := repo6.NewDepartmentRepo(client)
+	departmentUsecase := usecase6.NewDepartmentUsecase(departmentRepo, slogLogger)
 	departmentHandler := v1_5.NewDepartmentHandler(web, departmentUsecase, authMiddleware, slogLogger)
-	fileUsecase := usecase6.NewFileUsecase(slogLogger, minioClient, configConfig)
-	fileHandler := v1_6.NewFileHandler(web, fileUsecase, authMiddleware)
+	jobApplicationHandler := v1_6.NewJobApplicationHandler(web, jobApplicationUsecase, resumeUsecase, authMiddleware, slogLogger)
+	fileUsecase := usecase7.NewFileUsecase(slogLogger, minioClient, configConfig)
+	fileHandler := v1_7.NewFileHandler(web, fileUsecase, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
-		config:         configConfig,
-		web:            web,
-		ent:            client,
-		logger:         slogLogger,
-		userV1:         userHandler,
-		resumeV1:       resumeHandler,
-		generalagentV1: generalAgentHandler,
-		jobprofileV1:   jobProfileHandler,
-		departmentV1:   departmentHandler,
-		fileV1:         fileHandler,
-		version:        versionInfo,
+		config:           configConfig,
+		web:              web,
+		ent:              client,
+		logger:           slogLogger,
+		userV1:           userHandler,
+		resumeV1:         resumeHandler,
+		generalagentV1:   generalAgentHandler,
+		jobprofileV1:     jobProfileHandler,
+		departmentV1:     departmentHandler,
+		jobapplicationV1: jobApplicationHandler,
+		fileV1:           fileHandler,
+		version:          versionInfo,
 	}
 	return server, nil
 }
@@ -107,15 +114,16 @@ func newServer() (*Server, error) {
 // wire.go:
 
 type Server struct {
-	config         *config.Config
-	web            *web.Web
-	ent            *db.Client
-	logger         *slog.Logger
-	userV1         *v1.UserHandler
-	resumeV1       *v1_2.ResumeHandler
-	generalagentV1 *v1_3.GeneralAgentHandler
-	jobprofileV1   *v1_4.JobProfileHandler
-	departmentV1   *v1_5.DepartmentHandler
-	fileV1         *v1_6.FileHandler
-	version        *version.VersionInfo
+	config           *config.Config
+	web              *web.Web
+	ent              *db.Client
+	logger           *slog.Logger
+	userV1           *v1.UserHandler
+	resumeV1         *v1_2.ResumeHandler
+	generalagentV1   *v1_3.GeneralAgentHandler
+	jobprofileV1     *v1_4.JobProfileHandler
+	departmentV1     *v1_5.DepartmentHandler
+	jobapplicationV1 *v1_6.JobApplicationHandler
+	fileV1           *v1_7.FileHandler
+	version          *version.VersionInfo
 }

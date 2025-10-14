@@ -30,6 +30,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -116,6 +117,7 @@ func checkColumn(table, column string) error {
 			resumedocumentparse.Table:      resumedocumentparse.ValidColumn,
 			resumeeducation.Table:          resumeeducation.ValidColumn,
 			resumeexperience.Table:         resumeexperience.ValidColumn,
+			resumejobapplication.Table:     resumejobapplication.ValidColumn,
 			resumelog.Table:                resumelog.ValidColumn,
 			resumeproject.Table:            resumeproject.ValidColumn,
 			resumeskill.Table:              resumeskill.ValidColumn,

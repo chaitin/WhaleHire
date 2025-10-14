@@ -263,6 +263,20 @@ func (re *ResumeExperienceQuery) Page(ctx context.Context, page, size int) ([]*R
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (rja *ResumeJobApplicationQuery) Page(ctx context.Context, page, size int) ([]*ResumeJobApplication, *PageInfo, error) {
+	cnt, err := rja.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := rja.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (rl *ResumeLogQuery) Page(ctx context.Context, page, size int) ([]*ResumeLog, *PageInfo, error) {
 	cnt, err := rl.Count(ctx)
 	if err != nil {

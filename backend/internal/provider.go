@@ -11,6 +11,9 @@ import (
 	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
 	generalagentrepo "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	generalagentusecase "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
+	jobapplicationV1 "github.com/chaitin/WhaleHire/backend/internal/job_application/handler/v1"
+	jobapplicationrepo "github.com/chaitin/WhaleHire/backend/internal/job_application/repo"
+	jobapplicationusecase "github.com/chaitin/WhaleHire/backend/internal/job_application/usecase"
 	jobprofileV1 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
 	jobprofilerepo "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
 	jobprofileusecase "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
@@ -30,16 +33,18 @@ func NewAPIHandlers(
 	generalAgentV1 *generalagentV1.GeneralAgentHandler,
 	resumeV1 *resumeV1.ResumeHandler,
 	jobProfileV1 *jobprofileV1.JobProfileHandler,
+	jobApplicationV1 *jobapplicationV1.JobApplicationHandler,
 	fileV1 *fileV1.FileHandler,
 	departmentV1 *departmentV1.DepartmentHandler,
 ) *APIHandlers {
 	return &APIHandlers{
-		UserHandler:         userV1,
-		GeneralAgentHandler: generalAgentV1,
-		ResumeHandler:       resumeV1,
-		JobProfileHandler:   jobProfileV1,
-		FileHandler:         fileV1,
-		DepartmentHandler:   departmentV1,
+		UserHandler:           userV1,
+		GeneralAgentHandler:   generalAgentV1,
+		ResumeHandler:         resumeV1,
+		JobProfileHandler:     jobProfileV1,
+		JobApplicationHandler: jobApplicationV1,
+		FileHandler:           fileV1,
+		DepartmentHandler:     departmentV1,
 	}
 }
 
@@ -62,6 +67,9 @@ var Provider = wire.NewSet(
 	jobprofilerepo.NewJobProfileRepo,
 	jobprofilerepo.NewJobSkillMetaRepo,
 	jobprofileusecase.NewJobProfileUsecase,
+	jobapplicationV1.NewJobApplicationHandler,
+	jobapplicationrepo.NewJobApplicationRepo,
+	jobapplicationusecase.NewJobApplicationUsecase,
 	departmentrepo.NewDepartmentRepo,
 	departmentusecase.NewDepartmentUsecase,
 	departmentV1.NewDepartmentHandler,

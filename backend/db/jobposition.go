@@ -67,9 +67,11 @@ type JobPositionEdges struct {
 	ExperienceRequirements []*JobExperienceRequirement `json:"experience_requirements,omitempty"`
 	// IndustryRequirements holds the value of the industry_requirements edge.
 	IndustryRequirements []*JobIndustryRequirement `json:"industry_requirements,omitempty"`
+	// ResumeApplications holds the value of the resume_applications edge.
+	ResumeApplications []*ResumeJobApplication `json:"resume_applications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 }
 
 // DepartmentOrErr returns the Department value or an error if the edge
@@ -137,6 +139,15 @@ func (e JobPositionEdges) IndustryRequirementsOrErr() ([]*JobIndustryRequirement
 		return e.IndustryRequirements, nil
 	}
 	return nil, &NotLoadedError{edge: "industry_requirements"}
+}
+
+// ResumeApplicationsOrErr returns the ResumeApplications value or an error if the edge
+// was not loaded in eager-loading.
+func (e JobPositionEdges) ResumeApplicationsOrErr() ([]*ResumeJobApplication, error) {
+	if e.loadedTypes[7] {
+		return e.ResumeApplications, nil
+	}
+	return nil, &NotLoadedError{edge: "resume_applications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -298,6 +309,11 @@ func (jp *JobPosition) QueryExperienceRequirements() *JobExperienceRequirementQu
 // QueryIndustryRequirements queries the "industry_requirements" edge of the JobPosition entity.
 func (jp *JobPosition) QueryIndustryRequirements() *JobIndustryRequirementQuery {
 	return NewJobPositionClient(jp.config).QueryIndustryRequirements(jp)
+}
+
+// QueryResumeApplications queries the "resume_applications" edge of the JobPosition entity.
+func (jp *JobPosition) QueryResumeApplications() *ResumeJobApplicationQuery {
+	return NewJobPositionClient(jp.config).QueryResumeApplications(jp)
 }
 
 // Update returns a builder for updating this JobPosition.

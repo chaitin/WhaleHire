@@ -27,6 +27,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -579,6 +580,33 @@ func (f TraverseResumeExperience) Traverse(ctx context.Context, q db.Query) erro
 	return fmt.Errorf("unexpected query type %T. expect *db.ResumeExperienceQuery", q)
 }
 
+// The ResumeJobApplicationFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeJobApplicationFunc func(context.Context, *db.ResumeJobApplicationQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeJobApplicationFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeJobApplicationQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeJobApplicationQuery", q)
+}
+
+// The TraverseResumeJobApplication type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeJobApplication func(context.Context, *db.ResumeJobApplicationQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeJobApplication) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeJobApplication) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeJobApplicationQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeJobApplicationQuery", q)
+}
+
 // The ResumeLogFunc type is an adapter to allow the use of ordinary function as a Querier.
 type ResumeLogFunc func(context.Context, *db.ResumeLogQuery) (db.Value, error)
 
@@ -834,6 +862,8 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.ResumeEducationQuery, predicate.ResumeEducation, resumeeducation.OrderOption]{typ: db.TypeResumeEducation, tq: q}, nil
 	case *db.ResumeExperienceQuery:
 		return &query[*db.ResumeExperienceQuery, predicate.ResumeExperience, resumeexperience.OrderOption]{typ: db.TypeResumeExperience, tq: q}, nil
+	case *db.ResumeJobApplicationQuery:
+		return &query[*db.ResumeJobApplicationQuery, predicate.ResumeJobApplication, resumejobapplication.OrderOption]{typ: db.TypeResumeJobApplication, tq: q}, nil
 	case *db.ResumeLogQuery:
 		return &query[*db.ResumeLogQuery, predicate.ResumeLog, resumelog.OrderOption]{typ: db.TypeResumeLog, tq: q}, nil
 	case *db.ResumeProjectQuery:

@@ -225,6 +225,18 @@ func (f ResumeExperienceFunc) Mutate(ctx context.Context, m db.Mutation) (db.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeExperienceMutation", m)
 }
 
+// The ResumeJobApplicationFunc type is an adapter to allow the use of ordinary
+// function as ResumeJobApplication mutator.
+type ResumeJobApplicationFunc func(context.Context, *db.ResumeJobApplicationMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeJobApplicationFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeJobApplicationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeJobApplicationMutation", m)
+}
+
 // The ResumeLogFunc type is an adapter to allow the use of ordinary
 // function as ResumeLog mutator.
 type ResumeLogFunc func(context.Context, *db.ResumeLogMutation) (db.Value, error)

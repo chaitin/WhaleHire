@@ -34,6 +34,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -87,6 +88,8 @@ type Client struct {
 	ResumeEducation *ResumeEducationClient
 	// ResumeExperience is the client for interacting with the ResumeExperience builders.
 	ResumeExperience *ResumeExperienceClient
+	// ResumeJobApplication is the client for interacting with the ResumeJobApplication builders.
+	ResumeJobApplication *ResumeJobApplicationClient
 	// ResumeLog is the client for interacting with the ResumeLog builders.
 	ResumeLog *ResumeLogClient
 	// ResumeProject is the client for interacting with the ResumeProject builders.
@@ -132,6 +135,7 @@ func (c *Client) init() {
 	c.ResumeDocumentParse = NewResumeDocumentParseClient(c.config)
 	c.ResumeEducation = NewResumeEducationClient(c.config)
 	c.ResumeExperience = NewResumeExperienceClient(c.config)
+	c.ResumeJobApplication = NewResumeJobApplicationClient(c.config)
 	c.ResumeLog = NewResumeLogClient(c.config)
 	c.ResumeProject = NewResumeProjectClient(c.config)
 	c.ResumeSkill = NewResumeSkillClient(c.config)
@@ -250,6 +254,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ResumeDocumentParse:      NewResumeDocumentParseClient(cfg),
 		ResumeEducation:          NewResumeEducationClient(cfg),
 		ResumeExperience:         NewResumeExperienceClient(cfg),
+		ResumeJobApplication:     NewResumeJobApplicationClient(cfg),
 		ResumeLog:                NewResumeLogClient(cfg),
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
@@ -295,6 +300,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ResumeDocumentParse:      NewResumeDocumentParseClient(cfg),
 		ResumeEducation:          NewResumeEducationClient(cfg),
 		ResumeExperience:         NewResumeExperienceClient(cfg),
+		ResumeJobApplication:     NewResumeJobApplicationClient(cfg),
 		ResumeLog:                NewResumeLogClient(cfg),
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
@@ -336,8 +342,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Department, c.JobEducationRequirement, c.JobExperienceRequirement,
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
-		c.ResumeExperience, c.ResumeLog, c.ResumeProject, c.ResumeSkill, c.Role,
-		c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog, c.ResumeProject,
+		c.ResumeSkill, c.Role, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Use(hooks...)
 	}
@@ -351,8 +357,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Department, c.JobEducationRequirement, c.JobExperienceRequirement,
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
-		c.ResumeExperience, c.ResumeLog, c.ResumeProject, c.ResumeSkill, c.Role,
-		c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog, c.ResumeProject,
+		c.ResumeSkill, c.Role, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -397,6 +403,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ResumeEducation.mutate(ctx, m)
 	case *ResumeExperienceMutation:
 		return c.ResumeExperience.mutate(ctx, m)
+	case *ResumeJobApplicationMutation:
+		return c.ResumeJobApplication.mutate(ctx, m)
 	case *ResumeLogMutation:
 		return c.ResumeLog.mutate(ctx, m)
 	case *ResumeProjectMutation:
@@ -2055,6 +2063,22 @@ func (c *JobPositionClient) QueryIndustryRequirements(jp *JobPosition) *JobIndus
 	return query
 }
 
+// QueryResumeApplications queries the resume_applications edge of a JobPosition.
+func (c *JobPositionClient) QueryResumeApplications(jp *JobPosition) *ResumeJobApplicationQuery {
+	query := (&ResumeJobApplicationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(resumejobapplication.Table, resumejobapplication.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ResumeApplicationsTable, jobposition.ResumeApplicationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *JobPositionClient) Hooks() []Hook {
 	hooks := c.hooks.JobPosition
@@ -2938,6 +2962,22 @@ func (c *ResumeClient) QueryDocumentParse(r *Resume) *ResumeDocumentParseQuery {
 	return query
 }
 
+// QueryJobApplications queries the job_applications edge of a Resume.
+func (c *ResumeClient) QueryJobApplications(r *Resume) *ResumeJobApplicationQuery {
+	query := (&ResumeJobApplicationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, id),
+			sqlgraph.To(resumejobapplication.Table, resumejobapplication.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.JobApplicationsTable, resume.JobApplicationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ResumeClient) Hooks() []Hook {
 	hooks := c.hooks.Resume
@@ -3415,6 +3455,173 @@ func (c *ResumeExperienceClient) mutate(ctx context.Context, m *ResumeExperience
 		return (&ResumeExperienceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("db: unknown ResumeExperience mutation op: %q", m.Op())
+	}
+}
+
+// ResumeJobApplicationClient is a client for the ResumeJobApplication schema.
+type ResumeJobApplicationClient struct {
+	config
+}
+
+// NewResumeJobApplicationClient returns a client for the ResumeJobApplication from the given config.
+func NewResumeJobApplicationClient(c config) *ResumeJobApplicationClient {
+	return &ResumeJobApplicationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resumejobapplication.Hooks(f(g(h())))`.
+func (c *ResumeJobApplicationClient) Use(hooks ...Hook) {
+	c.hooks.ResumeJobApplication = append(c.hooks.ResumeJobApplication, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `resumejobapplication.Intercept(f(g(h())))`.
+func (c *ResumeJobApplicationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ResumeJobApplication = append(c.inters.ResumeJobApplication, interceptors...)
+}
+
+// Create returns a builder for creating a ResumeJobApplication entity.
+func (c *ResumeJobApplicationClient) Create() *ResumeJobApplicationCreate {
+	mutation := newResumeJobApplicationMutation(c.config, OpCreate)
+	return &ResumeJobApplicationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ResumeJobApplication entities.
+func (c *ResumeJobApplicationClient) CreateBulk(builders ...*ResumeJobApplicationCreate) *ResumeJobApplicationCreateBulk {
+	return &ResumeJobApplicationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ResumeJobApplicationClient) MapCreateBulk(slice any, setFunc func(*ResumeJobApplicationCreate, int)) *ResumeJobApplicationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ResumeJobApplicationCreateBulk{err: fmt.Errorf("calling to ResumeJobApplicationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ResumeJobApplicationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ResumeJobApplicationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ResumeJobApplication.
+func (c *ResumeJobApplicationClient) Update() *ResumeJobApplicationUpdate {
+	mutation := newResumeJobApplicationMutation(c.config, OpUpdate)
+	return &ResumeJobApplicationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResumeJobApplicationClient) UpdateOne(rja *ResumeJobApplication) *ResumeJobApplicationUpdateOne {
+	mutation := newResumeJobApplicationMutation(c.config, OpUpdateOne, withResumeJobApplication(rja))
+	return &ResumeJobApplicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResumeJobApplicationClient) UpdateOneID(id uuid.UUID) *ResumeJobApplicationUpdateOne {
+	mutation := newResumeJobApplicationMutation(c.config, OpUpdateOne, withResumeJobApplicationID(id))
+	return &ResumeJobApplicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResumeJobApplication.
+func (c *ResumeJobApplicationClient) Delete() *ResumeJobApplicationDelete {
+	mutation := newResumeJobApplicationMutation(c.config, OpDelete)
+	return &ResumeJobApplicationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ResumeJobApplicationClient) DeleteOne(rja *ResumeJobApplication) *ResumeJobApplicationDeleteOne {
+	return c.DeleteOneID(rja.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ResumeJobApplicationClient) DeleteOneID(id uuid.UUID) *ResumeJobApplicationDeleteOne {
+	builder := c.Delete().Where(resumejobapplication.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResumeJobApplicationDeleteOne{builder}
+}
+
+// Query returns a query builder for ResumeJobApplication.
+func (c *ResumeJobApplicationClient) Query() *ResumeJobApplicationQuery {
+	return &ResumeJobApplicationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeResumeJobApplication},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ResumeJobApplication entity by its id.
+func (c *ResumeJobApplicationClient) Get(ctx context.Context, id uuid.UUID) (*ResumeJobApplication, error) {
+	return c.Query().Where(resumejobapplication.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResumeJobApplicationClient) GetX(ctx context.Context, id uuid.UUID) *ResumeJobApplication {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryResume queries the resume edge of a ResumeJobApplication.
+func (c *ResumeJobApplicationClient) QueryResume(rja *ResumeJobApplication) *ResumeQuery {
+	query := (&ResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rja.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumejobapplication.Table, resumejobapplication.FieldID, id),
+			sqlgraph.To(resume.Table, resume.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, resumejobapplication.ResumeTable, resumejobapplication.ResumeColumn),
+		)
+		fromV = sqlgraph.Neighbors(rja.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryJobPosition queries the job_position edge of a ResumeJobApplication.
+func (c *ResumeJobApplicationClient) QueryJobPosition(rja *ResumeJobApplication) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rja.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumejobapplication.Table, resumejobapplication.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, resumejobapplication.JobPositionTable, resumejobapplication.JobPositionColumn),
+		)
+		fromV = sqlgraph.Neighbors(rja.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ResumeJobApplicationClient) Hooks() []Hook {
+	hooks := c.hooks.ResumeJobApplication
+	return append(hooks[:len(hooks):len(hooks)], resumejobapplication.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ResumeJobApplicationClient) Interceptors() []Interceptor {
+	inters := c.inters.ResumeJobApplication
+	return append(inters[:len(inters):len(inters)], resumejobapplication.Interceptors[:]...)
+}
+
+func (c *ResumeJobApplicationClient) mutate(ctx context.Context, m *ResumeJobApplicationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ResumeJobApplicationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ResumeJobApplicationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ResumeJobApplicationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ResumeJobApplicationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ResumeJobApplication mutation op: %q", m.Op())
 	}
 }
 
@@ -4690,16 +4897,16 @@ type (
 		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Department,
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
-		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog,
-		ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
+		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeJobApplication,
+		ResumeLog, ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
 		UserLoginHistory []ent.Hook
 	}
 	inters struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Department,
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
-		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeLog,
-		ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
+		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeJobApplication,
+		ResumeLog, ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
 		UserLoginHistory []ent.Interceptor
 	}
 )
