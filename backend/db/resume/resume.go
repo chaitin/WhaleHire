@@ -62,6 +62,8 @@ const (
 	EdgeLogs = "logs"
 	// EdgeDocumentParse holds the string denoting the document_parse edge name in mutations.
 	EdgeDocumentParse = "document_parse"
+	// EdgeJobApplications holds the string denoting the job_applications edge name in mutations.
+	EdgeJobApplications = "job_applications"
 	// Table holds the table name of the resume in the database.
 	Table = "resumes"
 	// UserTable is the table that holds the user relation/edge.
@@ -113,6 +115,13 @@ const (
 	DocumentParseInverseTable = "resume_document_parses"
 	// DocumentParseColumn is the table column denoting the document_parse relation/edge.
 	DocumentParseColumn = "resume_id"
+	// JobApplicationsTable is the table that holds the job_applications relation/edge.
+	JobApplicationsTable = "resume_job_applications"
+	// JobApplicationsInverseTable is the table name for the ResumeJobApplication entity.
+	// It exists in this package in order to avoid circular dependency with the "resumejobapplication" package.
+	JobApplicationsInverseTable = "resume_job_applications"
+	// JobApplicationsColumn is the table column denoting the job_applications relation/edge.
+	JobApplicationsColumn = "resume_id"
 )
 
 // Columns holds all SQL columns for resume fields.
@@ -346,6 +355,20 @@ func ByDocumentParse(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newDocumentParseStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByJobApplicationsCount orders the results by job_applications count.
+func ByJobApplicationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newJobApplicationsStep(), opts...)
+	}
+}
+
+// ByJobApplications orders the results by job_applications terms.
+func ByJobApplications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newJobApplicationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -393,5 +416,12 @@ func newDocumentParseStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DocumentParseInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, DocumentParseTable, DocumentParseColumn),
+	)
+}
+func newJobApplicationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(JobApplicationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, JobApplicationsTable, JobApplicationsColumn),
 	)
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/GoYoko/web"
 	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 )
 
 // GenerateAgentUsecase 通用智能体用例接口

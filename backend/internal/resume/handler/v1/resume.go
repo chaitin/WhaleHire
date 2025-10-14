@@ -3,8 +3,9 @@ package v1
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/errcode"
@@ -12,19 +13,22 @@ import (
 )
 
 type ResumeHandler struct {
-	usecase domain.ResumeUsecase
-	logger  *slog.Logger
+	usecase               domain.ResumeUsecase
+	jobApplicationUsecase domain.JobApplicationUsecase
+	logger                *slog.Logger
 }
 
 func NewResumeHandler(
 	w *web.Web,
 	usecase domain.ResumeUsecase,
+	jobApplicationUsecase domain.JobApplicationUsecase,
 	auth *middleware.AuthMiddleware,
 	logger *slog.Logger,
 ) *ResumeHandler {
 	h := &ResumeHandler{
-		usecase: usecase,
-		logger:  logger,
+		usecase:               usecase,
+		jobApplicationUsecase: jobApplicationUsecase,
+		logger:                logger,
 	}
 
 	// 简历管理API路由
@@ -48,12 +52,15 @@ func NewResumeHandler(
 //
 //	@Tags			Resume
 //	@Summary		上传简历
-//	@Description	上传简历文件并进行解析
+//	@Description	上传简历文件并进行解析，支持选择多个岗位
 //	@ID				upload-resume
 //	@Accept			multipart/form-data
 //	@Produce		json
-//	@Param			file	formData	file	true	"简历文件"
-//	@Success		200		{object}	web.Resp{data=domain.Resume}
+//	@Param			file				formData	file	true	"简历文件"
+//	@Param			job_position_ids	formData	string	false	"岗位ID列表，多个ID用逗号分隔"
+//	@Param			source				formData	string	false	"申请来源"
+//	@Param			notes				formData	string	false	"备注信息"
+//	@Success		200					{object}	web.Resp{data=domain.Resume}
 //	@Router			/api/v1/resume/upload [post]
 func (h *ResumeHandler) Upload(c *web.Context) error {
 	// 获取当前用户
@@ -70,11 +77,37 @@ func (h *ResumeHandler) Upload(c *web.Context) error {
 	}
 	defer file.Close()
 
+	// 获取岗位ID列表
+	var jobPositionIDs []string
+	if jobPositionIDsStr := c.Request().FormValue("job_position_ids"); jobPositionIDsStr != "" {
+		jobPositionIDs = strings.Split(strings.TrimSpace(jobPositionIDsStr), ",")
+		// 清理空字符串
+		var cleanIDs []string
+		for _, id := range jobPositionIDs {
+			if trimmedID := strings.TrimSpace(id); trimmedID != "" {
+				cleanIDs = append(cleanIDs, trimmedID)
+			}
+		}
+		jobPositionIDs = cleanIDs
+	}
+
+	// 获取其他可选参数
+	var source, notes *string
+	if sourceStr := c.Request().FormValue("source"); sourceStr != "" {
+		source = &sourceStr
+	}
+	if notesStr := c.Request().FormValue("notes"); notesStr != "" {
+		notes = &notesStr
+	}
+
 	// 构建上传请求
 	req := &domain.UploadResumeReq{
-		UploaderID: user.ID,
-		File:       file,
-		Filename:   header.Filename,
+		UploaderID:     user.ID,
+		File:           file,
+		Filename:       header.Filename,
+		JobPositionIDs: jobPositionIDs,
+		Source:         source,
+		Notes:          notes,
 	}
 
 	// 调用业务逻辑
@@ -82,6 +115,25 @@ func (h *ResumeHandler) Upload(c *web.Context) error {
 	if err != nil {
 		h.logger.Error("failed to upload resume", "error", err, "user_id", user.ID)
 		return err
+	}
+
+	// 如果指定了岗位，创建关联关系
+	if len(jobPositionIDs) > 0 {
+		jobAppReq := &domain.CreateJobApplicationsReq{
+			ResumeID:       resume.ID,
+			JobPositionIDs: jobPositionIDs,
+			Source:         source,
+			Notes:          notes,
+		}
+
+		_, err := h.jobApplicationUsecase.CreateJobApplications(c.Request().Context(), jobAppReq)
+		if err != nil {
+			h.logger.Error("failed to create job applications", "error", err, "resume_id", resume.ID)
+			// 不返回错误，因为简历已经上传成功，只是关联关系创建失败
+			h.logger.Warn("resume uploaded successfully but job applications creation failed", "resume_id", resume.ID)
+		} else {
+			h.logger.Info("job applications created successfully", "resume_id", resume.ID, "job_position_count", len(jobPositionIDs))
+		}
 	}
 
 	h.logger.Info("resume uploaded successfully", "resume_id", resume.ID, "user_id", user.ID)
@@ -169,12 +221,12 @@ func (h *ResumeHandler) Search(c *web.Context, req domain.SearchResumeReq) error
 //
 //	@Tags			Resume
 //	@Summary		更新简历
-//	@Description	更新简历信息，支持更新基本信息、教育经历、工作经历和技能
+//	@Description	更新简历信息，支持更新基本信息、教育经历、工作经历、技能和岗位关联
 //	@ID				update-resume
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string					true	"简历ID"
-//	@Param			param	body		domain.UpdateResumeReq	true	"更新参数，支持更新基本信息和子表数据（教育经历、工作经历、技能）"
+//	@Param			param	body		domain.UpdateResumeReq	true	"更新参数，支持更新基本信息、子表数据（教育经历、工作经历、技能）和岗位关联信息"
 //	@Success		200		{object}	web.Resp{data=domain.Resume}
 //	@Router			/api/v1/resume/{id} [put]
 func (h *ResumeHandler) Update(c *web.Context, req domain.UpdateResumeReq) error {

@@ -74,10 +74,18 @@ export const deleteResume = async (id: string): Promise<void> => {
 // 上传简历
 export const uploadResume = async (
   file: File,
+  jobPositionIds?: string[],
   position?: string
 ): Promise<Resume> => {
   const formData = new FormData();
   formData.append('file', file);
+
+  // 如果有岗位ID列表，用逗号分隔发送
+  if (jobPositionIds && jobPositionIds.length > 0) {
+    formData.append('job_position_ids', jobPositionIds.join(','));
+  }
+
+  // 保留旧的position参数以兼容
   if (position) {
     formData.append('position', position);
   }

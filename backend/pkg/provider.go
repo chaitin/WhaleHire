@@ -5,8 +5,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"golang.org/x/text/language"
 
-	"github.com/GoYoko/web"
-	"github.com/GoYoko/web/locale"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web/locale"
 
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/errcode"

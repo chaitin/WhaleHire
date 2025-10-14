@@ -27,6 +27,8 @@ import { Resume, ResumeParseProgress, ResumeDetail } from '@/types/resume';
 import { formatDate } from '@/lib/utils';
 import { ResumeParseProgressComponent } from '@/components/ui/resume-parse-progress';
 import { getResumeProgress, getResumeDetail } from '@/services/resume';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
+import { listJobProfiles } from '@/services/job-profile';
 
 interface UploadResumeModalProps {
   open: boolean;
@@ -51,8 +53,41 @@ export function UploadResumeModal({
   const [progress, setProgress] = useState<ResumeParseProgress | null>(null);
   const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
 
+  // 岗位选择相关状态
+  const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
+  const [jobOptions, setJobOptions] = useState<Option[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+
   const { uploadFile, uploading, uploadProgress, error } = useResumeUpload();
   const { startPolling, stopPolling } = useResumePollingManager();
+
+  // 获取岗位列表
+  useEffect(() => {
+    if (open) {
+      fetchJobProfiles();
+    }
+  }, [open]);
+
+  const fetchJobProfiles = async () => {
+    setLoadingJobs(true);
+    try {
+      const response = await listJobProfiles({
+        page: 1,
+        page_size: 100, // 获取足够多的岗位供选择
+      });
+
+      // 转换为 MultiSelect 所需的选项格式
+      const options: Option[] = response.items.map((job) => ({
+        value: job.id,
+        label: job.name,
+      }));
+      setJobOptions(options);
+    } catch (err) {
+      console.error('获取岗位列表失败:', err);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -65,6 +100,7 @@ export function UploadResumeModal({
         setCurrentStep('upload');
         setUploadedResume(null);
         setShowContentTip(false);
+        setSelectedJobIds([]); // 重置岗位选择
       }
     }
   }, [open, stopPolling, currentStep]);
@@ -112,7 +148,12 @@ export function UploadResumeModal({
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         try {
-          const resume = await uploadFile(file, position || undefined);
+          // 将选中的岗位ID作为数组传递给上传函数
+          const resume = await uploadFile(
+            file,
+            selectedJobIds,
+            position || undefined
+          );
           setUploadedResume(resume);
           setCurrentStep('preview');
           onSuccess?.(resume);
@@ -127,6 +168,11 @@ export function UploadResumeModal({
 
   const handleNext = () => {
     if (currentStep === 'upload' && uploadMethod === 'local' && !uploading) {
+      // 验证是否选择了岗位
+      if (selectedJobIds.length === 0) {
+        // 这里可以添加提示
+        return;
+      }
       handleFileUpload();
     } else if (currentStep === 'preview') {
       setShowContentTip(true);
@@ -305,6 +351,26 @@ export function UploadResumeModal({
         <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
           {currentStep === 'upload' && (
             <>
+              {/* 岗位选择区块 */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium text-gray-700">
+                    选择岗位 <span className="text-red-500">*</span>
+                  </Label>
+                </div>
+
+                <MultiSelect
+                  options={jobOptions}
+                  selected={selectedJobIds}
+                  onChange={setSelectedJobIds}
+                  placeholder={loadingJobs ? '加载岗位中...' : '请选择岗位'}
+                  multiple={true}
+                  searchPlaceholder="搜索岗位名称..."
+                  disabled={loadingJobs}
+                  selectCountLabel="岗位"
+                />
+              </div>
+
               {/* 上传方式选择 */}
               <div className="space-y-4">
                 <Label className="text-sm font-medium text-gray-700">
@@ -726,15 +792,32 @@ export function UploadResumeModal({
         {/* 底部按钮 */}
         {currentStep === 'upload' && (
           <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200 bg-gray-50">
-            <div className="flex justify-end">
-              <Button
-                onClick={handleNext}
-                disabled={uploadMethod !== 'local' || uploading}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
-              >
-                {uploading ? '上传中...' : '上传文件'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+            <div className="flex flex-col gap-2">
+              {/* 验证提示 */}
+              {(selectedJobIds.length === 0 || uploadMethod !== 'local') && (
+                <div className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+                  {selectedJobIds.length === 0 && '⚠️ 请先选择岗位'}
+                  {selectedJobIds.length === 0 &&
+                    uploadMethod !== 'local' &&
+                    '，并'}
+                  {uploadMethod !== 'local' && '⚠️ 请选择上传方式'}
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleNext}
+                  disabled={
+                    uploadMethod !== 'local' ||
+                    uploading ||
+                    selectedJobIds.length === 0
+                  }
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
+                >
+                  {uploading ? '上传中...' : '上传文件'}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}

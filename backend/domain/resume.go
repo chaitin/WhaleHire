@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
@@ -101,24 +101,25 @@ const (
 
 // UploadResumeReq 上传简历请求
 type UploadResumeReq struct {
-	UploaderID string    `json:"uploader_id" validate:"required"`
-	File       io.Reader `json:"-"`
-	Filename   string    `json:"filename" validate:"required"`
-	JobID      *string   `json:"job_id,omitempty"`
-	Source     *string   `json:"source,omitempty"`
+	UploaderID     string    `json:"uploader_id" validate:"required"`
+	File           io.Reader `json:"-"`
+	Filename       string    `json:"filename" validate:"required"`
+	JobPositionIDs []string  `json:"job_position_ids,omitempty"` // 关联的岗位ID列表
+	Source         *string   `json:"source,omitempty"`           // 申请来源
+	Notes          *string   `json:"notes,omitempty"`            // 备注信息
 }
 
 // ListResumeReq 简历列表请求
 type ListResumeReq struct {
 	web.Pagination
 
-	UploaderID *string       `json:"uploader_id,omitempty" query:"uploader_id"`
-	Status     *ResumeStatus `json:"status,omitempty" query:"status"`
-	Search     *string       `json:"search,omitempty" query:"search"`
-	JobID      *string       `json:"job_id,omitempty" query:"job_id"`
-	Source     *string       `json:"source,omitempty" query:"source"`
-	DateFrom   *time.Time    `json:"date_from,omitempty" query:"date_from"`
-	DateTo     *time.Time    `json:"date_to,omitempty" query:"date_to"`
+	UploaderID    *string       `json:"uploader_id,omitempty" query:"uploader_id"`
+	Status        *ResumeStatus `json:"status,omitempty" query:"status"`
+	Search        *string       `json:"search,omitempty" query:"search"`
+	JobPositionID *string       `json:"job_position_id,omitempty" query:"job_position_id"` // 按岗位ID筛选
+	Source        *string       `json:"source,omitempty" query:"source"`
+	DateFrom      *time.Time    `json:"date_from,omitempty" query:"date_from"`
+	DateTo        *time.Time    `json:"date_to,omitempty" query:"date_to"`
 }
 
 // SearchResumeReq 搜索简历请求
@@ -151,6 +152,9 @@ type UpdateResumeReq struct {
 	Experiences      []*UpdateResumeExperience `json:"experiences,omitempty"`
 	Skills           []*UpdateResumeSkill      `json:"skills,omitempty"`
 	Projects         []*UpdateResumeProject    `json:"projects,omitempty"`
+	// 岗位关联更新
+	JobPositionIDs  []string                     `json:"job_position_ids,omitempty"` // 关联的岗位ID列表
+	JobApplications []*JobApplicationAssociation `json:"job_applications,omitempty"` // 岗位申请详细信息
 }
 
 // UpdateResumeEducation 更新教育经历请求
@@ -203,25 +207,26 @@ type UpdateResumeProject struct {
 	ProjectType      *string    `json:"project_type,omitempty"`     // 项目类型
 }
 
-// Resume 简历信息
+// Resume 简历基本信息
 type Resume struct {
-	ID               string       `json:"id"`
-	UploaderID       string       `json:"uploader_id"`
-	UploaderName     string       `json:"uploader_name"`
-	Name             string       `json:"name"`
-	Gender           string       `json:"gender"`
-	Birthday         *time.Time   `json:"birthday,omitempty"`
-	Email            string       `json:"email"`
-	Phone            string       `json:"phone"`
-	CurrentCity      string       `json:"current_city"`
-	HighestEducation string       `json:"highest_education"`
-	YearsExperience  float64      `json:"years_experience"`
-	ResumeFileURL    string       `json:"resume_file_url"`
-	Status           ResumeStatus `json:"status"`
-	ErrorMessage     string       `json:"error_message,omitempty"`
-	ParsedAt         *time.Time   `json:"parsed_at,omitempty"`
-	CreatedAt        int64        `json:"created_at"`
-	UpdatedAt        int64        `json:"updated_at"`
+	ID               string            `json:"id"`
+	UploaderID       string            `json:"uploader_id"`
+	UploaderName     string            `json:"uploader_name"`
+	Name             string            `json:"name"`
+	Gender           string            `json:"gender"`
+	Birthday         *time.Time        `json:"birthday,omitempty"`
+	Email            string            `json:"email"`
+	Phone            string            `json:"phone"`
+	CurrentCity      string            `json:"current_city"`
+	HighestEducation string            `json:"highest_education"`
+	YearsExperience  float64           `json:"years_experience"`
+	ResumeFileURL    string            `json:"resume_file_url"`
+	Status           ResumeStatus      `json:"status"`
+	ErrorMessage     string            `json:"error_message,omitempty"`
+	ParsedAt         *time.Time        `json:"parsed_at,omitempty"`
+	JobPositions     []*JobApplication `json:"job_positions,omitempty"` // 关联的岗位信息
+	CreatedAt        int64             `json:"created_at"`
+	UpdatedAt        int64             `json:"updated_at"`
 }
 
 func (r *Resume) From(e *db.Resume) *Resume {
@@ -436,6 +441,23 @@ type ListResumeResp struct {
 
 // SearchResumeResp 搜索简历响应
 type SearchResumeResp struct {
+	*db.PageInfo
+	Resumes []*Resume `json:"resumes"`
+}
+
+// GetResumesByJobPositionIDReq 根据岗位ID获取简历请求
+type GetResumesByJobPositionIDReq struct {
+	web.Pagination
+
+	JobPositionID string     `json:"job_position_id,omitempty" query:"job_position_id"` // 岗位ID
+	Status        *string    `json:"status,omitempty" query:"status"`                   // 申请状态筛选
+	Source        *string    `json:"source,omitempty" query:"source"`                   // 申请来源筛选
+	DateFrom      *time.Time `json:"date_from,omitempty" query:"date_from"`             // 申请开始时间
+	DateTo        *time.Time `json:"date_to,omitempty" query:"date_to"`                 // 申请结束时间
+}
+
+// GetResumesByJobPositionIDResp 根据岗位ID获取简历信息响应
+type GetResumesByJobPositionIDResp struct {
 	*db.PageInfo
 	Resumes []*Resume `json:"resumes"`
 }

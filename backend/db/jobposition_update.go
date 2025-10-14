@@ -20,6 +20,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -339,6 +340,21 @@ func (jpu *JobPositionUpdate) AddIndustryRequirements(j ...*JobIndustryRequireme
 	return jpu.AddIndustryRequirementIDs(ids...)
 }
 
+// AddResumeApplicationIDs adds the "resume_applications" edge to the ResumeJobApplication entity by IDs.
+func (jpu *JobPositionUpdate) AddResumeApplicationIDs(ids ...uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.AddResumeApplicationIDs(ids...)
+	return jpu
+}
+
+// AddResumeApplications adds the "resume_applications" edges to the ResumeJobApplication entity.
+func (jpu *JobPositionUpdate) AddResumeApplications(r ...*ResumeJobApplication) *JobPositionUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return jpu.AddResumeApplicationIDs(ids...)
+}
+
 // Mutation returns the JobPositionMutation object of the builder.
 func (jpu *JobPositionUpdate) Mutation() *JobPositionMutation {
 	return jpu.mutation
@@ -459,6 +475,27 @@ func (jpu *JobPositionUpdate) RemoveIndustryRequirements(j ...*JobIndustryRequir
 		ids[i] = j[i].ID
 	}
 	return jpu.RemoveIndustryRequirementIDs(ids...)
+}
+
+// ClearResumeApplications clears all "resume_applications" edges to the ResumeJobApplication entity.
+func (jpu *JobPositionUpdate) ClearResumeApplications() *JobPositionUpdate {
+	jpu.mutation.ClearResumeApplications()
+	return jpu
+}
+
+// RemoveResumeApplicationIDs removes the "resume_applications" edge to ResumeJobApplication entities by IDs.
+func (jpu *JobPositionUpdate) RemoveResumeApplicationIDs(ids ...uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.RemoveResumeApplicationIDs(ids...)
+	return jpu
+}
+
+// RemoveResumeApplications removes "resume_applications" edges to ResumeJobApplication entities.
+func (jpu *JobPositionUpdate) RemoveResumeApplications(r ...*ResumeJobApplication) *JobPositionUpdate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return jpu.RemoveResumeApplicationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -873,6 +910,51 @@ func (jpu *JobPositionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if jpu.mutation.ResumeApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ResumeApplicationsTable,
+			Columns: []string{jobposition.ResumeApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpu.mutation.RemovedResumeApplicationsIDs(); len(nodes) > 0 && !jpu.mutation.ResumeApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ResumeApplicationsTable,
+			Columns: []string{jobposition.ResumeApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpu.mutation.ResumeApplicationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ResumeApplicationsTable,
+			Columns: []string{jobposition.ResumeApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(jpu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, jpu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1196,6 +1278,21 @@ func (jpuo *JobPositionUpdateOne) AddIndustryRequirements(j ...*JobIndustryRequi
 	return jpuo.AddIndustryRequirementIDs(ids...)
 }
 
+// AddResumeApplicationIDs adds the "resume_applications" edge to the ResumeJobApplication entity by IDs.
+func (jpuo *JobPositionUpdateOne) AddResumeApplicationIDs(ids ...uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.AddResumeApplicationIDs(ids...)
+	return jpuo
+}
+
+// AddResumeApplications adds the "resume_applications" edges to the ResumeJobApplication entity.
+func (jpuo *JobPositionUpdateOne) AddResumeApplications(r ...*ResumeJobApplication) *JobPositionUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return jpuo.AddResumeApplicationIDs(ids...)
+}
+
 // Mutation returns the JobPositionMutation object of the builder.
 func (jpuo *JobPositionUpdateOne) Mutation() *JobPositionMutation {
 	return jpuo.mutation
@@ -1316,6 +1413,27 @@ func (jpuo *JobPositionUpdateOne) RemoveIndustryRequirements(j ...*JobIndustryRe
 		ids[i] = j[i].ID
 	}
 	return jpuo.RemoveIndustryRequirementIDs(ids...)
+}
+
+// ClearResumeApplications clears all "resume_applications" edges to the ResumeJobApplication entity.
+func (jpuo *JobPositionUpdateOne) ClearResumeApplications() *JobPositionUpdateOne {
+	jpuo.mutation.ClearResumeApplications()
+	return jpuo
+}
+
+// RemoveResumeApplicationIDs removes the "resume_applications" edge to ResumeJobApplication entities by IDs.
+func (jpuo *JobPositionUpdateOne) RemoveResumeApplicationIDs(ids ...uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.RemoveResumeApplicationIDs(ids...)
+	return jpuo
+}
+
+// RemoveResumeApplications removes "resume_applications" edges to ResumeJobApplication entities.
+func (jpuo *JobPositionUpdateOne) RemoveResumeApplications(r ...*ResumeJobApplication) *JobPositionUpdateOne {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return jpuo.RemoveResumeApplicationIDs(ids...)
 }
 
 // Where appends a list predicates to the JobPositionUpdate builder.
@@ -1753,6 +1871,51 @@ func (jpuo *JobPositionUpdateOne) sqlSave(ctx context.Context) (_node *JobPositi
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(jobindustryrequirement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if jpuo.mutation.ResumeApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ResumeApplicationsTable,
+			Columns: []string{jobposition.ResumeApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpuo.mutation.RemovedResumeApplicationsIDs(); len(nodes) > 0 && !jpuo.mutation.ResumeApplicationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ResumeApplicationsTable,
+			Columns: []string{jobposition.ResumeApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpuo.mutation.ResumeApplicationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ResumeApplicationsTable,
+			Columns: []string{jobposition.ResumeApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

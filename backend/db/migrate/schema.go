@@ -490,6 +490,66 @@ var (
 			},
 		},
 	}
+	// ResumeJobApplicationsColumns holds the columns for the "resume_job_applications" table.
+	ResumeJobApplicationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "applied"},
+		{Name: "source", Type: field.TypeString, Nullable: true},
+		{Name: "notes", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "applied_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_position_id", Type: field.TypeUUID},
+		{Name: "resume_id", Type: field.TypeUUID},
+	}
+	// ResumeJobApplicationsTable holds the schema information for the "resume_job_applications" table.
+	ResumeJobApplicationsTable = &schema.Table{
+		Name:       "resume_job_applications",
+		Columns:    ResumeJobApplicationsColumns,
+		PrimaryKey: []*schema.Column{ResumeJobApplicationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_job_applications_job_position_resume_applications",
+				Columns:    []*schema.Column{ResumeJobApplicationsColumns[8]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "resume_job_applications_resumes_job_applications",
+				Columns:    []*schema.Column{ResumeJobApplicationsColumns[9]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "resumejobapplication_resume_id_job_position_id",
+				Unique:  true,
+				Columns: []*schema.Column{ResumeJobApplicationsColumns[9], ResumeJobApplicationsColumns[8]},
+			},
+			{
+				Name:    "resumejobapplication_resume_id",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeJobApplicationsColumns[9]},
+			},
+			{
+				Name:    "resumejobapplication_job_position_id",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeJobApplicationsColumns[8]},
+			},
+			{
+				Name:    "resumejobapplication_status",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeJobApplicationsColumns[2]},
+			},
+			{
+				Name:    "resumejobapplication_applied_at",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeJobApplicationsColumns[5]},
+			},
+		},
+	}
 	// ResumeLogsColumns holds the columns for the "resume_logs" table.
 	ResumeLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -701,6 +761,7 @@ var (
 		ResumeDocumentParsesTable,
 		ResumeEducationsTable,
 		ResumeExperiencesTable,
+		ResumeJobApplicationsTable,
 		ResumeLogsTable,
 		ResumeProjectsTable,
 		ResumeSkillsTable,
@@ -784,6 +845,11 @@ func init() {
 	ResumeExperiencesTable.ForeignKeys[0].RefTable = ResumesTable
 	ResumeExperiencesTable.Annotation = &entsql.Annotation{
 		Table: "resume_experiences",
+	}
+	ResumeJobApplicationsTable.ForeignKeys[0].RefTable = JobPositionTable
+	ResumeJobApplicationsTable.ForeignKeys[1].RefTable = ResumesTable
+	ResumeJobApplicationsTable.Annotation = &entsql.Annotation{
+		Table: "resume_job_applications",
 	}
 	ResumeLogsTable.ForeignKeys[0].RefTable = ResumesTable
 	ResumeLogsTable.Annotation = &entsql.Annotation{

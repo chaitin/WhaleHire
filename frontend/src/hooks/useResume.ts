@@ -361,7 +361,11 @@ export const useResumeUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const uploadFile = useCallback(
-    async (file: File, position?: string): Promise<Resume> => {
+    async (
+      file: File,
+      jobPositionIds?: string[],
+      position?: string
+    ): Promise<Resume> => {
       setUploading(true);
       setError(null);
       setUploadProgress(0);
@@ -378,7 +382,7 @@ export const useResumeUpload = () => {
           });
         }, 200);
 
-        const response = await uploadResume(file, position);
+        const response = await uploadResume(file, jobPositionIds, position);
 
         clearInterval(progressInterval);
         setUploadProgress(100);

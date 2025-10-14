@@ -38,7 +38,7 @@ import {
   createJobProfile,
   updateJobProfile,
   deleteJobProfile,
-  listJobSkillMetaSimple,
+  listJobSkillMeta,
   getJobProfile,
 } from '@/services/job-profile';
 import { listDepartments } from '@/services/department';
@@ -182,6 +182,9 @@ export function JobProfilePage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingJob, setDeletingJob] = useState<JobProfile | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  // 删除错误提示弹窗状态
+  const [deleteErrorOpen, setDeleteErrorOpen] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string>('');
 
   // 技能相关状态管理
   const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState(false);
@@ -215,6 +218,12 @@ export function JobProfilePage() {
     string[]
   >([]);
   const [availableSkills, setAvailableSkills] = useState<JobSkillMeta[]>([]);
+
+  // 技能加载状态
+  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [skillsHasMore, setSkillsHasMore] = useState(false);
+  const [skillsNextToken, setSkillsNextToken] = useState<string | undefined>();
+  const [skillsKeyword, setSkillsKeyword] = useState<string>('');
 
   // 统计数据
   const totalJobs = jobProfiles.length;
@@ -255,15 +264,57 @@ export function JobProfilePage() {
     setCurrentPage(1); // 重置到第一页
   };
 
-  // 获取技能列表
-  const fetchSkills = async () => {
+  // 获取技能列表（初始加载或搜索）
+  const fetchSkills = async (keyword?: string, reset = true) => {
     try {
-      const response = await listJobSkillMetaSimple();
-      setAvailableSkills(response.skills || []); // 修复：使用 response.skills 而不是 response.items
+      setSkillsLoading(true);
+      const response = await listJobSkillMeta({
+        size: 20,
+        keyword: keyword || undefined,
+      });
+
+      if (reset) {
+        setAvailableSkills(response.items || []);
+      } else {
+        setAvailableSkills((prev) => [...prev, ...(response.items || [])]);
+      }
+
+      setSkillsHasMore(!!response.page_info?.next_token);
+      setSkillsNextToken(response.page_info?.next_token);
     } catch (err) {
       console.error('获取技能列表失败:', err);
       setAvailableSkills([]);
+    } finally {
+      setSkillsLoading(false);
     }
+  };
+
+  // 加载更多技能
+  const loadMoreSkills = async () => {
+    if (!skillsNextToken || skillsLoading) return;
+
+    try {
+      setSkillsLoading(true);
+      const response = await listJobSkillMeta({
+        size: 20,
+        next_token: skillsNextToken,
+        keyword: skillsKeyword || undefined,
+      });
+
+      setAvailableSkills((prev) => [...prev, ...(response.items || [])]);
+      setSkillsHasMore(!!response.page_info?.next_token);
+      setSkillsNextToken(response.page_info?.next_token);
+    } catch (err) {
+      console.error('加载更多技能失败:', err);
+    } finally {
+      setSkillsLoading(false);
+    }
+  };
+
+  // 搜索技能
+  const handleSkillSearch = async (keyword: string) => {
+    setSkillsKeyword(keyword);
+    await fetchSkills(keyword, true);
   };
 
   // 处理技能添加成功
@@ -859,8 +910,48 @@ export function JobProfilePage() {
       setDeleteConfirmOpen(false);
       setDeletingJob(null);
       fetchJobProfiles(); // 重新获取列表
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '删除岗位失败');
+    } catch (err: unknown) {
+      // 关闭删除确认弹窗
+      setDeleteConfirmOpen(false);
+
+      // 类型守卫：检查错误对象结构
+      const isErrorWithData = (
+        error: unknown
+      ): error is {
+        data?: { code?: number };
+        code?: number;
+        message?: string;
+      } => {
+        return typeof error === 'object' && error !== null;
+      };
+
+      // 调试信息：打印错误结构
+      if (isErrorWithData(err)) {
+        console.log('Delete error:', {
+          err,
+          code: err.code,
+          dataCode: err.data?.code,
+          message: err.message,
+          data: err.data,
+        });
+
+        // 检查是否是岗位已关联简历的错误（错误码 40002）
+        // 业务错误码通常在 err.data.code 中
+        const businessErrorCode = err.data?.code;
+        if (businessErrorCode === 40002) {
+          setDeleteErrorMessage(
+            '当前岗位已关联简历无法删除，请取消关联后重试。'
+          );
+          setDeleteErrorOpen(true);
+        } else {
+          // 其他错误使用通用错误提示
+          setError(err instanceof Error ? err.message : '删除岗位失败');
+        }
+      } else {
+        // 未知错误结构
+        console.log('Delete error:', err);
+        setError(err instanceof Error ? err.message : '删除岗位失败');
+      }
     } finally {
       setIsDeleting(false);
     }
@@ -1120,40 +1211,28 @@ export function JobProfilePage() {
               ) : currentJobs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      {/* 空数据图标 */}
-                      <div className="w-20 h-20 mb-6 rounded-full bg-gray-100 flex items-center justify-center">
-                        <FileText className="w-10 h-10 text-gray-400" />
-                      </div>
-
-                      {/* 主要提示文字 */}
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        暂无岗位画像数据
-                      </h3>
-
-                      {/* 描述文字 */}
-                      {(activeSearchKeyword || departmentFilter !== 'all') && (
-                        <p className="text-sm text-gray-500 mb-6 max-w-sm">
-                          没有找到符合条件的岗位画像，请尝试调整搜索条件
-                        </p>
-                      )}
-
-                      {/* 搜索状态下的清除按钮 */}
-                      {(activeSearchKeyword || departmentFilter !== 'all') && (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSearchKeyword('');
-                            setActiveSearchKeyword('');
-                            setDepartmentFilter('all');
-                            setCurrentPage(1);
-                          }}
-                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="text-gray-400">
+                        <svg
+                          className="h-12 w-12 mx-auto"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
                         >
-                          <X className="w-4 h-4" />
-                          清除筛选条件
-                        </Button>
-                      )}
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        暂无岗位画像数据
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        请尝试调整搜索条件或创建新的岗位画像
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -1713,7 +1792,7 @@ export function JobProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Label className="text-[14px] font-medium text-[#374151]">
-                      工作技能 <span className="text-[#EF4444]">*</span>
+                      工作技能
                     </Label>
                     <Button
                       type="button"
@@ -1753,6 +1832,11 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedRequiredSkillIds([]);
                       }}
+                      selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
 
@@ -1779,6 +1863,11 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedOptionalSkillIds([]);
                       }}
+                      selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
                 </div>
@@ -2211,9 +2300,6 @@ export function JobProfilePage() {
                     <h3 className="text-[16px] font-medium text-[#1F2937]">
                       工作技能
                     </h3>
-                    <span className="text-[12px] text-[#6B7280]">
-                      (<span className="text-[#EF4444]">*</span>为必填项)
-                    </span>
                     <Button
                       type="button"
                       variant="outline"
@@ -2252,6 +2338,11 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedRequiredSkillIds([]);
                       }}
+                      selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
 
@@ -2278,6 +2369,11 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedOptionalSkillIds([]);
                       }}
+                      selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
                 </div>
@@ -2369,6 +2465,34 @@ export function JobProfilePage() {
         variant="destructive"
         loading={isDeleting}
       />
+
+      {/* 删除错误提示对话框 */}
+      <Dialog open={deleteErrorOpen} onOpenChange={setDeleteErrorOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="mb-1 font-medium leading-none tracking-tight text-destructive flex items-center gap-2">
+              <X className="h-4 w-4" />
+              删除失败
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="text-sm text-destructive [&_p]:leading-relaxed">
+              {deleteErrorMessage}
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                setDeleteErrorOpen(false);
+                setDeletingJob(null);
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              我知道了
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

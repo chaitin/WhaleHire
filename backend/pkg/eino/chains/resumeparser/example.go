@@ -5,16 +5,26 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/resumeparser"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
+	"github.com/cloudwego/eino-ext/devops"
 )
 
 func main() {
 	ctx := context.Background()
+
+	// 1.调用调试服务初始化函数
+	err := devops.Init(ctx)
+	if err != nil {
+		log.Fatalf("[eino dev] init failed, err=%v", err)
+		return
+	}
 
 	// 获取配置
 	cfg, err := config.Init()
@@ -42,17 +52,24 @@ func main() {
 		log.Fatalf("failed to create resume parser chain: %v", err)
 	}
 
-	agent, err := chain.Compile(ctx)
+	_, err = chain.Compile(ctx)
 	if err != nil {
 		log.Fatalf("failed to compile chain: %v", err)
 	}
 
 	// 示例简历文本
-	sample := `张三，邮箱 zhangsan@example.com，电话 13800001234。毕业于清华大学计算机科学与技术专业，本科。曾在字节跳动担任后端工程师（2021-07 至 2024-03），负责服务治理与性能优化。熟悉 Go、Python、Docker、Kubernetes。`
-	out, err := agent.Invoke(ctx, &resumeparser.ResumeParseInput{Resume: sample})
-	if err != nil {
-		log.Fatalf("failed to invoke agent: %v", err)
-	}
+	// sample := `张三，邮箱 zhangsan@example.com，电话 13800001234。毕业于清华大学计算机科学与技术专业，本科。曾在字节跳动担任后端工程师（2021-07 至 2024-03），负责服务治理与性能优化。熟悉 Go、Python、Docker、Kubernetes。`
+	// out, err := agent.Invoke(ctx, &resumeparser.ResumeParseInput{Resume: sample})
+	// if err != nil {
+	// 	log.Fatalf("failed to invoke agent: %v", err)
+	// }
 
-	fmt.Printf("%+v\n", out)
+	// fmt.Printf("%+v\n", out)
+	// Blocking process exits
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	<-sigs
+
+	// Exit
+	log.Fatalf("[eino dev] shutting down\n")
 }

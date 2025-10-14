@@ -17,6 +17,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
@@ -455,4 +456,24 @@ func (r *JobProfileRepo) createIndustryRequirements(ctx context.Context, tx *db.
 
 	_, err := tx.JobIndustryRequirement.CreateBulk(bulk...).Save(ctx)
 	return err
+}
+
+// HasRelatedResumes 检查岗位是否有关联的简历申请
+func (r *JobProfileRepo) HasRelatedResumes(ctx context.Context, id string) (bool, error) {
+	jobID, err := uuid.Parse(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid job profile ID: %w", err)
+	}
+
+	count, err := r.db.ResumeJobApplication.Query().
+		Where(
+			resumejobapplication.JobPositionID(jobID),
+			resumejobapplication.DeletedAtIsNil(),
+		).
+		Count(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to check related resumes: %w", err)
+	}
+
+	return count > 0, nil
 }

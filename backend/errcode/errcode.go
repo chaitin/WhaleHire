@@ -3,30 +3,50 @@ package errcode
 import (
 	"embed"
 
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 )
 
 //go:embed locale.*.toml
 var LocalFS embed.FS
 
 var (
-	ErrPermission           = web.NewBadRequestErr("err-permission")
-	ErrUserNotFound         = web.NewBadRequestErr("err-user-not-found")
-	ErrUserLock             = web.NewBadRequestErr("err-user-lock")
-	ErrPassword             = web.NewBadRequestErr("err-password")
-	ErrAccountAlreadyExist  = web.NewBadRequestErr("err-account-already-exist")
-	ErrInviteCodeInvalid    = web.NewBadRequestErr("err-invite-code-invalid")
-	ErrEmailInvalid         = web.NewBadRequestErr("err-email-invalid")
-	ErrOAuthStateInvalid    = web.NewBadRequestErr("err-oauth-state-invalid")
-	ErrUnsupportedPlatform  = web.NewBadRequestErr("err-unsupported-platform")
-	ErrNotInvited           = web.NewBadRequestErr("err-not-invited")
-	ErrDingtalkNotEnabled   = web.NewBadRequestErr("err-dingtalk-not-enabled")
-	ErrCustomNotEnabled     = web.NewBadRequestErr("err-custom-not-enabled")
-	ErrUserLimit            = web.NewBadRequestErr("err-user-limit")
-	ErrOnlyAdmin            = web.NewBadRequestErr("err-only-admin")
-	ErrMissKey              = web.NewBadRequestErr("err-miss-key")
-	ErrDepartmentRequired   = web.NewBadRequestErr("err-department-required")
-	ErrJobProfileRequired   = web.NewBadRequestErr("err-jobprofile-required")
-	ErrJobSkillMetaRequired = web.NewBadRequestErr("err-jobskillmeta-required")
-	ErrInvalidParam         = web.NewBadRequestErr("err-invalid-param")
+	// ========== 通用/系统模块 (10000-19999) ==========
+	ErrPermission   = web.NewBadRequestBusinessErr(10000, "err-permission")
+	ErrInvalidParam = web.NewBadRequestBusinessErr(10001, "err-invalid-param")
+	ErrMissKey      = web.NewBadRequestBusinessErr(10002, "err-miss-key")
+	ErrOnlyAdmin    = web.NewBadRequestBusinessErr(10003, "err-only-admin")
+
+	// ========== 用户管理模块 (20000-29999) ==========
+	ErrUserNotFound        = web.NewBadRequestBusinessErr(20000, "err-user-not-found")
+	ErrUserLock            = web.NewBadRequestBusinessErr(20001, "err-user-lock")
+	ErrPassword            = web.NewBadRequestBusinessErr(20002, "err-password")
+	ErrAccountAlreadyExist = web.NewBadRequestBusinessErr(20003, "err-account-already-exist")
+	ErrInviteCodeInvalid   = web.NewBadRequestBusinessErr(20004, "err-invite-code-invalid")
+	ErrEmailInvalid        = web.NewBadRequestBusinessErr(20005, "err-email-invalid")
+	ErrOAuthStateInvalid   = web.NewBadRequestBusinessErr(20006, "err-oauth-state-invalid")
+	ErrUnsupportedPlatform = web.NewBadRequestBusinessErr(20007, "err-unsupported-platform")
+	ErrNotInvited          = web.NewBadRequestBusinessErr(20008, "err-not-invited")
+	ErrDingtalkNotEnabled  = web.NewBadRequestBusinessErr(20009, "err-dingtalk-not-enabled")
+	ErrCustomNotEnabled    = web.NewBadRequestBusinessErr(20010, "err-custom-not-enabled")
+	ErrUserLimit           = web.NewBadRequestBusinessErr(20011, "err-user-limit")
+
+	// ========== 简历管理模块 (30000-39999) ==========
+	// 预留简历相关错误码
+
+	// ========== 职位管理模块 (40000-49999) ==========
+	ErrJobProfileRequired   = web.NewBadRequestBusinessErr(40000, "err-jobprofile-required")
+	ErrJobSkillMetaRequired = web.NewBadRequestBusinessErr(40001, "err-jobskillmeta-required")
+	ErrJobProfileHasResumes = web.NewBadRequestBusinessErr(40002, "err-jobprofile-has-resumes")
+
+	// ========== 求职申请模块 (50000-59999) ==========
+	// 预留求职申请相关错误码
+
+	// ========== 部门管理模块 (60000-69999) ==========
+	ErrDepartmentRequired = web.NewBadRequestBusinessErr(60000, "err-department-required")
+
+	// ========== 文件管理模块 (70000-79999) ==========
+	// 预留文件管理相关错误码
+
+	// ========== AI智能体模块 (80000-89999) ==========
+	// 预留AI智能体相关错误码
 )

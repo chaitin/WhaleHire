@@ -18,6 +18,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -28,18 +29,19 @@ import (
 // ResumeQuery is the builder for querying Resume entities.
 type ResumeQuery struct {
 	config
-	ctx               *QueryContext
-	order             []resume.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.Resume
-	withUser          *UserQuery
-	withEducations    *ResumeEducationQuery
-	withExperiences   *ResumeExperienceQuery
-	withProjects      *ResumeProjectQuery
-	withSkills        *ResumeSkillQuery
-	withLogs          *ResumeLogQuery
-	withDocumentParse *ResumeDocumentParseQuery
-	modifiers         []func(*sql.Selector)
+	ctx                 *QueryContext
+	order               []resume.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.Resume
+	withUser            *UserQuery
+	withEducations      *ResumeEducationQuery
+	withExperiences     *ResumeExperienceQuery
+	withProjects        *ResumeProjectQuery
+	withSkills          *ResumeSkillQuery
+	withLogs            *ResumeLogQuery
+	withDocumentParse   *ResumeDocumentParseQuery
+	withJobApplications *ResumeJobApplicationQuery
+	modifiers           []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -223,6 +225,28 @@ func (rq *ResumeQuery) QueryDocumentParse() *ResumeDocumentParseQuery {
 			sqlgraph.From(resume.Table, resume.FieldID, selector),
 			sqlgraph.To(resumedocumentparse.Table, resumedocumentparse.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, resume.DocumentParseTable, resume.DocumentParseColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryJobApplications chains the current query on the "job_applications" edge.
+func (rq *ResumeQuery) QueryJobApplications() *ResumeJobApplicationQuery {
+	query := (&ResumeJobApplicationClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, selector),
+			sqlgraph.To(resumejobapplication.Table, resumejobapplication.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.JobApplicationsTable, resume.JobApplicationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -417,18 +441,19 @@ func (rq *ResumeQuery) Clone() *ResumeQuery {
 		return nil
 	}
 	return &ResumeQuery{
-		config:            rq.config,
-		ctx:               rq.ctx.Clone(),
-		order:             append([]resume.OrderOption{}, rq.order...),
-		inters:            append([]Interceptor{}, rq.inters...),
-		predicates:        append([]predicate.Resume{}, rq.predicates...),
-		withUser:          rq.withUser.Clone(),
-		withEducations:    rq.withEducations.Clone(),
-		withExperiences:   rq.withExperiences.Clone(),
-		withProjects:      rq.withProjects.Clone(),
-		withSkills:        rq.withSkills.Clone(),
-		withLogs:          rq.withLogs.Clone(),
-		withDocumentParse: rq.withDocumentParse.Clone(),
+		config:              rq.config,
+		ctx:                 rq.ctx.Clone(),
+		order:               append([]resume.OrderOption{}, rq.order...),
+		inters:              append([]Interceptor{}, rq.inters...),
+		predicates:          append([]predicate.Resume{}, rq.predicates...),
+		withUser:            rq.withUser.Clone(),
+		withEducations:      rq.withEducations.Clone(),
+		withExperiences:     rq.withExperiences.Clone(),
+		withProjects:        rq.withProjects.Clone(),
+		withSkills:          rq.withSkills.Clone(),
+		withLogs:            rq.withLogs.Clone(),
+		withDocumentParse:   rq.withDocumentParse.Clone(),
+		withJobApplications: rq.withJobApplications.Clone(),
 		// clone intermediate query.
 		sql:       rq.sql.Clone(),
 		path:      rq.path,
@@ -513,6 +538,17 @@ func (rq *ResumeQuery) WithDocumentParse(opts ...func(*ResumeDocumentParseQuery)
 	return rq
 }
 
+// WithJobApplications tells the query-builder to eager-load the nodes that are connected to
+// the "job_applications" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ResumeQuery) WithJobApplications(opts ...func(*ResumeJobApplicationQuery)) *ResumeQuery {
+	query := (&ResumeJobApplicationClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withJobApplications = query
+	return rq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -591,7 +627,7 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 	var (
 		nodes       = []*Resume{}
 		_spec       = rq.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			rq.withUser != nil,
 			rq.withEducations != nil,
 			rq.withExperiences != nil,
@@ -599,6 +635,7 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 			rq.withSkills != nil,
 			rq.withLogs != nil,
 			rq.withDocumentParse != nil,
+			rq.withJobApplications != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -667,6 +704,13 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 		if err := rq.loadDocumentParse(ctx, query, nodes,
 			func(n *Resume) { n.Edges.DocumentParse = []*ResumeDocumentParse{} },
 			func(n *Resume, e *ResumeDocumentParse) { n.Edges.DocumentParse = append(n.Edges.DocumentParse, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withJobApplications; query != nil {
+		if err := rq.loadJobApplications(ctx, query, nodes,
+			func(n *Resume) { n.Edges.JobApplications = []*ResumeJobApplication{} },
+			func(n *Resume, e *ResumeJobApplication) { n.Edges.JobApplications = append(n.Edges.JobApplications, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -867,6 +911,36 @@ func (rq *ResumeQuery) loadDocumentParse(ctx context.Context, query *ResumeDocum
 	}
 	query.Where(predicate.ResumeDocumentParse(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(resume.DocumentParseColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ResumeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "resume_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (rq *ResumeQuery) loadJobApplications(ctx context.Context, query *ResumeJobApplicationQuery, nodes []*Resume, init func(*Resume), assign func(*Resume, *ResumeJobApplication)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Resume)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(resumejobapplication.FieldResumeID)
+	}
+	query.Where(predicate.ResumeJobApplication(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(resume.JobApplicationsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

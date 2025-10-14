@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 	"github.com/google/uuid"
 
 	"github.com/chaitin/WhaleHire/backend/domain"

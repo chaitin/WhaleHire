@@ -7,7 +7,7 @@ package internal
 import (
 	_ "embed"
 	// Web framework
-	_ "github.com/GoYoko/web"
+	_ "github.com/chaitin/WhaleHire/backend/pkg/web"
 
 	// Wire dependency injection
 	_ "github.com/google/wire"

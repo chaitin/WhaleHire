@@ -10,13 +10,13 @@ const (
 type JobExperienceType string
 
 const (
-	JobExperienceTypeUnlimited     JobExperienceType = "unlimited"
-	JobExperienceTypeFreshGraduate JobExperienceType = "fresh_graduate"
-	JobExperienceTypeUnderOneYear  JobExperienceType = "under_one_year"
-	JobExperienceTypeOneToThree    JobExperienceType = "one_to_three_years"
-	JobExperienceTypeThreeToFive   JobExperienceType = "three_to_five_years"
-	JobExperienceTypeFiveToTen     JobExperienceType = "five_to_ten_years"
-	JobExperienceTypeOverTen       JobExperienceType = "over_ten_years"
+	JobExperienceTypeUnlimited     JobExperienceType = "unlimited"           //不限
+	JobExperienceTypeFreshGraduate JobExperienceType = "fresh_graduate"      //应届生
+	JobExperienceTypeUnderOneYear  JobExperienceType = "under_one_year"      //1年以下
+	JobExperienceTypeOneToThree    JobExperienceType = "one_to_three_years"  //1-3年
+	JobExperienceTypeThreeToFive   JobExperienceType = "three_to_five_years" //3-5年
+	JobExperienceTypeFiveToTen     JobExperienceType = "five_to_ten_years"   //5-10年
+	JobExperienceTypeOverTen       JobExperienceType = "over_ten_years"      //10年以上
 )
 
 // JobWorkType 工作性质类型

@@ -16,6 +16,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
+	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
@@ -362,6 +363,21 @@ func (rc *ResumeCreate) AddDocumentParse(r ...*ResumeDocumentParse) *ResumeCreat
 	return rc.AddDocumentParseIDs(ids...)
 }
 
+// AddJobApplicationIDs adds the "job_applications" edge to the ResumeJobApplication entity by IDs.
+func (rc *ResumeCreate) AddJobApplicationIDs(ids ...uuid.UUID) *ResumeCreate {
+	rc.mutation.AddJobApplicationIDs(ids...)
+	return rc
+}
+
+// AddJobApplications adds the "job_applications" edges to the ResumeJobApplication entity.
+func (rc *ResumeCreate) AddJobApplications(r ...*ResumeJobApplication) *ResumeCreate {
+	ids := make([]uuid.UUID, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return rc.AddJobApplicationIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (rc *ResumeCreate) Mutation() *ResumeMutation {
 	return rc.mutation
@@ -651,6 +667,22 @@ func (rc *ResumeCreate) createSpec() (*Resume, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumedocumentparse.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.JobApplicationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.JobApplicationsTable,
+			Columns: []string{resume.JobApplicationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

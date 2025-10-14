@@ -62,5 +62,6 @@ func (JobPosition) Edges() []ent.Edge {
 		edge.To("education_requirements", JobEducationRequirement.Type),
 		edge.To("experience_requirements", JobExperienceRequirement.Type),
 		edge.To("industry_requirements", JobIndustryRequirement.Type),
+		edge.To("resume_applications", ResumeJobApplication.Type),
 	}
 }

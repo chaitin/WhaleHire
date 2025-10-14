@@ -51,3 +51,6 @@ other = " 缺少技能ID"
 
 [err-invalid-param]
 other = "无效参数请检查"
+
+[err-jobprofile-has-resumes]
+other = "岗位画像已关联简历"

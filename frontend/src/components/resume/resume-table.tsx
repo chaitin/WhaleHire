@@ -1,8 +1,14 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Select,
   SelectContent,
@@ -112,14 +118,6 @@ export function ResumeTable({
     }
   };
 
-  const stickyStyle = useMemo(
-    () => ({
-      backgroundColor: '#F9FAFB',
-      boxShadow: 'inset 0 -1px 0 0 #E5E7EB',
-    }),
-    []
-  );
-
   const generatePageNumbers = () => {
     const pages = [];
     const { current, total, pageSize } = pagination;
@@ -138,245 +136,299 @@ export function ResumeTable({
     return pages;
   };
 
+  // 渲染岗位名称单元格
+  const renderJobPositionsCell = (resume: Resume) => {
+    const jobPositions = resume.job_positions || [];
+
+    if (jobPositions.length === 0) {
+      return <span className="text-gray-400">-</span>;
+    }
+
+    if (jobPositions.length === 1) {
+      return (
+        <span className="text-sm text-gray-900">
+          {jobPositions[0].job_title}
+        </span>
+      );
+    }
+
+    // 多个岗位时显示第一个 + 等xx个岗位
+    const firstJobTitle = jobPositions[0].job_title;
+    const remainingCount = jobPositions.length - 1;
+
+    return (
+      <div className="text-sm text-gray-900">
+        {firstJobTitle}等
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-primary cursor-pointer underline decoration-dotted">
+                {remainingCount}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <div className="text-sm">
+                <div className="font-medium mb-1">所有岗位：</div>
+                <div className="flex flex-col gap-1">
+                  {jobPositions.map((jp, index) => (
+                    <div key={index}>{jp.job_title}</div>
+                  ))}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        个岗位
+      </div>
+    );
+  };
+
   return (
-    <div className={cn('space-y-6', className)}>
-      <div className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead style={stickyStyle} className="sticky top-0 z-10">
-              <tr className="text-left">
-                <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">
-                  简历信息
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">
-                  上传时间
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">
-                  上传人
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-[#6B7280]">
-                  状态
-                </th>
-                <th className="w-40 px-6 py-3 text-xs font-medium text-[#6B7280] text-right">
-                  操作
-                </th>
+    <div className={cn('', className)}>
+      {/* 表格标题 */}
+      <div className="border-b border-[#E5E7EB] px-6 py-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          简历列表 ({pagination.total})
+        </h3>
+      </div>
+
+      {/* 表格内容 */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                简历信息
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                岗位名称
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                上传时间
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                上传人
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                状态
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                操作
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {resumes && resumes.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-16">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="text-gray-400">
+                      <svg
+                        className="h-12 w-12 mx-auto"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="text-sm text-gray-500">暂无简历数据</div>
+                    <div className="text-xs text-gray-400">
+                      请尝试调整搜索条件或上传新的简历
+                    </div>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E7EB] bg-white">
-              {resumes && resumes.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <div className="text-gray-400">
-                        <svg
-                          className="h-12 w-12 mx-auto"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="text-sm text-gray-500">暂无简历数据</div>
-                      <div className="text-xs text-gray-400">
-                        请尝试调整搜索条件或上传新的简历
+            ) : (
+              resumes?.map((resume) => (
+                <tr key={resume.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {resume.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {resume.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {formatPhone(resume.phone)}
+                        </div>
                       </div>
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {renderJobPositionsCell(resume)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(resume.created_at, 'datetime')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {resume.uploader_name || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(resume.status, resume.id)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'h-8 w-8 p-0 text-gray-400 hover:text-gray-600',
+                          resume.status !== ResumeStatus.COMPLETED &&
+                            'opacity-50 cursor-not-allowed'
+                        )}
+                        onClick={() => onPreview?.(resume)}
+                        disabled={
+                          !onPreview ||
+                          resume.status !== ResumeStatus.COMPLETED ||
+                          isLoading
+                        }
+                        title="预览简历"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'h-8 w-8 p-0 text-gray-400 hover:text-gray-600',
+                          (downloadingResumeId === resume.id || isLoading) &&
+                            'opacity-50 cursor-not-allowed'
+                        )}
+                        onClick={() => handleDownloadClick(resume)}
+                        disabled={
+                          downloadingResumeId === resume.id || isLoading
+                        }
+                        title="下载简历"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                        onClick={() => handleDeleteClick(resume)}
+                        disabled={!onDelete || isLoading || isDeleting}
+                        title="删除简历"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
-              ) : (
-                resumes?.map((resume, index) => (
-                  <tr
-                    key={resume.id}
-                    className={cn(
-                      'h-[73px] transition hover:bg-[#F9FAFB]',
-                      index === resumes.length - 1 &&
-                        'border-b border-[#E5E7EB]'
-                    )}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-primary/10 text-primary">
-                            {resume.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium text-[#111827] text-sm">
-                            {resume.name}
-                          </div>
-                          <div className="text-sm text-[#6B7280]">
-                            {formatPhone(resume.phone)}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-[#6B7280]">
-                      {formatDate(resume.created_at, 'datetime')}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-[#6B7280]">
-                      {resume.uploader_name || '-'}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(resume.status, resume.id)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            'h-5 w-5 p-0 hover:bg-transparent',
-                            resume.status === ResumeStatus.COMPLETED
-                              ? 'hover:text-[#374151]'
-                              : 'opacity-50 cursor-not-allowed'
-                          )}
-                          onClick={() => onPreview?.(resume)}
-                          disabled={
-                            !onPreview ||
-                            resume.status !== ResumeStatus.COMPLETED ||
-                            isLoading
-                          }
-                        >
-                          <Eye className="h-4 w-4 text-[#6B7280]" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            'h-5 w-5 p-0 hover:bg-transparent',
-                            downloadingResumeId === resume.id || isLoading
-                              ? 'opacity-50 cursor-not-allowed'
-                              : 'hover:text-[#374151]'
-                          )}
-                          onClick={() => handleDownloadClick(resume)}
-                          disabled={
-                            downloadingResumeId === resume.id || isLoading
-                          }
-                        >
-                          <Download className="h-4 w-4 text-[#6B7280]" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 p-0 hover:bg-transparent"
-                          onClick={() => handleDeleteClick(resume)}
-                          disabled={!onDelete || isLoading || isDeleting}
-                        >
-                          <Trash2 className="h-4 w-4 text-[#6B7280] hover:text-[#EF4444]" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* 分页区域 */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-[#6B7280]">
-            显示
-            <span className="text-[#6B7280]">
-              {resumes?.length > 0
-                ? (pagination.current - 1) * pagination.pageSize + 1
-                : 0}
-            </span>{' '}
-            到{' '}
-            <span className="text-[#6B7280]">
-              {resumes?.length > 0
-                ? Math.min(
-                    pagination.current * pagination.pageSize,
-                    pagination.total
-                  )
-                : 0}
-            </span>{' '}
-            条，共 <span className="text-[#6B7280]">{pagination.total}</span>{' '}
-            条结果
+      <div className="border-t border-[#E5E7EB] px-6 py-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-[#6B7280]">
+              显示
+              <span className="text-[#6B7280]">
+                {resumes?.length > 0
+                  ? (pagination.current - 1) * pagination.pageSize + 1
+                  : 0}
+              </span>{' '}
+              到{' '}
+              <span className="text-[#6B7280]">
+                {resumes?.length > 0
+                  ? Math.min(
+                      pagination.current * pagination.pageSize,
+                      pagination.total
+                    )
+                  : 0}
+              </span>{' '}
+              条，共 <span className="text-[#6B7280]">{pagination.total}</span>{' '}
+              条结果
+            </div>
+
+            {/* 每页条数选择器 */}
+            {onPageSizeChange && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[#6B7280]">每页显示</span>
+                <Select
+                  value={pagination.pageSize.toString()}
+                  onValueChange={(value) => onPageSizeChange(parseInt(value))}
+                >
+                  <SelectTrigger className="w-20 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-[#6B7280]">条</span>
+              </div>
+            )}
           </div>
 
-          {/* 每页条数选择器 */}
-          {onPageSizeChange && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[#6B7280]">每页显示</span>
-              <Select
-                value={pagination.pageSize.toString()}
-                onValueChange={(value) => onPageSizeChange(parseInt(value))}
+          {/* 分页按钮 - 只在有数据时显示 */}
+          {pagination.total > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(pagination.current - 1)}
+                disabled={pagination.current === 1}
+                className={cn(
+                  'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
+                  pagination.current === 1 && 'opacity-50'
+                )}
               >
-                <SelectTrigger className="w-20 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-[#6B7280]">条</span>
+                <ChevronLeft className="h-4 w-4 text-[#6B7280]" />
+              </Button>
+
+              {generatePageNumbers().map((page) => (
+                <Button
+                  key={page}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPageChange(page)}
+                  className={cn(
+                    'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
+                    page === pagination.current &&
+                      'border-[#10B981] bg-[#10B981] text-white'
+                  )}
+                >
+                  {page}
+                </Button>
+              ))}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(pagination.current + 1)}
+                disabled={
+                  pagination.current >=
+                  Math.ceil(pagination.total / pagination.pageSize)
+                }
+                className={cn(
+                  'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
+                  pagination.current >=
+                    Math.ceil(pagination.total / pagination.pageSize) &&
+                    'opacity-50'
+                )}
+              >
+                <ChevronRight className="h-4 w-4 text-[#6B7280]" />
+              </Button>
             </div>
           )}
         </div>
-
-        {/* 分页按钮 - 只在有数据时显示 */}
-        {pagination.total > 0 && (
-          <div className="flex flex-wrap items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(pagination.current - 1)}
-              disabled={pagination.current === 1}
-              className={cn(
-                'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
-                pagination.current === 1 && 'opacity-50'
-              )}
-            >
-              <ChevronLeft className="h-4 w-4 text-[#6B7280]" />
-            </Button>
-
-            {generatePageNumbers().map((page) => (
-              <Button
-                key={page}
-                variant="outline"
-                size="sm"
-                onClick={() => onPageChange(page)}
-                className={cn(
-                  'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
-                  page === pagination.current &&
-                    'border-[#10B981] bg-[#10B981] text-white'
-                )}
-              >
-                {page}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(pagination.current + 1)}
-              disabled={
-                pagination.current >=
-                Math.ceil(pagination.total / pagination.pageSize)
-              }
-              className={cn(
-                'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
-                pagination.current >=
-                  Math.ceil(pagination.total / pagination.pageSize) &&
-                  'opacity-50'
-              )}
-            >
-              <ChevronRight className="h-4 w-4 text-[#6B7280]" />
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* 删除确认对话框 */}

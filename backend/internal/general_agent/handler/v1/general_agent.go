@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 	"golang.org/x/time/rate"
 
 	"github.com/chaitin/WhaleHire/backend/config"

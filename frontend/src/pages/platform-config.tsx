@@ -607,15 +607,7 @@ export default function PlatformConfig() {
                 重试
               </button>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">
-              当前已配置
-              <span className="text-emerald-500 font-medium mx-1">
-                {departments.length}
-              </span>
-              个部门，点击"配置"按钮管理岗位画像所属部门
-            </p>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -668,15 +660,7 @@ export default function PlatformConfig() {
                 重试
               </button>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">
-              当前已配置
-              <span className="text-blue-500 font-medium mx-1">
-                {skills.length}
-              </span>
-              个技能，点击"配置"按钮管理岗位画像工作技能
-            </p>
-          )}
+          ) : null}
         </div>
       </div>
 

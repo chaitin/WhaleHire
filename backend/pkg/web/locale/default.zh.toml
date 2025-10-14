@@ -1,0 +1,5 @@
+[err-bind-params]
+other = "参数错误"
+
+[err-internal]
+other = "服务器错误"

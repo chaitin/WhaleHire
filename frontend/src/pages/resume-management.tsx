@@ -448,15 +448,17 @@ export function ResumeManagementPage() {
         </Button>
       </div>
 
-      {/* 筛选和列表组合卡片 */}
+      {/* 筛选区域 */}
+      <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <ResumeFiltersComponent
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          onSearch={handleSearch}
+        />
+      </div>
+
+      {/* 列表表格区域 */}
       <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-[#E5E7EB] px-6 py-6">
-          <ResumeFiltersComponent
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            onSearch={handleSearch}
-          />
-        </div>
         <ResumeTable
           resumes={resumes}
           pagination={pagination}
@@ -466,7 +468,6 @@ export function ResumeManagementPage() {
           onPreview={handlePreview}
           onDelete={handleDelete}
           isLoading={isLoading}
-          className="px-6 py-6"
         />
       </div>
 

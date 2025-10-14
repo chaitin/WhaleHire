@@ -17,6 +17,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/errcode"
 )
 
 type JobProfileUsecase struct {
@@ -197,6 +198,16 @@ func (u *JobProfileUsecase) Update(ctx context.Context, req *domain.UpdateJobPro
 }
 
 func (u *JobProfileUsecase) Delete(ctx context.Context, id string) error {
+	// 检查岗位是否有关联的简历申请
+	hasRelated, err := u.repo.HasRelatedResumes(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to check related resumes: %w", err)
+	}
+
+	if hasRelated {
+		return errcode.ErrJobProfileHasResumes
+	}
+
 	if err := u.repo.Delete(ctx, id); err != nil {
 		return fmt.Errorf("failed to delete job profile: %w", err)
 	}

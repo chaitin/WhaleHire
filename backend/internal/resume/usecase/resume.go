@@ -14,11 +14,12 @@ import (
 )
 
 type ResumeUsecase struct {
-	config         *config.Config
-	repo           domain.ResumeRepo
-	parserService  domain.ParserService
-	storageService domain.StorageService
-	logger         *slog.Logger
+	config                *config.Config
+	repo                  domain.ResumeRepo
+	parserService         domain.ParserService
+	storageService        domain.StorageService
+	jobApplicationUsecase domain.JobApplicationUsecase
+	logger                *slog.Logger
 }
 
 // NewResumeUsecase 创建简历用例
@@ -27,14 +28,16 @@ func NewResumeUsecase(
 	repo domain.ResumeRepo,
 	parserService domain.ParserService,
 	storageService domain.StorageService,
+	jobApplicationUsecase domain.JobApplicationUsecase,
 	logger *slog.Logger,
 ) domain.ResumeUsecase {
 	return &ResumeUsecase{
-		config:         cfg,
-		repo:           repo,
-		parserService:  parserService,
-		storageService: storageService,
-		logger:         logger,
+		config:                cfg,
+		repo:                  repo,
+		parserService:         parserService,
+		storageService:        storageService,
+		jobApplicationUsecase: jobApplicationUsecase,
+		logger:                logger,
 	}
 }
 
@@ -77,7 +80,7 @@ func (u *ResumeUsecase) Upload(ctx context.Context, req *domain.UploadResumeReq)
 	return result.From(createdResume), nil
 }
 
-// GetByID 获取简历详情
+// GetByID 根据ID获取简历详情
 func (u *ResumeUsecase) GetByID(ctx context.Context, id string) (*domain.ResumeDetail, error) {
 	resume, err := u.repo.GetByID(ctx, id)
 	if err != nil {
@@ -111,8 +114,20 @@ func (u *ResumeUsecase) GetByID(ctx context.Context, id string) (*domain.ResumeD
 	}
 
 	// 转换为domain对象
+	domainResume := (&domain.Resume{}).From(resume)
+
+	// 转换岗位申请信息
+	if resume.Edges.JobApplications != nil {
+		jobApplications := make([]*domain.JobApplication, 0, len(resume.Edges.JobApplications))
+		for _, app := range resume.Edges.JobApplications {
+			jobApp := &domain.JobApplication{}
+			jobApplications = append(jobApplications, jobApp.From(app))
+		}
+		domainResume.JobPositions = jobApplications
+	}
+
 	result := &domain.ResumeDetail{
-		Resume:      (&domain.Resume{}).From(resume),
+		Resume:      domainResume,
 		Educations:  educations,
 		Experiences: experiences,
 		Skills:      skills,
@@ -134,7 +149,19 @@ func (u *ResumeUsecase) List(ctx context.Context, req *domain.ListResumeReq) (*d
 	result := make([]*domain.Resume, 0, len(resumes))
 	for _, resume := range resumes {
 		domainResume := &domain.Resume{}
-		result = append(result, domainResume.From(resume))
+		domainResume = domainResume.From(resume)
+
+		// 转换岗位申请信息
+		if resume.Edges.JobApplications != nil {
+			jobApplications := make([]*domain.JobApplication, 0, len(resume.Edges.JobApplications))
+			for _, app := range resume.Edges.JobApplications {
+				jobApp := &domain.JobApplication{}
+				jobApplications = append(jobApplications, jobApp.From(app))
+			}
+			domainResume.JobPositions = jobApplications
+		}
+
+		result = append(result, domainResume)
 	}
 
 	return &domain.ListResumeResp{
@@ -226,6 +253,25 @@ func (u *ResumeUsecase) Update(ctx context.Context, req *domain.UpdateResumeReq)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to update resume: %w", err)
+	}
+
+	// 处理岗位关联更新（在事务外执行，因为JobApplicationUsecase有自己的事务管理）
+	if req.JobPositionIDs != nil || req.JobApplications != nil {
+		updateJobReq := &domain.UpdateJobApplicationsReq{
+			ResumeID:       req.ID,
+			JobPositionIDs: req.JobPositionIDs,
+			Applications:   req.JobApplications,
+		}
+
+		if len(updateJobReq.JobPositionIDs) == 0 {
+			updateJobReq.JobPositionIDs = []string{} // 确保至少是空数组而不是nil
+		}
+
+		_, err := u.jobApplicationUsecase.UpdateJobApplications(ctx, updateJobReq)
+		if err != nil {
+			u.logger.Error("failed to update job applications", "error", err, "resume_id", req.ID)
+			return nil, fmt.Errorf("failed to update job applications: %w", err)
+		}
 	}
 
 	result := &domain.Resume{}

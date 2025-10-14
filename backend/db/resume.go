@@ -73,9 +73,11 @@ type ResumeEdges struct {
 	Logs []*ResumeLog `json:"logs,omitempty"`
 	// DocumentParse holds the value of the document_parse edge.
 	DocumentParse []*ResumeDocumentParse `json:"document_parse,omitempty"`
+	// JobApplications holds the value of the job_applications edge.
+	JobApplications []*ResumeJobApplication `json:"job_applications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -141,6 +143,15 @@ func (e ResumeEdges) DocumentParseOrErr() ([]*ResumeDocumentParse, error) {
 		return e.DocumentParse, nil
 	}
 	return nil, &NotLoadedError{edge: "document_parse"}
+}
+
+// JobApplicationsOrErr returns the JobApplications value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResumeEdges) JobApplicationsOrErr() ([]*ResumeJobApplication, error) {
+	if e.loadedTypes[7] {
+		return e.JobApplications, nil
+	}
+	return nil, &NotLoadedError{edge: "job_applications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -319,6 +330,11 @@ func (r *Resume) QueryLogs() *ResumeLogQuery {
 // QueryDocumentParse queries the "document_parse" edge of the Resume entity.
 func (r *Resume) QueryDocumentParse() *ResumeDocumentParseQuery {
 	return NewResumeClient(r.config).QueryDocumentParse(r)
+}
+
+// QueryJobApplications queries the "job_applications" edge of the Resume entity.
+func (r *Resume) QueryJobApplications() *ResumeJobApplicationQuery {
+	return NewResumeClient(r.config).QueryJobApplications(r)
 }
 
 // Update returns a builder for updating this Resume.
