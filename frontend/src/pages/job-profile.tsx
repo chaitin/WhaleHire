@@ -182,6 +182,9 @@ export function JobProfilePage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingJob, setDeletingJob] = useState<JobProfile | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  // 删除错误提示弹窗状态
+  const [deleteErrorOpen, setDeleteErrorOpen] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string>('');
 
   // 技能相关状态管理
   const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState(false);
@@ -907,12 +910,34 @@ export function JobProfilePage() {
       setDeleteConfirmOpen(false);
       setDeletingJob(null);
       fetchJobProfiles(); // 重新获取列表
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '删除岗位失败');
+    } catch (err: any) {
+      // 关闭删除确认弹窗
+      setDeleteConfirmOpen(false);
+      
+      // 调试信息：打印错误结构
+      console.log('Delete error:', {
+        err,
+        code: err?.code,
+        dataCode: err?.data?.code,
+        message: err?.message,
+        data: err?.data
+      });
+      
+      // 检查是否是岗位已关联简历的错误（错误码 40002）
+      // 业务错误码通常在 err.data.code 中
+      const businessErrorCode = err?.data?.code;
+      if (businessErrorCode === 40002) {
+        setDeleteErrorMessage('当前岗位已关联简历无法删除，请取消关联后重试。');
+        setDeleteErrorOpen(true);
+      } else {
+        // 其他错误使用通用错误提示
+        setError(err instanceof Error ? err.message : '删除岗位失败');
+      }
     } finally {
       setIsDeleting(false);
     }
   };
+
 
   // 生成页码数组
   const generatePageNumbers = () => {
@@ -2420,6 +2445,34 @@ export function JobProfilePage() {
         variant="destructive"
         loading={isDeleting}
       />
+
+      {/* 删除错误提示对话框 */}
+      <Dialog open={deleteErrorOpen} onOpenChange={setDeleteErrorOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="mb-1 font-medium leading-none tracking-tight text-destructive flex items-center gap-2">
+              <X className="h-4 w-4" />
+              删除失败
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="text-sm text-destructive [&_p]:leading-relaxed">
+              {deleteErrorMessage}
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                setDeleteErrorOpen(false);
+                setDeletingJob(null);
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              我知道了
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
