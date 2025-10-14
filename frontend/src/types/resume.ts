@@ -30,6 +30,8 @@ export interface Resume {
   error_message?: string;
   uploader_id: string;
   uploader_name?: string; // 上传人姓名
+  job_ids?: string[]; // 关联的岗位ID列表
+  job_names?: string[]; // 关联的岗位名称列表
   created_at: number;
   updated_at: number;
 }
@@ -156,6 +158,7 @@ export interface ResumeUpdateParams {
   current_city?: string;
   highest_education?: string;
   years_experience?: number;
+  job_ids?: string[]; // 关联的岗位ID列表
   experiences?: UpdateResumeExperience[];
   educations?: UpdateResumeEducation[];
   skills?: UpdateResumeSkill[];

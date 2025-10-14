@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 export type Option = {
   value: string;
   label: string;
+  description?: string;
 };
 
 interface MultiSelectProps {
@@ -31,6 +32,7 @@ interface MultiSelectProps {
   searchPlaceholder?: string;
   maxHeight?: string;
   showSelectCount?: boolean;
+  selectCountLabel?: string;
 }
 
 export function MultiSelect({
@@ -48,6 +50,7 @@ export function MultiSelect({
   searchPlaceholder = '搜索选项...',
   maxHeight = '300px',
   showSelectCount = true,
+  selectCountLabel = '项',
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState('');
@@ -140,7 +143,7 @@ export function MultiSelect({
               <span className="text-[#9CA3AF]">{placeholder}</span>
             ) : showSelectCount ? (
               <span className="text-[#374151] font-medium">
-                共选择 {selected.length} 个技能
+                共选择 {selected.length} 个{selectCountLabel}
               </span>
             ) : (
               <div className="flex flex-wrap gap-1">

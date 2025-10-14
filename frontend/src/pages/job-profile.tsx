@@ -1753,6 +1753,7 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedRequiredSkillIds([]);
                       }}
+                      selectCountLabel="技能"
                     />
                   </div>
 
@@ -1779,6 +1780,7 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedOptionalSkillIds([]);
                       }}
+                      selectCountLabel="技能"
                     />
                   </div>
                 </div>
@@ -2249,6 +2251,7 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedRequiredSkillIds([]);
                       }}
+                      selectCountLabel="技能"
                     />
                   </div>
 
@@ -2275,6 +2278,7 @@ export function JobProfilePage() {
                       onClearAll={() => {
                         setSelectedOptionalSkillIds([]);
                       }}
+                      selectCountLabel="技能"
                     />
                   </div>
                 </div>
