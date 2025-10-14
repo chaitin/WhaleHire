@@ -12,6 +12,7 @@ import {
   X,
   Crown,
   UserCheck,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NavigationItem } from '@/types/navigation';
@@ -42,6 +43,12 @@ const navigationItems: NavigationItem[] = [
     label: '岗位管理',
     icon: Briefcase,
     path: '/position-management',
+  },
+  {
+    id: 'intelligent-matching',
+    label: '智能匹配',
+    icon: Sparkles,
+    path: '/intelligent-matching',
   },
   {
     id: 'candidate',
@@ -167,7 +174,8 @@ export function Sidebar({
                 const isDisabled =
                   item.id !== 'resume-management' &&
                   item.id !== 'job-profile' &&
-                  item.id !== 'platform-config';
+                  item.id !== 'platform-config' &&
+                  item.id !== 'intelligent-matching';
 
                 if (isDisabled) {
                   return (

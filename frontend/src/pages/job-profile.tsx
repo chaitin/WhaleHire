@@ -1120,40 +1120,26 @@ export function JobProfilePage() {
               ) : currentJobs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      {/* 空数据图标 */}
-                      <div className="w-20 h-20 mb-6 rounded-full bg-gray-100 flex items-center justify-center">
-                        <FileText className="w-10 h-10 text-gray-400" />
-                      </div>
-
-                      {/* 主要提示文字 */}
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        暂无岗位画像数据
-                      </h3>
-
-                      {/* 描述文字 */}
-                      {(activeSearchKeyword || departmentFilter !== 'all') && (
-                        <p className="text-sm text-gray-500 mb-6 max-w-sm">
-                          没有找到符合条件的岗位画像，请尝试调整搜索条件
-                        </p>
-                      )}
-
-                      {/* 搜索状态下的清除按钮 */}
-                      {(activeSearchKeyword || departmentFilter !== 'all') && (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSearchKeyword('');
-                            setActiveSearchKeyword('');
-                            setDepartmentFilter('all');
-                            setCurrentPage(1);
-                          }}
-                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="text-gray-400">
+                        <svg
+                          className="h-12 w-12 mx-auto"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
                         >
-                          <X className="w-4 h-4" />
-                          清除筛选条件
-                        </Button>
-                      )}
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="text-sm text-gray-500">暂无岗位画像数据</div>
+                      <div className="text-xs text-gray-400">
+                        请尝试调整搜索条件或创建新的岗位画像
+                      </div>
                     </div>
                   </td>
                 </tr>
