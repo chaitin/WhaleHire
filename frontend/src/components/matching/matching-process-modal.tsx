@@ -24,6 +24,7 @@ interface MatchingProcessModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPrevious?: () => void;
+  onComplete?: () => void;
   selectedJobCount: number;
   selectedResumeCount: number;
 }
@@ -43,6 +44,7 @@ export function MatchingProcessModal({
   open,
   onOpenChange,
   onPrevious,
+  onComplete,
   selectedJobCount,
   selectedResumeCount,
 }: MatchingProcessModalProps) {
@@ -91,6 +93,11 @@ export function MatchingProcessModal({
         if (prev >= 100) {
           clearInterval(interval);
           addLog('✓ 所有匹配任务已完成');
+          // 延迟1秒后打开结果页面
+          setTimeout(() => {
+            onOpenChange(false);
+            onComplete?.();
+          }, 1000);
           return 100;
         }
         
@@ -129,7 +136,7 @@ export function MatchingProcessModal({
     }, 500);
 
     return () => clearInterval(interval);
-  }, [open, processedCount, selectedResumeCount, weights.length]);
+  }, [open, processedCount, selectedResumeCount, weights.length, onComplete, onOpenChange]);
 
   // 开始匹配
   useEffect(() => {

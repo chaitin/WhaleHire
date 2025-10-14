@@ -35,6 +35,7 @@ import { SelectJobModal } from '@/components/matching/select-job-modal';
 import { SelectResumeModal } from '@/components/matching/select-resume-modal';
 import { ConfigWeightModal, WeightConfig } from '@/components/matching/config-weight-modal';
 import { MatchingProcessModal } from '@/components/matching/matching-process-modal';
+import { MatchingResultModal } from '@/components/matching/matching-result-modal';
 
 export function IntelligentMatchingPage() {
   const [stats, setStats] = useState<MatchingStats>({
@@ -61,6 +62,7 @@ export function IntelligentMatchingPage() {
   const [isSelectResumeModalOpen, setIsSelectResumeModalOpen] = useState(false);
   const [isConfigWeightModalOpen, setIsConfigWeightModalOpen] = useState(false);
   const [isMatchingProcessModalOpen, setIsMatchingProcessModalOpen] = useState(false);
+  const [isMatchingResultModalOpen, setIsMatchingResultModalOpen] = useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [selectedResumeIds, setSelectedResumeIds] = useState<string[]>([]);
 
@@ -576,8 +578,19 @@ export function IntelligentMatchingPage() {
         open={isMatchingProcessModalOpen}
         onOpenChange={setIsMatchingProcessModalOpen}
         onPrevious={handleBackToConfigWeight}
+        onComplete={() => setIsMatchingResultModalOpen(true)}
         selectedJobCount={selectedJobIds.length}
         selectedResumeCount={selectedResumeIds.length}
+      />
+
+      {/* 匹配结果模态框 */}
+      <MatchingResultModal
+        open={isMatchingResultModalOpen}
+        onOpenChange={setIsMatchingResultModalOpen}
+        onBackToHome={() => {
+          setIsMatchingResultModalOpen(false);
+          // 可以在这里刷新任务列表等
+        }}
       />
     </div>
   );
