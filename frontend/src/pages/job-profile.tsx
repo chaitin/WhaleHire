@@ -1713,7 +1713,7 @@ export function JobProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Label className="text-[14px] font-medium text-[#374151]">
-                      工作技能 <span className="text-[#EF4444]">*</span>
+                      工作技能
                     </Label>
                     <Button
                       type="button"
@@ -2211,9 +2211,6 @@ export function JobProfilePage() {
                     <h3 className="text-[16px] font-medium text-[#1F2937]">
                       工作技能
                     </h3>
-                    <span className="text-[12px] text-[#6B7280]">
-                      (<span className="text-[#EF4444]">*</span>为必填项)
-                    </span>
                     <Button
                       type="button"
                       variant="outline"
