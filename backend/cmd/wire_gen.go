@@ -9,7 +9,6 @@ package main
 import (
 	"log/slog"
 
-	"github.com/GoYoko/web"
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
 	v1_5 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
@@ -41,6 +40,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/store"
 	"github.com/chaitin/WhaleHire/backend/pkg/store/s3"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 )
 
 // Injectors from wire.go:

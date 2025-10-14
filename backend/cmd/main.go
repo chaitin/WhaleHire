@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 	"github.com/google/wire"
 
 	"github.com/chaitin/WhaleHire/backend/config"

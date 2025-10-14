@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 	"github.com/google/uuid"
 	"github.com/patrickmn/go-cache"
 	"github.com/redis/go-redis/v9"

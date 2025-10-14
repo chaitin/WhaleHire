@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoYoko/web"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
@@ -40,6 +40,7 @@ type JobProfileRepo interface {
 	GetByID(ctx context.Context, id string) (*db.JobPosition, error)
 	List(ctx context.Context, req *ListJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error)
 	Search(ctx context.Context, req *SearchJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error)
+	HasRelatedResumes(ctx context.Context, id string) (bool, error)
 }
 
 // JobSkillMetaRepo manages job skill dictionary persistence.

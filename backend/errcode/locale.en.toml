@@ -51,3 +51,6 @@ other = " JobSkillMeta ID is required"
 
 [err-invalid-param]
 other = "Invalid Param"
+
+[err-jobprofile-has-resumes]
+other = "Job profile has associated resumes"
