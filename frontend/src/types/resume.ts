@@ -32,6 +32,7 @@ export interface Resume {
   uploader_name?: string; // 上传人姓名
   job_ids?: string[]; // 关联的岗位ID列表
   job_names?: string[]; // 关联的岗位名称列表
+  job_positions?: JobApplication[]; // 关联的岗位信息
   created_at: number;
   updated_at: number;
 }
@@ -92,6 +93,21 @@ export interface ResumeProject {
   role?: string; // 担任角色
   technologies?: string; // 技术栈
   tech_stack?: string; // 兼容旧字段
+  created_at: number;
+  updated_at: number;
+}
+
+// 简历岗位申请关联信息 - 根据backend domain.JobApplication定义
+export interface JobApplication {
+  id: string;
+  resume_id: string;
+  job_position_id: string;
+  job_title: string; // 岗位标题
+  job_department: string; // 岗位部门
+  status: string; // 申请状态
+  source: string; // 申请来源
+  notes: string; // 备注信息
+  applied_at?: string; // 申请时间
   created_at: number;
   updated_at: number;
 }
@@ -158,7 +174,8 @@ export interface ResumeUpdateParams {
   current_city?: string;
   highest_education?: string;
   years_experience?: number;
-  job_ids?: string[]; // 关联的岗位ID列表
+  job_ids?: string[]; // 关联的岗位ID列表（废弃，保留兼容）
+  job_position_ids?: string[]; // 关联的岗位ID列表（新字段）
   experiences?: UpdateResumeExperience[];
   educations?: UpdateResumeEducation[];
   skills?: UpdateResumeSkill[];

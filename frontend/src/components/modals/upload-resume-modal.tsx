@@ -148,7 +148,8 @@ export function UploadResumeModal({
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         try {
-          const resume = await uploadFile(file, position || undefined);
+          // 将选中的岗位ID作为数组传递给上传函数
+          const resume = await uploadFile(file, selectedJobIds, position || undefined);
           setUploadedResume(resume);
           setCurrentStep('preview');
           onSuccess?.(resume);

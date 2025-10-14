@@ -33,6 +33,11 @@ interface MultiSelectProps {
   maxHeight?: string;
   showSelectCount?: boolean;
   selectCountLabel?: string;
+  // 分页加载相关
+  loading?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  onSearch?: (keyword: string) => void;
 }
 
 export function MultiSelect({
@@ -51,19 +56,71 @@ export function MultiSelect({
   maxHeight = '300px',
   showSelectCount = true,
   selectCountLabel = '项',
+  loading = false,
+  hasMore = false,
+  onLoadMore,
+  onSearch,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState('');
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = React.useRef<NodeJS.Timeout>();
 
-  // 过滤选项
+  // 搜索处理（带防抖）
+  const handleSearchChange = React.useCallback((value: string) => {
+    setSearchValue(value);
+    
+    if (onSearch) {
+      // 清除之前的定时器
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      // 设置新的防抖定时器
+      searchTimeoutRef.current = setTimeout(() => {
+        onSearch(value);
+      }, 300);
+    }
+  }, [onSearch]);
+
+  // 清理定时器
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // 滚动加载监听
+  React.useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (!scrollElement || !onLoadMore || !hasMore || loading) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollElement;
+      // 当滚动到底部附近时触发加载更多
+      if (scrollHeight - scrollTop - clientHeight < 50) {
+        onLoadMore();
+      }
+    };
+
+    scrollElement.addEventListener('scroll', handleScroll);
+    return () => scrollElement.removeEventListener('scroll', handleScroll);
+  }, [onLoadMore, hasMore, loading]);
+
+  // 过滤选项（如果没有提供onSearch，则使用本地过滤）
   const filteredOptions = React.useMemo(() => {
+    if (onSearch) {
+      // 如果提供了onSearch回调，由外部控制过滤
+      return options;
+    }
     if (!searchValue.trim()) return options;
     return options.filter(
       (option) =>
         option.label.toLowerCase().includes(searchValue.toLowerCase()) ||
         option.value.toLowerCase().includes(searchValue.toLowerCase())
     );
-  }, [options, searchValue]);
+  }, [options, searchValue, onSearch]);
 
   // 获取选中项的标签
   const selectedLabels = React.useMemo(() => {
@@ -185,7 +242,7 @@ export function MultiSelect({
           <Input
             placeholder={searchPlaceholder}
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="h-8 text-sm"
           />
         </div>
@@ -230,74 +287,91 @@ export function MultiSelect({
         )}
 
         {/* 选项列表 */}
-        <div className="overflow-y-auto" style={{ maxHeight: `calc(${maxHeight} - 120px)` }}>
-          {filteredOptions.length === 0 ? (
+        <div ref={scrollRef} className="overflow-y-auto" style={{ maxHeight: `calc(${maxHeight} - 120px)` }}>
+          {filteredOptions.length === 0 && !loading ? (
             <div className="py-6 text-center text-sm text-[#6B7280]">
               {emptyText}
             </div>
           ) : (
-            filteredOptions.map((option) => {
-              const isSelected = selected.includes(option.value);
-              return (
-                <DropdownMenuItem
-                  key={option.value}
-                  onSelect={(e) => {
-                    e.preventDefault();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleToggle(option.value);
-                  }}
-                  className={cn(
-                    'cursor-pointer px-3 py-2.5 focus:bg-[#F0FDF4] focus:text-[#374151]',
-                    isSelected && 'bg-[#F0FDF4]'
-                  )}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    {/* 复选框/单选框 */}
-                    {multiple ? (
-                      <div
-                        className={cn(
-                          'flex h-4 w-4 items-center justify-center rounded border-2 transition-all',
-                          isSelected
-                            ? 'bg-[#22C55E] border-[#22C55E]'
-                            : 'bg-white border-[#D1D5DB] hover:border-[#22C55E]'
-                        )}
-                      >
-                        {isSelected && <Check className="h-3 w-3 text-white stroke-[3]" />}
-                      </div>
-                    ) : (
-                      <div
-                        className={cn(
-                          'flex h-4 w-4 items-center justify-center rounded-full border-2 transition-all',
-                          isSelected
-                            ? 'border-[#22C55E]'
-                            : 'border-[#D1D5DB] hover:border-[#22C55E]'
-                        )}
-                      >
-                        {isSelected && (
-                          <div className="h-2 w-2 rounded-full bg-[#22C55E]" />
-                        )}
-                      </div>
+            <>
+              {filteredOptions.map((option) => {
+                const isSelected = selected.includes(option.value);
+                return (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggle(option.value);
+                    }}
+                    className={cn(
+                      'cursor-pointer px-3 py-2.5 focus:bg-[#F0FDF4] focus:text-[#374151]',
+                      isSelected && 'bg-[#F0FDF4]'
                     )}
-                    {/* 选项文本 */}
-                    <span
-                      className={cn(
-                        'flex-1 text-sm',
-                        isSelected ? 'text-[#374151] font-medium' : 'text-[#6B7280]'
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      {/* 复选框/单选框 */}
+                      {multiple ? (
+                        <div
+                          className={cn(
+                            'flex h-4 w-4 items-center justify-center rounded border-2 transition-all',
+                            isSelected
+                              ? 'bg-[#22C55E] border-[#22C55E]'
+                              : 'bg-white border-[#D1D5DB] hover:border-[#22C55E]'
+                          )}
+                        >
+                          {isSelected && <Check className="h-3 w-3 text-white stroke-[3]" />}
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            'flex h-4 w-4 items-center justify-center rounded-full border-2 transition-all',
+                            isSelected
+                              ? 'border-[#22C55E]'
+                              : 'border-[#D1D5DB] hover:border-[#22C55E]'
+                          )}
+                        >
+                          {isSelected && (
+                            <div className="h-2 w-2 rounded-full bg-[#22C55E]" />
+                          )}
+                        </div>
                       )}
-                    >
-                      {option.label}
-                    </span>
-                    {/* 选中指示器 */}
-                    {isSelected && multiple && (
-                      <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
-                    )}
+                      {/* 选项文本 */}
+                      <span
+                        className={cn(
+                          'flex-1 text-sm',
+                          isSelected ? 'text-[#374151] font-medium' : 'text-[#6B7280]'
+                        )}
+                      >
+                        {option.label}
+                      </span>
+                      {/* 选中指示器 */}
+                      {isSelected && multiple && (
+                        <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+              {/* 加载指示器 */}
+              {loading && (
+                <div className="py-3 text-center">
+                  <div className="inline-flex items-center gap-2 text-sm text-[#6B7280]">
+                    <div className="w-4 h-4 border-2 border-[#22C55E] border-t-transparent rounded-full animate-spin"></div>
+                    <span>加载中...</span>
                   </div>
-                </DropdownMenuItem>
-              );
-            })
+                </div>
+              )}
+              {/* 加载更多提示 */}
+              {!loading && hasMore && (
+                <div className="py-2 text-center text-xs text-[#9CA3AF]">
+                  向下滚动加载更多
+                </div>
+              )}
+            </>
           )}
         </div>
       </DropdownMenuContent>

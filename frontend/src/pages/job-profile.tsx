@@ -38,7 +38,7 @@ import {
   createJobProfile,
   updateJobProfile,
   deleteJobProfile,
-  listJobSkillMetaSimple,
+  listJobSkillMeta,
   getJobProfile,
 } from '@/services/job-profile';
 import { listDepartments } from '@/services/department';
@@ -215,6 +215,12 @@ export function JobProfilePage() {
     string[]
   >([]);
   const [availableSkills, setAvailableSkills] = useState<JobSkillMeta[]>([]);
+  
+  // 技能加载状态
+  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [skillsHasMore, setSkillsHasMore] = useState(false);
+  const [skillsNextToken, setSkillsNextToken] = useState<string | undefined>();
+  const [skillsKeyword, setSkillsKeyword] = useState<string>('');
 
   // 统计数据
   const totalJobs = jobProfiles.length;
@@ -255,15 +261,57 @@ export function JobProfilePage() {
     setCurrentPage(1); // 重置到第一页
   };
 
-  // 获取技能列表
-  const fetchSkills = async () => {
+  // 获取技能列表（初始加载或搜索）
+  const fetchSkills = async (keyword?: string, reset = true) => {
     try {
-      const response = await listJobSkillMetaSimple();
-      setAvailableSkills(response.skills || []); // 修复：使用 response.skills 而不是 response.items
+      setSkillsLoading(true);
+      const response = await listJobSkillMeta({
+        size: 20,
+        keyword: keyword || undefined,
+      });
+      
+      if (reset) {
+        setAvailableSkills(response.items || []);
+      } else {
+        setAvailableSkills(prev => [...prev, ...(response.items || [])]);
+      }
+      
+      setSkillsHasMore(!!response.page_info?.next_token);
+      setSkillsNextToken(response.page_info?.next_token);
     } catch (err) {
       console.error('获取技能列表失败:', err);
       setAvailableSkills([]);
+    } finally {
+      setSkillsLoading(false);
     }
+  };
+  
+  // 加载更多技能
+  const loadMoreSkills = async () => {
+    if (!skillsNextToken || skillsLoading) return;
+    
+    try {
+      setSkillsLoading(true);
+      const response = await listJobSkillMeta({
+        size: 20,
+        next_token: skillsNextToken,
+        keyword: skillsKeyword || undefined,
+      });
+      
+      setAvailableSkills(prev => [...prev, ...(response.items || [])]);
+      setSkillsHasMore(!!response.page_info?.next_token);
+      setSkillsNextToken(response.page_info?.next_token);
+    } catch (err) {
+      console.error('加载更多技能失败:', err);
+    } finally {
+      setSkillsLoading(false);
+    }
+  };
+  
+  // 搜索技能
+  const handleSkillSearch = async (keyword: string) => {
+    setSkillsKeyword(keyword);
+    await fetchSkills(keyword, true);
   };
 
   // 处理技能添加成功
@@ -1740,6 +1788,10 @@ export function JobProfilePage() {
                         setSelectedRequiredSkillIds([]);
                       }}
                       selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
 
@@ -1767,6 +1819,10 @@ export function JobProfilePage() {
                         setSelectedOptionalSkillIds([]);
                       }}
                       selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
                 </div>
@@ -2238,6 +2294,10 @@ export function JobProfilePage() {
                         setSelectedRequiredSkillIds([]);
                       }}
                       selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
 
@@ -2265,6 +2325,10 @@ export function JobProfilePage() {
                         setSelectedOptionalSkillIds([]);
                       }}
                       selectCountLabel="技能"
+                      loading={skillsLoading}
+                      hasMore={skillsHasMore}
+                      onLoadMore={loadMoreSkills}
+                      onSearch={handleSkillSearch}
                     />
                   </div>
                 </div>

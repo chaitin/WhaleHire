@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -130,6 +136,50 @@ export function ResumeTable({
     return pages;
   };
 
+  // 渲染岗位名称单元格
+  const renderJobPositionsCell = (resume: Resume) => {
+    const jobPositions = resume.job_positions || [];
+    
+    if (jobPositions.length === 0) {
+      return <span className="text-gray-400">-</span>;
+    }
+    
+    if (jobPositions.length === 1) {
+      return <span className="text-sm text-gray-900">{jobPositions[0].job_title}</span>;
+    }
+    
+    // 多个岗位时显示第一个 + 等xx个岗位
+    const firstJobTitle = jobPositions[0].job_title;
+    const remainingCount = jobPositions.length - 1;
+    const allJobTitles = jobPositions.map(jp => jp.job_title).join('、');
+    
+    return (
+      <div className="text-sm text-gray-900">
+        {firstJobTitle}等
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-primary cursor-pointer underline decoration-dotted">
+                {remainingCount}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <div className="text-sm">
+                <div className="font-medium mb-1">所有岗位：</div>
+                <div className="flex flex-col gap-1">
+                  {jobPositions.map((jp, index) => (
+                    <div key={index}>{jp.job_title}</div>
+                  ))}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        个岗位
+      </div>
+    );
+  };
+
   return (
     <div className={cn('', className)}>
       {/* 表格标题 */}
@@ -148,6 +198,9 @@ export function ResumeTable({
                 简历信息
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                岗位名称
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 上传时间
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -164,7 +217,7 @@ export function ResumeTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {resumes && resumes.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-16">
+                <td colSpan={6} className="px-6 py-16">
                     <div className="flex flex-col items-center justify-center space-y-3">
                       <div className="text-gray-400">
                         <svg
@@ -207,6 +260,9 @@ export function ResumeTable({
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {renderJobPositionsCell(resume)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(resume.created_at, 'datetime')}

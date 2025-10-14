@@ -110,8 +110,9 @@ export function ResumePreviewModal({
     try {
       const detail = await getResumeDetail(resumeId);
       setResumeDetail(detail);
-      // 初始化已选岗位
-      setSelectedJobIds(detail.job_ids || []);
+      // 初始化已选岗位 - 从 job_positions 中提取岗位ID
+      const jobIds = detail.job_positions?.map(jp => jp.job_position_id).filter(Boolean) || [];
+      setSelectedJobIds(jobIds);
     } catch (err) {
       console.error('获取简历详情失败:', err);
       setError('获取简历详情失败，请稍后重试');
@@ -309,10 +310,10 @@ export function ResumePreviewModal({
 
     setIsSaving(true);
     try {
-      // 将选中的岗位ID添加到更新参数中
+      // 将选中的岗位ID添加到更新参数中，使用 job_position_ids 字段
       const updateData = {
         ...editFormData,
-        job_ids: selectedJobIds,
+        job_position_ids: selectedJobIds,
       };
       await updateResume(resumeId, updateData);
       await fetchResumeDetail(); // 重新获取数据
@@ -631,34 +632,36 @@ export function ResumePreviewModal({
                     </>
                   )}
 
-                  {/* 岗位显示 */}
-                  {!isEditing && resumeDetail.job_names && resumeDetail.job_names.length > 0 && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-gray-700 mb-3">
-                      <Briefcase className="w-4 h-4 text-green-600" />
-                      {resumeDetail.job_names.length === 1 ? (
-                        <span>{resumeDetail.job_names[0]}</span>
+                  {/* 岗位显示 - 使用 job_positions 获取 job_title */}
+                  {!isEditing && resumeDetail.job_positions && resumeDetail.job_positions.length > 0 && (
+                    <div className="flex items-center justify-center gap-2 text-sm mb-3">
+                      <Briefcase className="w-4 h-4 text-emerald-500" />
+                      {resumeDetail.job_positions.length === 1 ? (
+                        <span className="text-emerald-600">{resumeDetail.job_positions[0].job_title}</span>
                       ) : (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="cursor-help">
-                              {resumeDetail.job_names[0]}等
-                              <span className="text-green-600 font-medium hover:underline">
-                                {resumeDetail.job_names.length}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="cursor-pointer text-emerald-600">
+                                {resumeDetail.job_positions[0].job_title}等
+                                <span className="font-medium underline decoration-dotted mx-1">
+                                  {resumeDetail.job_positions.length - 1}
+                                </span>
+                                个岗位
                               </span>
-                              个
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-xs">
-                            <div className="space-y-1">
-                              <div className="font-semibold text-xs text-gray-500 mb-2">所有岗位：</div>
-                              {resumeDetail.job_names.map((jobName, idx) => (
-                                <div key={idx} className="text-sm">
-                                  • {jobName}
-                                </div>
-                              ))}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-xs">
+                              <div className="space-y-1">
+                                <div className="font-semibold text-xs text-gray-500 mb-2">所有岗位：</div>
+                                {resumeDetail.job_positions.map((jobPos, idx) => (
+                                  <div key={jobPos.id || idx} className="text-sm">
+                                    {jobPos.job_title}
+                                  </div>
+                                ))}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   )}
