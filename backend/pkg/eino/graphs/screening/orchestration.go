@@ -1,10 +1,11 @@
-package aggregator
+package screening
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/matching/aggregator"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/matching/basicinfo"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/matching/dispatcher"
@@ -14,23 +15,23 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/matching/responsibility"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/matching/skill"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/matching/taskmeta"
-	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/types"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
 )
 
 // 智能简历匹配图结构
 type ScreeningChatGraph struct {
-	graph *compose.Graph[*types.MatchInput, *types.JobResumeMatch]
+	graph   *compose.Graph[*domain.MatchInput, *domain.JobResumeMatch]
+	version string
 }
 
 // GetGraph 获取图结构
-func (r *ScreeningChatGraph) GetGraph() *compose.Graph[*types.MatchInput, *types.JobResumeMatch] {
+func (r *ScreeningChatGraph) GetGraph() *compose.Graph[*domain.MatchInput, *domain.JobResumeMatch] {
 	return r.graph
 }
 
 // Compile 编译链为可执行的Runnable
-func (r *ScreeningChatGraph) Compile(ctx context.Context) (compose.Runnable[*types.MatchInput, *types.JobResumeMatch], error) {
+func (r *ScreeningChatGraph) Compile(ctx context.Context) (compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch], error) {
 	agent, err := r.graph.Compile(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile chain: %w", err)
@@ -38,10 +39,15 @@ func (r *ScreeningChatGraph) Compile(ctx context.Context) (compose.Runnable[*typ
 	return agent, nil
 }
 
+// GetVersion 返回Agent版本
+func (r *ScreeningChatGraph) GetVersion() string {
+	return r.version
+}
+
 // NewScreeningChatGraph 使用配置创建智能简历匹配图
 func NewScreeningChatGraph(ctx context.Context, chatModel model.ToolCallingChatModel, cfg *config.Config) (*ScreeningChatGraph, error) {
 
-	g := compose.NewGraph[*types.MatchInput, *types.JobResumeMatch]()
+	g := compose.NewGraph[*domain.MatchInput, *domain.JobResumeMatch]()
 
 	dispatcher := dispatcher.NewDispatcher()
 	baseinfoAgent, err := basicinfo.NewBasicInfoAgent(ctx, chatModel)
@@ -80,67 +86,68 @@ func NewScreeningChatGraph(ctx context.Context, chatModel model.ToolCallingChatM
 	}
 
 	// 添加调度节点
-	_ = g.AddLambdaNode(types.DispatcherNode, compose.InvokableLambda(dispatcher.Process), compose.WithNodeName(types.DispatcherNode))
+	_ = g.AddLambdaNode(domain.DispatcherNode, compose.InvokableLambda(dispatcher.Process), compose.WithNodeName(domain.DispatcherNode))
 
 	// 批量添加各匹配代理节点
-	_ = g.AddGraphNode(types.BasicInfoAgent, baseinfoAgent.GetChain(),
-		compose.WithInputKey(types.BasicInfoAgent),
-		compose.WithOutputKey(types.BasicInfoAgent),
-		compose.WithNodeName(types.BasicInfoAgent))
+	_ = g.AddGraphNode(domain.BasicInfoAgent, baseinfoAgent.GetChain(),
+		compose.WithInputKey(domain.BasicInfoAgent),
+		compose.WithOutputKey(domain.BasicInfoAgent),
+		compose.WithNodeName(domain.BasicInfoAgent))
 
-	_ = g.AddGraphNode(types.EducationAgent, educationAgent.GetChain(),
-		compose.WithInputKey(types.EducationAgent),
-		compose.WithOutputKey(types.EducationAgent),
-		compose.WithNodeName(types.EducationAgent))
+	_ = g.AddGraphNode(domain.EducationAgent, educationAgent.GetChain(),
+		compose.WithInputKey(domain.EducationAgent),
+		compose.WithOutputKey(domain.EducationAgent),
+		compose.WithNodeName(domain.EducationAgent))
 
-	_ = g.AddGraphNode(types.ExperienceAgent, experienceAgent.GetChain(),
-		compose.WithInputKey(types.ExperienceAgent),
-		compose.WithOutputKey(types.ExperienceAgent),
-		compose.WithNodeName(types.ExperienceAgent))
+	_ = g.AddGraphNode(domain.ExperienceAgent, experienceAgent.GetChain(),
+		compose.WithInputKey(domain.ExperienceAgent),
+		compose.WithOutputKey(domain.ExperienceAgent),
+		compose.WithNodeName(domain.ExperienceAgent))
 
-	_ = g.AddGraphNode(types.IndustryAgent, industryAgent.GetChain(),
-		compose.WithInputKey(types.IndustryAgent),
-		compose.WithOutputKey(types.IndustryAgent),
-		compose.WithNodeName(types.IndustryAgent))
+	_ = g.AddGraphNode(domain.IndustryAgent, industryAgent.GetChain(),
+		compose.WithInputKey(domain.IndustryAgent),
+		compose.WithOutputKey(domain.IndustryAgent),
+		compose.WithNodeName(domain.IndustryAgent))
 
-	_ = g.AddGraphNode(types.ResponsibilityAgent, responseIndustryAgent.GetChain(),
-		compose.WithInputKey(types.ResponsibilityAgent),
-		compose.WithOutputKey(types.ResponsibilityAgent),
-		compose.WithNodeName(types.ResponsibilityAgent))
+	_ = g.AddGraphNode(domain.ResponsibilityAgent, responseIndustryAgent.GetChain(),
+		compose.WithInputKey(domain.ResponsibilityAgent),
+		compose.WithOutputKey(domain.ResponsibilityAgent),
+		compose.WithNodeName(domain.ResponsibilityAgent))
 
-	_ = g.AddGraphNode(types.SkillAgent, skillAgent.GetChain(),
-		compose.WithInputKey(types.SkillAgent),
-		compose.WithOutputKey(types.SkillAgent),
-		compose.WithNodeName(types.SkillAgent))
+	_ = g.AddGraphNode(domain.SkillAgent, skillAgent.GetChain(),
+		compose.WithInputKey(domain.SkillAgent),
+		compose.WithOutputKey(domain.SkillAgent),
+		compose.WithNodeName(domain.SkillAgent))
 
-	_ = g.AddLambdaNode(types.TaskMetaDataNode, compose.InvokableLambda(taskmeta.NewLambdaTaskMeta),
-		compose.WithInputKey(types.TaskMetaDataNode),
-		compose.WithOutputKey(types.TaskMetaDataNode),
-		compose.WithNodeName(types.TaskMetaDataNode))
+	_ = g.AddLambdaNode(domain.TaskMetaDataNode, compose.InvokableLambda(taskmeta.NewLambdaTaskMeta),
+		compose.WithInputKey(domain.TaskMetaDataNode),
+		compose.WithOutputKey(domain.TaskMetaDataNode),
+		compose.WithNodeName(domain.TaskMetaDataNode))
 
-	_ = g.AddGraphNode(types.AggregatorAgent, aggregatorAgent.GetChain(),
-		compose.WithNodeName(types.AggregatorAgent))
+	_ = g.AddGraphNode(domain.AggregatorAgent, aggregatorAgent.GetChain(),
+		compose.WithNodeName(domain.AggregatorAgent))
 
-	_ = g.AddEdge(compose.START, types.DispatcherNode)
-	_ = g.AddEdge(types.DispatcherNode, types.BasicInfoAgent)
-	_ = g.AddEdge(types.DispatcherNode, types.EducationAgent)
-	_ = g.AddEdge(types.DispatcherNode, types.ExperienceAgent)
-	_ = g.AddEdge(types.DispatcherNode, types.IndustryAgent)
-	_ = g.AddEdge(types.DispatcherNode, types.ResponsibilityAgent)
-	_ = g.AddEdge(types.DispatcherNode, types.SkillAgent)
-	_ = g.AddEdge(types.DispatcherNode, types.TaskMetaDataNode)
+	_ = g.AddEdge(compose.START, domain.DispatcherNode)
+	_ = g.AddEdge(domain.DispatcherNode, domain.BasicInfoAgent)
+	_ = g.AddEdge(domain.DispatcherNode, domain.EducationAgent)
+	_ = g.AddEdge(domain.DispatcherNode, domain.ExperienceAgent)
+	_ = g.AddEdge(domain.DispatcherNode, domain.IndustryAgent)
+	_ = g.AddEdge(domain.DispatcherNode, domain.ResponsibilityAgent)
+	_ = g.AddEdge(domain.DispatcherNode, domain.SkillAgent)
+	_ = g.AddEdge(domain.DispatcherNode, domain.TaskMetaDataNode)
 
-	_ = g.AddEdge(types.BasicInfoAgent, types.AggregatorAgent)
-	_ = g.AddEdge(types.EducationAgent, types.AggregatorAgent)
-	_ = g.AddEdge(types.ExperienceAgent, types.AggregatorAgent)
-	_ = g.AddEdge(types.IndustryAgent, types.AggregatorAgent)
-	_ = g.AddEdge(types.ResponsibilityAgent, types.AggregatorAgent)
-	_ = g.AddEdge(types.SkillAgent, types.AggregatorAgent)
-	_ = g.AddEdge(types.TaskMetaDataNode, types.AggregatorAgent)
+	_ = g.AddEdge(domain.BasicInfoAgent, domain.AggregatorAgent)
+	_ = g.AddEdge(domain.EducationAgent, domain.AggregatorAgent)
+	_ = g.AddEdge(domain.ExperienceAgent, domain.AggregatorAgent)
+	_ = g.AddEdge(domain.IndustryAgent, domain.AggregatorAgent)
+	_ = g.AddEdge(domain.ResponsibilityAgent, domain.AggregatorAgent)
+	_ = g.AddEdge(domain.SkillAgent, domain.AggregatorAgent)
+	_ = g.AddEdge(domain.TaskMetaDataNode, domain.AggregatorAgent)
 
-	_ = g.AddEdge(types.AggregatorAgent, compose.END)
+	_ = g.AddEdge(domain.AggregatorAgent, compose.END)
 
 	return &ScreeningChatGraph{
-		graph: g,
+		graph:   g,
+		version: "1.0.0",
 	}, nil
 }

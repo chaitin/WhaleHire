@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/types"
+	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
@@ -13,19 +13,19 @@ import (
 
 // AggregatorAgent 匹配结果聚合Agent
 type AggregatorAgent struct {
-	chain *compose.Chain[map[string]any, *types.JobResumeMatch]
+	chain *compose.Chain[map[string]any, *domain.JobResumeMatch]
 }
 
 // AggregatorInput 聚合器输入结构
 type AggregatorInput struct {
-	BasicMatch          *types.BasicMatchDetail          `json:"basic_match"`
-	SkillMatch          *types.SkillMatchDetail          `json:"skill_match"`
-	ResponsibilityMatch *types.ResponsibilityMatchDetail `json:"responsibility_match"`
-	ExperienceMatch     *types.ExperienceMatchDetail     `json:"experience_match"`
-	EducationMatch      *types.EducationMatchDetail      `json:"education_match"`
-	IndustryMatch       *types.IndustryMatchDetail       `json:"industry_match"`
-	Weights             *types.DimensionWeights          `json:"weights"`
-	TaskMetaData        *types.TaskMetaData              `json:"-"` // 任务元数据不参与序列化
+	BasicMatch          *domain.BasicMatchDetail          `json:"basic_match"`
+	SkillMatch          *domain.SkillMatchDetail          `json:"skill_match"`
+	ResponsibilityMatch *domain.ResponsibilityMatchDetail `json:"responsibility_match"`
+	ExperienceMatch     *domain.ExperienceMatchDetail     `json:"experience_match"`
+	EducationMatch      *domain.EducationMatchDetail      `json:"education_match"`
+	IndustryMatch       *domain.IndustryMatchDetail       `json:"industry_match"`
+	Weights             *domain.DimensionWeights          `json:"weights"`
+	TaskMetaData        *domain.TaskMetaData              `json:"-"` // 任务元数据不参与序列化
 }
 
 // 输入处理，将map[string]any转换为模板变量
@@ -37,52 +37,52 @@ func newInputLambda(ctx context.Context, input map[string]any, opts ...any) (map
 	aggregatorInput := &AggregatorInput{}
 
 	// 从map中提取各个Agent的输出结果
-	if basicMatch, ok := input[types.BasicInfoAgent]; ok {
-		if basicDetail, ok := basicMatch.(*types.BasicMatchDetail); ok {
+	if basicMatch, ok := input[domain.BasicInfoAgent]; ok {
+		if basicDetail, ok := basicMatch.(*domain.BasicMatchDetail); ok {
 			aggregatorInput.BasicMatch = basicDetail
 		}
 	}
 
-	if skillMatch, ok := input[types.SkillAgent]; ok {
-		if skillDetail, ok := skillMatch.(*types.SkillMatchDetail); ok {
+	if skillMatch, ok := input[domain.SkillAgent]; ok {
+		if skillDetail, ok := skillMatch.(*domain.SkillMatchDetail); ok {
 			aggregatorInput.SkillMatch = skillDetail
 		}
 	}
 
-	if responsibilityMatch, ok := input[types.ResponsibilityAgent]; ok {
-		if respDetail, ok := responsibilityMatch.(*types.ResponsibilityMatchDetail); ok {
+	if responsibilityMatch, ok := input[domain.ResponsibilityAgent]; ok {
+		if respDetail, ok := responsibilityMatch.(*domain.ResponsibilityMatchDetail); ok {
 			aggregatorInput.ResponsibilityMatch = respDetail
 		}
 	}
 
-	if experienceMatch, ok := input[types.ExperienceAgent]; ok {
-		if expDetail, ok := experienceMatch.(*types.ExperienceMatchDetail); ok {
+	if experienceMatch, ok := input[domain.ExperienceAgent]; ok {
+		if expDetail, ok := experienceMatch.(*domain.ExperienceMatchDetail); ok {
 			aggregatorInput.ExperienceMatch = expDetail
 		}
 	}
 
-	if educationMatch, ok := input[types.EducationAgent]; ok {
-		if eduDetail, ok := educationMatch.(*types.EducationMatchDetail); ok {
+	if educationMatch, ok := input[domain.EducationAgent]; ok {
+		if eduDetail, ok := educationMatch.(*domain.EducationMatchDetail); ok {
 			aggregatorInput.EducationMatch = eduDetail
 		}
 	}
 
-	if industryMatch, ok := input[types.IndustryAgent]; ok {
-		if indDetail, ok := industryMatch.(*types.IndustryMatchDetail); ok {
+	if industryMatch, ok := input[domain.IndustryAgent]; ok {
+		if indDetail, ok := industryMatch.(*domain.IndustryMatchDetail); ok {
 			aggregatorInput.IndustryMatch = indDetail
 		}
 	}
 
 	// 提取任务元数据
-	if taskMetaData, ok := input[types.TaskMetaDataNode]; ok {
-		if metaData, ok := taskMetaData.(*types.TaskMetaData); ok {
+	if taskMetaData, ok := input[domain.TaskMetaDataNode]; ok {
+		if metaData, ok := taskMetaData.(*domain.TaskMetaData); ok {
 			aggregatorInput.TaskMetaData = metaData
 			// 从任务元数据中提取权重配置
 			if metaData.DimensionWeights != nil {
 				aggregatorInput.Weights = metaData.DimensionWeights
 			} else {
 				// 如果没有配置权重，使用默认权重
-				aggregatorInput.Weights = &types.DefaultDimensionWeights
+				aggregatorInput.Weights = &domain.DefaultDimensionWeights
 			}
 		}
 	}
@@ -100,12 +100,12 @@ func newInputLambda(ctx context.Context, input map[string]any, opts ...any) (map
 }
 
 // 输出处理，将模型输出解析为结构化结果
-func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*types.JobResumeMatch, error) {
+func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*domain.JobResumeMatch, error) {
 	if msg == nil || msg.Content == "" {
 		return nil, fmt.Errorf("empty model output")
 	}
 
-	var output types.JobResumeMatch
+	var output domain.JobResumeMatch
 	if err := json.Unmarshal([]byte(msg.Content), &output); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON output: %w; raw=%s", err, msg.Content)
 	}
@@ -122,7 +122,7 @@ func NewAggregatorAgent(ctx context.Context, llm model.ToolCallingChatModel) (*A
 	}
 
 	// 构建处理链
-	chain := compose.NewChain[map[string]any, *types.JobResumeMatch]()
+	chain := compose.NewChain[map[string]any, *domain.JobResumeMatch]()
 	chain.
 		AppendLambda(compose.InvokableLambdaWithOption(newInputLambda), compose.WithNodeName("input_processing")).
 		AppendChatTemplate(chatTemplate, compose.WithNodeName("chat_template")).
@@ -135,12 +135,12 @@ func NewAggregatorAgent(ctx context.Context, llm model.ToolCallingChatModel) (*A
 }
 
 // GetChain 获取处理链
-func (a *AggregatorAgent) GetChain() *compose.Chain[map[string]any, *types.JobResumeMatch] {
+func (a *AggregatorAgent) GetChain() *compose.Chain[map[string]any, *domain.JobResumeMatch] {
 	return a.chain
 }
 
 // Compile 编译链为可执行的Runnable
-func (a *AggregatorAgent) Compile(ctx context.Context) (compose.Runnable[map[string]any, *types.JobResumeMatch], error) {
+func (a *AggregatorAgent) Compile(ctx context.Context) (compose.Runnable[map[string]any, *domain.JobResumeMatch], error) {
 	runnable, err := a.chain.Compile(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile chain: %w", err)
@@ -149,7 +149,7 @@ func (a *AggregatorAgent) Compile(ctx context.Context) (compose.Runnable[map[str
 }
 
 // Process 处理匹配结果聚合
-func (a *AggregatorAgent) Process(ctx context.Context, input map[string]any) (*types.JobResumeMatch, error) {
+func (a *AggregatorAgent) Process(ctx context.Context, input map[string]any) (*domain.JobResumeMatch, error) {
 	// 验证输入
 	if err := a.validateInput(input); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
@@ -181,11 +181,11 @@ func (a *AggregatorAgent) validateInput(input map[string]any) error {
 	}
 
 	// 验证任务元数据
-	taskMetaData, ok := input[types.TaskMetaDataNode]
+	taskMetaData, ok := input[domain.TaskMetaDataNode]
 	if !ok {
 		return fmt.Errorf("task metadata is required")
 	}
-	if metaData, ok := taskMetaData.(*types.TaskMetaData); !ok {
+	if metaData, ok := taskMetaData.(*domain.TaskMetaData); !ok {
 		return fmt.Errorf("task metadata must be of type *TaskMetaData")
 	} else {
 		if metaData.JobID == "" {
@@ -201,12 +201,12 @@ func (a *AggregatorAgent) validateInput(input map[string]any) error {
 
 	// 验证至少有一个Agent的输出
 	agentOutputs := []string{
-		types.BasicInfoAgent,
-		types.SkillAgent,
-		types.ResponsibilityAgent,
-		types.ExperienceAgent,
-		types.EducationAgent,
-		types.IndustryAgent,
+		domain.BasicInfoAgent,
+		domain.SkillAgent,
+		domain.ResponsibilityAgent,
+		domain.ExperienceAgent,
+		domain.EducationAgent,
+		domain.IndustryAgent,
 	}
 
 	hasOutput := false
@@ -215,28 +215,28 @@ func (a *AggregatorAgent) validateInput(input map[string]any) error {
 			hasOutput = true
 			// 验证输出类型
 			switch agentName {
-			case types.BasicInfoAgent:
-				if _, ok := output.(*types.BasicMatchDetail); !ok {
+			case domain.BasicInfoAgent:
+				if _, ok := output.(*domain.BasicMatchDetail); !ok {
 					return fmt.Errorf("%s output must be of type *BasicMatchDetail", agentName)
 				}
-			case types.SkillAgent:
-				if _, ok := output.(*types.SkillMatchDetail); !ok {
+			case domain.SkillAgent:
+				if _, ok := output.(*domain.SkillMatchDetail); !ok {
 					return fmt.Errorf("%s output must be of type *SkillMatchDetail", agentName)
 				}
-			case types.ResponsibilityAgent:
-				if _, ok := output.(*types.ResponsibilityMatchDetail); !ok {
+			case domain.ResponsibilityAgent:
+				if _, ok := output.(*domain.ResponsibilityMatchDetail); !ok {
 					return fmt.Errorf("%s output must be of type *ResponsibilityMatchDetail", agentName)
 				}
-			case types.ExperienceAgent:
-				if _, ok := output.(*types.ExperienceMatchDetail); !ok {
+			case domain.ExperienceAgent:
+				if _, ok := output.(*domain.ExperienceMatchDetail); !ok {
 					return fmt.Errorf("%s output must be of type *ExperienceMatchDetail", agentName)
 				}
-			case types.EducationAgent:
-				if _, ok := output.(*types.EducationMatchDetail); !ok {
+			case domain.EducationAgent:
+				if _, ok := output.(*domain.EducationMatchDetail); !ok {
 					return fmt.Errorf("%s output must be of type *EducationMatchDetail", agentName)
 				}
-			case types.IndustryAgent:
-				if _, ok := output.(*types.IndustryMatchDetail); !ok {
+			case domain.IndustryAgent:
+				if _, ok := output.(*domain.IndustryMatchDetail); !ok {
 					return fmt.Errorf("%s output must be of type *IndustryMatchDetail", agentName)
 				}
 			}
@@ -251,7 +251,7 @@ func (a *AggregatorAgent) validateInput(input map[string]any) error {
 }
 
 // validateOutput 验证输出数据
-func (a *AggregatorAgent) validateOutput(output *types.JobResumeMatch) error {
+func (a *AggregatorAgent) validateOutput(output *domain.JobResumeMatch) error {
 	if output == nil {
 		return fmt.Errorf("output cannot be nil")
 	}

@@ -1,9 +1,7 @@
-package types
+package domain
 
 import (
 	"time"
-
-	"github.com/chaitin/WhaleHire/backend/domain"
 )
 
 const (
@@ -20,10 +18,10 @@ const (
 
 // MatchInput 匹配输入结构
 type MatchInput struct {
-	JobProfile       *domain.JobProfileDetail `json:"job_profile"`
-	Resume           *domain.ResumeDetail     `json:"resume"`
-	DimensionWeights *DimensionWeights        `json:"weights"`
-	MatchTaskID      string                   `json:"match_task_id"`
+	JobProfile       *JobProfileDetail `json:"job_profile"`
+	Resume           *ResumeDetail     `json:"resume"`
+	DimensionWeights *DimensionWeights `json:"weights"`
+	MatchTaskID      string            `json:"match_task_id"`
 }
 
 // JobResumeMatch 工作简历匹配结果
@@ -50,11 +48,11 @@ type BasicMatchDetail struct {
 
 // SkillMatchDetail 技能匹配详情
 type SkillMatchDetail struct {
-	Score         float64            `json:"score"`
-	MatchedSkills []*MatchedSkill    `json:"matched_skills"` // 匹配的技能
-	MissingSkills []*domain.JobSkill `json:"missing_skills"` // 缺失的技能
-	ExtraSkills   []string           `json:"extra_skills"`   // 额外的技能
-	LLMAnalysis   *SkillLLMAnalysis  `json:"llm_analysis"`   // 大模型整体分析
+	Score         float64           `json:"score"`
+	MatchedSkills []*MatchedSkill   `json:"matched_skills"` // 匹配的技能
+	MissingSkills []*JobSkill       `json:"missing_skills"` // 缺失的技能
+	ExtraSkills   []string          `json:"extra_skills"`   // 额外的技能
+	LLMAnalysis   *SkillLLMAnalysis `json:"llm_analysis"`   // 大模型整体分析
 }
 
 // MatchedSkill 匹配的技能
@@ -91,10 +89,10 @@ type SkillItemAnalysis struct {
 
 // ResponsibilityMatchDetail 职责匹配详情
 type ResponsibilityMatchDetail struct {
-	Score                     float64                     `json:"score"`
-	MatchedResponsibilities   []*MatchedResponsibility    `json:"matched_responsibilities"`   // 匹配的职责
-	UnmatchedResponsibilities []*domain.JobResponsibility `json:"unmatched_responsibilities"` // 未匹配的职责
-	RelevantExperiences       []string                    `json:"relevant_experiences"`       // 相关工作经历ID
+	Score                     float64                  `json:"score"`
+	MatchedResponsibilities   []*MatchedResponsibility `json:"matched_responsibilities"`   // 匹配的职责
+	UnmatchedResponsibilities []*JobResponsibility     `json:"unmatched_responsibilities"` // 未匹配的职责
+	RelevantExperiences       []string                 `json:"relevant_experiences"`       // 相关工作经历ID
 }
 
 // MatchedResponsibility 匹配的职责
@@ -245,41 +243,41 @@ var DefaultDimensionWeights = DimensionWeights{
 
 // BasicInfoData 基本信息Agent数据
 type BasicInfoData struct {
-	JobProfile *domain.JobProfileDetail `json:"job_profile"`
-	Resume     *domain.ResumeDetail     `json:"resume"`
+	JobProfile *JobProfileDetail `json:"job_profile"`
+	Resume     *ResumeDetail     `json:"resume"`
 }
 
 // SkillData 技能Agent数据
 type SkillData struct {
-	JobSkills      []*domain.JobSkill      `json:"job_skills"`
-	ResumeSkills   []*domain.ResumeSkill   `json:"resume_skills"`
-	ResumeProjects []*domain.ResumeProject `json:"resume_projects"` // 新增：用于提取技术栈
+	JobSkills      []*JobSkill      `json:"job_skills"`
+	ResumeSkills   []*ResumeSkill   `json:"resume_skills"`
+	ResumeProjects []*ResumeProject `json:"resume_projects"` // 新增：用于提取技术栈
 }
 
 // ResponsibilityData 职责Agent数据
 type ResponsibilityData struct {
-	JobResponsibilities []*domain.JobResponsibility `json:"job_responsibilities"`
-	ResumeExperiences   []*domain.ResumeExperience  `json:"resume_experiences"`
-	ResumeProjects      []*domain.ResumeProject     `json:"resume_projects"` // 新增：项目职责匹配
+	JobResponsibilities []*JobResponsibility `json:"job_responsibilities"`
+	ResumeExperiences   []*ResumeExperience  `json:"resume_experiences"`
+	ResumeProjects      []*ResumeProject     `json:"resume_projects"` // 新增：项目职责匹配
 }
 
 // ExperienceData 经验Agent数据
 type ExperienceData struct {
-	JobExperienceRequirements []*domain.JobExperienceRequirement `json:"job_experience_requirements"`
-	ResumeExperiences         []*domain.ResumeExperience         `json:"resume_experiences"`
-	ResumeYearsExperience     float64                            `json:"resume_years_experience"` // 新增：简历总工作年限
+	JobExperienceRequirements []*JobExperienceRequirement `json:"job_experience_requirements"`
+	ResumeExperiences         []*ResumeExperience         `json:"resume_experiences"`
+	ResumeYearsExperience     float64                     `json:"resume_years_experience"` // 新增：简历总工作年限
 }
 
 // EducationData 教育Agent数据
 type EducationData struct {
-	JobEducationRequirements []*domain.JobEducationRequirement `json:"job_education_requirements"`
-	ResumeEducations         []*domain.ResumeEducation         `json:"resume_educations"`
+	JobEducationRequirements []*JobEducationRequirement `json:"job_education_requirements"`
+	ResumeEducations         []*ResumeEducation         `json:"resume_educations"`
 }
 
 // IndustryData 行业Agent数据
 type IndustryData struct {
-	JobIndustryRequirements []*domain.JobIndustryRequirement `json:"job_industry_requirements"`
-	ResumeExperiences       []*domain.ResumeExperience       `json:"resume_experiences"`
+	JobIndustryRequirements []*JobIndustryRequirement `json:"job_industry_requirements"`
+	ResumeExperiences       []*ResumeExperience       `json:"resume_experiences"`
 }
 
 // 任务数据

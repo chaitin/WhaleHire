@@ -65,5 +65,7 @@ func (Resume) Edges() []ent.Edge {
 		edge.To("logs", ResumeLog.Type),
 		edge.To("document_parse", ResumeDocumentParse.Type),
 		edge.To("job_applications", ResumeJobApplication.Type),
+		edge.To("screening_task_resumes", ScreeningTaskResume.Type),
+		edge.To("screening_results", ScreeningResult.Type),
 	}
 }

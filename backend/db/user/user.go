@@ -44,6 +44,8 @@ const (
 	EdgeResumes = "resumes"
 	// EdgeCreatedPositions holds the string denoting the created_positions edge name in mutations.
 	EdgeCreatedPositions = "created_positions"
+	// EdgeCreatedScreeningTasks holds the string denoting the created_screening_tasks edge name in mutations.
+	EdgeCreatedScreeningTasks = "created_screening_tasks"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// LoginHistoriesTable is the table that holds the login_histories relation/edge.
@@ -81,6 +83,13 @@ const (
 	CreatedPositionsInverseTable = "job_position"
 	// CreatedPositionsColumn is the table column denoting the created_positions relation/edge.
 	CreatedPositionsColumn = "created_by"
+	// CreatedScreeningTasksTable is the table that holds the created_screening_tasks relation/edge.
+	CreatedScreeningTasksTable = "screening_tasks"
+	// CreatedScreeningTasksInverseTable is the table name for the ScreeningTask entity.
+	// It exists in this package in order to avoid circular dependency with the "screeningtask" package.
+	CreatedScreeningTasksInverseTable = "screening_tasks"
+	// CreatedScreeningTasksColumn is the table column denoting the created_screening_tasks relation/edge.
+	CreatedScreeningTasksColumn = "created_by"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -247,6 +256,20 @@ func ByCreatedPositions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newCreatedPositionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCreatedScreeningTasksCount orders the results by created_screening_tasks count.
+func ByCreatedScreeningTasksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCreatedScreeningTasksStep(), opts...)
+	}
+}
+
+// ByCreatedScreeningTasks orders the results by created_screening_tasks terms.
+func ByCreatedScreeningTasks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCreatedScreeningTasksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newLoginHistoriesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -280,5 +303,12 @@ func newCreatedPositionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CreatedPositionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CreatedPositionsTable, CreatedPositionsColumn),
+	)
+}
+func newCreatedScreeningTasksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CreatedScreeningTasksInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CreatedScreeningTasksTable, CreatedScreeningTasksColumn),
 	)
 }

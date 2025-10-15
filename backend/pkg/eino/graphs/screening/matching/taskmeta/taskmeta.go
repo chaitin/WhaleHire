@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/types"
+	"github.com/chaitin/WhaleHire/backend/domain"
 )
 
 var (
@@ -23,9 +23,9 @@ func NewTaskMetaProcessor() *TaskMetaProcessor {
 }
 
 // NewLambdaTaskMeta 做数据转换，增强任务元数据
-func NewLambdaTaskMeta(ctx context.Context, input *types.TaskMetaData) (output *types.TaskMetaData, err error) {
+func NewLambdaTaskMeta(ctx context.Context, input *domain.TaskMetaData) (output *domain.TaskMetaData, err error) {
 	// 增强任务元数据，添加时间戳和处理状态
-	enhanced := &types.TaskMetaData{
+	enhanced := &domain.TaskMetaData{
 		JobID:       input.JobID,
 		ResumeID:    input.ResumeID,
 		MatchTaskID: input.MatchTaskID,
@@ -36,7 +36,7 @@ func NewLambdaTaskMeta(ctx context.Context, input *types.TaskMetaData) (output *
 }
 
 // ProcessTaskMeta 处理任务元数据，为各Agent提供统一的任务上下文
-func (p *TaskMetaProcessor) ProcessTaskMeta(ctx context.Context, input *types.TaskMetaData) (*types.TaskMetaData, error) {
+func (p *TaskMetaProcessor) ProcessTaskMeta(ctx context.Context, input *domain.TaskMetaData) (*domain.TaskMetaData, error) {
 	// 验证输入数据
 	if input == nil {
 		return nil, ErrInvalidInput
@@ -47,7 +47,7 @@ func (p *TaskMetaProcessor) ProcessTaskMeta(ctx context.Context, input *types.Ta
 	}
 
 	// 创建增强的任务元数据
-	enhanced := &types.TaskMetaData{
+	enhanced := &domain.TaskMetaData{
 		JobID:       input.JobID,
 		ResumeID:    input.ResumeID,
 		MatchTaskID: input.MatchTaskID,

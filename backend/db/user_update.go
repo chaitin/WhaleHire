@@ -16,6 +16,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -267,6 +268,21 @@ func (uu *UserUpdate) AddCreatedPositions(j ...*JobPosition) *UserUpdate {
 	return uu.AddCreatedPositionIDs(ids...)
 }
 
+// AddCreatedScreeningTaskIDs adds the "created_screening_tasks" edge to the ScreeningTask entity by IDs.
+func (uu *UserUpdate) AddCreatedScreeningTaskIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddCreatedScreeningTaskIDs(ids...)
+	return uu
+}
+
+// AddCreatedScreeningTasks adds the "created_screening_tasks" edges to the ScreeningTask entity.
+func (uu *UserUpdate) AddCreatedScreeningTasks(s ...*ScreeningTask) *UserUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uu.AddCreatedScreeningTaskIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -375,6 +391,27 @@ func (uu *UserUpdate) RemoveCreatedPositions(j ...*JobPosition) *UserUpdate {
 		ids[i] = j[i].ID
 	}
 	return uu.RemoveCreatedPositionIDs(ids...)
+}
+
+// ClearCreatedScreeningTasks clears all "created_screening_tasks" edges to the ScreeningTask entity.
+func (uu *UserUpdate) ClearCreatedScreeningTasks() *UserUpdate {
+	uu.mutation.ClearCreatedScreeningTasks()
+	return uu
+}
+
+// RemoveCreatedScreeningTaskIDs removes the "created_screening_tasks" edge to ScreeningTask entities by IDs.
+func (uu *UserUpdate) RemoveCreatedScreeningTaskIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveCreatedScreeningTaskIDs(ids...)
+	return uu
+}
+
+// RemoveCreatedScreeningTasks removes "created_screening_tasks" edges to ScreeningTask entities.
+func (uu *UserUpdate) RemoveCreatedScreeningTasks(s ...*ScreeningTask) *UserUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uu.RemoveCreatedScreeningTaskIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -686,6 +723,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.CreatedScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedScreeningTasksTable,
+			Columns: []string{user.CreatedScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedCreatedScreeningTasksIDs(); len(nodes) > 0 && !uu.mutation.CreatedScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedScreeningTasksTable,
+			Columns: []string{user.CreatedScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CreatedScreeningTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedScreeningTasksTable,
+			Columns: []string{user.CreatedScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(uu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -939,6 +1021,21 @@ func (uuo *UserUpdateOne) AddCreatedPositions(j ...*JobPosition) *UserUpdateOne 
 	return uuo.AddCreatedPositionIDs(ids...)
 }
 
+// AddCreatedScreeningTaskIDs adds the "created_screening_tasks" edge to the ScreeningTask entity by IDs.
+func (uuo *UserUpdateOne) AddCreatedScreeningTaskIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddCreatedScreeningTaskIDs(ids...)
+	return uuo
+}
+
+// AddCreatedScreeningTasks adds the "created_screening_tasks" edges to the ScreeningTask entity.
+func (uuo *UserUpdateOne) AddCreatedScreeningTasks(s ...*ScreeningTask) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uuo.AddCreatedScreeningTaskIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1047,6 +1144,27 @@ func (uuo *UserUpdateOne) RemoveCreatedPositions(j ...*JobPosition) *UserUpdateO
 		ids[i] = j[i].ID
 	}
 	return uuo.RemoveCreatedPositionIDs(ids...)
+}
+
+// ClearCreatedScreeningTasks clears all "created_screening_tasks" edges to the ScreeningTask entity.
+func (uuo *UserUpdateOne) ClearCreatedScreeningTasks() *UserUpdateOne {
+	uuo.mutation.ClearCreatedScreeningTasks()
+	return uuo
+}
+
+// RemoveCreatedScreeningTaskIDs removes the "created_screening_tasks" edge to ScreeningTask entities by IDs.
+func (uuo *UserUpdateOne) RemoveCreatedScreeningTaskIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveCreatedScreeningTaskIDs(ids...)
+	return uuo
+}
+
+// RemoveCreatedScreeningTasks removes "created_screening_tasks" edges to ScreeningTask entities.
+func (uuo *UserUpdateOne) RemoveCreatedScreeningTasks(s ...*ScreeningTask) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uuo.RemoveCreatedScreeningTaskIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1381,6 +1499,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CreatedScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedScreeningTasksTable,
+			Columns: []string{user.CreatedScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedCreatedScreeningTasksIDs(); len(nodes) > 0 && !uuo.mutation.CreatedScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedScreeningTasksTable,
+			Columns: []string{user.CreatedScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CreatedScreeningTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedScreeningTasksTable,
+			Columns: []string{user.CreatedScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

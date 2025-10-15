@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"time"
 
-	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/types"
+	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
@@ -13,20 +16,19 @@ import (
 
 // BasicInfoAgent 基本信息匹配Agent
 type BasicInfoAgent struct {
-	chain *compose.Chain[*types.BasicInfoData, *types.BasicMatchDetail]
+	chain *compose.Chain[*domain.BasicInfoData, *domain.BasicMatchDetail]
 }
 
 // 输入处理，将BasicInfoData转换为模板变量
-func newInputLambda(ctx context.Context, input *types.BasicInfoData, opts ...any) (map[string]any, error) {
+func newInputLambda(ctx context.Context, input *domain.BasicInfoData, opts ...any) (map[string]any, error) {
 	// 验证输入数据
 	if input == nil {
 		return nil, fmt.Errorf("input cannot be nil")
 	}
-
-	// 构建结构化的输入数据，便于LLM理解
+	// 仅保留与基础匹配相关的字段，避免上下文过长
 	inputData := map[string]any{
-		"job_profile": input.JobProfile,
-		"resume":      input.Resume,
+		"job_profile": buildJobBasicInfo(input.JobProfile),
+		"resume":      buildResumeBasicInfo(input.Resume),
 	}
 
 	// 将输入转换为JSON字符串
@@ -41,15 +43,14 @@ func newInputLambda(ctx context.Context, input *types.BasicInfoData, opts ...any
 }
 
 // 输出处理，将模型输出解析为结构化结果
-func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*types.BasicMatchDetail, error) {
+func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*domain.BasicMatchDetail, error) {
 
 	if msg == nil || msg.Content == "" {
 		return nil, fmt.Errorf("empty model output")
 	}
-
 	fmt.Printf("basicinfo msg=%v\n", msg.Content)
 
-	var output types.BasicMatchDetail
+	var output domain.BasicMatchDetail
 	if err := json.Unmarshal([]byte(msg.Content), &output); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON output: %w; raw=%s", err, msg.Content)
 	}
@@ -66,7 +67,7 @@ func NewBasicInfoAgent(ctx context.Context, llm model.ToolCallingChatModel) (*Ba
 	}
 
 	// 构建处理链
-	chain := compose.NewChain[*types.BasicInfoData, *types.BasicMatchDetail]()
+	chain := compose.NewChain[*domain.BasicInfoData, *domain.BasicMatchDetail]()
 	chain.
 		AppendLambda(compose.InvokableLambdaWithOption(newInputLambda), compose.WithNodeName("input_processing")).
 		AppendChatTemplate(chatTemplate, compose.WithNodeName("chat_template")).
@@ -79,12 +80,12 @@ func NewBasicInfoAgent(ctx context.Context, llm model.ToolCallingChatModel) (*Ba
 }
 
 // GetChain 获取处理链
-func (a *BasicInfoAgent) GetChain() *compose.Chain[*types.BasicInfoData, *types.BasicMatchDetail] {
+func (a *BasicInfoAgent) GetChain() *compose.Chain[*domain.BasicInfoData, *domain.BasicMatchDetail] {
 	return a.chain
 }
 
 // Compile 编译链为可执行的Runnable
-func (a *BasicInfoAgent) Compile(ctx context.Context) (compose.Runnable[*types.BasicInfoData, *types.BasicMatchDetail], error) {
+func (a *BasicInfoAgent) Compile(ctx context.Context) (compose.Runnable[*domain.BasicInfoData, *domain.BasicMatchDetail], error) {
 	runnable, err := a.chain.Compile(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile chain: %w", err)
@@ -93,7 +94,7 @@ func (a *BasicInfoAgent) Compile(ctx context.Context) (compose.Runnable[*types.B
 }
 
 // Process 处理基本信息匹配
-func (a *BasicInfoAgent) Process(ctx context.Context, input *types.BasicInfoData) (*types.BasicMatchDetail, error) {
+func (a *BasicInfoAgent) Process(ctx context.Context, input *domain.BasicInfoData) (*domain.BasicMatchDetail, error) {
 	// 验证输入
 	if err := a.validateInput(input); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
@@ -119,7 +120,7 @@ func (a *BasicInfoAgent) Process(ctx context.Context, input *types.BasicInfoData
 }
 
 // validateInput 验证输入数据
-func (a *BasicInfoAgent) validateInput(input *types.BasicInfoData) error {
+func (a *BasicInfoAgent) validateInput(input *domain.BasicInfoData) error {
 	if input == nil {
 		return fmt.Errorf("input cannot be nil")
 	}
@@ -133,19 +134,12 @@ func (a *BasicInfoAgent) validateInput(input *types.BasicInfoData) error {
 }
 
 // validateOutput 验证输出数据
-func (a *BasicInfoAgent) validateOutput(output *types.BasicMatchDetail) error {
+func (a *BasicInfoAgent) validateOutput(output *domain.BasicMatchDetail) error {
 	if output == nil {
 		return fmt.Errorf("output cannot be nil")
 	}
 	if output.Score < 0 || output.Score > 100 {
 		return fmt.Errorf("score must be between 0 and 100, got %f", output.Score)
-	}
-
-	// 验证子分数
-	for key, score := range output.SubScores {
-		if score < 0 || score > 100 {
-			return fmt.Errorf("sub score '%s' must be between 0 and 100, got %f", key, score)
-		}
 	}
 
 	return nil
@@ -159,4 +153,188 @@ func (a *BasicInfoAgent) GetAgentType() string {
 // GetVersion 返回Agent版本
 func (a *BasicInfoAgent) GetVersion() string {
 	return "1.0.0"
+}
+
+type jobBasicInfo struct {
+	Name        string       `json:"name,omitempty"`
+	Department  string       `json:"department,omitempty"`
+	WorkType    *string      `json:"work_type,omitempty"`
+	Location    *string      `json:"location,omitempty"`
+	SalaryRange *salaryRange `json:"salary_range,omitempty"`
+	Notes       []string     `json:"notes,omitempty"`
+}
+
+type resumeBasicInfo struct {
+	Name              string              `json:"name,omitempty"`
+	CurrentCity       string              `json:"current_city,omitempty"`
+	YearsExperience   *float64            `json:"years_experience,omitempty"`
+	ExpectedSalary    *salaryRange        `json:"expected_salary,omitempty"`
+	RecentExperiences []experienceSummary `json:"recent_experiences,omitempty"`
+	Notes             []string            `json:"notes,omitempty"`
+}
+
+type salaryRange struct {
+	Min *float64 `json:"min,omitempty"`
+	Max *float64 `json:"max,omitempty"`
+}
+
+type experienceSummary struct {
+	Company     string `json:"company,omitempty"`
+	Position    string `json:"position,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
+	Start       string `json:"start,omitempty"`
+	End         string `json:"end,omitempty"`
+}
+
+func buildJobBasicInfo(detail *domain.JobProfileDetail) jobBasicInfo {
+	info := jobBasicInfo{}
+	if detail == nil || detail.JobProfile == nil {
+		return info
+	}
+
+	base := detail.JobProfile
+	info.Name = base.Name
+	info.Department = base.Department
+	info.WorkType = base.WorkType
+	info.Location = base.Location
+
+	if base.SalaryMin != nil || base.SalaryMax != nil {
+		info.SalaryRange = &salaryRange{
+			Min: base.SalaryMin,
+			Max: base.SalaryMax,
+		}
+	}
+
+	if base.Location == nil || strings.TrimSpace(*base.Location) == "" {
+		info.Notes = append(info.Notes, "岗位未提供明确的工作地点信息")
+	}
+	if base.SalaryMin == nil && base.SalaryMax == nil {
+		info.Notes = append(info.Notes, "岗位未提供薪资预算范围")
+	}
+
+	return info
+}
+
+func buildResumeBasicInfo(detail *domain.ResumeDetail) resumeBasicInfo {
+	info := resumeBasicInfo{}
+	if detail == nil || detail.Resume == nil {
+		return info
+	}
+
+	base := detail.Resume
+	info.Name = base.Name
+	info.CurrentCity = base.CurrentCity
+
+	if base.YearsExperience > 0 {
+		info.YearsExperience = float64Ptr(base.YearsExperience)
+	}
+
+	if expected := extractExpectedSalary(detail); expected != nil {
+		info.ExpectedSalary = expected
+	}
+
+	info.RecentExperiences = summarizeExperiences(detail.Experiences, 3)
+
+	if strings.TrimSpace(base.CurrentCity) == "" {
+		info.Notes = append(info.Notes, "简历未提供当前城市信息")
+	}
+	if info.ExpectedSalary == nil {
+		info.Notes = append(info.Notes, "简历未提供明确的期望薪资信息")
+	}
+
+	return info
+}
+
+func summarizeExperiences(exps []*domain.ResumeExperience, limit int) []experienceSummary {
+	if len(exps) == 0 {
+		return nil
+	}
+
+	sorted := make([]*domain.ResumeExperience, 0, len(exps))
+	sorted = append(sorted, exps...)
+
+	sort.Slice(sorted, func(i, j int) bool {
+		startI := comparableTime(sorted[i])
+		startJ := comparableTime(sorted[j])
+		if startI.Equal(startJ) {
+			return endTime(sorted[i]).After(endTime(sorted[j]))
+		}
+		return startI.After(startJ)
+	})
+
+	if limit <= 0 || limit > len(sorted) {
+		limit = len(sorted)
+	}
+
+	result := make([]experienceSummary, 0, limit)
+	for _, exp := range sorted[:limit] {
+		if exp == nil {
+			continue
+		}
+		item := experienceSummary{
+			Company:  strings.TrimSpace(exp.Company),
+			Position: strings.TrimSpace(exp.Position),
+			Title:    strings.TrimSpace(exp.Title),
+		}
+		if desc := strings.TrimSpace(exp.Description); desc != "" {
+			item.Description = truncateText(desc, 120)
+		}
+		if exp.StartDate != nil && !exp.StartDate.IsZero() {
+			item.Start = exp.StartDate.Format("2006-01")
+		}
+		if exp.EndDate != nil && !exp.EndDate.IsZero() {
+			item.End = exp.EndDate.Format("2006-01")
+		} else {
+			item.End = "至今"
+		}
+		result = append(result, item)
+	}
+	return result
+}
+
+func extractExpectedSalary(detail *domain.ResumeDetail) *salaryRange {
+	if detail == nil {
+		return nil
+	}
+	// 暂无明确的期望薪资字段，预留扩展
+	return nil
+}
+
+func comparableTime(exp *domain.ResumeExperience) time.Time {
+	if exp == nil {
+		return time.Time{}
+	}
+	if exp.StartDate != nil && !exp.StartDate.IsZero() {
+		return *exp.StartDate
+	}
+	if exp.EndDate != nil && !exp.EndDate.IsZero() {
+		return *exp.EndDate
+	}
+	return time.Time{}
+}
+
+func endTime(exp *domain.ResumeExperience) time.Time {
+	if exp == nil {
+		return time.Time{}
+	}
+	if exp.EndDate != nil && !exp.EndDate.IsZero() {
+		return *exp.EndDate
+	}
+	return comparableTime(exp)
+}
+
+func truncateText(s string, limit int) string {
+	if limit <= 0 {
+		return ""
+	}
+	runes := []rune(s)
+	if len(runes) <= limit {
+		return s
+	}
+	return string(runes[:limit]) + "..."
+}
+
+func float64Ptr(v float64) *float64 {
+	return &v
 }

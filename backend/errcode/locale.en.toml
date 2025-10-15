@@ -54,3 +54,12 @@ other = "Invalid Param"
 
 [err-jobprofile-has-resumes]
 other = "Job profile has associated resumes"
+
+[err-screening-task-not-found]
+other = "Screening task not found"
+
+[err-screening-task-running]
+other = "Cannot delete running task, please wait for completion or failure"
+
+[err-screening-task-delete-failed]
+other = "Failed to delete screening task"
