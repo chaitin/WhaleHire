@@ -69,9 +69,13 @@ type JobPositionEdges struct {
 	IndustryRequirements []*JobIndustryRequirement `json:"industry_requirements,omitempty"`
 	// ResumeApplications holds the value of the resume_applications edge.
 	ResumeApplications []*ResumeJobApplication `json:"resume_applications,omitempty"`
+	// ScreeningTasks holds the value of the screening_tasks edge.
+	ScreeningTasks []*ScreeningTask `json:"screening_tasks,omitempty"`
+	// ScreeningResults holds the value of the screening_results edge.
+	ScreeningResults []*ScreeningResult `json:"screening_results,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [10]bool
 }
 
 // DepartmentOrErr returns the Department value or an error if the edge
@@ -148,6 +152,24 @@ func (e JobPositionEdges) ResumeApplicationsOrErr() ([]*ResumeJobApplication, er
 		return e.ResumeApplications, nil
 	}
 	return nil, &NotLoadedError{edge: "resume_applications"}
+}
+
+// ScreeningTasksOrErr returns the ScreeningTasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e JobPositionEdges) ScreeningTasksOrErr() ([]*ScreeningTask, error) {
+	if e.loadedTypes[8] {
+		return e.ScreeningTasks, nil
+	}
+	return nil, &NotLoadedError{edge: "screening_tasks"}
+}
+
+// ScreeningResultsOrErr returns the ScreeningResults value or an error if the edge
+// was not loaded in eager-loading.
+func (e JobPositionEdges) ScreeningResultsOrErr() ([]*ScreeningResult, error) {
+	if e.loadedTypes[9] {
+		return e.ScreeningResults, nil
+	}
+	return nil, &NotLoadedError{edge: "screening_results"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -314,6 +336,16 @@ func (jp *JobPosition) QueryIndustryRequirements() *JobIndustryRequirementQuery 
 // QueryResumeApplications queries the "resume_applications" edge of the JobPosition entity.
 func (jp *JobPosition) QueryResumeApplications() *ResumeJobApplicationQuery {
 	return NewJobPositionClient(jp.config).QueryResumeApplications(jp)
+}
+
+// QueryScreeningTasks queries the "screening_tasks" edge of the JobPosition entity.
+func (jp *JobPosition) QueryScreeningTasks() *ScreeningTaskQuery {
+	return NewJobPositionClient(jp.config).QueryScreeningTasks(jp)
+}
+
+// QueryScreeningResults queries the "screening_results" edge of the JobPosition entity.
+func (jp *JobPosition) QueryScreeningResults() *ScreeningResultQuery {
+	return NewJobPositionClient(jp.config).QueryScreeningResults(jp)
 }
 
 // Update returns a builder for updating this JobPosition.

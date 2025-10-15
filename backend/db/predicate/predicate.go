@@ -75,6 +75,18 @@ type ResumeSkill func(*sql.Selector)
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
 
+// ScreeningResult is the predicate function for screeningresult builders.
+type ScreeningResult func(*sql.Selector)
+
+// ScreeningRunMetric is the predicate function for screeningrunmetric builders.
+type ScreeningRunMetric func(*sql.Selector)
+
+// ScreeningTask is the predicate function for screeningtask builders.
+type ScreeningTask func(*sql.Selector)
+
+// ScreeningTaskResume is the predicate function for screeningtaskresume builders.
+type ScreeningTaskResume func(*sql.Selector)
+
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
 

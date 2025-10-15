@@ -333,6 +333,62 @@ func (r *RoleQuery) Page(ctx context.Context, page, size int) ([]*Role, *PageInf
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (sr *ScreeningResultQuery) Page(ctx context.Context, page, size int) ([]*ScreeningResult, *PageInfo, error) {
+	cnt, err := sr.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := sr.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (srm *ScreeningRunMetricQuery) Page(ctx context.Context, page, size int) ([]*ScreeningRunMetric, *PageInfo, error) {
+	cnt, err := srm.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := srm.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (st *ScreeningTaskQuery) Page(ctx context.Context, page, size int) ([]*ScreeningTask, *PageInfo, error) {
+	cnt, err := st.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := st.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (str *ScreeningTaskResumeQuery) Page(ctx context.Context, page, size int) ([]*ScreeningTaskResume, *PageInfo, error) {
+	cnt, err := str.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := str.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (s *SettingQuery) Page(ctx context.Context, page, size int) ([]*Setting, *PageInfo, error) {
 	cnt, err := s.Count(ctx)
 	if err != nil {

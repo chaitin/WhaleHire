@@ -21,6 +21,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -355,6 +357,36 @@ func (jpu *JobPositionUpdate) AddResumeApplications(r ...*ResumeJobApplication) 
 	return jpu.AddResumeApplicationIDs(ids...)
 }
 
+// AddScreeningTaskIDs adds the "screening_tasks" edge to the ScreeningTask entity by IDs.
+func (jpu *JobPositionUpdate) AddScreeningTaskIDs(ids ...uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.AddScreeningTaskIDs(ids...)
+	return jpu
+}
+
+// AddScreeningTasks adds the "screening_tasks" edges to the ScreeningTask entity.
+func (jpu *JobPositionUpdate) AddScreeningTasks(s ...*ScreeningTask) *JobPositionUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpu.AddScreeningTaskIDs(ids...)
+}
+
+// AddScreeningResultIDs adds the "screening_results" edge to the ScreeningResult entity by IDs.
+func (jpu *JobPositionUpdate) AddScreeningResultIDs(ids ...uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.AddScreeningResultIDs(ids...)
+	return jpu
+}
+
+// AddScreeningResults adds the "screening_results" edges to the ScreeningResult entity.
+func (jpu *JobPositionUpdate) AddScreeningResults(s ...*ScreeningResult) *JobPositionUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpu.AddScreeningResultIDs(ids...)
+}
+
 // Mutation returns the JobPositionMutation object of the builder.
 func (jpu *JobPositionUpdate) Mutation() *JobPositionMutation {
 	return jpu.mutation
@@ -496,6 +528,48 @@ func (jpu *JobPositionUpdate) RemoveResumeApplications(r ...*ResumeJobApplicatio
 		ids[i] = r[i].ID
 	}
 	return jpu.RemoveResumeApplicationIDs(ids...)
+}
+
+// ClearScreeningTasks clears all "screening_tasks" edges to the ScreeningTask entity.
+func (jpu *JobPositionUpdate) ClearScreeningTasks() *JobPositionUpdate {
+	jpu.mutation.ClearScreeningTasks()
+	return jpu
+}
+
+// RemoveScreeningTaskIDs removes the "screening_tasks" edge to ScreeningTask entities by IDs.
+func (jpu *JobPositionUpdate) RemoveScreeningTaskIDs(ids ...uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.RemoveScreeningTaskIDs(ids...)
+	return jpu
+}
+
+// RemoveScreeningTasks removes "screening_tasks" edges to ScreeningTask entities.
+func (jpu *JobPositionUpdate) RemoveScreeningTasks(s ...*ScreeningTask) *JobPositionUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpu.RemoveScreeningTaskIDs(ids...)
+}
+
+// ClearScreeningResults clears all "screening_results" edges to the ScreeningResult entity.
+func (jpu *JobPositionUpdate) ClearScreeningResults() *JobPositionUpdate {
+	jpu.mutation.ClearScreeningResults()
+	return jpu
+}
+
+// RemoveScreeningResultIDs removes the "screening_results" edge to ScreeningResult entities by IDs.
+func (jpu *JobPositionUpdate) RemoveScreeningResultIDs(ids ...uuid.UUID) *JobPositionUpdate {
+	jpu.mutation.RemoveScreeningResultIDs(ids...)
+	return jpu
+}
+
+// RemoveScreeningResults removes "screening_results" edges to ScreeningResult entities.
+func (jpu *JobPositionUpdate) RemoveScreeningResults(s ...*ScreeningResult) *JobPositionUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpu.RemoveScreeningResultIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -955,6 +1029,96 @@ func (jpu *JobPositionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if jpu.mutation.ScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningTasksTable,
+			Columns: []string{jobposition.ScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpu.mutation.RemovedScreeningTasksIDs(); len(nodes) > 0 && !jpu.mutation.ScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningTasksTable,
+			Columns: []string{jobposition.ScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpu.mutation.ScreeningTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningTasksTable,
+			Columns: []string{jobposition.ScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if jpu.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningResultsTable,
+			Columns: []string{jobposition.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpu.mutation.RemovedScreeningResultsIDs(); len(nodes) > 0 && !jpu.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningResultsTable,
+			Columns: []string{jobposition.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpu.mutation.ScreeningResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningResultsTable,
+			Columns: []string{jobposition.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(jpu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, jpu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1293,6 +1457,36 @@ func (jpuo *JobPositionUpdateOne) AddResumeApplications(r ...*ResumeJobApplicati
 	return jpuo.AddResumeApplicationIDs(ids...)
 }
 
+// AddScreeningTaskIDs adds the "screening_tasks" edge to the ScreeningTask entity by IDs.
+func (jpuo *JobPositionUpdateOne) AddScreeningTaskIDs(ids ...uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.AddScreeningTaskIDs(ids...)
+	return jpuo
+}
+
+// AddScreeningTasks adds the "screening_tasks" edges to the ScreeningTask entity.
+func (jpuo *JobPositionUpdateOne) AddScreeningTasks(s ...*ScreeningTask) *JobPositionUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpuo.AddScreeningTaskIDs(ids...)
+}
+
+// AddScreeningResultIDs adds the "screening_results" edge to the ScreeningResult entity by IDs.
+func (jpuo *JobPositionUpdateOne) AddScreeningResultIDs(ids ...uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.AddScreeningResultIDs(ids...)
+	return jpuo
+}
+
+// AddScreeningResults adds the "screening_results" edges to the ScreeningResult entity.
+func (jpuo *JobPositionUpdateOne) AddScreeningResults(s ...*ScreeningResult) *JobPositionUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpuo.AddScreeningResultIDs(ids...)
+}
+
 // Mutation returns the JobPositionMutation object of the builder.
 func (jpuo *JobPositionUpdateOne) Mutation() *JobPositionMutation {
 	return jpuo.mutation
@@ -1434,6 +1628,48 @@ func (jpuo *JobPositionUpdateOne) RemoveResumeApplications(r ...*ResumeJobApplic
 		ids[i] = r[i].ID
 	}
 	return jpuo.RemoveResumeApplicationIDs(ids...)
+}
+
+// ClearScreeningTasks clears all "screening_tasks" edges to the ScreeningTask entity.
+func (jpuo *JobPositionUpdateOne) ClearScreeningTasks() *JobPositionUpdateOne {
+	jpuo.mutation.ClearScreeningTasks()
+	return jpuo
+}
+
+// RemoveScreeningTaskIDs removes the "screening_tasks" edge to ScreeningTask entities by IDs.
+func (jpuo *JobPositionUpdateOne) RemoveScreeningTaskIDs(ids ...uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.RemoveScreeningTaskIDs(ids...)
+	return jpuo
+}
+
+// RemoveScreeningTasks removes "screening_tasks" edges to ScreeningTask entities.
+func (jpuo *JobPositionUpdateOne) RemoveScreeningTasks(s ...*ScreeningTask) *JobPositionUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpuo.RemoveScreeningTaskIDs(ids...)
+}
+
+// ClearScreeningResults clears all "screening_results" edges to the ScreeningResult entity.
+func (jpuo *JobPositionUpdateOne) ClearScreeningResults() *JobPositionUpdateOne {
+	jpuo.mutation.ClearScreeningResults()
+	return jpuo
+}
+
+// RemoveScreeningResultIDs removes the "screening_results" edge to ScreeningResult entities by IDs.
+func (jpuo *JobPositionUpdateOne) RemoveScreeningResultIDs(ids ...uuid.UUID) *JobPositionUpdateOne {
+	jpuo.mutation.RemoveScreeningResultIDs(ids...)
+	return jpuo
+}
+
+// RemoveScreeningResults removes "screening_results" edges to ScreeningResult entities.
+func (jpuo *JobPositionUpdateOne) RemoveScreeningResults(s ...*ScreeningResult) *JobPositionUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpuo.RemoveScreeningResultIDs(ids...)
 }
 
 // Where appends a list predicates to the JobPositionUpdate builder.
@@ -1916,6 +2152,96 @@ func (jpuo *JobPositionUpdateOne) sqlSave(ctx context.Context) (_node *JobPositi
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if jpuo.mutation.ScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningTasksTable,
+			Columns: []string{jobposition.ScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpuo.mutation.RemovedScreeningTasksIDs(); len(nodes) > 0 && !jpuo.mutation.ScreeningTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningTasksTable,
+			Columns: []string{jobposition.ScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpuo.mutation.ScreeningTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningTasksTable,
+			Columns: []string{jobposition.ScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if jpuo.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningResultsTable,
+			Columns: []string{jobposition.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpuo.mutation.RemovedScreeningResultsIDs(); len(nodes) > 0 && !jpuo.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningResultsTable,
+			Columns: []string{jobposition.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := jpuo.mutation.ScreeningResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningResultsTable,
+			Columns: []string{jobposition.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

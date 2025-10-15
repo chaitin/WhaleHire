@@ -817,6 +817,29 @@ func HasCreatedPositionsWith(preds ...predicate.JobPosition) predicate.User {
 	})
 }
 
+// HasCreatedScreeningTasks applies the HasEdge predicate on the "created_screening_tasks" edge.
+func HasCreatedScreeningTasks() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CreatedScreeningTasksTable, CreatedScreeningTasksColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCreatedScreeningTasksWith applies the HasEdge predicate on the "created_screening_tasks" edge with a given conditions (other predicates).
+func HasCreatedScreeningTasksWith(preds ...predicate.ScreeningTask) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCreatedScreeningTasksStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

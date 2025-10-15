@@ -39,6 +39,8 @@ import {
 } from '@/components/matching/config-weight-modal';
 import { MatchingProcessModal } from '@/components/matching/matching-process-modal';
 import { MatchingResultModal } from '@/components/matching/matching-result-modal';
+import { createScreeningTask, startScreeningTask } from '@/services/screening';
+import { DimensionWeights } from '@/types/screening';
 
 export function IntelligentMatchingPage() {
   const [stats, setStats] = useState<MatchingStats>({
@@ -70,6 +72,7 @@ export function IntelligentMatchingPage() {
     useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [selectedResumeIds, setSelectedResumeIds] = useState<string[]>([]);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
 
   // 加载数据
   useEffect(() => {
@@ -137,13 +140,43 @@ export function IntelligentMatchingPage() {
   };
 
   // 处理权重配置完成
-  const handleWeightConfigured = (weights: WeightConfig) => {
+  const handleWeightConfigured = async (weights: WeightConfig) => {
     console.log('选择的岗位IDs:', selectedJobIds);
     console.log('选择的简历IDs:', selectedResumeIds);
     console.log('配置的权重:', weights);
-    // 进入匹配处理界面
-    setIsConfigWeightModalOpen(false);
-    setIsMatchingProcessModalOpen(true);
+
+    try {
+      // 构建维度权重对象
+      const dimensionWeights: DimensionWeights = {
+        basic: weights.basicInfo / 100,
+        responsibility: weights.responsibilities / 100,
+        skill: weights.skills / 100,
+        education: weights.education / 100,
+        experience: weights.experience / 100,
+        industry: weights.industry / 100,
+      };
+
+      // 创建筛选任务
+      const response = await createScreeningTask({
+        job_position_id: selectedJobIds[0], // 选择第一个岗位ID
+        resume_ids: selectedResumeIds,
+        dimension_weights: dimensionWeights,
+      });
+
+      console.log('任务创建成功，任务ID:', response.task_id);
+      setCurrentTaskId(response.task_id);
+
+      // 启动筛选任务
+      await startScreeningTask(response.task_id);
+      console.log('任务启动成功');
+
+      // 进入匹配处理界面
+      setIsConfigWeightModalOpen(false);
+      setIsMatchingProcessModalOpen(true);
+    } catch (error) {
+      console.error('创建或启动任务失败:', error);
+      alert('创建任务失败，请重试');
+    }
   };
 
   // 处理从权重配置返回到选择简历
@@ -608,9 +641,13 @@ export function IntelligentMatchingPage() {
         open={isMatchingProcessModalOpen}
         onOpenChange={setIsMatchingProcessModalOpen}
         onPrevious={handleBackToConfigWeight}
-        onComplete={() => setIsMatchingResultModalOpen(true)}
+        onComplete={() => {
+          setIsMatchingProcessModalOpen(false);
+          setIsMatchingResultModalOpen(true);
+        }}
         selectedJobCount={selectedJobIds.length}
         selectedResumeCount={selectedResumeIds.length}
+        taskId={currentTaskId}
       />
 
       {/* 匹配结果模态框 */}
@@ -619,8 +656,10 @@ export function IntelligentMatchingPage() {
         onOpenChange={setIsMatchingResultModalOpen}
         onBackToHome={() => {
           setIsMatchingResultModalOpen(false);
-          // 可以在这里刷新任务列表等
+          // 刷新任务列表
+          window.location.reload();
         }}
+        taskId={currentTaskId}
       />
     </div>
   );

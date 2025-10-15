@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/types"
+	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
@@ -13,11 +13,11 @@ import (
 
 // ExperienceAgent 工作经验匹配Agent
 type ExperienceAgent struct {
-	chain *compose.Chain[*types.ExperienceData, *types.ExperienceMatchDetail]
+	chain *compose.Chain[*domain.ExperienceData, *domain.ExperienceMatchDetail]
 }
 
 // 输入处理，将ExperienceData转换为模板变量
-func newInputLambda(ctx context.Context, input *types.ExperienceData, opts ...any) (map[string]any, error) {
+func newInputLambda(ctx context.Context, input *domain.ExperienceData, opts ...any) (map[string]any, error) {
 	// 验证输入数据
 	if input == nil {
 		return nil, fmt.Errorf("input cannot be nil")
@@ -42,7 +42,7 @@ func newInputLambda(ctx context.Context, input *types.ExperienceData, opts ...an
 }
 
 // 输出处理，将模型输出解析为结构化结果
-func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*types.ExperienceMatchDetail, error) {
+func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*domain.ExperienceMatchDetail, error) {
 
 	if msg == nil || msg.Content == "" {
 		return nil, fmt.Errorf("empty model output")
@@ -50,7 +50,7 @@ func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*ty
 
 	fmt.Printf("experience msg=%v\n", msg.Content)
 
-	var output types.ExperienceMatchDetail
+	var output domain.ExperienceMatchDetail
 	if err := json.Unmarshal([]byte(msg.Content), &output); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON output: %w; raw=%s", err, msg.Content)
 	}
@@ -67,7 +67,7 @@ func NewExperienceAgent(ctx context.Context, llm model.ToolCallingChatModel) (*E
 	}
 
 	// 构建处理链
-	chain := compose.NewChain[*types.ExperienceData, *types.ExperienceMatchDetail]()
+	chain := compose.NewChain[*domain.ExperienceData, *domain.ExperienceMatchDetail]()
 	chain.
 		AppendLambda(compose.InvokableLambdaWithOption(newInputLambda), compose.WithNodeName("input_processing")).
 		AppendChatTemplate(chatTemplate, compose.WithNodeName("chat_template")).
@@ -80,12 +80,12 @@ func NewExperienceAgent(ctx context.Context, llm model.ToolCallingChatModel) (*E
 }
 
 // GetChain 获取处理链
-func (a *ExperienceAgent) GetChain() *compose.Chain[*types.ExperienceData, *types.ExperienceMatchDetail] {
+func (a *ExperienceAgent) GetChain() *compose.Chain[*domain.ExperienceData, *domain.ExperienceMatchDetail] {
 	return a.chain
 }
 
 // Compile 编译链为可执行的Runnable
-func (a *ExperienceAgent) Compile(ctx context.Context) (compose.Runnable[*types.ExperienceData, *types.ExperienceMatchDetail], error) {
+func (a *ExperienceAgent) Compile(ctx context.Context) (compose.Runnable[*domain.ExperienceData, *domain.ExperienceMatchDetail], error) {
 	runnable, err := a.chain.Compile(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile chain: %w", err)
@@ -94,7 +94,7 @@ func (a *ExperienceAgent) Compile(ctx context.Context) (compose.Runnable[*types.
 }
 
 // Process 处理工作经验匹配
-func (a *ExperienceAgent) Process(ctx context.Context, input *types.ExperienceData) (*types.ExperienceMatchDetail, error) {
+func (a *ExperienceAgent) Process(ctx context.Context, input *domain.ExperienceData) (*domain.ExperienceMatchDetail, error) {
 	// 验证输入
 	if err := a.validateInput(input); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
@@ -120,7 +120,7 @@ func (a *ExperienceAgent) Process(ctx context.Context, input *types.ExperienceDa
 }
 
 // validateInput 验证输入数据
-func (a *ExperienceAgent) validateInput(input *types.ExperienceData) error {
+func (a *ExperienceAgent) validateInput(input *domain.ExperienceData) error {
 	if input == nil {
 		return fmt.Errorf("input cannot be nil")
 	}
@@ -134,7 +134,7 @@ func (a *ExperienceAgent) validateInput(input *types.ExperienceData) error {
 }
 
 // validateOutput 验证输出数据
-func (a *ExperienceAgent) validateOutput(output *types.ExperienceMatchDetail) error {
+func (a *ExperienceAgent) validateOutput(output *domain.ExperienceMatchDetail) error {
 	if output == nil {
 		return fmt.Errorf("output cannot be nil")
 	}

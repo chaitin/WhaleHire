@@ -75,9 +75,13 @@ type ResumeEdges struct {
 	DocumentParse []*ResumeDocumentParse `json:"document_parse,omitempty"`
 	// JobApplications holds the value of the job_applications edge.
 	JobApplications []*ResumeJobApplication `json:"job_applications,omitempty"`
+	// ScreeningTaskResumes holds the value of the screening_task_resumes edge.
+	ScreeningTaskResumes []*ScreeningTaskResume `json:"screening_task_resumes,omitempty"`
+	// ScreeningResults holds the value of the screening_results edge.
+	ScreeningResults []*ScreeningResult `json:"screening_results,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [10]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -152,6 +156,24 @@ func (e ResumeEdges) JobApplicationsOrErr() ([]*ResumeJobApplication, error) {
 		return e.JobApplications, nil
 	}
 	return nil, &NotLoadedError{edge: "job_applications"}
+}
+
+// ScreeningTaskResumesOrErr returns the ScreeningTaskResumes value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResumeEdges) ScreeningTaskResumesOrErr() ([]*ScreeningTaskResume, error) {
+	if e.loadedTypes[8] {
+		return e.ScreeningTaskResumes, nil
+	}
+	return nil, &NotLoadedError{edge: "screening_task_resumes"}
+}
+
+// ScreeningResultsOrErr returns the ScreeningResults value or an error if the edge
+// was not loaded in eager-loading.
+func (e ResumeEdges) ScreeningResultsOrErr() ([]*ScreeningResult, error) {
+	if e.loadedTypes[9] {
+		return e.ScreeningResults, nil
+	}
+	return nil, &NotLoadedError{edge: "screening_results"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -335,6 +357,16 @@ func (r *Resume) QueryDocumentParse() *ResumeDocumentParseQuery {
 // QueryJobApplications queries the "job_applications" edge of the Resume entity.
 func (r *Resume) QueryJobApplications() *ResumeJobApplicationQuery {
 	return NewResumeClient(r.config).QueryJobApplications(r)
+}
+
+// QueryScreeningTaskResumes queries the "screening_task_resumes" edge of the Resume entity.
+func (r *Resume) QueryScreeningTaskResumes() *ScreeningTaskResumeQuery {
+	return NewResumeClient(r.config).QueryScreeningTaskResumes(r)
+}
+
+// QueryScreeningResults queries the "screening_results" edge of the Resume entity.
+func (r *Resume) QueryScreeningResults() *ScreeningResultQuery {
+	return NewResumeClient(r.config).QueryScreeningResults(r)
 }
 
 // Update returns a builder for updating this Resume.

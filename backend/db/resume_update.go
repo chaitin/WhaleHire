@@ -20,6 +20,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -449,6 +451,36 @@ func (ru *ResumeUpdate) AddJobApplications(r ...*ResumeJobApplication) *ResumeUp
 	return ru.AddJobApplicationIDs(ids...)
 }
 
+// AddScreeningTaskResumeIDs adds the "screening_task_resumes" edge to the ScreeningTaskResume entity by IDs.
+func (ru *ResumeUpdate) AddScreeningTaskResumeIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.AddScreeningTaskResumeIDs(ids...)
+	return ru
+}
+
+// AddScreeningTaskResumes adds the "screening_task_resumes" edges to the ScreeningTaskResume entity.
+func (ru *ResumeUpdate) AddScreeningTaskResumes(s ...*ScreeningTaskResume) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ru.AddScreeningTaskResumeIDs(ids...)
+}
+
+// AddScreeningResultIDs adds the "screening_results" edge to the ScreeningResult entity by IDs.
+func (ru *ResumeUpdate) AddScreeningResultIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.AddScreeningResultIDs(ids...)
+	return ru
+}
+
+// AddScreeningResults adds the "screening_results" edges to the ScreeningResult entity.
+func (ru *ResumeUpdate) AddScreeningResults(s ...*ScreeningResult) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ru.AddScreeningResultIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (ru *ResumeUpdate) Mutation() *ResumeMutation {
 	return ru.mutation
@@ -605,6 +637,48 @@ func (ru *ResumeUpdate) RemoveJobApplications(r ...*ResumeJobApplication) *Resum
 		ids[i] = r[i].ID
 	}
 	return ru.RemoveJobApplicationIDs(ids...)
+}
+
+// ClearScreeningTaskResumes clears all "screening_task_resumes" edges to the ScreeningTaskResume entity.
+func (ru *ResumeUpdate) ClearScreeningTaskResumes() *ResumeUpdate {
+	ru.mutation.ClearScreeningTaskResumes()
+	return ru
+}
+
+// RemoveScreeningTaskResumeIDs removes the "screening_task_resumes" edge to ScreeningTaskResume entities by IDs.
+func (ru *ResumeUpdate) RemoveScreeningTaskResumeIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.RemoveScreeningTaskResumeIDs(ids...)
+	return ru
+}
+
+// RemoveScreeningTaskResumes removes "screening_task_resumes" edges to ScreeningTaskResume entities.
+func (ru *ResumeUpdate) RemoveScreeningTaskResumes(s ...*ScreeningTaskResume) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ru.RemoveScreeningTaskResumeIDs(ids...)
+}
+
+// ClearScreeningResults clears all "screening_results" edges to the ScreeningResult entity.
+func (ru *ResumeUpdate) ClearScreeningResults() *ResumeUpdate {
+	ru.mutation.ClearScreeningResults()
+	return ru
+}
+
+// RemoveScreeningResultIDs removes the "screening_results" edge to ScreeningResult entities by IDs.
+func (ru *ResumeUpdate) RemoveScreeningResultIDs(ids ...uuid.UUID) *ResumeUpdate {
+	ru.mutation.RemoveScreeningResultIDs(ids...)
+	return ru
+}
+
+// RemoveScreeningResults removes "screening_results" edges to ScreeningResult entities.
+func (ru *ResumeUpdate) RemoveScreeningResults(s ...*ScreeningResult) *ResumeUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ru.RemoveScreeningResultIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1108,6 +1182,96 @@ func (ru *ResumeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ru.mutation.ScreeningTaskResumesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningTaskResumesTable,
+			Columns: []string{resume.ScreeningTaskResumesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtaskresume.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedScreeningTaskResumesIDs(); len(nodes) > 0 && !ru.mutation.ScreeningTaskResumesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningTaskResumesTable,
+			Columns: []string{resume.ScreeningTaskResumesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtaskresume.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.ScreeningTaskResumesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningTaskResumesTable,
+			Columns: []string{resume.ScreeningTaskResumesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtaskresume.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningResultsTable,
+			Columns: []string{resume.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedScreeningResultsIDs(); len(nodes) > 0 && !ru.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningResultsTable,
+			Columns: []string{resume.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.ScreeningResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningResultsTable,
+			Columns: []string{resume.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(ru.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1541,6 +1705,36 @@ func (ruo *ResumeUpdateOne) AddJobApplications(r ...*ResumeJobApplication) *Resu
 	return ruo.AddJobApplicationIDs(ids...)
 }
 
+// AddScreeningTaskResumeIDs adds the "screening_task_resumes" edge to the ScreeningTaskResume entity by IDs.
+func (ruo *ResumeUpdateOne) AddScreeningTaskResumeIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.AddScreeningTaskResumeIDs(ids...)
+	return ruo
+}
+
+// AddScreeningTaskResumes adds the "screening_task_resumes" edges to the ScreeningTaskResume entity.
+func (ruo *ResumeUpdateOne) AddScreeningTaskResumes(s ...*ScreeningTaskResume) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ruo.AddScreeningTaskResumeIDs(ids...)
+}
+
+// AddScreeningResultIDs adds the "screening_results" edge to the ScreeningResult entity by IDs.
+func (ruo *ResumeUpdateOne) AddScreeningResultIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.AddScreeningResultIDs(ids...)
+	return ruo
+}
+
+// AddScreeningResults adds the "screening_results" edges to the ScreeningResult entity.
+func (ruo *ResumeUpdateOne) AddScreeningResults(s ...*ScreeningResult) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ruo.AddScreeningResultIDs(ids...)
+}
+
 // Mutation returns the ResumeMutation object of the builder.
 func (ruo *ResumeUpdateOne) Mutation() *ResumeMutation {
 	return ruo.mutation
@@ -1697,6 +1891,48 @@ func (ruo *ResumeUpdateOne) RemoveJobApplications(r ...*ResumeJobApplication) *R
 		ids[i] = r[i].ID
 	}
 	return ruo.RemoveJobApplicationIDs(ids...)
+}
+
+// ClearScreeningTaskResumes clears all "screening_task_resumes" edges to the ScreeningTaskResume entity.
+func (ruo *ResumeUpdateOne) ClearScreeningTaskResumes() *ResumeUpdateOne {
+	ruo.mutation.ClearScreeningTaskResumes()
+	return ruo
+}
+
+// RemoveScreeningTaskResumeIDs removes the "screening_task_resumes" edge to ScreeningTaskResume entities by IDs.
+func (ruo *ResumeUpdateOne) RemoveScreeningTaskResumeIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.RemoveScreeningTaskResumeIDs(ids...)
+	return ruo
+}
+
+// RemoveScreeningTaskResumes removes "screening_task_resumes" edges to ScreeningTaskResume entities.
+func (ruo *ResumeUpdateOne) RemoveScreeningTaskResumes(s ...*ScreeningTaskResume) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ruo.RemoveScreeningTaskResumeIDs(ids...)
+}
+
+// ClearScreeningResults clears all "screening_results" edges to the ScreeningResult entity.
+func (ruo *ResumeUpdateOne) ClearScreeningResults() *ResumeUpdateOne {
+	ruo.mutation.ClearScreeningResults()
+	return ruo
+}
+
+// RemoveScreeningResultIDs removes the "screening_results" edge to ScreeningResult entities by IDs.
+func (ruo *ResumeUpdateOne) RemoveScreeningResultIDs(ids ...uuid.UUID) *ResumeUpdateOne {
+	ruo.mutation.RemoveScreeningResultIDs(ids...)
+	return ruo
+}
+
+// RemoveScreeningResults removes "screening_results" edges to ScreeningResult entities.
+func (ruo *ResumeUpdateOne) RemoveScreeningResults(s ...*ScreeningResult) *ResumeUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ruo.RemoveScreeningResultIDs(ids...)
 }
 
 // Where appends a list predicates to the ResumeUpdate builder.
@@ -2223,6 +2459,96 @@ func (ruo *ResumeUpdateOne) sqlSave(ctx context.Context) (_node *Resume, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.ScreeningTaskResumesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningTaskResumesTable,
+			Columns: []string{resume.ScreeningTaskResumesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtaskresume.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedScreeningTaskResumesIDs(); len(nodes) > 0 && !ruo.mutation.ScreeningTaskResumesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningTaskResumesTable,
+			Columns: []string{resume.ScreeningTaskResumesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtaskresume.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.ScreeningTaskResumesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningTaskResumesTable,
+			Columns: []string{resume.ScreeningTaskResumesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtaskresume.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningResultsTable,
+			Columns: []string{resume.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedScreeningResultsIDs(); len(nodes) > 0 && !ruo.mutation.ScreeningResultsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningResultsTable,
+			Columns: []string{resume.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.ScreeningResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   resume.ScreeningResultsTable,
+			Columns: []string{resume.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

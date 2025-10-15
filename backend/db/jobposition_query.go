@@ -22,6 +22,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -41,6 +43,8 @@ type JobPositionQuery struct {
 	withExperienceRequirements *JobExperienceRequirementQuery
 	withIndustryRequirements   *JobIndustryRequirementQuery
 	withResumeApplications     *ResumeJobApplicationQuery
+	withScreeningTasks         *ScreeningTaskQuery
+	withScreeningResults       *ScreeningResultQuery
 	modifiers                  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -254,6 +258,50 @@ func (jpq *JobPositionQuery) QueryResumeApplications() *ResumeJobApplicationQuer
 	return query
 }
 
+// QueryScreeningTasks chains the current query on the "screening_tasks" edge.
+func (jpq *JobPositionQuery) QueryScreeningTasks() *ScreeningTaskQuery {
+	query := (&ScreeningTaskClient{config: jpq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := jpq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := jpq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, selector),
+			sqlgraph.To(screeningtask.Table, screeningtask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ScreeningTasksTable, jobposition.ScreeningTasksColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(jpq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryScreeningResults chains the current query on the "screening_results" edge.
+func (jpq *JobPositionQuery) QueryScreeningResults() *ScreeningResultQuery {
+	query := (&ScreeningResultClient{config: jpq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := jpq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := jpq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, selector),
+			sqlgraph.To(screeningresult.Table, screeningresult.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ScreeningResultsTable, jobposition.ScreeningResultsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(jpq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first JobPosition entity from the query.
 // Returns a *NotFoundError when no JobPosition was found.
 func (jpq *JobPositionQuery) First(ctx context.Context) (*JobPosition, error) {
@@ -454,6 +502,8 @@ func (jpq *JobPositionQuery) Clone() *JobPositionQuery {
 		withExperienceRequirements: jpq.withExperienceRequirements.Clone(),
 		withIndustryRequirements:   jpq.withIndustryRequirements.Clone(),
 		withResumeApplications:     jpq.withResumeApplications.Clone(),
+		withScreeningTasks:         jpq.withScreeningTasks.Clone(),
+		withScreeningResults:       jpq.withScreeningResults.Clone(),
 		// clone intermediate query.
 		sql:       jpq.sql.Clone(),
 		path:      jpq.path,
@@ -549,6 +599,28 @@ func (jpq *JobPositionQuery) WithResumeApplications(opts ...func(*ResumeJobAppli
 	return jpq
 }
 
+// WithScreeningTasks tells the query-builder to eager-load the nodes that are connected to
+// the "screening_tasks" edge. The optional arguments are used to configure the query builder of the edge.
+func (jpq *JobPositionQuery) WithScreeningTasks(opts ...func(*ScreeningTaskQuery)) *JobPositionQuery {
+	query := (&ScreeningTaskClient{config: jpq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	jpq.withScreeningTasks = query
+	return jpq
+}
+
+// WithScreeningResults tells the query-builder to eager-load the nodes that are connected to
+// the "screening_results" edge. The optional arguments are used to configure the query builder of the edge.
+func (jpq *JobPositionQuery) WithScreeningResults(opts ...func(*ScreeningResultQuery)) *JobPositionQuery {
+	query := (&ScreeningResultClient{config: jpq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	jpq.withScreeningResults = query
+	return jpq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -627,7 +699,7 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*JobPosition{}
 		_spec       = jpq.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [10]bool{
 			jpq.withDepartment != nil,
 			jpq.withCreator != nil,
 			jpq.withResponsibilities != nil,
@@ -636,6 +708,8 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			jpq.withExperienceRequirements != nil,
 			jpq.withIndustryRequirements != nil,
 			jpq.withResumeApplications != nil,
+			jpq.withScreeningTasks != nil,
+			jpq.withScreeningResults != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -719,6 +793,22 @@ func (jpq *JobPositionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			func(n *JobPosition) { n.Edges.ResumeApplications = []*ResumeJobApplication{} },
 			func(n *JobPosition, e *ResumeJobApplication) {
 				n.Edges.ResumeApplications = append(n.Edges.ResumeApplications, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := jpq.withScreeningTasks; query != nil {
+		if err := jpq.loadScreeningTasks(ctx, query, nodes,
+			func(n *JobPosition) { n.Edges.ScreeningTasks = []*ScreeningTask{} },
+			func(n *JobPosition, e *ScreeningTask) { n.Edges.ScreeningTasks = append(n.Edges.ScreeningTasks, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := jpq.withScreeningResults; query != nil {
+		if err := jpq.loadScreeningResults(ctx, query, nodes,
+			func(n *JobPosition) { n.Edges.ScreeningResults = []*ScreeningResult{} },
+			func(n *JobPosition, e *ScreeningResult) {
+				n.Edges.ScreeningResults = append(n.Edges.ScreeningResults, e)
 			}); err != nil {
 			return nil, err
 		}
@@ -952,6 +1042,66 @@ func (jpq *JobPositionQuery) loadResumeApplications(ctx context.Context, query *
 	}
 	query.Where(predicate.ResumeJobApplication(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(jobposition.ResumeApplicationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.JobPositionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "job_position_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (jpq *JobPositionQuery) loadScreeningTasks(ctx context.Context, query *ScreeningTaskQuery, nodes []*JobPosition, init func(*JobPosition), assign func(*JobPosition, *ScreeningTask)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*JobPosition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(screeningtask.FieldJobPositionID)
+	}
+	query.Where(predicate.ScreeningTask(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(jobposition.ScreeningTasksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.JobPositionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "job_position_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (jpq *JobPositionQuery) loadScreeningResults(ctx context.Context, query *ScreeningResultQuery, nodes []*JobPosition, init func(*JobPosition), assign func(*JobPosition, *ScreeningResult)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*JobPosition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(screeningresult.FieldJobPositionID)
+	}
+	query.Where(predicate.ScreeningResult(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(jobposition.ScreeningResultsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -22,6 +22,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -29,19 +31,21 @@ import (
 // ResumeQuery is the builder for querying Resume entities.
 type ResumeQuery struct {
 	config
-	ctx                 *QueryContext
-	order               []resume.OrderOption
-	inters              []Interceptor
-	predicates          []predicate.Resume
-	withUser            *UserQuery
-	withEducations      *ResumeEducationQuery
-	withExperiences     *ResumeExperienceQuery
-	withProjects        *ResumeProjectQuery
-	withSkills          *ResumeSkillQuery
-	withLogs            *ResumeLogQuery
-	withDocumentParse   *ResumeDocumentParseQuery
-	withJobApplications *ResumeJobApplicationQuery
-	modifiers           []func(*sql.Selector)
+	ctx                      *QueryContext
+	order                    []resume.OrderOption
+	inters                   []Interceptor
+	predicates               []predicate.Resume
+	withUser                 *UserQuery
+	withEducations           *ResumeEducationQuery
+	withExperiences          *ResumeExperienceQuery
+	withProjects             *ResumeProjectQuery
+	withSkills               *ResumeSkillQuery
+	withLogs                 *ResumeLogQuery
+	withDocumentParse        *ResumeDocumentParseQuery
+	withJobApplications      *ResumeJobApplicationQuery
+	withScreeningTaskResumes *ScreeningTaskResumeQuery
+	withScreeningResults     *ScreeningResultQuery
+	modifiers                []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -254,6 +258,50 @@ func (rq *ResumeQuery) QueryJobApplications() *ResumeJobApplicationQuery {
 	return query
 }
 
+// QueryScreeningTaskResumes chains the current query on the "screening_task_resumes" edge.
+func (rq *ResumeQuery) QueryScreeningTaskResumes() *ScreeningTaskResumeQuery {
+	query := (&ScreeningTaskResumeClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, selector),
+			sqlgraph.To(screeningtaskresume.Table, screeningtaskresume.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.ScreeningTaskResumesTable, resume.ScreeningTaskResumesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryScreeningResults chains the current query on the "screening_results" edge.
+func (rq *ResumeQuery) QueryScreeningResults() *ScreeningResultQuery {
+	query := (&ScreeningResultClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, selector),
+			sqlgraph.To(screeningresult.Table, screeningresult.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.ScreeningResultsTable, resume.ScreeningResultsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Resume entity from the query.
 // Returns a *NotFoundError when no Resume was found.
 func (rq *ResumeQuery) First(ctx context.Context) (*Resume, error) {
@@ -441,19 +489,21 @@ func (rq *ResumeQuery) Clone() *ResumeQuery {
 		return nil
 	}
 	return &ResumeQuery{
-		config:              rq.config,
-		ctx:                 rq.ctx.Clone(),
-		order:               append([]resume.OrderOption{}, rq.order...),
-		inters:              append([]Interceptor{}, rq.inters...),
-		predicates:          append([]predicate.Resume{}, rq.predicates...),
-		withUser:            rq.withUser.Clone(),
-		withEducations:      rq.withEducations.Clone(),
-		withExperiences:     rq.withExperiences.Clone(),
-		withProjects:        rq.withProjects.Clone(),
-		withSkills:          rq.withSkills.Clone(),
-		withLogs:            rq.withLogs.Clone(),
-		withDocumentParse:   rq.withDocumentParse.Clone(),
-		withJobApplications: rq.withJobApplications.Clone(),
+		config:                   rq.config,
+		ctx:                      rq.ctx.Clone(),
+		order:                    append([]resume.OrderOption{}, rq.order...),
+		inters:                   append([]Interceptor{}, rq.inters...),
+		predicates:               append([]predicate.Resume{}, rq.predicates...),
+		withUser:                 rq.withUser.Clone(),
+		withEducations:           rq.withEducations.Clone(),
+		withExperiences:          rq.withExperiences.Clone(),
+		withProjects:             rq.withProjects.Clone(),
+		withSkills:               rq.withSkills.Clone(),
+		withLogs:                 rq.withLogs.Clone(),
+		withDocumentParse:        rq.withDocumentParse.Clone(),
+		withJobApplications:      rq.withJobApplications.Clone(),
+		withScreeningTaskResumes: rq.withScreeningTaskResumes.Clone(),
+		withScreeningResults:     rq.withScreeningResults.Clone(),
 		// clone intermediate query.
 		sql:       rq.sql.Clone(),
 		path:      rq.path,
@@ -549,6 +599,28 @@ func (rq *ResumeQuery) WithJobApplications(opts ...func(*ResumeJobApplicationQue
 	return rq
 }
 
+// WithScreeningTaskResumes tells the query-builder to eager-load the nodes that are connected to
+// the "screening_task_resumes" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ResumeQuery) WithScreeningTaskResumes(opts ...func(*ScreeningTaskResumeQuery)) *ResumeQuery {
+	query := (&ScreeningTaskResumeClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withScreeningTaskResumes = query
+	return rq
+}
+
+// WithScreeningResults tells the query-builder to eager-load the nodes that are connected to
+// the "screening_results" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ResumeQuery) WithScreeningResults(opts ...func(*ScreeningResultQuery)) *ResumeQuery {
+	query := (&ScreeningResultClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withScreeningResults = query
+	return rq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -627,7 +699,7 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 	var (
 		nodes       = []*Resume{}
 		_spec       = rq.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [10]bool{
 			rq.withUser != nil,
 			rq.withEducations != nil,
 			rq.withExperiences != nil,
@@ -636,6 +708,8 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 			rq.withLogs != nil,
 			rq.withDocumentParse != nil,
 			rq.withJobApplications != nil,
+			rq.withScreeningTaskResumes != nil,
+			rq.withScreeningResults != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -711,6 +785,22 @@ func (rq *ResumeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Resum
 		if err := rq.loadJobApplications(ctx, query, nodes,
 			func(n *Resume) { n.Edges.JobApplications = []*ResumeJobApplication{} },
 			func(n *Resume, e *ResumeJobApplication) { n.Edges.JobApplications = append(n.Edges.JobApplications, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withScreeningTaskResumes; query != nil {
+		if err := rq.loadScreeningTaskResumes(ctx, query, nodes,
+			func(n *Resume) { n.Edges.ScreeningTaskResumes = []*ScreeningTaskResume{} },
+			func(n *Resume, e *ScreeningTaskResume) {
+				n.Edges.ScreeningTaskResumes = append(n.Edges.ScreeningTaskResumes, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withScreeningResults; query != nil {
+		if err := rq.loadScreeningResults(ctx, query, nodes,
+			func(n *Resume) { n.Edges.ScreeningResults = []*ScreeningResult{} },
+			func(n *Resume, e *ScreeningResult) { n.Edges.ScreeningResults = append(n.Edges.ScreeningResults, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -941,6 +1031,66 @@ func (rq *ResumeQuery) loadJobApplications(ctx context.Context, query *ResumeJob
 	}
 	query.Where(predicate.ResumeJobApplication(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(resume.JobApplicationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ResumeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "resume_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (rq *ResumeQuery) loadScreeningTaskResumes(ctx context.Context, query *ScreeningTaskResumeQuery, nodes []*Resume, init func(*Resume), assign func(*Resume, *ScreeningTaskResume)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Resume)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(screeningtaskresume.FieldResumeID)
+	}
+	query.Where(predicate.ScreeningTaskResume(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(resume.ScreeningTaskResumesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ResumeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "resume_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (rq *ResumeQuery) loadScreeningResults(ctx context.Context, query *ScreeningResultQuery, nodes []*Resume, init func(*Resume), assign func(*Resume, *ScreeningResult)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Resume)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(screeningresult.FieldResumeID)
+	}
+	query.Where(predicate.ScreeningResult(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(resume.ScreeningResultsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

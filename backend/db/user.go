@@ -55,9 +55,11 @@ type UserEdges struct {
 	Resumes []*Resume `json:"resumes,omitempty"`
 	// CreatedPositions holds the value of the created_positions edge.
 	CreatedPositions []*JobPosition `json:"created_positions,omitempty"`
+	// CreatedScreeningTasks holds the value of the created_screening_tasks edge.
+	CreatedScreeningTasks []*ScreeningTask `json:"created_screening_tasks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // LoginHistoriesOrErr returns the LoginHistories value or an error if the edge
@@ -103,6 +105,15 @@ func (e UserEdges) CreatedPositionsOrErr() ([]*JobPosition, error) {
 		return e.CreatedPositions, nil
 	}
 	return nil, &NotLoadedError{edge: "created_positions"}
+}
+
+// CreatedScreeningTasksOrErr returns the CreatedScreeningTasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CreatedScreeningTasksOrErr() ([]*ScreeningTask, error) {
+	if e.loadedTypes[5] {
+		return e.CreatedScreeningTasks, nil
+	}
+	return nil, &NotLoadedError{edge: "created_screening_tasks"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -227,6 +238,11 @@ func (u *User) QueryResumes() *ResumeQuery {
 // QueryCreatedPositions queries the "created_positions" edge of the User entity.
 func (u *User) QueryCreatedPositions() *JobPositionQuery {
 	return NewUserClient(u.config).QueryCreatedPositions(u)
+}
+
+// QueryCreatedScreeningTasks queries the "created_screening_tasks" edge of the User entity.
+func (u *User) QueryCreatedScreeningTasks() *ScreeningTaskQuery {
+	return NewUserClient(u.config).QueryCreatedScreeningTasks(u)
 }
 
 // Update returns a builder for updating this User.

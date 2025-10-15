@@ -64,6 +64,10 @@ const (
 	EdgeDocumentParse = "document_parse"
 	// EdgeJobApplications holds the string denoting the job_applications edge name in mutations.
 	EdgeJobApplications = "job_applications"
+	// EdgeScreeningTaskResumes holds the string denoting the screening_task_resumes edge name in mutations.
+	EdgeScreeningTaskResumes = "screening_task_resumes"
+	// EdgeScreeningResults holds the string denoting the screening_results edge name in mutations.
+	EdgeScreeningResults = "screening_results"
 	// Table holds the table name of the resume in the database.
 	Table = "resumes"
 	// UserTable is the table that holds the user relation/edge.
@@ -122,6 +126,20 @@ const (
 	JobApplicationsInverseTable = "resume_job_applications"
 	// JobApplicationsColumn is the table column denoting the job_applications relation/edge.
 	JobApplicationsColumn = "resume_id"
+	// ScreeningTaskResumesTable is the table that holds the screening_task_resumes relation/edge.
+	ScreeningTaskResumesTable = "screening_task_resumes"
+	// ScreeningTaskResumesInverseTable is the table name for the ScreeningTaskResume entity.
+	// It exists in this package in order to avoid circular dependency with the "screeningtaskresume" package.
+	ScreeningTaskResumesInverseTable = "screening_task_resumes"
+	// ScreeningTaskResumesColumn is the table column denoting the screening_task_resumes relation/edge.
+	ScreeningTaskResumesColumn = "resume_id"
+	// ScreeningResultsTable is the table that holds the screening_results relation/edge.
+	ScreeningResultsTable = "screening_results"
+	// ScreeningResultsInverseTable is the table name for the ScreeningResult entity.
+	// It exists in this package in order to avoid circular dependency with the "screeningresult" package.
+	ScreeningResultsInverseTable = "screening_results"
+	// ScreeningResultsColumn is the table column denoting the screening_results relation/edge.
+	ScreeningResultsColumn = "resume_id"
 )
 
 // Columns holds all SQL columns for resume fields.
@@ -369,6 +387,34 @@ func ByJobApplications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newJobApplicationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByScreeningTaskResumesCount orders the results by screening_task_resumes count.
+func ByScreeningTaskResumesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newScreeningTaskResumesStep(), opts...)
+	}
+}
+
+// ByScreeningTaskResumes orders the results by screening_task_resumes terms.
+func ByScreeningTaskResumes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newScreeningTaskResumesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByScreeningResultsCount orders the results by screening_results count.
+func ByScreeningResultsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newScreeningResultsStep(), opts...)
+	}
+}
+
+// ByScreeningResults orders the results by screening_results terms.
+func ByScreeningResults(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newScreeningResultsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -423,5 +469,19 @@ func newJobApplicationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(JobApplicationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, JobApplicationsTable, JobApplicationsColumn),
+	)
+}
+func newScreeningTaskResumesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ScreeningTaskResumesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ScreeningTaskResumesTable, ScreeningTaskResumesColumn),
+	)
+}
+func newScreeningResultsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ScreeningResultsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ScreeningResultsTable, ScreeningResultsColumn),
 	)
 }

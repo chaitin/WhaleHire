@@ -210,7 +210,14 @@ export function JobProfilePage() {
     responsibilities: [''], // 改为数组类型，默认包含一个空字符串
   });
 
-  // 技能管理状态 - 改为使用技能ID数组
+  // 技能管理状态 - 保存完整的技能记录信息
+  const [selectedRequiredSkills, setSelectedRequiredSkills] = useState<
+    JobSkillInput[]
+  >([]);
+  const [selectedOptionalSkills, setSelectedOptionalSkills] = useState<
+    JobSkillInput[]
+  >([]);
+  // 为了兼容MultiSelect组件，保留技能ID数组
   const [selectedRequiredSkillIds, setSelectedRequiredSkillIds] = useState<
     string[]
   >([]);
@@ -323,6 +330,56 @@ export function JobProfilePage() {
     setAvailableSkills((prev) => [...prev, newSkill]);
   };
 
+  // 处理必填技能选择变化
+  const handleRequiredSkillsChange = (selectedSkillIds: string[]) => {
+    setSelectedRequiredSkillIds(selectedSkillIds);
+
+    // 更新完整的技能记录信息
+    const updatedSkills: JobSkillInput[] = selectedSkillIds.map((skillId) => {
+      // 查找是否已存在的技能记录
+      const existingSkill = selectedRequiredSkills.find(
+        (skill) => skill.skill_id === skillId
+      );
+      if (existingSkill) {
+        return existingSkill; // 保留现有的技能记录ID
+      }
+
+      // 新添加的技能，不包含技能记录ID
+      return {
+        skill_id: skillId,
+        type: 'required' as const,
+        weight: 1,
+      };
+    });
+
+    setSelectedRequiredSkills(updatedSkills);
+  };
+
+  // 处理选填技能选择变化
+  const handleOptionalSkillsChange = (selectedSkillIds: string[]) => {
+    setSelectedOptionalSkillIds(selectedSkillIds);
+
+    // 更新完整的技能记录信息
+    const updatedSkills: JobSkillInput[] = selectedSkillIds.map((skillId) => {
+      // 查找是否已存在的技能记录
+      const existingSkill = selectedOptionalSkills.find(
+        (skill) => skill.skill_id === skillId
+      );
+      if (existingSkill) {
+        return existingSkill; // 保留现有的技能记录ID
+      }
+
+      // 新添加的技能，不包含技能记录ID
+      return {
+        skill_id: skillId,
+        type: 'bonus' as const,
+        weight: 1,
+      };
+    });
+
+    setSelectedOptionalSkills(updatedSkills);
+  };
+
   // 获取部门列表（目前使用硬编码数据，可以后续扩展为API调用）
   const fetchDepartments = async () => {
     try {
@@ -375,6 +432,8 @@ export function JobProfilePage() {
     });
     setEditMode('manual');
     // 清除技能相关状态
+    setSelectedRequiredSkills([]);
+    setSelectedOptionalSkills([]);
     setSelectedRequiredSkillIds([]);
     setSelectedOptionalSkillIds([]);
 
@@ -403,6 +462,8 @@ export function JobProfilePage() {
     });
     setEditMode('manual');
     // 清除技能相关状态
+    setSelectedRequiredSkills([]);
+    setSelectedOptionalSkills([]);
     setSelectedRequiredSkillIds([]);
     setSelectedOptionalSkillIds([]);
   };
@@ -737,6 +798,8 @@ export function JobProfilePage() {
       // 处理技能数据预填充
       const requiredSkills: JobSkillMeta[] = [];
       const optionalSkills: JobSkillMeta[] = [];
+      const requiredSkillInputs: JobSkillInput[] = [];
+      const optionalSkillInputs: JobSkillInput[] = [];
 
       if (jobDetail.skills && jobDetail.skills.length > 0) {
         jobDetail.skills.forEach((skill) => {
@@ -747,16 +810,43 @@ export function JobProfilePage() {
             updated_at: 0,
           };
 
+          const skillInput: JobSkillInput = {
+            id: skill.id, // 保存技能记录ID
+            skill_id: skill.skill_id,
+            type: skill.type,
+            weight: skill.weight,
+          };
+
           if (skill.type === 'required') {
             requiredSkills.push(skillMeta);
+            requiredSkillInputs.push(skillInput);
           } else if (skill.type === 'bonus') {
             optionalSkills.push(skillMeta);
+            optionalSkillInputs.push(skillInput);
           }
         });
       }
 
+      // 保存完整的技能记录信息
+      setSelectedRequiredSkills(requiredSkillInputs);
+      setSelectedOptionalSkills(optionalSkillInputs);
+      // 为了兼容MultiSelect组件，也保存技能ID数组
       setSelectedRequiredSkillIds(requiredSkills.map((skill) => skill.id));
       setSelectedOptionalSkillIds(optionalSkills.map((skill) => skill.id));
+
+      // 将岗位的技能数据合并到可用技能列表中，确保编辑时能正确显示
+      const allJobSkills = [...requiredSkills, ...optionalSkills];
+      setAvailableSkills((prevSkills) => {
+        // 去重合并：保留现有技能，添加岗位中的新技能
+        const existingSkillIds = new Set(prevSkills.map((skill) => skill.id));
+        const newSkills = allJobSkills.filter(
+          (skill) => !existingSkillIds.has(skill.id)
+        );
+        return [...prevSkills, ...newSkills];
+      });
+
+      // 同时加载更多技能数据，确保用户可以选择其他技能
+      await fetchSkills();
 
       setIsEditJobModalOpen(true);
     } catch (err) {
@@ -780,8 +870,13 @@ export function JobProfilePage() {
       });
 
       // 清空技能相关状态
+      setSelectedRequiredSkills([]);
+      setSelectedOptionalSkills([]);
       setSelectedRequiredSkillIds([]);
       setSelectedOptionalSkillIds([]);
+
+      // 即使获取详情失败，也要加载技能列表，确保用户可以选择技能
+      await fetchSkills();
 
       setIsEditJobModalOpen(true);
     } finally {
@@ -822,16 +917,10 @@ export function JobProfilePage() {
     try {
       setLoading(true);
 
-      // 准备技能数据
-      const skillInputs = [
-        ...selectedRequiredSkillIds.map((skillId) => ({
-          skill_id: skillId,
-          type: 'required' as const,
-        })),
-        ...selectedOptionalSkillIds.map((skillId) => ({
-          skill_id: skillId,
-          type: 'bonus' as const,
-        })),
+      // 准备技能数据 - 使用完整的技能记录信息，包含技能记录ID
+      const skillInputs: JobSkillInput[] = [
+        ...selectedRequiredSkills,
+        ...selectedOptionalSkills,
       ];
 
       // 准备行业要求数据
@@ -1820,7 +1909,7 @@ export function JobProfilePage() {
                         label: skill.name,
                       }))}
                       selected={selectedRequiredSkillIds}
-                      onChange={setSelectedRequiredSkillIds}
+                      onChange={handleRequiredSkillsChange}
                       placeholder="请选择必填技能"
                       multiple={true}
                       onSelectAll={() => {
@@ -1851,7 +1940,7 @@ export function JobProfilePage() {
                         label: skill.name,
                       }))}
                       selected={selectedOptionalSkillIds}
-                      onChange={setSelectedOptionalSkillIds}
+                      onChange={handleOptionalSkillsChange}
                       placeholder="请选择选填技能"
                       multiple={true}
                       onSelectAll={() => {
@@ -2326,17 +2415,17 @@ export function JobProfilePage() {
                         label: skill.name,
                       }))}
                       selected={selectedRequiredSkillIds}
-                      onChange={setSelectedRequiredSkillIds}
+                      onChange={handleRequiredSkillsChange}
                       placeholder="请选择必填技能"
                       multiple={true}
                       onSelectAll={() => {
                         const allSkillIds = availableSkills.map(
                           (skill) => skill.id
                         );
-                        setSelectedRequiredSkillIds(allSkillIds);
+                        handleRequiredSkillsChange(allSkillIds);
                       }}
                       onClearAll={() => {
-                        setSelectedRequiredSkillIds([]);
+                        handleRequiredSkillsChange([]);
                       }}
                       selectCountLabel="技能"
                       loading={skillsLoading}
@@ -2357,17 +2446,17 @@ export function JobProfilePage() {
                         label: skill.name,
                       }))}
                       selected={selectedOptionalSkillIds}
-                      onChange={setSelectedOptionalSkillIds}
+                      onChange={handleOptionalSkillsChange}
                       placeholder="请选择选填技能"
                       multiple={true}
                       onSelectAll={() => {
                         const allSkillIds = availableSkills.map(
                           (skill) => skill.id
                         );
-                        setSelectedOptionalSkillIds(allSkillIds);
+                        handleOptionalSkillsChange(allSkillIds);
                       }}
                       onClearAll={() => {
-                        setSelectedOptionalSkillIds([]);
+                        handleOptionalSkillsChange([]);
                       }}
                       selectCountLabel="技能"
                       loading={skillsLoading}

@@ -645,6 +645,261 @@ var (
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
 	}
+	// ScreeningResultsColumns holds the columns for the "screening_results" table.
+	ScreeningResultsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "overall_score", Type: field.TypeFloat64},
+		{Name: "match_level", Type: field.TypeEnum, Nullable: true, Enums: []string{"excellent", "good", "fair", "poor"}},
+		{Name: "dimension_scores", Type: field.TypeJSON, Nullable: true},
+		{Name: "skill_detail", Type: field.TypeJSON, Nullable: true},
+		{Name: "responsibility_detail", Type: field.TypeJSON, Nullable: true},
+		{Name: "experience_detail", Type: field.TypeJSON, Nullable: true},
+		{Name: "education_detail", Type: field.TypeJSON, Nullable: true},
+		{Name: "industry_detail", Type: field.TypeJSON, Nullable: true},
+		{Name: "basic_detail", Type: field.TypeJSON, Nullable: true},
+		{Name: "recommendations", Type: field.TypeJSON, Nullable: true},
+		{Name: "trace_id", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "runtime_metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "sub_agent_versions", Type: field.TypeJSON, Nullable: true},
+		{Name: "matched_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_position_id", Type: field.TypeUUID},
+		{Name: "resume_id", Type: field.TypeUUID},
+		{Name: "task_id", Type: field.TypeUUID},
+	}
+	// ScreeningResultsTable holds the schema information for the "screening_results" table.
+	ScreeningResultsTable = &schema.Table{
+		Name:       "screening_results",
+		Columns:    ScreeningResultsColumns,
+		PrimaryKey: []*schema.Column{ScreeningResultsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "screening_results_job_position_screening_results",
+				Columns:    []*schema.Column{ScreeningResultsColumns[18]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "screening_results_resumes_screening_results",
+				Columns:    []*schema.Column{ScreeningResultsColumns[19]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "screening_results_screening_tasks_results",
+				Columns:    []*schema.Column{ScreeningResultsColumns[20]},
+				RefColumns: []*schema.Column{ScreeningTasksColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "screeningresult_task_id",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningResultsColumns[20]},
+			},
+			{
+				Name:    "screeningresult_job_position_id_resume_id",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningResultsColumns[18], ScreeningResultsColumns[19]},
+			},
+			{
+				Name:    "screeningresult_overall_score",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningResultsColumns[2]},
+				Annotation: &entsql.IndexAnnotation{
+					Desc: true,
+				},
+			},
+			{
+				Name:    "screeningresult_task_id_resume_id",
+				Unique:  true,
+				Columns: []*schema.Column{ScreeningResultsColumns[20], ScreeningResultsColumns[19]},
+			},
+			{
+				Name:    "screeningresult_match_level",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningResultsColumns[3]},
+			},
+			{
+				Name:    "screeningresult_matched_at",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningResultsColumns[15]},
+			},
+		},
+	}
+	// ScreeningRunMetricsColumns holds the columns for the "screening_run_metrics" table.
+	ScreeningRunMetricsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "avg_score", Type: field.TypeFloat64, Nullable: true},
+		{Name: "histogram", Type: field.TypeJSON, Nullable: true},
+		{Name: "tokens_input", Type: field.TypeInt64, Nullable: true},
+		{Name: "tokens_output", Type: field.TypeInt64, Nullable: true},
+		{Name: "total_cost", Type: field.TypeFloat64, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "task_id", Type: field.TypeUUID},
+	}
+	// ScreeningRunMetricsTable holds the schema information for the "screening_run_metrics" table.
+	ScreeningRunMetricsTable = &schema.Table{
+		Name:       "screening_run_metrics",
+		Columns:    ScreeningRunMetricsColumns,
+		PrimaryKey: []*schema.Column{ScreeningRunMetricsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "screening_run_metrics_screening_tasks_run_metrics",
+				Columns:    []*schema.Column{ScreeningRunMetricsColumns[9]},
+				RefColumns: []*schema.Column{ScreeningTasksColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "screeningrunmetric_task_id",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningRunMetricsColumns[9]},
+			},
+			{
+				Name:    "screeningrunmetric_avg_score",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningRunMetricsColumns[2]},
+			},
+			{
+				Name:    "screeningrunmetric_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningRunMetricsColumns[7]},
+			},
+		},
+	}
+	// ScreeningTasksColumns holds the columns for the "screening_tasks" table.
+	ScreeningTasksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "dimension_weights", Type: field.TypeJSON, Nullable: true},
+		{Name: "llm_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "notes", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "resume_total", Type: field.TypeInt, Default: 0},
+		{Name: "resume_processed", Type: field.TypeInt, Default: 0},
+		{Name: "resume_succeeded", Type: field.TypeInt, Default: 0},
+		{Name: "resume_failed", Type: field.TypeInt, Default: 0},
+		{Name: "agent_version", Type: field.TypeString, Nullable: true, Size: 50},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_position_id", Type: field.TypeUUID},
+		{Name: "created_by", Type: field.TypeUUID},
+	}
+	// ScreeningTasksTable holds the schema information for the "screening_tasks" table.
+	ScreeningTasksTable = &schema.Table{
+		Name:       "screening_tasks",
+		Columns:    ScreeningTasksColumns,
+		PrimaryKey: []*schema.Column{ScreeningTasksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "screening_tasks_job_position_screening_tasks",
+				Columns:    []*schema.Column{ScreeningTasksColumns[15]},
+				RefColumns: []*schema.Column{JobPositionColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "screening_tasks_users_created_screening_tasks",
+				Columns:    []*schema.Column{ScreeningTasksColumns[16]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "screeningtask_job_position_id",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTasksColumns[15]},
+			},
+			{
+				Name:    "screeningtask_status",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTasksColumns[2]},
+			},
+			{
+				Name:    "screeningtask_created_by",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTasksColumns[16]},
+			},
+			{
+				Name:    "screeningtask_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTasksColumns[13]},
+			},
+		},
+	}
+	// ScreeningTaskResumesColumns holds the columns for the "screening_task_resumes" table.
+	ScreeningTaskResumesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "ranking", Type: field.TypeInt, Nullable: true},
+		{Name: "score", Type: field.TypeFloat64, Nullable: true},
+		{Name: "processed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resume_id", Type: field.TypeUUID},
+		{Name: "task_id", Type: field.TypeUUID},
+	}
+	// ScreeningTaskResumesTable holds the schema information for the "screening_task_resumes" table.
+	ScreeningTaskResumesTable = &schema.Table{
+		Name:       "screening_task_resumes",
+		Columns:    ScreeningTaskResumesColumns,
+		PrimaryKey: []*schema.Column{ScreeningTaskResumesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "screening_task_resumes_resumes_screening_task_resumes",
+				Columns:    []*schema.Column{ScreeningTaskResumesColumns[9]},
+				RefColumns: []*schema.Column{ResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "screening_task_resumes_screening_tasks_task_resumes",
+				Columns:    []*schema.Column{ScreeningTaskResumesColumns[10]},
+				RefColumns: []*schema.Column{ScreeningTasksColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "screeningtaskresume_task_id",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTaskResumesColumns[10]},
+			},
+			{
+				Name:    "screeningtaskresume_status",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTaskResumesColumns[2]},
+			},
+			{
+				Name:    "screeningtaskresume_score",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTaskResumesColumns[5]},
+				Annotation: &entsql.IndexAnnotation{
+					Desc: true,
+				},
+			},
+			{
+				Name:    "screeningtaskresume_task_id_resume_id",
+				Unique:  true,
+				Columns: []*schema.Column{ScreeningTaskResumesColumns[10], ScreeningTaskResumesColumns[9]},
+			},
+			{
+				Name:    "screeningtaskresume_task_id_ranking",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningTaskResumesColumns[10], ScreeningTaskResumesColumns[4]},
+			},
+		},
+	}
 	// SettingsColumns holds the columns for the "settings" table.
 	SettingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -766,6 +1021,10 @@ var (
 		ResumeProjectsTable,
 		ResumeSkillsTable,
 		RolesTable,
+		ScreeningResultsTable,
+		ScreeningRunMetricsTable,
+		ScreeningTasksTable,
+		ScreeningTaskResumesTable,
 		SettingsTable,
 		UsersTable,
 		UserIdentitiesTable,
@@ -865,6 +1124,26 @@ func init() {
 	}
 	RolesTable.Annotation = &entsql.Annotation{
 		Table: "roles",
+	}
+	ScreeningResultsTable.ForeignKeys[0].RefTable = JobPositionTable
+	ScreeningResultsTable.ForeignKeys[1].RefTable = ResumesTable
+	ScreeningResultsTable.ForeignKeys[2].RefTable = ScreeningTasksTable
+	ScreeningResultsTable.Annotation = &entsql.Annotation{
+		Table: "screening_results",
+	}
+	ScreeningRunMetricsTable.ForeignKeys[0].RefTable = ScreeningTasksTable
+	ScreeningRunMetricsTable.Annotation = &entsql.Annotation{
+		Table: "screening_run_metrics",
+	}
+	ScreeningTasksTable.ForeignKeys[0].RefTable = JobPositionTable
+	ScreeningTasksTable.ForeignKeys[1].RefTable = UsersTable
+	ScreeningTasksTable.Annotation = &entsql.Annotation{
+		Table: "screening_tasks",
+	}
+	ScreeningTaskResumesTable.ForeignKeys[0].RefTable = ResumesTable
+	ScreeningTaskResumesTable.ForeignKeys[1].RefTable = ScreeningTasksTable
+	ScreeningTaskResumesTable.Annotation = &entsql.Annotation{
+		Table: "screening_task_resumes",
 	}
 	SettingsTable.Annotation = &entsql.Annotation{
 		Table: "settings",

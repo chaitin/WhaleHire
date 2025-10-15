@@ -54,3 +54,12 @@ other = "无效参数请检查"
 
 [err-jobprofile-has-resumes]
 other = "岗位画像已关联简历"
+
+[err-screening-task-not-found]
+other = "筛选任务不存在"
+
+[err-screening-task-running]
+other = "正在进行中的任务不能删除，请等待任务完成或失败后再删除"
+
+[err-screening-task-delete-failed]
+other = "删除筛选任务失败"

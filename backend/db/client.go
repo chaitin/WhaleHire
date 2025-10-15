@@ -39,6 +39,10 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
@@ -98,6 +102,14 @@ type Client struct {
 	ResumeSkill *ResumeSkillClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// ScreeningResult is the client for interacting with the ScreeningResult builders.
+	ScreeningResult *ScreeningResultClient
+	// ScreeningRunMetric is the client for interacting with the ScreeningRunMetric builders.
+	ScreeningRunMetric *ScreeningRunMetricClient
+	// ScreeningTask is the client for interacting with the ScreeningTask builders.
+	ScreeningTask *ScreeningTaskClient
+	// ScreeningTaskResume is the client for interacting with the ScreeningTaskResume builders.
+	ScreeningTaskResume *ScreeningTaskResumeClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
 	// User is the client for interacting with the User builders.
@@ -140,6 +152,10 @@ func (c *Client) init() {
 	c.ResumeProject = NewResumeProjectClient(c.config)
 	c.ResumeSkill = NewResumeSkillClient(c.config)
 	c.Role = NewRoleClient(c.config)
+	c.ScreeningResult = NewScreeningResultClient(c.config)
+	c.ScreeningRunMetric = NewScreeningRunMetricClient(c.config)
+	c.ScreeningTask = NewScreeningTaskClient(c.config)
+	c.ScreeningTaskResume = NewScreeningTaskResumeClient(c.config)
 	c.Setting = NewSettingClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserIdentity = NewUserIdentityClient(c.config)
@@ -259,6 +275,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
+		ScreeningResult:          NewScreeningResultClient(cfg),
+		ScreeningRunMetric:       NewScreeningRunMetricClient(cfg),
+		ScreeningTask:            NewScreeningTaskClient(cfg),
+		ScreeningTaskResume:      NewScreeningTaskResumeClient(cfg),
 		Setting:                  NewSettingClient(cfg),
 		User:                     NewUserClient(cfg),
 		UserIdentity:             NewUserIdentityClient(cfg),
@@ -305,6 +325,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
+		ScreeningResult:          NewScreeningResultClient(cfg),
+		ScreeningRunMetric:       NewScreeningRunMetricClient(cfg),
+		ScreeningTask:            NewScreeningTaskClient(cfg),
+		ScreeningTaskResume:      NewScreeningTaskResumeClient(cfg),
 		Setting:                  NewSettingClient(cfg),
 		User:                     NewUserClient(cfg),
 		UserIdentity:             NewUserIdentityClient(cfg),
@@ -343,7 +367,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
 		c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog, c.ResumeProject,
-		c.ResumeSkill, c.Role, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.ResumeSkill, c.Role, c.ScreeningResult, c.ScreeningRunMetric,
+		c.ScreeningTask, c.ScreeningTaskResume, c.Setting, c.User, c.UserIdentity,
+		c.UserLoginHistory,
 	} {
 		n.Use(hooks...)
 	}
@@ -358,7 +384,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
 		c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog, c.ResumeProject,
-		c.ResumeSkill, c.Role, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.ResumeSkill, c.Role, c.ScreeningResult, c.ScreeningRunMetric,
+		c.ScreeningTask, c.ScreeningTaskResume, c.Setting, c.User, c.UserIdentity,
+		c.UserLoginHistory,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -413,6 +441,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ResumeSkill.mutate(ctx, m)
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
+	case *ScreeningResultMutation:
+		return c.ScreeningResult.mutate(ctx, m)
+	case *ScreeningRunMetricMutation:
+		return c.ScreeningRunMetric.mutate(ctx, m)
+	case *ScreeningTaskMutation:
+		return c.ScreeningTask.mutate(ctx, m)
+	case *ScreeningTaskResumeMutation:
+		return c.ScreeningTaskResume.mutate(ctx, m)
 	case *SettingMutation:
 		return c.Setting.mutate(ctx, m)
 	case *UserMutation:
@@ -2079,6 +2115,38 @@ func (c *JobPositionClient) QueryResumeApplications(jp *JobPosition) *ResumeJobA
 	return query
 }
 
+// QueryScreeningTasks queries the screening_tasks edge of a JobPosition.
+func (c *JobPositionClient) QueryScreeningTasks(jp *JobPosition) *ScreeningTaskQuery {
+	query := (&ScreeningTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(screeningtask.Table, screeningtask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ScreeningTasksTable, jobposition.ScreeningTasksColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryScreeningResults queries the screening_results edge of a JobPosition.
+func (c *JobPositionClient) QueryScreeningResults(jp *JobPosition) *ScreeningResultQuery {
+	query := (&ScreeningResultClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := jp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(jobposition.Table, jobposition.FieldID, id),
+			sqlgraph.To(screeningresult.Table, screeningresult.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, jobposition.ScreeningResultsTable, jobposition.ScreeningResultsColumn),
+		)
+		fromV = sqlgraph.Neighbors(jp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *JobPositionClient) Hooks() []Hook {
 	hooks := c.hooks.JobPosition
@@ -2971,6 +3039,38 @@ func (c *ResumeClient) QueryJobApplications(r *Resume) *ResumeJobApplicationQuer
 			sqlgraph.From(resume.Table, resume.FieldID, id),
 			sqlgraph.To(resumejobapplication.Table, resumejobapplication.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, resume.JobApplicationsTable, resume.JobApplicationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryScreeningTaskResumes queries the screening_task_resumes edge of a Resume.
+func (c *ResumeClient) QueryScreeningTaskResumes(r *Resume) *ScreeningTaskResumeQuery {
+	query := (&ScreeningTaskResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, id),
+			sqlgraph.To(screeningtaskresume.Table, screeningtaskresume.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.ScreeningTaskResumesTable, resume.ScreeningTaskResumesColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryScreeningResults queries the screening_results edge of a Resume.
+func (c *ResumeClient) QueryScreeningResults(r *Resume) *ScreeningResultQuery {
+	query := (&ScreeningResultClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resume.Table, resume.FieldID, id),
+			sqlgraph.To(screeningresult.Table, screeningresult.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resume.ScreeningResultsTable, resume.ScreeningResultsColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -4243,6 +4343,722 @@ func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error)
 	}
 }
 
+// ScreeningResultClient is a client for the ScreeningResult schema.
+type ScreeningResultClient struct {
+	config
+}
+
+// NewScreeningResultClient returns a client for the ScreeningResult from the given config.
+func NewScreeningResultClient(c config) *ScreeningResultClient {
+	return &ScreeningResultClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `screeningresult.Hooks(f(g(h())))`.
+func (c *ScreeningResultClient) Use(hooks ...Hook) {
+	c.hooks.ScreeningResult = append(c.hooks.ScreeningResult, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `screeningresult.Intercept(f(g(h())))`.
+func (c *ScreeningResultClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ScreeningResult = append(c.inters.ScreeningResult, interceptors...)
+}
+
+// Create returns a builder for creating a ScreeningResult entity.
+func (c *ScreeningResultClient) Create() *ScreeningResultCreate {
+	mutation := newScreeningResultMutation(c.config, OpCreate)
+	return &ScreeningResultCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ScreeningResult entities.
+func (c *ScreeningResultClient) CreateBulk(builders ...*ScreeningResultCreate) *ScreeningResultCreateBulk {
+	return &ScreeningResultCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ScreeningResultClient) MapCreateBulk(slice any, setFunc func(*ScreeningResultCreate, int)) *ScreeningResultCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ScreeningResultCreateBulk{err: fmt.Errorf("calling to ScreeningResultClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ScreeningResultCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ScreeningResultCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ScreeningResult.
+func (c *ScreeningResultClient) Update() *ScreeningResultUpdate {
+	mutation := newScreeningResultMutation(c.config, OpUpdate)
+	return &ScreeningResultUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ScreeningResultClient) UpdateOne(sr *ScreeningResult) *ScreeningResultUpdateOne {
+	mutation := newScreeningResultMutation(c.config, OpUpdateOne, withScreeningResult(sr))
+	return &ScreeningResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ScreeningResultClient) UpdateOneID(id uuid.UUID) *ScreeningResultUpdateOne {
+	mutation := newScreeningResultMutation(c.config, OpUpdateOne, withScreeningResultID(id))
+	return &ScreeningResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ScreeningResult.
+func (c *ScreeningResultClient) Delete() *ScreeningResultDelete {
+	mutation := newScreeningResultMutation(c.config, OpDelete)
+	return &ScreeningResultDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ScreeningResultClient) DeleteOne(sr *ScreeningResult) *ScreeningResultDeleteOne {
+	return c.DeleteOneID(sr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ScreeningResultClient) DeleteOneID(id uuid.UUID) *ScreeningResultDeleteOne {
+	builder := c.Delete().Where(screeningresult.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ScreeningResultDeleteOne{builder}
+}
+
+// Query returns a query builder for ScreeningResult.
+func (c *ScreeningResultClient) Query() *ScreeningResultQuery {
+	return &ScreeningResultQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeScreeningResult},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ScreeningResult entity by its id.
+func (c *ScreeningResultClient) Get(ctx context.Context, id uuid.UUID) (*ScreeningResult, error) {
+	return c.Query().Where(screeningresult.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ScreeningResultClient) GetX(ctx context.Context, id uuid.UUID) *ScreeningResult {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTask queries the task edge of a ScreeningResult.
+func (c *ScreeningResultClient) QueryTask(sr *ScreeningResult) *ScreeningTaskQuery {
+	query := (&ScreeningTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningresult.Table, screeningresult.FieldID, id),
+			sqlgraph.To(screeningtask.Table, screeningtask.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningresult.TaskTable, screeningresult.TaskColumn),
+		)
+		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryJobPosition queries the job_position edge of a ScreeningResult.
+func (c *ScreeningResultClient) QueryJobPosition(sr *ScreeningResult) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningresult.Table, screeningresult.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningresult.JobPositionTable, screeningresult.JobPositionColumn),
+		)
+		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryResume queries the resume edge of a ScreeningResult.
+func (c *ScreeningResultClient) QueryResume(sr *ScreeningResult) *ResumeQuery {
+	query := (&ResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningresult.Table, screeningresult.FieldID, id),
+			sqlgraph.To(resume.Table, resume.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningresult.ResumeTable, screeningresult.ResumeColumn),
+		)
+		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ScreeningResultClient) Hooks() []Hook {
+	hooks := c.hooks.ScreeningResult
+	return append(hooks[:len(hooks):len(hooks)], screeningresult.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ScreeningResultClient) Interceptors() []Interceptor {
+	inters := c.inters.ScreeningResult
+	return append(inters[:len(inters):len(inters)], screeningresult.Interceptors[:]...)
+}
+
+func (c *ScreeningResultClient) mutate(ctx context.Context, m *ScreeningResultMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ScreeningResultCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ScreeningResultUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ScreeningResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ScreeningResultDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ScreeningResult mutation op: %q", m.Op())
+	}
+}
+
+// ScreeningRunMetricClient is a client for the ScreeningRunMetric schema.
+type ScreeningRunMetricClient struct {
+	config
+}
+
+// NewScreeningRunMetricClient returns a client for the ScreeningRunMetric from the given config.
+func NewScreeningRunMetricClient(c config) *ScreeningRunMetricClient {
+	return &ScreeningRunMetricClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `screeningrunmetric.Hooks(f(g(h())))`.
+func (c *ScreeningRunMetricClient) Use(hooks ...Hook) {
+	c.hooks.ScreeningRunMetric = append(c.hooks.ScreeningRunMetric, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `screeningrunmetric.Intercept(f(g(h())))`.
+func (c *ScreeningRunMetricClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ScreeningRunMetric = append(c.inters.ScreeningRunMetric, interceptors...)
+}
+
+// Create returns a builder for creating a ScreeningRunMetric entity.
+func (c *ScreeningRunMetricClient) Create() *ScreeningRunMetricCreate {
+	mutation := newScreeningRunMetricMutation(c.config, OpCreate)
+	return &ScreeningRunMetricCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ScreeningRunMetric entities.
+func (c *ScreeningRunMetricClient) CreateBulk(builders ...*ScreeningRunMetricCreate) *ScreeningRunMetricCreateBulk {
+	return &ScreeningRunMetricCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ScreeningRunMetricClient) MapCreateBulk(slice any, setFunc func(*ScreeningRunMetricCreate, int)) *ScreeningRunMetricCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ScreeningRunMetricCreateBulk{err: fmt.Errorf("calling to ScreeningRunMetricClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ScreeningRunMetricCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ScreeningRunMetricCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ScreeningRunMetric.
+func (c *ScreeningRunMetricClient) Update() *ScreeningRunMetricUpdate {
+	mutation := newScreeningRunMetricMutation(c.config, OpUpdate)
+	return &ScreeningRunMetricUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ScreeningRunMetricClient) UpdateOne(srm *ScreeningRunMetric) *ScreeningRunMetricUpdateOne {
+	mutation := newScreeningRunMetricMutation(c.config, OpUpdateOne, withScreeningRunMetric(srm))
+	return &ScreeningRunMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ScreeningRunMetricClient) UpdateOneID(id uuid.UUID) *ScreeningRunMetricUpdateOne {
+	mutation := newScreeningRunMetricMutation(c.config, OpUpdateOne, withScreeningRunMetricID(id))
+	return &ScreeningRunMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ScreeningRunMetric.
+func (c *ScreeningRunMetricClient) Delete() *ScreeningRunMetricDelete {
+	mutation := newScreeningRunMetricMutation(c.config, OpDelete)
+	return &ScreeningRunMetricDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ScreeningRunMetricClient) DeleteOne(srm *ScreeningRunMetric) *ScreeningRunMetricDeleteOne {
+	return c.DeleteOneID(srm.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ScreeningRunMetricClient) DeleteOneID(id uuid.UUID) *ScreeningRunMetricDeleteOne {
+	builder := c.Delete().Where(screeningrunmetric.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ScreeningRunMetricDeleteOne{builder}
+}
+
+// Query returns a query builder for ScreeningRunMetric.
+func (c *ScreeningRunMetricClient) Query() *ScreeningRunMetricQuery {
+	return &ScreeningRunMetricQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeScreeningRunMetric},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ScreeningRunMetric entity by its id.
+func (c *ScreeningRunMetricClient) Get(ctx context.Context, id uuid.UUID) (*ScreeningRunMetric, error) {
+	return c.Query().Where(screeningrunmetric.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ScreeningRunMetricClient) GetX(ctx context.Context, id uuid.UUID) *ScreeningRunMetric {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTask queries the task edge of a ScreeningRunMetric.
+func (c *ScreeningRunMetricClient) QueryTask(srm *ScreeningRunMetric) *ScreeningTaskQuery {
+	query := (&ScreeningTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := srm.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningrunmetric.Table, screeningrunmetric.FieldID, id),
+			sqlgraph.To(screeningtask.Table, screeningtask.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningrunmetric.TaskTable, screeningrunmetric.TaskColumn),
+		)
+		fromV = sqlgraph.Neighbors(srm.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ScreeningRunMetricClient) Hooks() []Hook {
+	hooks := c.hooks.ScreeningRunMetric
+	return append(hooks[:len(hooks):len(hooks)], screeningrunmetric.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ScreeningRunMetricClient) Interceptors() []Interceptor {
+	inters := c.inters.ScreeningRunMetric
+	return append(inters[:len(inters):len(inters)], screeningrunmetric.Interceptors[:]...)
+}
+
+func (c *ScreeningRunMetricClient) mutate(ctx context.Context, m *ScreeningRunMetricMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ScreeningRunMetricCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ScreeningRunMetricUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ScreeningRunMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ScreeningRunMetricDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ScreeningRunMetric mutation op: %q", m.Op())
+	}
+}
+
+// ScreeningTaskClient is a client for the ScreeningTask schema.
+type ScreeningTaskClient struct {
+	config
+}
+
+// NewScreeningTaskClient returns a client for the ScreeningTask from the given config.
+func NewScreeningTaskClient(c config) *ScreeningTaskClient {
+	return &ScreeningTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `screeningtask.Hooks(f(g(h())))`.
+func (c *ScreeningTaskClient) Use(hooks ...Hook) {
+	c.hooks.ScreeningTask = append(c.hooks.ScreeningTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `screeningtask.Intercept(f(g(h())))`.
+func (c *ScreeningTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ScreeningTask = append(c.inters.ScreeningTask, interceptors...)
+}
+
+// Create returns a builder for creating a ScreeningTask entity.
+func (c *ScreeningTaskClient) Create() *ScreeningTaskCreate {
+	mutation := newScreeningTaskMutation(c.config, OpCreate)
+	return &ScreeningTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ScreeningTask entities.
+func (c *ScreeningTaskClient) CreateBulk(builders ...*ScreeningTaskCreate) *ScreeningTaskCreateBulk {
+	return &ScreeningTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ScreeningTaskClient) MapCreateBulk(slice any, setFunc func(*ScreeningTaskCreate, int)) *ScreeningTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ScreeningTaskCreateBulk{err: fmt.Errorf("calling to ScreeningTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ScreeningTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ScreeningTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ScreeningTask.
+func (c *ScreeningTaskClient) Update() *ScreeningTaskUpdate {
+	mutation := newScreeningTaskMutation(c.config, OpUpdate)
+	return &ScreeningTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ScreeningTaskClient) UpdateOne(st *ScreeningTask) *ScreeningTaskUpdateOne {
+	mutation := newScreeningTaskMutation(c.config, OpUpdateOne, withScreeningTask(st))
+	return &ScreeningTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ScreeningTaskClient) UpdateOneID(id uuid.UUID) *ScreeningTaskUpdateOne {
+	mutation := newScreeningTaskMutation(c.config, OpUpdateOne, withScreeningTaskID(id))
+	return &ScreeningTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ScreeningTask.
+func (c *ScreeningTaskClient) Delete() *ScreeningTaskDelete {
+	mutation := newScreeningTaskMutation(c.config, OpDelete)
+	return &ScreeningTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ScreeningTaskClient) DeleteOne(st *ScreeningTask) *ScreeningTaskDeleteOne {
+	return c.DeleteOneID(st.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ScreeningTaskClient) DeleteOneID(id uuid.UUID) *ScreeningTaskDeleteOne {
+	builder := c.Delete().Where(screeningtask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ScreeningTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for ScreeningTask.
+func (c *ScreeningTaskClient) Query() *ScreeningTaskQuery {
+	return &ScreeningTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeScreeningTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ScreeningTask entity by its id.
+func (c *ScreeningTaskClient) Get(ctx context.Context, id uuid.UUID) (*ScreeningTask, error) {
+	return c.Query().Where(screeningtask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ScreeningTaskClient) GetX(ctx context.Context, id uuid.UUID) *ScreeningTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryJobPosition queries the job_position edge of a ScreeningTask.
+func (c *ScreeningTaskClient) QueryJobPosition(st *ScreeningTask) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := st.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningtask.JobPositionTable, screeningtask.JobPositionColumn),
+		)
+		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCreator queries the creator edge of a ScreeningTask.
+func (c *ScreeningTaskClient) QueryCreator(st *ScreeningTask) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := st.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningtask.CreatorTable, screeningtask.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTaskResumes queries the task_resumes edge of a ScreeningTask.
+func (c *ScreeningTaskClient) QueryTaskResumes(st *ScreeningTask) *ScreeningTaskResumeQuery {
+	query := (&ScreeningTaskResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := st.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, id),
+			sqlgraph.To(screeningtaskresume.Table, screeningtaskresume.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, screeningtask.TaskResumesTable, screeningtask.TaskResumesColumn),
+		)
+		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryResults queries the results edge of a ScreeningTask.
+func (c *ScreeningTaskClient) QueryResults(st *ScreeningTask) *ScreeningResultQuery {
+	query := (&ScreeningResultClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := st.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, id),
+			sqlgraph.To(screeningresult.Table, screeningresult.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, screeningtask.ResultsTable, screeningtask.ResultsColumn),
+		)
+		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRunMetrics queries the run_metrics edge of a ScreeningTask.
+func (c *ScreeningTaskClient) QueryRunMetrics(st *ScreeningTask) *ScreeningRunMetricQuery {
+	query := (&ScreeningRunMetricClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := st.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, id),
+			sqlgraph.To(screeningrunmetric.Table, screeningrunmetric.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, screeningtask.RunMetricsTable, screeningtask.RunMetricsColumn),
+		)
+		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ScreeningTaskClient) Hooks() []Hook {
+	hooks := c.hooks.ScreeningTask
+	return append(hooks[:len(hooks):len(hooks)], screeningtask.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ScreeningTaskClient) Interceptors() []Interceptor {
+	inters := c.inters.ScreeningTask
+	return append(inters[:len(inters):len(inters)], screeningtask.Interceptors[:]...)
+}
+
+func (c *ScreeningTaskClient) mutate(ctx context.Context, m *ScreeningTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ScreeningTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ScreeningTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ScreeningTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ScreeningTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ScreeningTask mutation op: %q", m.Op())
+	}
+}
+
+// ScreeningTaskResumeClient is a client for the ScreeningTaskResume schema.
+type ScreeningTaskResumeClient struct {
+	config
+}
+
+// NewScreeningTaskResumeClient returns a client for the ScreeningTaskResume from the given config.
+func NewScreeningTaskResumeClient(c config) *ScreeningTaskResumeClient {
+	return &ScreeningTaskResumeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `screeningtaskresume.Hooks(f(g(h())))`.
+func (c *ScreeningTaskResumeClient) Use(hooks ...Hook) {
+	c.hooks.ScreeningTaskResume = append(c.hooks.ScreeningTaskResume, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `screeningtaskresume.Intercept(f(g(h())))`.
+func (c *ScreeningTaskResumeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ScreeningTaskResume = append(c.inters.ScreeningTaskResume, interceptors...)
+}
+
+// Create returns a builder for creating a ScreeningTaskResume entity.
+func (c *ScreeningTaskResumeClient) Create() *ScreeningTaskResumeCreate {
+	mutation := newScreeningTaskResumeMutation(c.config, OpCreate)
+	return &ScreeningTaskResumeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ScreeningTaskResume entities.
+func (c *ScreeningTaskResumeClient) CreateBulk(builders ...*ScreeningTaskResumeCreate) *ScreeningTaskResumeCreateBulk {
+	return &ScreeningTaskResumeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ScreeningTaskResumeClient) MapCreateBulk(slice any, setFunc func(*ScreeningTaskResumeCreate, int)) *ScreeningTaskResumeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ScreeningTaskResumeCreateBulk{err: fmt.Errorf("calling to ScreeningTaskResumeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ScreeningTaskResumeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ScreeningTaskResumeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ScreeningTaskResume.
+func (c *ScreeningTaskResumeClient) Update() *ScreeningTaskResumeUpdate {
+	mutation := newScreeningTaskResumeMutation(c.config, OpUpdate)
+	return &ScreeningTaskResumeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ScreeningTaskResumeClient) UpdateOne(str *ScreeningTaskResume) *ScreeningTaskResumeUpdateOne {
+	mutation := newScreeningTaskResumeMutation(c.config, OpUpdateOne, withScreeningTaskResume(str))
+	return &ScreeningTaskResumeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ScreeningTaskResumeClient) UpdateOneID(id uuid.UUID) *ScreeningTaskResumeUpdateOne {
+	mutation := newScreeningTaskResumeMutation(c.config, OpUpdateOne, withScreeningTaskResumeID(id))
+	return &ScreeningTaskResumeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ScreeningTaskResume.
+func (c *ScreeningTaskResumeClient) Delete() *ScreeningTaskResumeDelete {
+	mutation := newScreeningTaskResumeMutation(c.config, OpDelete)
+	return &ScreeningTaskResumeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ScreeningTaskResumeClient) DeleteOne(str *ScreeningTaskResume) *ScreeningTaskResumeDeleteOne {
+	return c.DeleteOneID(str.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ScreeningTaskResumeClient) DeleteOneID(id uuid.UUID) *ScreeningTaskResumeDeleteOne {
+	builder := c.Delete().Where(screeningtaskresume.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ScreeningTaskResumeDeleteOne{builder}
+}
+
+// Query returns a query builder for ScreeningTaskResume.
+func (c *ScreeningTaskResumeClient) Query() *ScreeningTaskResumeQuery {
+	return &ScreeningTaskResumeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeScreeningTaskResume},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ScreeningTaskResume entity by its id.
+func (c *ScreeningTaskResumeClient) Get(ctx context.Context, id uuid.UUID) (*ScreeningTaskResume, error) {
+	return c.Query().Where(screeningtaskresume.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ScreeningTaskResumeClient) GetX(ctx context.Context, id uuid.UUID) *ScreeningTaskResume {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTask queries the task edge of a ScreeningTaskResume.
+func (c *ScreeningTaskResumeClient) QueryTask(str *ScreeningTaskResume) *ScreeningTaskQuery {
+	query := (&ScreeningTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := str.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtaskresume.Table, screeningtaskresume.FieldID, id),
+			sqlgraph.To(screeningtask.Table, screeningtask.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningtaskresume.TaskTable, screeningtaskresume.TaskColumn),
+		)
+		fromV = sqlgraph.Neighbors(str.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryResume queries the resume edge of a ScreeningTaskResume.
+func (c *ScreeningTaskResumeClient) QueryResume(str *ScreeningTaskResume) *ResumeQuery {
+	query := (&ResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := str.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtaskresume.Table, screeningtaskresume.FieldID, id),
+			sqlgraph.To(resume.Table, resume.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningtaskresume.ResumeTable, screeningtaskresume.ResumeColumn),
+		)
+		fromV = sqlgraph.Neighbors(str.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ScreeningTaskResumeClient) Hooks() []Hook {
+	hooks := c.hooks.ScreeningTaskResume
+	return append(hooks[:len(hooks):len(hooks)], screeningtaskresume.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ScreeningTaskResumeClient) Interceptors() []Interceptor {
+	inters := c.inters.ScreeningTaskResume
+	return append(inters[:len(inters):len(inters)], screeningtaskresume.Interceptors[:]...)
+}
+
+func (c *ScreeningTaskResumeClient) mutate(ctx context.Context, m *ScreeningTaskResumeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ScreeningTaskResumeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ScreeningTaskResumeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ScreeningTaskResumeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ScreeningTaskResumeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ScreeningTaskResume mutation op: %q", m.Op())
+	}
+}
+
 // SettingClient is a client for the Setting schema.
 type SettingClient struct {
 	config
@@ -4557,6 +5373,22 @@ func (c *UserClient) QueryCreatedPositions(u *User) *JobPositionQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(jobposition.Table, jobposition.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.CreatedPositionsTable, user.CreatedPositionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCreatedScreeningTasks queries the created_screening_tasks edge of a User.
+func (c *UserClient) QueryCreatedScreeningTasks(u *User) *ScreeningTaskQuery {
+	query := (&ScreeningTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(screeningtask.Table, screeningtask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CreatedScreeningTasksTable, user.CreatedScreeningTasksColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -4898,16 +5730,18 @@ type (
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
 		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeJobApplication,
-		ResumeLog, ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
-		UserLoginHistory []ent.Hook
+		ResumeLog, ResumeProject, ResumeSkill, Role, ScreeningResult,
+		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
+		UserIdentity, UserLoginHistory []ent.Hook
 	}
 	inters struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, Conversation, Department,
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
 		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeJobApplication,
-		ResumeLog, ResumeProject, ResumeSkill, Role, Setting, User, UserIdentity,
-		UserLoginHistory []ent.Interceptor
+		ResumeLog, ResumeProject, ResumeSkill, Role, ScreeningResult,
+		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
+		UserIdentity, UserLoginHistory []ent.Interceptor
 	}
 )
 
