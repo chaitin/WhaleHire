@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Clock, FileCheck, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getTaskProgress } from '@/services/screening';
+import { GetTaskProgressResp } from '@/types/screening';
 
 interface MatchingProcessModalProps {
   open: boolean;
@@ -27,17 +29,7 @@ interface MatchingProcessModalProps {
   onComplete?: () => void;
   selectedJobCount: number;
   selectedResumeCount: number;
-}
-
-interface WeightProgress {
-  name: string;
-  emoji: string;
-  status: 'completed' | 'in_progress' | 'pending';
-}
-
-interface LogEntry {
-  time: string;
-  message: string;
+  taskId: string | null;
 }
 
 export function MatchingProcessModal({
@@ -45,135 +37,49 @@ export function MatchingProcessModal({
   onOpenChange,
   onPrevious,
   onComplete,
-  selectedJobCount,
   selectedResumeCount,
+  taskId,
 }: MatchingProcessModalProps) {
-  const [progress, setProgress] = useState(0);
-  const [processedCount, setProcessedCount] = useState(0);
-  const [currentStage, setCurrentStage] = useState('基本信息权重');
-  const [estimatedTime, setEstimatedTime] = useState('计算中...');
-  const [logs, setLogs] = useState<LogEntry[]>([
-    {
-      time: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
-      message: '系统初始化完成',
-    },
-    {
-      time: new Date(Date.now() + 1000).toLocaleTimeString('zh-CN', {
-        hour12: false,
-      }),
-      message: '等待开始匹配任务...',
-    },
-    {
-      time: new Date(Date.now() + 2000).toLocaleTimeString('zh-CN', {
-        hour12: false,
-      }),
-      message: '提示：点击"开始匹配"按钮开始处理',
-    },
-  ]);
-
-  const [weights, setWeights] = useState<WeightProgress[]>([
-    { name: '基本信息权重', emoji: '✓', status: 'completed' },
-    { name: '工作职责权重', emoji: '⏳', status: 'in_progress' },
-    { name: '工作技能权重', emoji: '⏸', status: 'pending' },
-    { name: '教育经历权重', emoji: '⏸', status: 'pending' },
-    { name: '工作经历权重', emoji: '⏸', status: 'pending' },
-    { name: '行业背景权重', emoji: '⏸', status: 'pending' },
-    { name: '其他自定义权重', emoji: '⏸', status: 'pending' },
-  ]);
-
-  const logContainerRef = useRef<HTMLDivElement>(null);
+  const [progressData, setProgressData] = useState<GetTaskProgressResp | null>(
+    null
+  );
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [previousStatus, setPreviousStatus] = useState<string | null>(null);
 
-  // 自动滚动日志到底部
+  // 获取任务进度
   useEffect(() => {
-    if (logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-    }
-  }, [logs]);
+    if (!open || !taskId) return;
 
-  // 添加日志
-  const addLog = (message: string) => {
-    const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-    setLogs((prev) => [...prev, { time, message }]);
-  };
+    // 立即获取一次
+    const fetchProgress = async () => {
+      try {
+        const data = await getTaskProgress(taskId);
+        setProgressData(data);
 
-  // 模拟匹配进度
-  useEffect(() => {
-    if (!open) return;
-
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          addLog('✓ 所有匹配任务已完成');
-          // 延迟1秒后打开结果页面
-          setTimeout(() => {
-            onOpenChange(false);
-            onComplete?.();
-          }, 1000);
-          return 100;
-        }
-
-        const newProgress = prev + 2;
-        const newProcessed = Math.floor(
-          (newProgress / 100) * selectedResumeCount
-        );
-
-        if (newProcessed > processedCount) {
-          setProcessedCount(newProcessed);
-          if (newProcessed % 10 === 0) {
-            addLog(`正在处理简历 ${newProcessed}/${selectedResumeCount}`);
+        // 检查状态变化，当状态变为 completed 时自动跳转
+        if (data.status === 'completed') {
+          // 如果之前不是 completed 状态，现在变成了 completed，延迟1秒后跳转
+          if (previousStatus !== 'completed') {
+            setTimeout(() => {
+              onComplete?.();
+            }, 1000);
           }
         }
 
-        // 更新预计剩余时间
-        const remaining = 100 - newProgress;
-        const estimatedSeconds = Math.ceil((remaining / 2) * 0.5); // 假设每2%需要0.5秒
-        setEstimatedTime(`约 ${estimatedSeconds} 秒`);
+        // 更新上一次的状态
+        setPreviousStatus(data.status);
+      } catch (error) {
+        console.error('获取任务进度失败:', error);
+      }
+    };
 
-        // 更新权重进度
-        const currentWeightIndex = Math.floor(
-          (newProgress / 100) * weights.length
-        );
-        setWeights((prev) =>
-          prev.map((w, i) => {
-            if (i < currentWeightIndex) {
-              return { ...w, status: 'completed' as const, emoji: '✓' };
-            } else if (i === currentWeightIndex) {
-              return { ...w, status: 'in_progress' as const, emoji: '⏳' };
-            }
-            return w;
-          })
-        );
+    fetchProgress();
 
-        if (currentWeightIndex < weights.length) {
-          setCurrentStage(weights[currentWeightIndex].name);
-        }
-
-        return newProgress;
-      });
-    }, 500);
+    // 每2秒轮询一次进度
+    const interval = setInterval(fetchProgress, 2000);
 
     return () => clearInterval(interval);
-  }, [
-    open,
-    processedCount,
-    selectedResumeCount,
-    weights,
-    onComplete,
-    onOpenChange,
-  ]);
-
-  // 开始匹配
-  useEffect(() => {
-    if (open && progress === 0) {
-      setTimeout(() => {
-        addLog('开始匹配任务');
-        addLog(`共需匹配 ${selectedResumeCount} 份简历`);
-        addLog(`匹配 ${selectedJobCount} 个岗位`);
-      }, 100);
-    }
-  }, [open, progress, selectedResumeCount, selectedJobCount]);
+  }, [open, taskId, onComplete, previousStatus]);
 
   const handlePrevious = () => {
     setShowConfirmDialog(true);
@@ -184,42 +90,43 @@ export function MatchingProcessModal({
     onPrevious?.();
   };
 
-  const getWeightStatusStyle = (status: WeightProgress['status']) => {
+  // 格式化预计完成时间
+  const formatEstimatedTime = (estimatedFinish?: string) => {
+    if (!estimatedFinish) return '计算中...';
+    try {
+      const date = new Date(estimatedFinish);
+      return date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    } catch {
+      return '计算中...';
+    }
+  };
+
+  // 获取状态标签 - 按照用户要求的中文显示
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'completed':
-        return {
-          bg: 'bg-green-50',
-          border: 'border-l-4 border-green-500',
-          textColor: 'text-gray-900',
-          statusColor: 'text-green-600',
-          statusLabel: '已完成',
-          iconBg: 'bg-green-500',
-        };
-      case 'in_progress':
-        return {
-          bg: 'bg-yellow-50',
-          border: 'border-l-4 border-yellow-500',
-          textColor: 'text-gray-900',
-          statusColor: 'text-yellow-600',
-          statusLabel: '进行中',
-          iconBg: 'bg-yellow-500',
-        };
       case 'pending':
-        return {
-          bg: 'bg-gray-50',
-          border: 'border-l-4 border-gray-300',
-          textColor: 'text-gray-500',
-          statusColor: 'text-gray-500',
-          statusLabel: '待处理',
-          iconBg: 'bg-gray-300',
-        };
+        return '创建完成';
+      case 'running':
+        return '匹配中';
+      case 'completed':
+        return '匹配完成';
+      case 'failed':
+        return '匹配失败';
+      default:
+        return '未知';
     }
   };
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[880px] max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="max-w-[880px] max-h-[90vh] p-0">
           {/* 头部 */}
           <DialogHeader className="border-b border-gray-200 px-6 py-5">
             <div className="flex items-center justify-between">
@@ -315,104 +222,82 @@ export function MatchingProcessModal({
                         匹配进度
                       </span>
                       <span className="text-xl font-bold text-green-600">
-                        {progress}%
+                        {(progressData?.progress_percent || 0).toFixed(1)}%
                       </span>
                     </div>
                     <div className="h-2.5 w-full rounded-full bg-gray-200">
                       <div
                         className="h-2.5 rounded-full bg-gradient-to-r from-orange-500 via-blue-500 to-green-500 transition-all duration-300"
-                        style={{ width: `${progress}%` }}
+                        style={{
+                          width: `${progressData?.progress_percent || 0}%`,
+                        }}
                       />
                     </div>
                   </div>
 
-                  {/* 当前处理状态 */}
-                  <div className="grid grid-cols-2 gap-4 rounded-xl bg-white p-6 shadow-sm">
-                    <div>
-                      <p className="mb-1 text-xs text-gray-500">当前处理状态</p>
-                      <p className="text-base font-semibold text-gray-900">
-                        正在分析简历 {processedCount}/{selectedResumeCount}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="mb-1 text-xs text-gray-500">预计剩余时间</p>
-                      <p className="text-base font-medium text-gray-900">
-                        {estimatedTime}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 权重处理进度 */}
+                  {/* 任务信息详情 */}
                   <div className="rounded-xl bg-white p-6 shadow-sm">
                     <h4 className="mb-4 text-base font-semibold text-gray-900">
-                      权重处理进度
+                      任务详情
                     </h4>
-                    <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900 border-l-4 border-blue-500">
-                      当前阶段：正在根据【{currentStage}】进行匹配...
-                    </div>
-                    <div className="space-y-3">
-                      {weights.map((weight, index) => {
-                        const style = getWeightStatusStyle(weight.status);
-                        return (
-                          <div
-                            key={index}
-                            className={cn(
-                              'flex items-center gap-3 rounded-lg p-3',
-                              style.bg,
-                              style.border
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* 预计完成时间 */}
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-lg bg-blue-50 p-2">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">
+                            预计完成时间
+                          </p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {formatEstimatedTime(
+                              progressData?.estimated_finish
                             )}
-                          >
-                            <div
-                              className={cn(
-                                'flex h-8 w-8 items-center justify-center rounded-full',
-                                style.iconBg,
-                                'bg-opacity-60'
-                              )}
-                            >
-                              <span className="text-sm">{weight.emoji}</span>
-                            </div>
-                            <div className="flex-1">
-                              <p
-                                className={cn(
-                                  'text-sm font-medium',
-                                  style.textColor
-                                )}
-                              >
-                                {weight.name}
-                              </p>
-                            </div>
-                            <div>
-                              <span
-                                className={cn(
-                                  'text-xs font-medium',
-                                  style.statusColor
-                                )}
-                              >
-                                {style.statusLabel}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                          </p>
+                        </div>
+                      </div>
 
-                  {/* 实时处理日志 */}
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h4 className="mb-4 text-base font-semibold text-gray-900">
-                      实时处理日志
-                    </h4>
-                    <div
-                      ref={logContainerRef}
-                      className="h-[200px] overflow-y-auto rounded-lg bg-gray-900 p-4 font-mono text-xs"
-                    >
-                      <div className="space-y-1">
-                        {logs.map((log, index) => (
-                          <div key={index} className="flex gap-2">
-                            <span className="text-gray-400">[{log.time}]</span>
-                            <span className="text-gray-300">{log.message}</span>
-                          </div>
-                        ))}
+                      {/* 已处理简历数量 */}
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-lg bg-green-50 p-2">
+                          <FileCheck className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">
+                            已处理简历
+                          </p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {progressData?.resume_processed || 0} /{' '}
+                            {progressData?.resume_total || selectedResumeCount}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 简历总数 */}
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-lg bg-purple-50 p-2">
+                          <FileCheck className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">简历总数</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {progressData?.resume_total || selectedResumeCount}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 任务状态 */}
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-lg bg-orange-50 p-2">
+                          <CheckCircle className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">任务状态</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {getStatusLabel(progressData?.status || 'pending')}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
