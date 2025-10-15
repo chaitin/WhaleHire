@@ -5,7 +5,14 @@ export interface NavigationItem {
   label: string;
   icon: LucideIcon;
   path: string;
+  disabled?: boolean;
   children?: NavigationItem[];
+}
+
+export interface NavigationGroup {
+  id: string;
+  label: string;
+  items: NavigationItem[];
 }
 
 export interface SidebarProps {

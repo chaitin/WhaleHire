@@ -1,99 +1,136 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
   FileText,
-  Briefcase,
-  Users,
   Calendar,
   BarChart3,
   Settings,
   UserCircle,
-  Shield,
   Rocket,
   X,
   Crown,
   UserCheck,
   Sparkles,
+  GitBranch,
+  FileCode,
+  MessageSquare,
+  HelpCircle,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { NavigationItem } from '@/types/navigation';
+import { NavigationGroup } from '@/types/navigation';
 // 导入package.json以获取版本号
 import packageJson from '../../../package.json';
 
-const navigationItems: NavigationItem[] = [
+// 菜单分组配置
+const navigationGroups: NavigationGroup[] = [
   {
-    id: 'dashboard',
-    label: '仪表盘',
-    icon: BarChart3,
-    path: '/dashboard',
+    id: 'function-menu',
+    label: '主菜单',
+    items: [
+      {
+        id: 'dashboard',
+        label: '仪表盘',
+        icon: BarChart3,
+        path: '/dashboard',
+        disabled: true,
+      },
+      {
+        id: 'job-profile',
+        label: '岗位画像',
+        icon: UserCheck,
+        path: '/job-profile',
+        disabled: false,
+      },
+      {
+        id: 'resume-management',
+        label: '简历管理',
+        icon: FileText,
+        path: '/resume-management',
+        disabled: false,
+      },
+      {
+        id: 'intelligent-matching',
+        label: '智能匹配',
+        icon: Sparkles,
+        path: '/intelligent-matching',
+        disabled: false,
+      },
+      {
+        id: 'interview-schedule',
+        label: '面试安排',
+        icon: Calendar,
+        path: '/interview-schedule',
+        disabled: true,
+      },
+      {
+        id: 'talent-pool',
+        label: '人才库',
+        icon: Users,
+        path: '/talent-pool',
+        disabled: true,
+      },
+      {
+        id: 'intelligent-orchestration',
+        label: '智能编排',
+        icon: GitBranch,
+        path: '/intelligent-orchestration',
+        disabled: true,
+      },
+    ],
   },
   {
-    id: 'job-profile',
-    label: '岗位画像',
-    icon: UserCheck,
-    path: '/job-profile',
+    id: 'system-config',
+    label: '系统配置',
+    items: [
+      {
+        id: 'platform-config',
+        label: '基础功能配置',
+        icon: Settings,
+        path: '/platform-config',
+        disabled: false,
+      },
+      {
+        id: 'basic-config',
+        label: '基本信息',
+        icon: Settings,
+        path: '/basic-config',
+        disabled: true,
+      },
+      {
+        id: 'user-management',
+        label: '用户管理',
+        icon: UserCircle,
+        path: '/user-management',
+        disabled: true,
+      },
+      {
+        id: 'operation-log',
+        label: '操作日志',
+        icon: FileCode,
+        path: '/operation-log',
+        disabled: true,
+      },
+    ],
   },
   {
-    id: 'resume-management',
-    label: '简历管理',
-    icon: FileText,
-    path: '/resume-management',
-  },
-  {
-    id: 'position-management',
-    label: '岗位管理',
-    icon: Briefcase,
-    path: '/position-management',
-  },
-  {
-    id: 'intelligent-matching',
-    label: '智能匹配',
-    icon: Sparkles,
-    path: '/intelligent-matching',
-  },
-  {
-    id: 'candidate',
-    label: '候选人',
-    icon: Users,
-    path: '/candidate',
-  },
-  {
-    id: 'interview-schedule',
-    label: '面试安排',
-    icon: Calendar,
-    path: '/interview-schedule',
-  },
-  {
-    id: 'data-analysis',
-    label: '数据分析',
-    icon: BarChart3,
-    path: '/data-analysis',
-  },
-  {
-    id: 'platform-config',
-    label: '平台配置',
-    icon: Settings,
-    path: '/platform-config',
-  },
-];
-
-const systemItems: NavigationItem[] = [
-  {
-    id: 'system-settings',
-    label: '系统设置',
-    icon: Settings,
-    path: '/system-settings',
-  },
-  {
-    id: 'user-management',
-    label: '用户管理',
-    icon: UserCircle,
-    path: '/user-management',
-  },
-  {
-    id: 'permission-management',
-    label: '权限管理',
-    icon: Shield,
-    path: '/permission-management',
+    id: 'help-center',
+    label: '帮助中心',
+    items: [
+      {
+        id: 'document-center',
+        label: '文档中心',
+        icon: HelpCircle,
+        path: '/document-center',
+        disabled: true,
+      },
+      {
+        id: 'discussion-area',
+        label: '讨论专区',
+        icon: MessageSquare,
+        path: '/discussion-area',
+        disabled: true,
+      },
+    ],
   },
 ];
 
@@ -166,75 +203,61 @@ export function Sidebar({
         }}
       >
         <div className="scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent -mr-1 flex-1 overflow-y-auto pr-1">
-          {/* 添加顶部间距，让菜单向下移动 */}
-          <div className="pt-8">
-            <nav className="sidebar-nav px-3">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isDisabled =
-                  item.id !== 'resume-management' &&
-                  item.id !== 'job-profile' &&
-                  item.id !== 'platform-config' &&
-                  item.id !== 'intelligent-matching';
+          {/* 添加顶部间距，让菜单向下移动更多距离 */}
+          <div className="pt-12">
+            {navigationGroups.map((group, groupIndex) => (
+              <div
+                key={group.id}
+                className={cn('px-3', groupIndex > 0 && 'mt-6')}
+              >
+                {/* 主菜单标题 - 不可点击，浅灰色 */}
+                <div className="mb-3 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  {group.label}
+                </div>
 
-                if (isDisabled) {
-                  return (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        'sidebar-nav-item disabled',
-                        'cursor-not-allowed opacity-50'
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </div>
-                  );
-                }
+                {/* 子菜单项 */}
+                <nav className="sidebar-nav space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
 
-                return (
-                  <Link
-                    key={item.id}
-                    to={item.path}
-                    className={cn(
-                      'sidebar-nav-item',
-                      isActive(item.path) && 'active'
-                    )}
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
+                    if (item.disabled) {
+                      return (
+                        <div
+                          key={item.id}
+                          className={cn(
+                            'sidebar-nav-item disabled',
+                            'cursor-not-allowed opacity-50'
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </div>
+                      );
+                    }
 
-            {/* System Settings */}
-            <nav className="sidebar-nav px-3 mt-3">
-              {systemItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      'sidebar-nav-item disabled',
-                      'cursor-not-allowed opacity-50'
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </div>
-                );
-              })}
-            </nav>
+                    return (
+                      <Link
+                        key={item.id}
+                        to={item.path}
+                        className={cn(
+                          'sidebar-nav-item',
+                          isActive(item.path) && 'active'
+                        )}
+                        onClick={isMobile ? onClose : undefined}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Upgrade Section - positioned to align with 10th row */}
-        <div
-          className="border-t px-4 pt-4 pb-4"
-          style={{ marginTop: 'auto', position: 'relative', top: '-120px' }}
-        >
+        {/* Upgrade Section - 固定在左下角 */}
+        <div className="border-t px-4 pt-4 pb-4">
           <div className="rounded-lg bg-gradient-to-r from-green-50 to-green-100 border border-green-200 p-4 opacity-60 cursor-not-allowed">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-green-400 to-green-500">
