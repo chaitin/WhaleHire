@@ -14,8 +14,8 @@ import (
 	v1_5 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
 	repo6 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
 	usecase6 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
-	v1_7 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
-	usecase7 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
+	v1_8 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
+	usecase8 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	v1_3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
 	repo5 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	usecase4 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
@@ -30,6 +30,10 @@ import (
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	usecase3 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	v1_7 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
+	repo7 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
+	service2 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
+	usecase7 "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
 	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
@@ -91,8 +95,15 @@ func newServer() (*Server, error) {
 	departmentUsecase := usecase6.NewDepartmentUsecase(departmentRepo, slogLogger)
 	departmentHandler := v1_5.NewDepartmentHandler(web, departmentUsecase, authMiddleware, slogLogger)
 	jobApplicationHandler := v1_6.NewJobApplicationHandler(web, jobApplicationUsecase, resumeUsecase, authMiddleware, slogLogger)
-	fileUsecase := usecase7.NewFileUsecase(slogLogger, minioClient, configConfig)
-	fileHandler := v1_7.NewFileHandler(web, fileUsecase, authMiddleware)
+	screeningRepo := repo7.NewScreeningRepo(client)
+	matchingService, err := service2.NewMatchingService(configConfig, slogLogger)
+	if err != nil {
+		return nil, err
+	}
+	screeningUsecase := usecase7.NewScreeningUsecase(screeningRepo, jobProfileUsecase, resumeUsecase, matchingService, slogLogger)
+	screeningHandler := v1_7.NewScreeningHandler(web, screeningUsecase, authMiddleware, slogLogger)
+	fileUsecase := usecase8.NewFileUsecase(slogLogger, minioClient, configConfig)
+	fileHandler := v1_8.NewFileHandler(web, fileUsecase, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
 		config:           configConfig,
@@ -105,6 +116,7 @@ func newServer() (*Server, error) {
 		jobprofileV1:     jobProfileHandler,
 		departmentV1:     departmentHandler,
 		jobapplicationV1: jobApplicationHandler,
+		screeningV1:      screeningHandler,
 		fileV1:           fileHandler,
 		version:          versionInfo,
 	}
@@ -124,6 +136,7 @@ type Server struct {
 	jobprofileV1     *v1_4.JobProfileHandler
 	departmentV1     *v1_5.DepartmentHandler
 	jobapplicationV1 *v1_6.JobApplicationHandler
-	fileV1           *v1_7.FileHandler
+	screeningV1      *v1_7.ScreeningHandler
+	fileV1           *v1_8.FileHandler
 	version          *version.VersionInfo
 }

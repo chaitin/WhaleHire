@@ -22,6 +22,10 @@ import (
 	resumerepo "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	resumeservice "github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	resumeusecase "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
+	screeningrepo "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
+	screeningservice "github.com/chaitin/WhaleHire/backend/internal/screening/service"
+	screeningusecase "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	userrepo "github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	userusecase "github.com/chaitin/WhaleHire/backend/internal/user/usecase"
@@ -36,6 +40,7 @@ func NewAPIHandlers(
 	jobApplicationV1 *jobapplicationV1.JobApplicationHandler,
 	fileV1 *fileV1.FileHandler,
 	departmentV1 *departmentV1.DepartmentHandler,
+	screeningV1 *screeningV1.ScreeningHandler,
 ) *APIHandlers {
 	return &APIHandlers{
 		UserHandler:           userV1,
@@ -45,6 +50,7 @@ func NewAPIHandlers(
 		JobApplicationHandler: jobApplicationV1,
 		FileHandler:           fileV1,
 		DepartmentHandler:     departmentV1,
+		ScreeningHandler:      screeningV1,
 	}
 }
 
@@ -75,5 +81,9 @@ var Provider = wire.NewSet(
 	departmentV1.NewDepartmentHandler,
 	fileusecase.NewFileUsecase,
 	fileV1.NewFileHandler,
+	screeningrepo.NewScreeningRepo,
+	screeningservice.NewMatchingService,
+	screeningusecase.NewScreeningUsecase,
+	screeningV1.NewScreeningHandler,
 	NewAPIHandlers,
 )

@@ -285,6 +285,54 @@ func (f RoleFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.RoleMutation", m)
 }
 
+// The ScreeningResultFunc type is an adapter to allow the use of ordinary
+// function as ScreeningResult mutator.
+type ScreeningResultFunc func(context.Context, *db.ScreeningResultMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScreeningResultFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ScreeningResultMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ScreeningResultMutation", m)
+}
+
+// The ScreeningRunMetricFunc type is an adapter to allow the use of ordinary
+// function as ScreeningRunMetric mutator.
+type ScreeningRunMetricFunc func(context.Context, *db.ScreeningRunMetricMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScreeningRunMetricFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ScreeningRunMetricMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ScreeningRunMetricMutation", m)
+}
+
+// The ScreeningTaskFunc type is an adapter to allow the use of ordinary
+// function as ScreeningTask mutator.
+type ScreeningTaskFunc func(context.Context, *db.ScreeningTaskMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScreeningTaskFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ScreeningTaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ScreeningTaskMutation", m)
+}
+
+// The ScreeningTaskResumeFunc type is an adapter to allow the use of ordinary
+// function as ScreeningTaskResume mutator.
+type ScreeningTaskResumeFunc func(context.Context, *db.ScreeningTaskResumeMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScreeningTaskResumeFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ScreeningTaskResumeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ScreeningTaskResumeMutation", m)
+}
+
 // The SettingFunc type is an adapter to allow the use of ordinary
 // function as Setting mutator.
 type SettingFunc func(context.Context, *db.SettingMutation) (db.Value, error)

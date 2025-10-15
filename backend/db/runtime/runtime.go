@@ -28,6 +28,10 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
@@ -567,6 +571,126 @@ func init() {
 	roleDescCreatedAt := roleFields[3].Descriptor()
 	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
 	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	screeningresultMixin := schema.ScreeningResult{}.Mixin()
+	screeningresultMixinHooks0 := screeningresultMixin[0].Hooks()
+	screeningresult.Hooks[0] = screeningresultMixinHooks0[0]
+	screeningresultMixinInters0 := screeningresultMixin[0].Interceptors()
+	screeningresult.Interceptors[0] = screeningresultMixinInters0[0]
+	screeningresultFields := schema.ScreeningResult{}.Fields()
+	_ = screeningresultFields
+	// screeningresultDescTraceID is the schema descriptor for trace_id field.
+	screeningresultDescTraceID := screeningresultFields[14].Descriptor()
+	// screeningresult.TraceIDValidator is a validator for the "trace_id" field. It is called by the builders before save.
+	screeningresult.TraceIDValidator = screeningresultDescTraceID.Validators[0].(func(string) error)
+	// screeningresultDescMatchedAt is the schema descriptor for matched_at field.
+	screeningresultDescMatchedAt := screeningresultFields[17].Descriptor()
+	// screeningresult.DefaultMatchedAt holds the default value on creation for the matched_at field.
+	screeningresult.DefaultMatchedAt = screeningresultDescMatchedAt.Default.(func() time.Time)
+	// screeningresultDescCreatedAt is the schema descriptor for created_at field.
+	screeningresultDescCreatedAt := screeningresultFields[18].Descriptor()
+	// screeningresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	screeningresult.DefaultCreatedAt = screeningresultDescCreatedAt.Default.(func() time.Time)
+	// screeningresultDescUpdatedAt is the schema descriptor for updated_at field.
+	screeningresultDescUpdatedAt := screeningresultFields[19].Descriptor()
+	// screeningresult.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	screeningresult.DefaultUpdatedAt = screeningresultDescUpdatedAt.Default.(func() time.Time)
+	// screeningresult.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	screeningresult.UpdateDefaultUpdatedAt = screeningresultDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// screeningresultDescID is the schema descriptor for id field.
+	screeningresultDescID := screeningresultFields[0].Descriptor()
+	// screeningresult.DefaultID holds the default value on creation for the id field.
+	screeningresult.DefaultID = screeningresultDescID.Default.(func() uuid.UUID)
+	screeningrunmetricMixin := schema.ScreeningRunMetric{}.Mixin()
+	screeningrunmetricMixinHooks0 := screeningrunmetricMixin[0].Hooks()
+	screeningrunmetric.Hooks[0] = screeningrunmetricMixinHooks0[0]
+	screeningrunmetricMixinInters0 := screeningrunmetricMixin[0].Interceptors()
+	screeningrunmetric.Interceptors[0] = screeningrunmetricMixinInters0[0]
+	screeningrunmetricFields := schema.ScreeningRunMetric{}.Fields()
+	_ = screeningrunmetricFields
+	// screeningrunmetricDescCreatedAt is the schema descriptor for created_at field.
+	screeningrunmetricDescCreatedAt := screeningrunmetricFields[7].Descriptor()
+	// screeningrunmetric.DefaultCreatedAt holds the default value on creation for the created_at field.
+	screeningrunmetric.DefaultCreatedAt = screeningrunmetricDescCreatedAt.Default.(func() time.Time)
+	// screeningrunmetricDescUpdatedAt is the schema descriptor for updated_at field.
+	screeningrunmetricDescUpdatedAt := screeningrunmetricFields[8].Descriptor()
+	// screeningrunmetric.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	screeningrunmetric.DefaultUpdatedAt = screeningrunmetricDescUpdatedAt.Default.(func() time.Time)
+	// screeningrunmetric.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	screeningrunmetric.UpdateDefaultUpdatedAt = screeningrunmetricDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// screeningrunmetricDescID is the schema descriptor for id field.
+	screeningrunmetricDescID := screeningrunmetricFields[0].Descriptor()
+	// screeningrunmetric.DefaultID holds the default value on creation for the id field.
+	screeningrunmetric.DefaultID = screeningrunmetricDescID.Default.(func() uuid.UUID)
+	screeningtaskMixin := schema.ScreeningTask{}.Mixin()
+	screeningtaskMixinHooks0 := screeningtaskMixin[0].Hooks()
+	screeningtask.Hooks[0] = screeningtaskMixinHooks0[0]
+	screeningtaskMixinInters0 := screeningtaskMixin[0].Interceptors()
+	screeningtask.Interceptors[0] = screeningtaskMixinInters0[0]
+	screeningtaskFields := schema.ScreeningTask{}.Fields()
+	_ = screeningtaskFields
+	// screeningtaskDescStatus is the schema descriptor for status field.
+	screeningtaskDescStatus := screeningtaskFields[3].Descriptor()
+	// screeningtask.DefaultStatus holds the default value on creation for the status field.
+	screeningtask.DefaultStatus = screeningtaskDescStatus.Default.(string)
+	// screeningtaskDescResumeTotal is the schema descriptor for resume_total field.
+	screeningtaskDescResumeTotal := screeningtaskFields[7].Descriptor()
+	// screeningtask.DefaultResumeTotal holds the default value on creation for the resume_total field.
+	screeningtask.DefaultResumeTotal = screeningtaskDescResumeTotal.Default.(int)
+	// screeningtaskDescResumeProcessed is the schema descriptor for resume_processed field.
+	screeningtaskDescResumeProcessed := screeningtaskFields[8].Descriptor()
+	// screeningtask.DefaultResumeProcessed holds the default value on creation for the resume_processed field.
+	screeningtask.DefaultResumeProcessed = screeningtaskDescResumeProcessed.Default.(int)
+	// screeningtaskDescResumeSucceeded is the schema descriptor for resume_succeeded field.
+	screeningtaskDescResumeSucceeded := screeningtaskFields[9].Descriptor()
+	// screeningtask.DefaultResumeSucceeded holds the default value on creation for the resume_succeeded field.
+	screeningtask.DefaultResumeSucceeded = screeningtaskDescResumeSucceeded.Default.(int)
+	// screeningtaskDescResumeFailed is the schema descriptor for resume_failed field.
+	screeningtaskDescResumeFailed := screeningtaskFields[10].Descriptor()
+	// screeningtask.DefaultResumeFailed holds the default value on creation for the resume_failed field.
+	screeningtask.DefaultResumeFailed = screeningtaskDescResumeFailed.Default.(int)
+	// screeningtaskDescAgentVersion is the schema descriptor for agent_version field.
+	screeningtaskDescAgentVersion := screeningtaskFields[11].Descriptor()
+	// screeningtask.AgentVersionValidator is a validator for the "agent_version" field. It is called by the builders before save.
+	screeningtask.AgentVersionValidator = screeningtaskDescAgentVersion.Validators[0].(func(string) error)
+	// screeningtaskDescCreatedAt is the schema descriptor for created_at field.
+	screeningtaskDescCreatedAt := screeningtaskFields[14].Descriptor()
+	// screeningtask.DefaultCreatedAt holds the default value on creation for the created_at field.
+	screeningtask.DefaultCreatedAt = screeningtaskDescCreatedAt.Default.(func() time.Time)
+	// screeningtaskDescUpdatedAt is the schema descriptor for updated_at field.
+	screeningtaskDescUpdatedAt := screeningtaskFields[15].Descriptor()
+	// screeningtask.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	screeningtask.DefaultUpdatedAt = screeningtaskDescUpdatedAt.Default.(func() time.Time)
+	// screeningtask.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	screeningtask.UpdateDefaultUpdatedAt = screeningtaskDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// screeningtaskDescID is the schema descriptor for id field.
+	screeningtaskDescID := screeningtaskFields[0].Descriptor()
+	// screeningtask.DefaultID holds the default value on creation for the id field.
+	screeningtask.DefaultID = screeningtaskDescID.Default.(func() uuid.UUID)
+	screeningtaskresumeMixin := schema.ScreeningTaskResume{}.Mixin()
+	screeningtaskresumeMixinHooks0 := screeningtaskresumeMixin[0].Hooks()
+	screeningtaskresume.Hooks[0] = screeningtaskresumeMixinHooks0[0]
+	screeningtaskresumeMixinInters0 := screeningtaskresumeMixin[0].Interceptors()
+	screeningtaskresume.Interceptors[0] = screeningtaskresumeMixinInters0[0]
+	screeningtaskresumeFields := schema.ScreeningTaskResume{}.Fields()
+	_ = screeningtaskresumeFields
+	// screeningtaskresumeDescStatus is the schema descriptor for status field.
+	screeningtaskresumeDescStatus := screeningtaskresumeFields[3].Descriptor()
+	// screeningtaskresume.DefaultStatus holds the default value on creation for the status field.
+	screeningtaskresume.DefaultStatus = screeningtaskresumeDescStatus.Default.(string)
+	// screeningtaskresumeDescCreatedAt is the schema descriptor for created_at field.
+	screeningtaskresumeDescCreatedAt := screeningtaskresumeFields[8].Descriptor()
+	// screeningtaskresume.DefaultCreatedAt holds the default value on creation for the created_at field.
+	screeningtaskresume.DefaultCreatedAt = screeningtaskresumeDescCreatedAt.Default.(func() time.Time)
+	// screeningtaskresumeDescUpdatedAt is the schema descriptor for updated_at field.
+	screeningtaskresumeDescUpdatedAt := screeningtaskresumeFields[9].Descriptor()
+	// screeningtaskresume.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	screeningtaskresume.DefaultUpdatedAt = screeningtaskresumeDescUpdatedAt.Default.(func() time.Time)
+	// screeningtaskresume.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	screeningtaskresume.UpdateDefaultUpdatedAt = screeningtaskresumeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// screeningtaskresumeDescID is the schema descriptor for id field.
+	screeningtaskresumeDescID := screeningtaskresumeFields[0].Descriptor()
+	// screeningtaskresume.DefaultID holds the default value on creation for the id field.
+	screeningtaskresume.DefaultID = screeningtaskresumeDescID.Default.(func() uuid.UUID)
 	settingFields := schema.Setting{}.Fields()
 	_ = settingFields
 	// settingDescEnableSSO is the schema descriptor for enable_sso field.

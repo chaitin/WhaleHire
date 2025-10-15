@@ -44,9 +44,8 @@ var (
 	// ========== 部门管理模块 (60000-69999) ==========
 	ErrDepartmentRequired = web.NewBadRequestBusinessErr(60000, "err-department-required")
 
-	// ========== 文件管理模块 (70000-79999) ==========
-	// 预留文件管理相关错误码
-
-	// ========== AI智能体模块 (80000-89999) ==========
-	// 预留AI智能体相关错误码
+	// ========== 筛选任务模块 (70000-79999) ==========
+	ErrScreeningTaskNotFound     = web.NewBadRequestBusinessErr(70000, "err-screening-task-not-found")
+	ErrScreeningTaskRunning      = web.NewBadRequestBusinessErr(70001, "err-screening-task-running")
+	ErrScreeningTaskDeleteFailed = web.NewBadRequestBusinessErr(70002, "err-screening-task-delete-failed")
 )

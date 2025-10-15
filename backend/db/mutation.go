@@ -36,6 +36,10 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
@@ -76,6 +80,10 @@ const (
 	TypeResumeProject            = "ResumeProject"
 	TypeResumeSkill              = "ResumeSkill"
 	TypeRole                     = "Role"
+	TypeScreeningResult          = "ScreeningResult"
+	TypeScreeningRunMetric       = "ScreeningRunMetric"
+	TypeScreeningTask            = "ScreeningTask"
+	TypeScreeningTaskResume      = "ScreeningTaskResume"
 	TypeSetting                  = "Setting"
 	TypeUser                     = "User"
 	TypeUserIdentity             = "UserIdentity"
@@ -7090,6 +7098,12 @@ type JobPositionMutation struct {
 	resume_applications            map[uuid.UUID]struct{}
 	removedresume_applications     map[uuid.UUID]struct{}
 	clearedresume_applications     bool
+	screening_tasks                map[uuid.UUID]struct{}
+	removedscreening_tasks         map[uuid.UUID]struct{}
+	clearedscreening_tasks         bool
+	screening_results              map[uuid.UUID]struct{}
+	removedscreening_results       map[uuid.UUID]struct{}
+	clearedscreening_results       bool
 	done                           bool
 	oldValue                       func(context.Context) (*JobPosition, error)
 	predicates                     []predicate.JobPosition
@@ -8155,6 +8169,114 @@ func (m *JobPositionMutation) ResetResumeApplications() {
 	m.removedresume_applications = nil
 }
 
+// AddScreeningTaskIDs adds the "screening_tasks" edge to the ScreeningTask entity by ids.
+func (m *JobPositionMutation) AddScreeningTaskIDs(ids ...uuid.UUID) {
+	if m.screening_tasks == nil {
+		m.screening_tasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.screening_tasks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearScreeningTasks clears the "screening_tasks" edge to the ScreeningTask entity.
+func (m *JobPositionMutation) ClearScreeningTasks() {
+	m.clearedscreening_tasks = true
+}
+
+// ScreeningTasksCleared reports if the "screening_tasks" edge to the ScreeningTask entity was cleared.
+func (m *JobPositionMutation) ScreeningTasksCleared() bool {
+	return m.clearedscreening_tasks
+}
+
+// RemoveScreeningTaskIDs removes the "screening_tasks" edge to the ScreeningTask entity by IDs.
+func (m *JobPositionMutation) RemoveScreeningTaskIDs(ids ...uuid.UUID) {
+	if m.removedscreening_tasks == nil {
+		m.removedscreening_tasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.screening_tasks, ids[i])
+		m.removedscreening_tasks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedScreeningTasks returns the removed IDs of the "screening_tasks" edge to the ScreeningTask entity.
+func (m *JobPositionMutation) RemovedScreeningTasksIDs() (ids []uuid.UUID) {
+	for id := range m.removedscreening_tasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ScreeningTasksIDs returns the "screening_tasks" edge IDs in the mutation.
+func (m *JobPositionMutation) ScreeningTasksIDs() (ids []uuid.UUID) {
+	for id := range m.screening_tasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetScreeningTasks resets all changes to the "screening_tasks" edge.
+func (m *JobPositionMutation) ResetScreeningTasks() {
+	m.screening_tasks = nil
+	m.clearedscreening_tasks = false
+	m.removedscreening_tasks = nil
+}
+
+// AddScreeningResultIDs adds the "screening_results" edge to the ScreeningResult entity by ids.
+func (m *JobPositionMutation) AddScreeningResultIDs(ids ...uuid.UUID) {
+	if m.screening_results == nil {
+		m.screening_results = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.screening_results[ids[i]] = struct{}{}
+	}
+}
+
+// ClearScreeningResults clears the "screening_results" edge to the ScreeningResult entity.
+func (m *JobPositionMutation) ClearScreeningResults() {
+	m.clearedscreening_results = true
+}
+
+// ScreeningResultsCleared reports if the "screening_results" edge to the ScreeningResult entity was cleared.
+func (m *JobPositionMutation) ScreeningResultsCleared() bool {
+	return m.clearedscreening_results
+}
+
+// RemoveScreeningResultIDs removes the "screening_results" edge to the ScreeningResult entity by IDs.
+func (m *JobPositionMutation) RemoveScreeningResultIDs(ids ...uuid.UUID) {
+	if m.removedscreening_results == nil {
+		m.removedscreening_results = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.screening_results, ids[i])
+		m.removedscreening_results[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedScreeningResults returns the removed IDs of the "screening_results" edge to the ScreeningResult entity.
+func (m *JobPositionMutation) RemovedScreeningResultsIDs() (ids []uuid.UUID) {
+	for id := range m.removedscreening_results {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ScreeningResultsIDs returns the "screening_results" edge IDs in the mutation.
+func (m *JobPositionMutation) ScreeningResultsIDs() (ids []uuid.UUID) {
+	for id := range m.screening_results {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetScreeningResults resets all changes to the "screening_results" edge.
+func (m *JobPositionMutation) ResetScreeningResults() {
+	m.screening_results = nil
+	m.clearedscreening_results = false
+	m.removedscreening_results = nil
+}
+
 // Where appends a list predicates to the JobPositionMutation builder.
 func (m *JobPositionMutation) Where(ps ...predicate.JobPosition) {
 	m.predicates = append(m.predicates, ps...)
@@ -8547,7 +8669,7 @@ func (m *JobPositionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *JobPositionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 10)
 	if m.department != nil {
 		edges = append(edges, jobposition.EdgeDepartment)
 	}
@@ -8571,6 +8693,12 @@ func (m *JobPositionMutation) AddedEdges() []string {
 	}
 	if m.resume_applications != nil {
 		edges = append(edges, jobposition.EdgeResumeApplications)
+	}
+	if m.screening_tasks != nil {
+		edges = append(edges, jobposition.EdgeScreeningTasks)
+	}
+	if m.screening_results != nil {
+		edges = append(edges, jobposition.EdgeScreeningResults)
 	}
 	return edges
 }
@@ -8623,13 +8751,25 @@ func (m *JobPositionMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case jobposition.EdgeScreeningTasks:
+		ids := make([]ent.Value, 0, len(m.screening_tasks))
+		for id := range m.screening_tasks {
+			ids = append(ids, id)
+		}
+		return ids
+	case jobposition.EdgeScreeningResults:
+		ids := make([]ent.Value, 0, len(m.screening_results))
+		for id := range m.screening_results {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *JobPositionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 10)
 	if m.removedresponsibilities != nil {
 		edges = append(edges, jobposition.EdgeResponsibilities)
 	}
@@ -8647,6 +8787,12 @@ func (m *JobPositionMutation) RemovedEdges() []string {
 	}
 	if m.removedresume_applications != nil {
 		edges = append(edges, jobposition.EdgeResumeApplications)
+	}
+	if m.removedscreening_tasks != nil {
+		edges = append(edges, jobposition.EdgeScreeningTasks)
+	}
+	if m.removedscreening_results != nil {
+		edges = append(edges, jobposition.EdgeScreeningResults)
 	}
 	return edges
 }
@@ -8691,13 +8837,25 @@ func (m *JobPositionMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case jobposition.EdgeScreeningTasks:
+		ids := make([]ent.Value, 0, len(m.removedscreening_tasks))
+		for id := range m.removedscreening_tasks {
+			ids = append(ids, id)
+		}
+		return ids
+	case jobposition.EdgeScreeningResults:
+		ids := make([]ent.Value, 0, len(m.removedscreening_results))
+		for id := range m.removedscreening_results {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *JobPositionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 10)
 	if m.cleareddepartment {
 		edges = append(edges, jobposition.EdgeDepartment)
 	}
@@ -8722,6 +8880,12 @@ func (m *JobPositionMutation) ClearedEdges() []string {
 	if m.clearedresume_applications {
 		edges = append(edges, jobposition.EdgeResumeApplications)
 	}
+	if m.clearedscreening_tasks {
+		edges = append(edges, jobposition.EdgeScreeningTasks)
+	}
+	if m.clearedscreening_results {
+		edges = append(edges, jobposition.EdgeScreeningResults)
+	}
 	return edges
 }
 
@@ -8745,6 +8909,10 @@ func (m *JobPositionMutation) EdgeCleared(name string) bool {
 		return m.clearedindustry_requirements
 	case jobposition.EdgeResumeApplications:
 		return m.clearedresume_applications
+	case jobposition.EdgeScreeningTasks:
+		return m.clearedscreening_tasks
+	case jobposition.EdgeScreeningResults:
+		return m.clearedscreening_results
 	}
 	return false
 }
@@ -8790,6 +8958,12 @@ func (m *JobPositionMutation) ResetEdge(name string) error {
 		return nil
 	case jobposition.EdgeResumeApplications:
 		m.ResetResumeApplications()
+		return nil
+	case jobposition.EdgeScreeningTasks:
+		m.ResetScreeningTasks()
+		return nil
+	case jobposition.EdgeScreeningResults:
+		m.ResetScreeningResults()
 		return nil
 	}
 	return fmt.Errorf("unknown JobPosition edge %s", name)
@@ -11827,52 +12001,58 @@ func (m *MessageMutation) ResetEdge(name string) error {
 // ResumeMutation represents an operation that mutates the Resume nodes in the graph.
 type ResumeMutation struct {
 	config
-	op                      Op
-	typ                     string
-	id                      *uuid.UUID
-	deleted_at              *time.Time
-	name                    *string
-	gender                  *string
-	birthday                *time.Time
-	email                   *string
-	phone                   *string
-	current_city            *string
-	highest_education       *string
-	years_experience        *float64
-	addyears_experience     *float64
-	resume_file_url         *string
-	status                  *string
-	error_message           *string
-	parsed_at               *time.Time
-	created_at              *time.Time
-	updated_at              *time.Time
-	clearedFields           map[string]struct{}
-	user                    *uuid.UUID
-	cleareduser             bool
-	educations              map[uuid.UUID]struct{}
-	removededucations       map[uuid.UUID]struct{}
-	clearededucations       bool
-	experiences             map[uuid.UUID]struct{}
-	removedexperiences      map[uuid.UUID]struct{}
-	clearedexperiences      bool
-	projects                map[uuid.UUID]struct{}
-	removedprojects         map[uuid.UUID]struct{}
-	clearedprojects         bool
-	skills                  map[uuid.UUID]struct{}
-	removedskills           map[uuid.UUID]struct{}
-	clearedskills           bool
-	logs                    map[uuid.UUID]struct{}
-	removedlogs             map[uuid.UUID]struct{}
-	clearedlogs             bool
-	document_parse          map[uuid.UUID]struct{}
-	removeddocument_parse   map[uuid.UUID]struct{}
-	cleareddocument_parse   bool
-	job_applications        map[uuid.UUID]struct{}
-	removedjob_applications map[uuid.UUID]struct{}
-	clearedjob_applications bool
-	done                    bool
-	oldValue                func(context.Context) (*Resume, error)
-	predicates              []predicate.Resume
+	op                            Op
+	typ                           string
+	id                            *uuid.UUID
+	deleted_at                    *time.Time
+	name                          *string
+	gender                        *string
+	birthday                      *time.Time
+	email                         *string
+	phone                         *string
+	current_city                  *string
+	highest_education             *string
+	years_experience              *float64
+	addyears_experience           *float64
+	resume_file_url               *string
+	status                        *string
+	error_message                 *string
+	parsed_at                     *time.Time
+	created_at                    *time.Time
+	updated_at                    *time.Time
+	clearedFields                 map[string]struct{}
+	user                          *uuid.UUID
+	cleareduser                   bool
+	educations                    map[uuid.UUID]struct{}
+	removededucations             map[uuid.UUID]struct{}
+	clearededucations             bool
+	experiences                   map[uuid.UUID]struct{}
+	removedexperiences            map[uuid.UUID]struct{}
+	clearedexperiences            bool
+	projects                      map[uuid.UUID]struct{}
+	removedprojects               map[uuid.UUID]struct{}
+	clearedprojects               bool
+	skills                        map[uuid.UUID]struct{}
+	removedskills                 map[uuid.UUID]struct{}
+	clearedskills                 bool
+	logs                          map[uuid.UUID]struct{}
+	removedlogs                   map[uuid.UUID]struct{}
+	clearedlogs                   bool
+	document_parse                map[uuid.UUID]struct{}
+	removeddocument_parse         map[uuid.UUID]struct{}
+	cleareddocument_parse         bool
+	job_applications              map[uuid.UUID]struct{}
+	removedjob_applications       map[uuid.UUID]struct{}
+	clearedjob_applications       bool
+	screening_task_resumes        map[uuid.UUID]struct{}
+	removedscreening_task_resumes map[uuid.UUID]struct{}
+	clearedscreening_task_resumes bool
+	screening_results             map[uuid.UUID]struct{}
+	removedscreening_results      map[uuid.UUID]struct{}
+	clearedscreening_results      bool
+	done                          bool
+	oldValue                      func(context.Context) (*Resume, error)
+	predicates                    []predicate.Resume
 }
 
 var _ ent.Mutation = (*ResumeMutation)(nil)
@@ -13150,6 +13330,114 @@ func (m *ResumeMutation) ResetJobApplications() {
 	m.removedjob_applications = nil
 }
 
+// AddScreeningTaskResumeIDs adds the "screening_task_resumes" edge to the ScreeningTaskResume entity by ids.
+func (m *ResumeMutation) AddScreeningTaskResumeIDs(ids ...uuid.UUID) {
+	if m.screening_task_resumes == nil {
+		m.screening_task_resumes = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.screening_task_resumes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearScreeningTaskResumes clears the "screening_task_resumes" edge to the ScreeningTaskResume entity.
+func (m *ResumeMutation) ClearScreeningTaskResumes() {
+	m.clearedscreening_task_resumes = true
+}
+
+// ScreeningTaskResumesCleared reports if the "screening_task_resumes" edge to the ScreeningTaskResume entity was cleared.
+func (m *ResumeMutation) ScreeningTaskResumesCleared() bool {
+	return m.clearedscreening_task_resumes
+}
+
+// RemoveScreeningTaskResumeIDs removes the "screening_task_resumes" edge to the ScreeningTaskResume entity by IDs.
+func (m *ResumeMutation) RemoveScreeningTaskResumeIDs(ids ...uuid.UUID) {
+	if m.removedscreening_task_resumes == nil {
+		m.removedscreening_task_resumes = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.screening_task_resumes, ids[i])
+		m.removedscreening_task_resumes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedScreeningTaskResumes returns the removed IDs of the "screening_task_resumes" edge to the ScreeningTaskResume entity.
+func (m *ResumeMutation) RemovedScreeningTaskResumesIDs() (ids []uuid.UUID) {
+	for id := range m.removedscreening_task_resumes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ScreeningTaskResumesIDs returns the "screening_task_resumes" edge IDs in the mutation.
+func (m *ResumeMutation) ScreeningTaskResumesIDs() (ids []uuid.UUID) {
+	for id := range m.screening_task_resumes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetScreeningTaskResumes resets all changes to the "screening_task_resumes" edge.
+func (m *ResumeMutation) ResetScreeningTaskResumes() {
+	m.screening_task_resumes = nil
+	m.clearedscreening_task_resumes = false
+	m.removedscreening_task_resumes = nil
+}
+
+// AddScreeningResultIDs adds the "screening_results" edge to the ScreeningResult entity by ids.
+func (m *ResumeMutation) AddScreeningResultIDs(ids ...uuid.UUID) {
+	if m.screening_results == nil {
+		m.screening_results = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.screening_results[ids[i]] = struct{}{}
+	}
+}
+
+// ClearScreeningResults clears the "screening_results" edge to the ScreeningResult entity.
+func (m *ResumeMutation) ClearScreeningResults() {
+	m.clearedscreening_results = true
+}
+
+// ScreeningResultsCleared reports if the "screening_results" edge to the ScreeningResult entity was cleared.
+func (m *ResumeMutation) ScreeningResultsCleared() bool {
+	return m.clearedscreening_results
+}
+
+// RemoveScreeningResultIDs removes the "screening_results" edge to the ScreeningResult entity by IDs.
+func (m *ResumeMutation) RemoveScreeningResultIDs(ids ...uuid.UUID) {
+	if m.removedscreening_results == nil {
+		m.removedscreening_results = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.screening_results, ids[i])
+		m.removedscreening_results[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedScreeningResults returns the removed IDs of the "screening_results" edge to the ScreeningResult entity.
+func (m *ResumeMutation) RemovedScreeningResultsIDs() (ids []uuid.UUID) {
+	for id := range m.removedscreening_results {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ScreeningResultsIDs returns the "screening_results" edge IDs in the mutation.
+func (m *ResumeMutation) ScreeningResultsIDs() (ids []uuid.UUID) {
+	for id := range m.screening_results {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetScreeningResults resets all changes to the "screening_results" edge.
+func (m *ResumeMutation) ResetScreeningResults() {
+	m.screening_results = nil
+	m.clearedscreening_results = false
+	m.removedscreening_results = nil
+}
+
 // Where appends a list predicates to the ResumeMutation builder.
 func (m *ResumeMutation) Where(ps ...predicate.Resume) {
 	m.predicates = append(m.predicates, ps...)
@@ -13628,7 +13916,7 @@ func (m *ResumeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ResumeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 10)
 	if m.user != nil {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -13652,6 +13940,12 @@ func (m *ResumeMutation) AddedEdges() []string {
 	}
 	if m.job_applications != nil {
 		edges = append(edges, resume.EdgeJobApplications)
+	}
+	if m.screening_task_resumes != nil {
+		edges = append(edges, resume.EdgeScreeningTaskResumes)
+	}
+	if m.screening_results != nil {
+		edges = append(edges, resume.EdgeScreeningResults)
 	}
 	return edges
 }
@@ -13706,13 +14000,25 @@ func (m *ResumeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeScreeningTaskResumes:
+		ids := make([]ent.Value, 0, len(m.screening_task_resumes))
+		for id := range m.screening_task_resumes {
+			ids = append(ids, id)
+		}
+		return ids
+	case resume.EdgeScreeningResults:
+		ids := make([]ent.Value, 0, len(m.screening_results))
+		for id := range m.screening_results {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ResumeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 10)
 	if m.removededucations != nil {
 		edges = append(edges, resume.EdgeEducations)
 	}
@@ -13733,6 +14039,12 @@ func (m *ResumeMutation) RemovedEdges() []string {
 	}
 	if m.removedjob_applications != nil {
 		edges = append(edges, resume.EdgeJobApplications)
+	}
+	if m.removedscreening_task_resumes != nil {
+		edges = append(edges, resume.EdgeScreeningTaskResumes)
+	}
+	if m.removedscreening_results != nil {
+		edges = append(edges, resume.EdgeScreeningResults)
 	}
 	return edges
 }
@@ -13783,13 +14095,25 @@ func (m *ResumeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case resume.EdgeScreeningTaskResumes:
+		ids := make([]ent.Value, 0, len(m.removedscreening_task_resumes))
+		for id := range m.removedscreening_task_resumes {
+			ids = append(ids, id)
+		}
+		return ids
+	case resume.EdgeScreeningResults:
+		ids := make([]ent.Value, 0, len(m.removedscreening_results))
+		for id := range m.removedscreening_results {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ResumeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 10)
 	if m.cleareduser {
 		edges = append(edges, resume.EdgeUser)
 	}
@@ -13814,6 +14138,12 @@ func (m *ResumeMutation) ClearedEdges() []string {
 	if m.clearedjob_applications {
 		edges = append(edges, resume.EdgeJobApplications)
 	}
+	if m.clearedscreening_task_resumes {
+		edges = append(edges, resume.EdgeScreeningTaskResumes)
+	}
+	if m.clearedscreening_results {
+		edges = append(edges, resume.EdgeScreeningResults)
+	}
 	return edges
 }
 
@@ -13837,6 +14167,10 @@ func (m *ResumeMutation) EdgeCleared(name string) bool {
 		return m.cleareddocument_parse
 	case resume.EdgeJobApplications:
 		return m.clearedjob_applications
+	case resume.EdgeScreeningTaskResumes:
+		return m.clearedscreening_task_resumes
+	case resume.EdgeScreeningResults:
+		return m.clearedscreening_results
 	}
 	return false
 }
@@ -13879,6 +14213,12 @@ func (m *ResumeMutation) ResetEdge(name string) error {
 		return nil
 	case resume.EdgeJobApplications:
 		m.ResetJobApplications()
+		return nil
+	case resume.EdgeScreeningTaskResumes:
+		m.ResetScreeningTaskResumes()
+		return nil
+	case resume.EdgeScreeningResults:
+		m.ResetScreeningResults()
 		return nil
 	}
 	return fmt.Errorf("unknown Resume edge %s", name)
@@ -21434,6 +21774,5751 @@ func (m *RoleMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Role edge %s", name)
 }
 
+// ScreeningResultMutation represents an operation that mutates the ScreeningResult nodes in the graph.
+type ScreeningResultMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	deleted_at            *time.Time
+	overall_score         *float64
+	addoverall_score      *float64
+	match_level           *screeningresult.MatchLevel
+	dimension_scores      *map[string]interface{}
+	skill_detail          *map[string]interface{}
+	responsibility_detail *map[string]interface{}
+	experience_detail     *map[string]interface{}
+	education_detail      *map[string]interface{}
+	industry_detail       *map[string]interface{}
+	basic_detail          *map[string]interface{}
+	recommendations       *[]string
+	appendrecommendations []string
+	trace_id              *string
+	runtime_metadata      *map[string]interface{}
+	sub_agent_versions    *map[string]interface{}
+	matched_at            *time.Time
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	task                  *uuid.UUID
+	clearedtask           bool
+	job_position          *uuid.UUID
+	clearedjob_position   bool
+	resume                *uuid.UUID
+	clearedresume         bool
+	done                  bool
+	oldValue              func(context.Context) (*ScreeningResult, error)
+	predicates            []predicate.ScreeningResult
+}
+
+var _ ent.Mutation = (*ScreeningResultMutation)(nil)
+
+// screeningresultOption allows management of the mutation configuration using functional options.
+type screeningresultOption func(*ScreeningResultMutation)
+
+// newScreeningResultMutation creates new mutation for the ScreeningResult entity.
+func newScreeningResultMutation(c config, op Op, opts ...screeningresultOption) *ScreeningResultMutation {
+	m := &ScreeningResultMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeScreeningResult,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withScreeningResultID sets the ID field of the mutation.
+func withScreeningResultID(id uuid.UUID) screeningresultOption {
+	return func(m *ScreeningResultMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ScreeningResult
+		)
+		m.oldValue = func(ctx context.Context) (*ScreeningResult, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ScreeningResult.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withScreeningResult sets the old ScreeningResult of the mutation.
+func withScreeningResult(node *ScreeningResult) screeningresultOption {
+	return func(m *ScreeningResultMutation) {
+		m.oldValue = func(context.Context) (*ScreeningResult, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ScreeningResultMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ScreeningResultMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ScreeningResult entities.
+func (m *ScreeningResultMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ScreeningResultMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ScreeningResultMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ScreeningResult.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ScreeningResultMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ScreeningResultMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ScreeningResultMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[screeningresult.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ScreeningResultMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ScreeningResultMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, screeningresult.FieldDeletedAt)
+}
+
+// SetTaskID sets the "task_id" field.
+func (m *ScreeningResultMutation) SetTaskID(u uuid.UUID) {
+	m.task = &u
+}
+
+// TaskID returns the value of the "task_id" field in the mutation.
+func (m *ScreeningResultMutation) TaskID() (r uuid.UUID, exists bool) {
+	v := m.task
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTaskID returns the old "task_id" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldTaskID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTaskID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTaskID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTaskID: %w", err)
+	}
+	return oldValue.TaskID, nil
+}
+
+// ResetTaskID resets all changes to the "task_id" field.
+func (m *ScreeningResultMutation) ResetTaskID() {
+	m.task = nil
+}
+
+// SetJobPositionID sets the "job_position_id" field.
+func (m *ScreeningResultMutation) SetJobPositionID(u uuid.UUID) {
+	m.job_position = &u
+}
+
+// JobPositionID returns the value of the "job_position_id" field in the mutation.
+func (m *ScreeningResultMutation) JobPositionID() (r uuid.UUID, exists bool) {
+	v := m.job_position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJobPositionID returns the old "job_position_id" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldJobPositionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJobPositionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJobPositionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJobPositionID: %w", err)
+	}
+	return oldValue.JobPositionID, nil
+}
+
+// ResetJobPositionID resets all changes to the "job_position_id" field.
+func (m *ScreeningResultMutation) ResetJobPositionID() {
+	m.job_position = nil
+}
+
+// SetResumeID sets the "resume_id" field.
+func (m *ScreeningResultMutation) SetResumeID(u uuid.UUID) {
+	m.resume = &u
+}
+
+// ResumeID returns the value of the "resume_id" field in the mutation.
+func (m *ScreeningResultMutation) ResumeID() (r uuid.UUID, exists bool) {
+	v := m.resume
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeID returns the old "resume_id" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldResumeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeID: %w", err)
+	}
+	return oldValue.ResumeID, nil
+}
+
+// ResetResumeID resets all changes to the "resume_id" field.
+func (m *ScreeningResultMutation) ResetResumeID() {
+	m.resume = nil
+}
+
+// SetOverallScore sets the "overall_score" field.
+func (m *ScreeningResultMutation) SetOverallScore(f float64) {
+	m.overall_score = &f
+	m.addoverall_score = nil
+}
+
+// OverallScore returns the value of the "overall_score" field in the mutation.
+func (m *ScreeningResultMutation) OverallScore() (r float64, exists bool) {
+	v := m.overall_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOverallScore returns the old "overall_score" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldOverallScore(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOverallScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOverallScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOverallScore: %w", err)
+	}
+	return oldValue.OverallScore, nil
+}
+
+// AddOverallScore adds f to the "overall_score" field.
+func (m *ScreeningResultMutation) AddOverallScore(f float64) {
+	if m.addoverall_score != nil {
+		*m.addoverall_score += f
+	} else {
+		m.addoverall_score = &f
+	}
+}
+
+// AddedOverallScore returns the value that was added to the "overall_score" field in this mutation.
+func (m *ScreeningResultMutation) AddedOverallScore() (r float64, exists bool) {
+	v := m.addoverall_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOverallScore resets all changes to the "overall_score" field.
+func (m *ScreeningResultMutation) ResetOverallScore() {
+	m.overall_score = nil
+	m.addoverall_score = nil
+}
+
+// SetMatchLevel sets the "match_level" field.
+func (m *ScreeningResultMutation) SetMatchLevel(sl screeningresult.MatchLevel) {
+	m.match_level = &sl
+}
+
+// MatchLevel returns the value of the "match_level" field in the mutation.
+func (m *ScreeningResultMutation) MatchLevel() (r screeningresult.MatchLevel, exists bool) {
+	v := m.match_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMatchLevel returns the old "match_level" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldMatchLevel(ctx context.Context) (v screeningresult.MatchLevel, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMatchLevel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMatchLevel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMatchLevel: %w", err)
+	}
+	return oldValue.MatchLevel, nil
+}
+
+// ClearMatchLevel clears the value of the "match_level" field.
+func (m *ScreeningResultMutation) ClearMatchLevel() {
+	m.match_level = nil
+	m.clearedFields[screeningresult.FieldMatchLevel] = struct{}{}
+}
+
+// MatchLevelCleared returns if the "match_level" field was cleared in this mutation.
+func (m *ScreeningResultMutation) MatchLevelCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldMatchLevel]
+	return ok
+}
+
+// ResetMatchLevel resets all changes to the "match_level" field.
+func (m *ScreeningResultMutation) ResetMatchLevel() {
+	m.match_level = nil
+	delete(m.clearedFields, screeningresult.FieldMatchLevel)
+}
+
+// SetDimensionScores sets the "dimension_scores" field.
+func (m *ScreeningResultMutation) SetDimensionScores(value map[string]interface{}) {
+	m.dimension_scores = &value
+}
+
+// DimensionScores returns the value of the "dimension_scores" field in the mutation.
+func (m *ScreeningResultMutation) DimensionScores() (r map[string]interface{}, exists bool) {
+	v := m.dimension_scores
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDimensionScores returns the old "dimension_scores" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldDimensionScores(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDimensionScores is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDimensionScores requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDimensionScores: %w", err)
+	}
+	return oldValue.DimensionScores, nil
+}
+
+// ClearDimensionScores clears the value of the "dimension_scores" field.
+func (m *ScreeningResultMutation) ClearDimensionScores() {
+	m.dimension_scores = nil
+	m.clearedFields[screeningresult.FieldDimensionScores] = struct{}{}
+}
+
+// DimensionScoresCleared returns if the "dimension_scores" field was cleared in this mutation.
+func (m *ScreeningResultMutation) DimensionScoresCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldDimensionScores]
+	return ok
+}
+
+// ResetDimensionScores resets all changes to the "dimension_scores" field.
+func (m *ScreeningResultMutation) ResetDimensionScores() {
+	m.dimension_scores = nil
+	delete(m.clearedFields, screeningresult.FieldDimensionScores)
+}
+
+// SetSkillDetail sets the "skill_detail" field.
+func (m *ScreeningResultMutation) SetSkillDetail(value map[string]interface{}) {
+	m.skill_detail = &value
+}
+
+// SkillDetail returns the value of the "skill_detail" field in the mutation.
+func (m *ScreeningResultMutation) SkillDetail() (r map[string]interface{}, exists bool) {
+	v := m.skill_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSkillDetail returns the old "skill_detail" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldSkillDetail(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSkillDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSkillDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSkillDetail: %w", err)
+	}
+	return oldValue.SkillDetail, nil
+}
+
+// ClearSkillDetail clears the value of the "skill_detail" field.
+func (m *ScreeningResultMutation) ClearSkillDetail() {
+	m.skill_detail = nil
+	m.clearedFields[screeningresult.FieldSkillDetail] = struct{}{}
+}
+
+// SkillDetailCleared returns if the "skill_detail" field was cleared in this mutation.
+func (m *ScreeningResultMutation) SkillDetailCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldSkillDetail]
+	return ok
+}
+
+// ResetSkillDetail resets all changes to the "skill_detail" field.
+func (m *ScreeningResultMutation) ResetSkillDetail() {
+	m.skill_detail = nil
+	delete(m.clearedFields, screeningresult.FieldSkillDetail)
+}
+
+// SetResponsibilityDetail sets the "responsibility_detail" field.
+func (m *ScreeningResultMutation) SetResponsibilityDetail(value map[string]interface{}) {
+	m.responsibility_detail = &value
+}
+
+// ResponsibilityDetail returns the value of the "responsibility_detail" field in the mutation.
+func (m *ScreeningResultMutation) ResponsibilityDetail() (r map[string]interface{}, exists bool) {
+	v := m.responsibility_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResponsibilityDetail returns the old "responsibility_detail" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldResponsibilityDetail(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResponsibilityDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResponsibilityDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResponsibilityDetail: %w", err)
+	}
+	return oldValue.ResponsibilityDetail, nil
+}
+
+// ClearResponsibilityDetail clears the value of the "responsibility_detail" field.
+func (m *ScreeningResultMutation) ClearResponsibilityDetail() {
+	m.responsibility_detail = nil
+	m.clearedFields[screeningresult.FieldResponsibilityDetail] = struct{}{}
+}
+
+// ResponsibilityDetailCleared returns if the "responsibility_detail" field was cleared in this mutation.
+func (m *ScreeningResultMutation) ResponsibilityDetailCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldResponsibilityDetail]
+	return ok
+}
+
+// ResetResponsibilityDetail resets all changes to the "responsibility_detail" field.
+func (m *ScreeningResultMutation) ResetResponsibilityDetail() {
+	m.responsibility_detail = nil
+	delete(m.clearedFields, screeningresult.FieldResponsibilityDetail)
+}
+
+// SetExperienceDetail sets the "experience_detail" field.
+func (m *ScreeningResultMutation) SetExperienceDetail(value map[string]interface{}) {
+	m.experience_detail = &value
+}
+
+// ExperienceDetail returns the value of the "experience_detail" field in the mutation.
+func (m *ScreeningResultMutation) ExperienceDetail() (r map[string]interface{}, exists bool) {
+	v := m.experience_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExperienceDetail returns the old "experience_detail" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldExperienceDetail(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExperienceDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExperienceDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExperienceDetail: %w", err)
+	}
+	return oldValue.ExperienceDetail, nil
+}
+
+// ClearExperienceDetail clears the value of the "experience_detail" field.
+func (m *ScreeningResultMutation) ClearExperienceDetail() {
+	m.experience_detail = nil
+	m.clearedFields[screeningresult.FieldExperienceDetail] = struct{}{}
+}
+
+// ExperienceDetailCleared returns if the "experience_detail" field was cleared in this mutation.
+func (m *ScreeningResultMutation) ExperienceDetailCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldExperienceDetail]
+	return ok
+}
+
+// ResetExperienceDetail resets all changes to the "experience_detail" field.
+func (m *ScreeningResultMutation) ResetExperienceDetail() {
+	m.experience_detail = nil
+	delete(m.clearedFields, screeningresult.FieldExperienceDetail)
+}
+
+// SetEducationDetail sets the "education_detail" field.
+func (m *ScreeningResultMutation) SetEducationDetail(value map[string]interface{}) {
+	m.education_detail = &value
+}
+
+// EducationDetail returns the value of the "education_detail" field in the mutation.
+func (m *ScreeningResultMutation) EducationDetail() (r map[string]interface{}, exists bool) {
+	v := m.education_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEducationDetail returns the old "education_detail" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldEducationDetail(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEducationDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEducationDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEducationDetail: %w", err)
+	}
+	return oldValue.EducationDetail, nil
+}
+
+// ClearEducationDetail clears the value of the "education_detail" field.
+func (m *ScreeningResultMutation) ClearEducationDetail() {
+	m.education_detail = nil
+	m.clearedFields[screeningresult.FieldEducationDetail] = struct{}{}
+}
+
+// EducationDetailCleared returns if the "education_detail" field was cleared in this mutation.
+func (m *ScreeningResultMutation) EducationDetailCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldEducationDetail]
+	return ok
+}
+
+// ResetEducationDetail resets all changes to the "education_detail" field.
+func (m *ScreeningResultMutation) ResetEducationDetail() {
+	m.education_detail = nil
+	delete(m.clearedFields, screeningresult.FieldEducationDetail)
+}
+
+// SetIndustryDetail sets the "industry_detail" field.
+func (m *ScreeningResultMutation) SetIndustryDetail(value map[string]interface{}) {
+	m.industry_detail = &value
+}
+
+// IndustryDetail returns the value of the "industry_detail" field in the mutation.
+func (m *ScreeningResultMutation) IndustryDetail() (r map[string]interface{}, exists bool) {
+	v := m.industry_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIndustryDetail returns the old "industry_detail" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldIndustryDetail(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIndustryDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIndustryDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIndustryDetail: %w", err)
+	}
+	return oldValue.IndustryDetail, nil
+}
+
+// ClearIndustryDetail clears the value of the "industry_detail" field.
+func (m *ScreeningResultMutation) ClearIndustryDetail() {
+	m.industry_detail = nil
+	m.clearedFields[screeningresult.FieldIndustryDetail] = struct{}{}
+}
+
+// IndustryDetailCleared returns if the "industry_detail" field was cleared in this mutation.
+func (m *ScreeningResultMutation) IndustryDetailCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldIndustryDetail]
+	return ok
+}
+
+// ResetIndustryDetail resets all changes to the "industry_detail" field.
+func (m *ScreeningResultMutation) ResetIndustryDetail() {
+	m.industry_detail = nil
+	delete(m.clearedFields, screeningresult.FieldIndustryDetail)
+}
+
+// SetBasicDetail sets the "basic_detail" field.
+func (m *ScreeningResultMutation) SetBasicDetail(value map[string]interface{}) {
+	m.basic_detail = &value
+}
+
+// BasicDetail returns the value of the "basic_detail" field in the mutation.
+func (m *ScreeningResultMutation) BasicDetail() (r map[string]interface{}, exists bool) {
+	v := m.basic_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBasicDetail returns the old "basic_detail" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldBasicDetail(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBasicDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBasicDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBasicDetail: %w", err)
+	}
+	return oldValue.BasicDetail, nil
+}
+
+// ClearBasicDetail clears the value of the "basic_detail" field.
+func (m *ScreeningResultMutation) ClearBasicDetail() {
+	m.basic_detail = nil
+	m.clearedFields[screeningresult.FieldBasicDetail] = struct{}{}
+}
+
+// BasicDetailCleared returns if the "basic_detail" field was cleared in this mutation.
+func (m *ScreeningResultMutation) BasicDetailCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldBasicDetail]
+	return ok
+}
+
+// ResetBasicDetail resets all changes to the "basic_detail" field.
+func (m *ScreeningResultMutation) ResetBasicDetail() {
+	m.basic_detail = nil
+	delete(m.clearedFields, screeningresult.FieldBasicDetail)
+}
+
+// SetRecommendations sets the "recommendations" field.
+func (m *ScreeningResultMutation) SetRecommendations(s []string) {
+	m.recommendations = &s
+	m.appendrecommendations = nil
+}
+
+// Recommendations returns the value of the "recommendations" field in the mutation.
+func (m *ScreeningResultMutation) Recommendations() (r []string, exists bool) {
+	v := m.recommendations
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRecommendations returns the old "recommendations" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldRecommendations(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRecommendations is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRecommendations requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRecommendations: %w", err)
+	}
+	return oldValue.Recommendations, nil
+}
+
+// AppendRecommendations adds s to the "recommendations" field.
+func (m *ScreeningResultMutation) AppendRecommendations(s []string) {
+	m.appendrecommendations = append(m.appendrecommendations, s...)
+}
+
+// AppendedRecommendations returns the list of values that were appended to the "recommendations" field in this mutation.
+func (m *ScreeningResultMutation) AppendedRecommendations() ([]string, bool) {
+	if len(m.appendrecommendations) == 0 {
+		return nil, false
+	}
+	return m.appendrecommendations, true
+}
+
+// ClearRecommendations clears the value of the "recommendations" field.
+func (m *ScreeningResultMutation) ClearRecommendations() {
+	m.recommendations = nil
+	m.appendrecommendations = nil
+	m.clearedFields[screeningresult.FieldRecommendations] = struct{}{}
+}
+
+// RecommendationsCleared returns if the "recommendations" field was cleared in this mutation.
+func (m *ScreeningResultMutation) RecommendationsCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldRecommendations]
+	return ok
+}
+
+// ResetRecommendations resets all changes to the "recommendations" field.
+func (m *ScreeningResultMutation) ResetRecommendations() {
+	m.recommendations = nil
+	m.appendrecommendations = nil
+	delete(m.clearedFields, screeningresult.FieldRecommendations)
+}
+
+// SetTraceID sets the "trace_id" field.
+func (m *ScreeningResultMutation) SetTraceID(s string) {
+	m.trace_id = &s
+}
+
+// TraceID returns the value of the "trace_id" field in the mutation.
+func (m *ScreeningResultMutation) TraceID() (r string, exists bool) {
+	v := m.trace_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTraceID returns the old "trace_id" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldTraceID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTraceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTraceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTraceID: %w", err)
+	}
+	return oldValue.TraceID, nil
+}
+
+// ClearTraceID clears the value of the "trace_id" field.
+func (m *ScreeningResultMutation) ClearTraceID() {
+	m.trace_id = nil
+	m.clearedFields[screeningresult.FieldTraceID] = struct{}{}
+}
+
+// TraceIDCleared returns if the "trace_id" field was cleared in this mutation.
+func (m *ScreeningResultMutation) TraceIDCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldTraceID]
+	return ok
+}
+
+// ResetTraceID resets all changes to the "trace_id" field.
+func (m *ScreeningResultMutation) ResetTraceID() {
+	m.trace_id = nil
+	delete(m.clearedFields, screeningresult.FieldTraceID)
+}
+
+// SetRuntimeMetadata sets the "runtime_metadata" field.
+func (m *ScreeningResultMutation) SetRuntimeMetadata(value map[string]interface{}) {
+	m.runtime_metadata = &value
+}
+
+// RuntimeMetadata returns the value of the "runtime_metadata" field in the mutation.
+func (m *ScreeningResultMutation) RuntimeMetadata() (r map[string]interface{}, exists bool) {
+	v := m.runtime_metadata
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRuntimeMetadata returns the old "runtime_metadata" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldRuntimeMetadata(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRuntimeMetadata is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRuntimeMetadata requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRuntimeMetadata: %w", err)
+	}
+	return oldValue.RuntimeMetadata, nil
+}
+
+// ClearRuntimeMetadata clears the value of the "runtime_metadata" field.
+func (m *ScreeningResultMutation) ClearRuntimeMetadata() {
+	m.runtime_metadata = nil
+	m.clearedFields[screeningresult.FieldRuntimeMetadata] = struct{}{}
+}
+
+// RuntimeMetadataCleared returns if the "runtime_metadata" field was cleared in this mutation.
+func (m *ScreeningResultMutation) RuntimeMetadataCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldRuntimeMetadata]
+	return ok
+}
+
+// ResetRuntimeMetadata resets all changes to the "runtime_metadata" field.
+func (m *ScreeningResultMutation) ResetRuntimeMetadata() {
+	m.runtime_metadata = nil
+	delete(m.clearedFields, screeningresult.FieldRuntimeMetadata)
+}
+
+// SetSubAgentVersions sets the "sub_agent_versions" field.
+func (m *ScreeningResultMutation) SetSubAgentVersions(value map[string]interface{}) {
+	m.sub_agent_versions = &value
+}
+
+// SubAgentVersions returns the value of the "sub_agent_versions" field in the mutation.
+func (m *ScreeningResultMutation) SubAgentVersions() (r map[string]interface{}, exists bool) {
+	v := m.sub_agent_versions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubAgentVersions returns the old "sub_agent_versions" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldSubAgentVersions(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubAgentVersions is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubAgentVersions requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubAgentVersions: %w", err)
+	}
+	return oldValue.SubAgentVersions, nil
+}
+
+// ClearSubAgentVersions clears the value of the "sub_agent_versions" field.
+func (m *ScreeningResultMutation) ClearSubAgentVersions() {
+	m.sub_agent_versions = nil
+	m.clearedFields[screeningresult.FieldSubAgentVersions] = struct{}{}
+}
+
+// SubAgentVersionsCleared returns if the "sub_agent_versions" field was cleared in this mutation.
+func (m *ScreeningResultMutation) SubAgentVersionsCleared() bool {
+	_, ok := m.clearedFields[screeningresult.FieldSubAgentVersions]
+	return ok
+}
+
+// ResetSubAgentVersions resets all changes to the "sub_agent_versions" field.
+func (m *ScreeningResultMutation) ResetSubAgentVersions() {
+	m.sub_agent_versions = nil
+	delete(m.clearedFields, screeningresult.FieldSubAgentVersions)
+}
+
+// SetMatchedAt sets the "matched_at" field.
+func (m *ScreeningResultMutation) SetMatchedAt(t time.Time) {
+	m.matched_at = &t
+}
+
+// MatchedAt returns the value of the "matched_at" field in the mutation.
+func (m *ScreeningResultMutation) MatchedAt() (r time.Time, exists bool) {
+	v := m.matched_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMatchedAt returns the old "matched_at" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldMatchedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMatchedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMatchedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMatchedAt: %w", err)
+	}
+	return oldValue.MatchedAt, nil
+}
+
+// ResetMatchedAt resets all changes to the "matched_at" field.
+func (m *ScreeningResultMutation) ResetMatchedAt() {
+	m.matched_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ScreeningResultMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ScreeningResultMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ScreeningResultMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ScreeningResultMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ScreeningResultMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ScreeningResult entity.
+// If the ScreeningResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningResultMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ScreeningResultMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearTask clears the "task" edge to the ScreeningTask entity.
+func (m *ScreeningResultMutation) ClearTask() {
+	m.clearedtask = true
+	m.clearedFields[screeningresult.FieldTaskID] = struct{}{}
+}
+
+// TaskCleared reports if the "task" edge to the ScreeningTask entity was cleared.
+func (m *ScreeningResultMutation) TaskCleared() bool {
+	return m.clearedtask
+}
+
+// TaskIDs returns the "task" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TaskID instead. It exists only for internal usage by the builders.
+func (m *ScreeningResultMutation) TaskIDs() (ids []uuid.UUID) {
+	if id := m.task; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTask resets all changes to the "task" edge.
+func (m *ScreeningResultMutation) ResetTask() {
+	m.task = nil
+	m.clearedtask = false
+}
+
+// ClearJobPosition clears the "job_position" edge to the JobPosition entity.
+func (m *ScreeningResultMutation) ClearJobPosition() {
+	m.clearedjob_position = true
+	m.clearedFields[screeningresult.FieldJobPositionID] = struct{}{}
+}
+
+// JobPositionCleared reports if the "job_position" edge to the JobPosition entity was cleared.
+func (m *ScreeningResultMutation) JobPositionCleared() bool {
+	return m.clearedjob_position
+}
+
+// JobPositionIDs returns the "job_position" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// JobPositionID instead. It exists only for internal usage by the builders.
+func (m *ScreeningResultMutation) JobPositionIDs() (ids []uuid.UUID) {
+	if id := m.job_position; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetJobPosition resets all changes to the "job_position" edge.
+func (m *ScreeningResultMutation) ResetJobPosition() {
+	m.job_position = nil
+	m.clearedjob_position = false
+}
+
+// ClearResume clears the "resume" edge to the Resume entity.
+func (m *ScreeningResultMutation) ClearResume() {
+	m.clearedresume = true
+	m.clearedFields[screeningresult.FieldResumeID] = struct{}{}
+}
+
+// ResumeCleared reports if the "resume" edge to the Resume entity was cleared.
+func (m *ScreeningResultMutation) ResumeCleared() bool {
+	return m.clearedresume
+}
+
+// ResumeIDs returns the "resume" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ResumeID instead. It exists only for internal usage by the builders.
+func (m *ScreeningResultMutation) ResumeIDs() (ids []uuid.UUID) {
+	if id := m.resume; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetResume resets all changes to the "resume" edge.
+func (m *ScreeningResultMutation) ResetResume() {
+	m.resume = nil
+	m.clearedresume = false
+}
+
+// Where appends a list predicates to the ScreeningResultMutation builder.
+func (m *ScreeningResultMutation) Where(ps ...predicate.ScreeningResult) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ScreeningResultMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ScreeningResultMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ScreeningResult, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ScreeningResultMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ScreeningResultMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ScreeningResult).
+func (m *ScreeningResultMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ScreeningResultMutation) Fields() []string {
+	fields := make([]string, 0, 20)
+	if m.deleted_at != nil {
+		fields = append(fields, screeningresult.FieldDeletedAt)
+	}
+	if m.task != nil {
+		fields = append(fields, screeningresult.FieldTaskID)
+	}
+	if m.job_position != nil {
+		fields = append(fields, screeningresult.FieldJobPositionID)
+	}
+	if m.resume != nil {
+		fields = append(fields, screeningresult.FieldResumeID)
+	}
+	if m.overall_score != nil {
+		fields = append(fields, screeningresult.FieldOverallScore)
+	}
+	if m.match_level != nil {
+		fields = append(fields, screeningresult.FieldMatchLevel)
+	}
+	if m.dimension_scores != nil {
+		fields = append(fields, screeningresult.FieldDimensionScores)
+	}
+	if m.skill_detail != nil {
+		fields = append(fields, screeningresult.FieldSkillDetail)
+	}
+	if m.responsibility_detail != nil {
+		fields = append(fields, screeningresult.FieldResponsibilityDetail)
+	}
+	if m.experience_detail != nil {
+		fields = append(fields, screeningresult.FieldExperienceDetail)
+	}
+	if m.education_detail != nil {
+		fields = append(fields, screeningresult.FieldEducationDetail)
+	}
+	if m.industry_detail != nil {
+		fields = append(fields, screeningresult.FieldIndustryDetail)
+	}
+	if m.basic_detail != nil {
+		fields = append(fields, screeningresult.FieldBasicDetail)
+	}
+	if m.recommendations != nil {
+		fields = append(fields, screeningresult.FieldRecommendations)
+	}
+	if m.trace_id != nil {
+		fields = append(fields, screeningresult.FieldTraceID)
+	}
+	if m.runtime_metadata != nil {
+		fields = append(fields, screeningresult.FieldRuntimeMetadata)
+	}
+	if m.sub_agent_versions != nil {
+		fields = append(fields, screeningresult.FieldSubAgentVersions)
+	}
+	if m.matched_at != nil {
+		fields = append(fields, screeningresult.FieldMatchedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, screeningresult.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, screeningresult.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ScreeningResultMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case screeningresult.FieldDeletedAt:
+		return m.DeletedAt()
+	case screeningresult.FieldTaskID:
+		return m.TaskID()
+	case screeningresult.FieldJobPositionID:
+		return m.JobPositionID()
+	case screeningresult.FieldResumeID:
+		return m.ResumeID()
+	case screeningresult.FieldOverallScore:
+		return m.OverallScore()
+	case screeningresult.FieldMatchLevel:
+		return m.MatchLevel()
+	case screeningresult.FieldDimensionScores:
+		return m.DimensionScores()
+	case screeningresult.FieldSkillDetail:
+		return m.SkillDetail()
+	case screeningresult.FieldResponsibilityDetail:
+		return m.ResponsibilityDetail()
+	case screeningresult.FieldExperienceDetail:
+		return m.ExperienceDetail()
+	case screeningresult.FieldEducationDetail:
+		return m.EducationDetail()
+	case screeningresult.FieldIndustryDetail:
+		return m.IndustryDetail()
+	case screeningresult.FieldBasicDetail:
+		return m.BasicDetail()
+	case screeningresult.FieldRecommendations:
+		return m.Recommendations()
+	case screeningresult.FieldTraceID:
+		return m.TraceID()
+	case screeningresult.FieldRuntimeMetadata:
+		return m.RuntimeMetadata()
+	case screeningresult.FieldSubAgentVersions:
+		return m.SubAgentVersions()
+	case screeningresult.FieldMatchedAt:
+		return m.MatchedAt()
+	case screeningresult.FieldCreatedAt:
+		return m.CreatedAt()
+	case screeningresult.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ScreeningResultMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case screeningresult.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case screeningresult.FieldTaskID:
+		return m.OldTaskID(ctx)
+	case screeningresult.FieldJobPositionID:
+		return m.OldJobPositionID(ctx)
+	case screeningresult.FieldResumeID:
+		return m.OldResumeID(ctx)
+	case screeningresult.FieldOverallScore:
+		return m.OldOverallScore(ctx)
+	case screeningresult.FieldMatchLevel:
+		return m.OldMatchLevel(ctx)
+	case screeningresult.FieldDimensionScores:
+		return m.OldDimensionScores(ctx)
+	case screeningresult.FieldSkillDetail:
+		return m.OldSkillDetail(ctx)
+	case screeningresult.FieldResponsibilityDetail:
+		return m.OldResponsibilityDetail(ctx)
+	case screeningresult.FieldExperienceDetail:
+		return m.OldExperienceDetail(ctx)
+	case screeningresult.FieldEducationDetail:
+		return m.OldEducationDetail(ctx)
+	case screeningresult.FieldIndustryDetail:
+		return m.OldIndustryDetail(ctx)
+	case screeningresult.FieldBasicDetail:
+		return m.OldBasicDetail(ctx)
+	case screeningresult.FieldRecommendations:
+		return m.OldRecommendations(ctx)
+	case screeningresult.FieldTraceID:
+		return m.OldTraceID(ctx)
+	case screeningresult.FieldRuntimeMetadata:
+		return m.OldRuntimeMetadata(ctx)
+	case screeningresult.FieldSubAgentVersions:
+		return m.OldSubAgentVersions(ctx)
+	case screeningresult.FieldMatchedAt:
+		return m.OldMatchedAt(ctx)
+	case screeningresult.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case screeningresult.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ScreeningResult field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningResultMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case screeningresult.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case screeningresult.FieldTaskID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTaskID(v)
+		return nil
+	case screeningresult.FieldJobPositionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJobPositionID(v)
+		return nil
+	case screeningresult.FieldResumeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeID(v)
+		return nil
+	case screeningresult.FieldOverallScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOverallScore(v)
+		return nil
+	case screeningresult.FieldMatchLevel:
+		v, ok := value.(screeningresult.MatchLevel)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMatchLevel(v)
+		return nil
+	case screeningresult.FieldDimensionScores:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDimensionScores(v)
+		return nil
+	case screeningresult.FieldSkillDetail:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSkillDetail(v)
+		return nil
+	case screeningresult.FieldResponsibilityDetail:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResponsibilityDetail(v)
+		return nil
+	case screeningresult.FieldExperienceDetail:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExperienceDetail(v)
+		return nil
+	case screeningresult.FieldEducationDetail:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEducationDetail(v)
+		return nil
+	case screeningresult.FieldIndustryDetail:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIndustryDetail(v)
+		return nil
+	case screeningresult.FieldBasicDetail:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBasicDetail(v)
+		return nil
+	case screeningresult.FieldRecommendations:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRecommendations(v)
+		return nil
+	case screeningresult.FieldTraceID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTraceID(v)
+		return nil
+	case screeningresult.FieldRuntimeMetadata:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRuntimeMetadata(v)
+		return nil
+	case screeningresult.FieldSubAgentVersions:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubAgentVersions(v)
+		return nil
+	case screeningresult.FieldMatchedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMatchedAt(v)
+		return nil
+	case screeningresult.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case screeningresult.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningResult field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ScreeningResultMutation) AddedFields() []string {
+	var fields []string
+	if m.addoverall_score != nil {
+		fields = append(fields, screeningresult.FieldOverallScore)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ScreeningResultMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case screeningresult.FieldOverallScore:
+		return m.AddedOverallScore()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningResultMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case screeningresult.FieldOverallScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOverallScore(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningResult numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ScreeningResultMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(screeningresult.FieldDeletedAt) {
+		fields = append(fields, screeningresult.FieldDeletedAt)
+	}
+	if m.FieldCleared(screeningresult.FieldMatchLevel) {
+		fields = append(fields, screeningresult.FieldMatchLevel)
+	}
+	if m.FieldCleared(screeningresult.FieldDimensionScores) {
+		fields = append(fields, screeningresult.FieldDimensionScores)
+	}
+	if m.FieldCleared(screeningresult.FieldSkillDetail) {
+		fields = append(fields, screeningresult.FieldSkillDetail)
+	}
+	if m.FieldCleared(screeningresult.FieldResponsibilityDetail) {
+		fields = append(fields, screeningresult.FieldResponsibilityDetail)
+	}
+	if m.FieldCleared(screeningresult.FieldExperienceDetail) {
+		fields = append(fields, screeningresult.FieldExperienceDetail)
+	}
+	if m.FieldCleared(screeningresult.FieldEducationDetail) {
+		fields = append(fields, screeningresult.FieldEducationDetail)
+	}
+	if m.FieldCleared(screeningresult.FieldIndustryDetail) {
+		fields = append(fields, screeningresult.FieldIndustryDetail)
+	}
+	if m.FieldCleared(screeningresult.FieldBasicDetail) {
+		fields = append(fields, screeningresult.FieldBasicDetail)
+	}
+	if m.FieldCleared(screeningresult.FieldRecommendations) {
+		fields = append(fields, screeningresult.FieldRecommendations)
+	}
+	if m.FieldCleared(screeningresult.FieldTraceID) {
+		fields = append(fields, screeningresult.FieldTraceID)
+	}
+	if m.FieldCleared(screeningresult.FieldRuntimeMetadata) {
+		fields = append(fields, screeningresult.FieldRuntimeMetadata)
+	}
+	if m.FieldCleared(screeningresult.FieldSubAgentVersions) {
+		fields = append(fields, screeningresult.FieldSubAgentVersions)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ScreeningResultMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ScreeningResultMutation) ClearField(name string) error {
+	switch name {
+	case screeningresult.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case screeningresult.FieldMatchLevel:
+		m.ClearMatchLevel()
+		return nil
+	case screeningresult.FieldDimensionScores:
+		m.ClearDimensionScores()
+		return nil
+	case screeningresult.FieldSkillDetail:
+		m.ClearSkillDetail()
+		return nil
+	case screeningresult.FieldResponsibilityDetail:
+		m.ClearResponsibilityDetail()
+		return nil
+	case screeningresult.FieldExperienceDetail:
+		m.ClearExperienceDetail()
+		return nil
+	case screeningresult.FieldEducationDetail:
+		m.ClearEducationDetail()
+		return nil
+	case screeningresult.FieldIndustryDetail:
+		m.ClearIndustryDetail()
+		return nil
+	case screeningresult.FieldBasicDetail:
+		m.ClearBasicDetail()
+		return nil
+	case screeningresult.FieldRecommendations:
+		m.ClearRecommendations()
+		return nil
+	case screeningresult.FieldTraceID:
+		m.ClearTraceID()
+		return nil
+	case screeningresult.FieldRuntimeMetadata:
+		m.ClearRuntimeMetadata()
+		return nil
+	case screeningresult.FieldSubAgentVersions:
+		m.ClearSubAgentVersions()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningResult nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ScreeningResultMutation) ResetField(name string) error {
+	switch name {
+	case screeningresult.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case screeningresult.FieldTaskID:
+		m.ResetTaskID()
+		return nil
+	case screeningresult.FieldJobPositionID:
+		m.ResetJobPositionID()
+		return nil
+	case screeningresult.FieldResumeID:
+		m.ResetResumeID()
+		return nil
+	case screeningresult.FieldOverallScore:
+		m.ResetOverallScore()
+		return nil
+	case screeningresult.FieldMatchLevel:
+		m.ResetMatchLevel()
+		return nil
+	case screeningresult.FieldDimensionScores:
+		m.ResetDimensionScores()
+		return nil
+	case screeningresult.FieldSkillDetail:
+		m.ResetSkillDetail()
+		return nil
+	case screeningresult.FieldResponsibilityDetail:
+		m.ResetResponsibilityDetail()
+		return nil
+	case screeningresult.FieldExperienceDetail:
+		m.ResetExperienceDetail()
+		return nil
+	case screeningresult.FieldEducationDetail:
+		m.ResetEducationDetail()
+		return nil
+	case screeningresult.FieldIndustryDetail:
+		m.ResetIndustryDetail()
+		return nil
+	case screeningresult.FieldBasicDetail:
+		m.ResetBasicDetail()
+		return nil
+	case screeningresult.FieldRecommendations:
+		m.ResetRecommendations()
+		return nil
+	case screeningresult.FieldTraceID:
+		m.ResetTraceID()
+		return nil
+	case screeningresult.FieldRuntimeMetadata:
+		m.ResetRuntimeMetadata()
+		return nil
+	case screeningresult.FieldSubAgentVersions:
+		m.ResetSubAgentVersions()
+		return nil
+	case screeningresult.FieldMatchedAt:
+		m.ResetMatchedAt()
+		return nil
+	case screeningresult.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case screeningresult.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningResult field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ScreeningResultMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.task != nil {
+		edges = append(edges, screeningresult.EdgeTask)
+	}
+	if m.job_position != nil {
+		edges = append(edges, screeningresult.EdgeJobPosition)
+	}
+	if m.resume != nil {
+		edges = append(edges, screeningresult.EdgeResume)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ScreeningResultMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case screeningresult.EdgeTask:
+		if id := m.task; id != nil {
+			return []ent.Value{*id}
+		}
+	case screeningresult.EdgeJobPosition:
+		if id := m.job_position; id != nil {
+			return []ent.Value{*id}
+		}
+	case screeningresult.EdgeResume:
+		if id := m.resume; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ScreeningResultMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ScreeningResultMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ScreeningResultMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.clearedtask {
+		edges = append(edges, screeningresult.EdgeTask)
+	}
+	if m.clearedjob_position {
+		edges = append(edges, screeningresult.EdgeJobPosition)
+	}
+	if m.clearedresume {
+		edges = append(edges, screeningresult.EdgeResume)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ScreeningResultMutation) EdgeCleared(name string) bool {
+	switch name {
+	case screeningresult.EdgeTask:
+		return m.clearedtask
+	case screeningresult.EdgeJobPosition:
+		return m.clearedjob_position
+	case screeningresult.EdgeResume:
+		return m.clearedresume
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ScreeningResultMutation) ClearEdge(name string) error {
+	switch name {
+	case screeningresult.EdgeTask:
+		m.ClearTask()
+		return nil
+	case screeningresult.EdgeJobPosition:
+		m.ClearJobPosition()
+		return nil
+	case screeningresult.EdgeResume:
+		m.ClearResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningResult unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ScreeningResultMutation) ResetEdge(name string) error {
+	switch name {
+	case screeningresult.EdgeTask:
+		m.ResetTask()
+		return nil
+	case screeningresult.EdgeJobPosition:
+		m.ResetJobPosition()
+		return nil
+	case screeningresult.EdgeResume:
+		m.ResetResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningResult edge %s", name)
+}
+
+// ScreeningRunMetricMutation represents an operation that mutates the ScreeningRunMetric nodes in the graph.
+type ScreeningRunMetricMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *uuid.UUID
+	deleted_at       *time.Time
+	avg_score        *float64
+	addavg_score     *float64
+	histogram        *map[string]interface{}
+	tokens_input     *int64
+	addtokens_input  *int64
+	tokens_output    *int64
+	addtokens_output *int64
+	total_cost       *float64
+	addtotal_cost    *float64
+	created_at       *time.Time
+	updated_at       *time.Time
+	clearedFields    map[string]struct{}
+	task             *uuid.UUID
+	clearedtask      bool
+	done             bool
+	oldValue         func(context.Context) (*ScreeningRunMetric, error)
+	predicates       []predicate.ScreeningRunMetric
+}
+
+var _ ent.Mutation = (*ScreeningRunMetricMutation)(nil)
+
+// screeningrunmetricOption allows management of the mutation configuration using functional options.
+type screeningrunmetricOption func(*ScreeningRunMetricMutation)
+
+// newScreeningRunMetricMutation creates new mutation for the ScreeningRunMetric entity.
+func newScreeningRunMetricMutation(c config, op Op, opts ...screeningrunmetricOption) *ScreeningRunMetricMutation {
+	m := &ScreeningRunMetricMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeScreeningRunMetric,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withScreeningRunMetricID sets the ID field of the mutation.
+func withScreeningRunMetricID(id uuid.UUID) screeningrunmetricOption {
+	return func(m *ScreeningRunMetricMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ScreeningRunMetric
+		)
+		m.oldValue = func(ctx context.Context) (*ScreeningRunMetric, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ScreeningRunMetric.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withScreeningRunMetric sets the old ScreeningRunMetric of the mutation.
+func withScreeningRunMetric(node *ScreeningRunMetric) screeningrunmetricOption {
+	return func(m *ScreeningRunMetricMutation) {
+		m.oldValue = func(context.Context) (*ScreeningRunMetric, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ScreeningRunMetricMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ScreeningRunMetricMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ScreeningRunMetric entities.
+func (m *ScreeningRunMetricMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ScreeningRunMetricMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ScreeningRunMetricMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ScreeningRunMetric.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ScreeningRunMetricMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ScreeningRunMetricMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ScreeningRunMetricMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[screeningrunmetric.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ScreeningRunMetricMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[screeningrunmetric.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ScreeningRunMetricMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, screeningrunmetric.FieldDeletedAt)
+}
+
+// SetTaskID sets the "task_id" field.
+func (m *ScreeningRunMetricMutation) SetTaskID(u uuid.UUID) {
+	m.task = &u
+}
+
+// TaskID returns the value of the "task_id" field in the mutation.
+func (m *ScreeningRunMetricMutation) TaskID() (r uuid.UUID, exists bool) {
+	v := m.task
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTaskID returns the old "task_id" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldTaskID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTaskID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTaskID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTaskID: %w", err)
+	}
+	return oldValue.TaskID, nil
+}
+
+// ResetTaskID resets all changes to the "task_id" field.
+func (m *ScreeningRunMetricMutation) ResetTaskID() {
+	m.task = nil
+}
+
+// SetAvgScore sets the "avg_score" field.
+func (m *ScreeningRunMetricMutation) SetAvgScore(f float64) {
+	m.avg_score = &f
+	m.addavg_score = nil
+}
+
+// AvgScore returns the value of the "avg_score" field in the mutation.
+func (m *ScreeningRunMetricMutation) AvgScore() (r float64, exists bool) {
+	v := m.avg_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvgScore returns the old "avg_score" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldAvgScore(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAvgScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAvgScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvgScore: %w", err)
+	}
+	return oldValue.AvgScore, nil
+}
+
+// AddAvgScore adds f to the "avg_score" field.
+func (m *ScreeningRunMetricMutation) AddAvgScore(f float64) {
+	if m.addavg_score != nil {
+		*m.addavg_score += f
+	} else {
+		m.addavg_score = &f
+	}
+}
+
+// AddedAvgScore returns the value that was added to the "avg_score" field in this mutation.
+func (m *ScreeningRunMetricMutation) AddedAvgScore() (r float64, exists bool) {
+	v := m.addavg_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAvgScore clears the value of the "avg_score" field.
+func (m *ScreeningRunMetricMutation) ClearAvgScore() {
+	m.avg_score = nil
+	m.addavg_score = nil
+	m.clearedFields[screeningrunmetric.FieldAvgScore] = struct{}{}
+}
+
+// AvgScoreCleared returns if the "avg_score" field was cleared in this mutation.
+func (m *ScreeningRunMetricMutation) AvgScoreCleared() bool {
+	_, ok := m.clearedFields[screeningrunmetric.FieldAvgScore]
+	return ok
+}
+
+// ResetAvgScore resets all changes to the "avg_score" field.
+func (m *ScreeningRunMetricMutation) ResetAvgScore() {
+	m.avg_score = nil
+	m.addavg_score = nil
+	delete(m.clearedFields, screeningrunmetric.FieldAvgScore)
+}
+
+// SetHistogram sets the "histogram" field.
+func (m *ScreeningRunMetricMutation) SetHistogram(value map[string]interface{}) {
+	m.histogram = &value
+}
+
+// Histogram returns the value of the "histogram" field in the mutation.
+func (m *ScreeningRunMetricMutation) Histogram() (r map[string]interface{}, exists bool) {
+	v := m.histogram
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHistogram returns the old "histogram" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldHistogram(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHistogram is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHistogram requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHistogram: %w", err)
+	}
+	return oldValue.Histogram, nil
+}
+
+// ClearHistogram clears the value of the "histogram" field.
+func (m *ScreeningRunMetricMutation) ClearHistogram() {
+	m.histogram = nil
+	m.clearedFields[screeningrunmetric.FieldHistogram] = struct{}{}
+}
+
+// HistogramCleared returns if the "histogram" field was cleared in this mutation.
+func (m *ScreeningRunMetricMutation) HistogramCleared() bool {
+	_, ok := m.clearedFields[screeningrunmetric.FieldHistogram]
+	return ok
+}
+
+// ResetHistogram resets all changes to the "histogram" field.
+func (m *ScreeningRunMetricMutation) ResetHistogram() {
+	m.histogram = nil
+	delete(m.clearedFields, screeningrunmetric.FieldHistogram)
+}
+
+// SetTokensInput sets the "tokens_input" field.
+func (m *ScreeningRunMetricMutation) SetTokensInput(i int64) {
+	m.tokens_input = &i
+	m.addtokens_input = nil
+}
+
+// TokensInput returns the value of the "tokens_input" field in the mutation.
+func (m *ScreeningRunMetricMutation) TokensInput() (r int64, exists bool) {
+	v := m.tokens_input
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTokensInput returns the old "tokens_input" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldTokensInput(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTokensInput is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTokensInput requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTokensInput: %w", err)
+	}
+	return oldValue.TokensInput, nil
+}
+
+// AddTokensInput adds i to the "tokens_input" field.
+func (m *ScreeningRunMetricMutation) AddTokensInput(i int64) {
+	if m.addtokens_input != nil {
+		*m.addtokens_input += i
+	} else {
+		m.addtokens_input = &i
+	}
+}
+
+// AddedTokensInput returns the value that was added to the "tokens_input" field in this mutation.
+func (m *ScreeningRunMetricMutation) AddedTokensInput() (r int64, exists bool) {
+	v := m.addtokens_input
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTokensInput clears the value of the "tokens_input" field.
+func (m *ScreeningRunMetricMutation) ClearTokensInput() {
+	m.tokens_input = nil
+	m.addtokens_input = nil
+	m.clearedFields[screeningrunmetric.FieldTokensInput] = struct{}{}
+}
+
+// TokensInputCleared returns if the "tokens_input" field was cleared in this mutation.
+func (m *ScreeningRunMetricMutation) TokensInputCleared() bool {
+	_, ok := m.clearedFields[screeningrunmetric.FieldTokensInput]
+	return ok
+}
+
+// ResetTokensInput resets all changes to the "tokens_input" field.
+func (m *ScreeningRunMetricMutation) ResetTokensInput() {
+	m.tokens_input = nil
+	m.addtokens_input = nil
+	delete(m.clearedFields, screeningrunmetric.FieldTokensInput)
+}
+
+// SetTokensOutput sets the "tokens_output" field.
+func (m *ScreeningRunMetricMutation) SetTokensOutput(i int64) {
+	m.tokens_output = &i
+	m.addtokens_output = nil
+}
+
+// TokensOutput returns the value of the "tokens_output" field in the mutation.
+func (m *ScreeningRunMetricMutation) TokensOutput() (r int64, exists bool) {
+	v := m.tokens_output
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTokensOutput returns the old "tokens_output" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldTokensOutput(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTokensOutput is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTokensOutput requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTokensOutput: %w", err)
+	}
+	return oldValue.TokensOutput, nil
+}
+
+// AddTokensOutput adds i to the "tokens_output" field.
+func (m *ScreeningRunMetricMutation) AddTokensOutput(i int64) {
+	if m.addtokens_output != nil {
+		*m.addtokens_output += i
+	} else {
+		m.addtokens_output = &i
+	}
+}
+
+// AddedTokensOutput returns the value that was added to the "tokens_output" field in this mutation.
+func (m *ScreeningRunMetricMutation) AddedTokensOutput() (r int64, exists bool) {
+	v := m.addtokens_output
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTokensOutput clears the value of the "tokens_output" field.
+func (m *ScreeningRunMetricMutation) ClearTokensOutput() {
+	m.tokens_output = nil
+	m.addtokens_output = nil
+	m.clearedFields[screeningrunmetric.FieldTokensOutput] = struct{}{}
+}
+
+// TokensOutputCleared returns if the "tokens_output" field was cleared in this mutation.
+func (m *ScreeningRunMetricMutation) TokensOutputCleared() bool {
+	_, ok := m.clearedFields[screeningrunmetric.FieldTokensOutput]
+	return ok
+}
+
+// ResetTokensOutput resets all changes to the "tokens_output" field.
+func (m *ScreeningRunMetricMutation) ResetTokensOutput() {
+	m.tokens_output = nil
+	m.addtokens_output = nil
+	delete(m.clearedFields, screeningrunmetric.FieldTokensOutput)
+}
+
+// SetTotalCost sets the "total_cost" field.
+func (m *ScreeningRunMetricMutation) SetTotalCost(f float64) {
+	m.total_cost = &f
+	m.addtotal_cost = nil
+}
+
+// TotalCost returns the value of the "total_cost" field in the mutation.
+func (m *ScreeningRunMetricMutation) TotalCost() (r float64, exists bool) {
+	v := m.total_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalCost returns the old "total_cost" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldTotalCost(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalCost: %w", err)
+	}
+	return oldValue.TotalCost, nil
+}
+
+// AddTotalCost adds f to the "total_cost" field.
+func (m *ScreeningRunMetricMutation) AddTotalCost(f float64) {
+	if m.addtotal_cost != nil {
+		*m.addtotal_cost += f
+	} else {
+		m.addtotal_cost = &f
+	}
+}
+
+// AddedTotalCost returns the value that was added to the "total_cost" field in this mutation.
+func (m *ScreeningRunMetricMutation) AddedTotalCost() (r float64, exists bool) {
+	v := m.addtotal_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTotalCost clears the value of the "total_cost" field.
+func (m *ScreeningRunMetricMutation) ClearTotalCost() {
+	m.total_cost = nil
+	m.addtotal_cost = nil
+	m.clearedFields[screeningrunmetric.FieldTotalCost] = struct{}{}
+}
+
+// TotalCostCleared returns if the "total_cost" field was cleared in this mutation.
+func (m *ScreeningRunMetricMutation) TotalCostCleared() bool {
+	_, ok := m.clearedFields[screeningrunmetric.FieldTotalCost]
+	return ok
+}
+
+// ResetTotalCost resets all changes to the "total_cost" field.
+func (m *ScreeningRunMetricMutation) ResetTotalCost() {
+	m.total_cost = nil
+	m.addtotal_cost = nil
+	delete(m.clearedFields, screeningrunmetric.FieldTotalCost)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ScreeningRunMetricMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ScreeningRunMetricMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ScreeningRunMetricMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ScreeningRunMetricMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ScreeningRunMetricMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ScreeningRunMetric entity.
+// If the ScreeningRunMetric object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningRunMetricMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ScreeningRunMetricMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearTask clears the "task" edge to the ScreeningTask entity.
+func (m *ScreeningRunMetricMutation) ClearTask() {
+	m.clearedtask = true
+	m.clearedFields[screeningrunmetric.FieldTaskID] = struct{}{}
+}
+
+// TaskCleared reports if the "task" edge to the ScreeningTask entity was cleared.
+func (m *ScreeningRunMetricMutation) TaskCleared() bool {
+	return m.clearedtask
+}
+
+// TaskIDs returns the "task" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TaskID instead. It exists only for internal usage by the builders.
+func (m *ScreeningRunMetricMutation) TaskIDs() (ids []uuid.UUID) {
+	if id := m.task; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTask resets all changes to the "task" edge.
+func (m *ScreeningRunMetricMutation) ResetTask() {
+	m.task = nil
+	m.clearedtask = false
+}
+
+// Where appends a list predicates to the ScreeningRunMetricMutation builder.
+func (m *ScreeningRunMetricMutation) Where(ps ...predicate.ScreeningRunMetric) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ScreeningRunMetricMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ScreeningRunMetricMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ScreeningRunMetric, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ScreeningRunMetricMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ScreeningRunMetricMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ScreeningRunMetric).
+func (m *ScreeningRunMetricMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ScreeningRunMetricMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.deleted_at != nil {
+		fields = append(fields, screeningrunmetric.FieldDeletedAt)
+	}
+	if m.task != nil {
+		fields = append(fields, screeningrunmetric.FieldTaskID)
+	}
+	if m.avg_score != nil {
+		fields = append(fields, screeningrunmetric.FieldAvgScore)
+	}
+	if m.histogram != nil {
+		fields = append(fields, screeningrunmetric.FieldHistogram)
+	}
+	if m.tokens_input != nil {
+		fields = append(fields, screeningrunmetric.FieldTokensInput)
+	}
+	if m.tokens_output != nil {
+		fields = append(fields, screeningrunmetric.FieldTokensOutput)
+	}
+	if m.total_cost != nil {
+		fields = append(fields, screeningrunmetric.FieldTotalCost)
+	}
+	if m.created_at != nil {
+		fields = append(fields, screeningrunmetric.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, screeningrunmetric.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ScreeningRunMetricMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case screeningrunmetric.FieldDeletedAt:
+		return m.DeletedAt()
+	case screeningrunmetric.FieldTaskID:
+		return m.TaskID()
+	case screeningrunmetric.FieldAvgScore:
+		return m.AvgScore()
+	case screeningrunmetric.FieldHistogram:
+		return m.Histogram()
+	case screeningrunmetric.FieldTokensInput:
+		return m.TokensInput()
+	case screeningrunmetric.FieldTokensOutput:
+		return m.TokensOutput()
+	case screeningrunmetric.FieldTotalCost:
+		return m.TotalCost()
+	case screeningrunmetric.FieldCreatedAt:
+		return m.CreatedAt()
+	case screeningrunmetric.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ScreeningRunMetricMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case screeningrunmetric.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case screeningrunmetric.FieldTaskID:
+		return m.OldTaskID(ctx)
+	case screeningrunmetric.FieldAvgScore:
+		return m.OldAvgScore(ctx)
+	case screeningrunmetric.FieldHistogram:
+		return m.OldHistogram(ctx)
+	case screeningrunmetric.FieldTokensInput:
+		return m.OldTokensInput(ctx)
+	case screeningrunmetric.FieldTokensOutput:
+		return m.OldTokensOutput(ctx)
+	case screeningrunmetric.FieldTotalCost:
+		return m.OldTotalCost(ctx)
+	case screeningrunmetric.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case screeningrunmetric.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ScreeningRunMetric field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningRunMetricMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case screeningrunmetric.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case screeningrunmetric.FieldTaskID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTaskID(v)
+		return nil
+	case screeningrunmetric.FieldAvgScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvgScore(v)
+		return nil
+	case screeningrunmetric.FieldHistogram:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHistogram(v)
+		return nil
+	case screeningrunmetric.FieldTokensInput:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTokensInput(v)
+		return nil
+	case screeningrunmetric.FieldTokensOutput:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTokensOutput(v)
+		return nil
+	case screeningrunmetric.FieldTotalCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalCost(v)
+		return nil
+	case screeningrunmetric.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case screeningrunmetric.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningRunMetric field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ScreeningRunMetricMutation) AddedFields() []string {
+	var fields []string
+	if m.addavg_score != nil {
+		fields = append(fields, screeningrunmetric.FieldAvgScore)
+	}
+	if m.addtokens_input != nil {
+		fields = append(fields, screeningrunmetric.FieldTokensInput)
+	}
+	if m.addtokens_output != nil {
+		fields = append(fields, screeningrunmetric.FieldTokensOutput)
+	}
+	if m.addtotal_cost != nil {
+		fields = append(fields, screeningrunmetric.FieldTotalCost)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ScreeningRunMetricMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case screeningrunmetric.FieldAvgScore:
+		return m.AddedAvgScore()
+	case screeningrunmetric.FieldTokensInput:
+		return m.AddedTokensInput()
+	case screeningrunmetric.FieldTokensOutput:
+		return m.AddedTokensOutput()
+	case screeningrunmetric.FieldTotalCost:
+		return m.AddedTotalCost()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningRunMetricMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case screeningrunmetric.FieldAvgScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAvgScore(v)
+		return nil
+	case screeningrunmetric.FieldTokensInput:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTokensInput(v)
+		return nil
+	case screeningrunmetric.FieldTokensOutput:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTokensOutput(v)
+		return nil
+	case screeningrunmetric.FieldTotalCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalCost(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningRunMetric numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ScreeningRunMetricMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(screeningrunmetric.FieldDeletedAt) {
+		fields = append(fields, screeningrunmetric.FieldDeletedAt)
+	}
+	if m.FieldCleared(screeningrunmetric.FieldAvgScore) {
+		fields = append(fields, screeningrunmetric.FieldAvgScore)
+	}
+	if m.FieldCleared(screeningrunmetric.FieldHistogram) {
+		fields = append(fields, screeningrunmetric.FieldHistogram)
+	}
+	if m.FieldCleared(screeningrunmetric.FieldTokensInput) {
+		fields = append(fields, screeningrunmetric.FieldTokensInput)
+	}
+	if m.FieldCleared(screeningrunmetric.FieldTokensOutput) {
+		fields = append(fields, screeningrunmetric.FieldTokensOutput)
+	}
+	if m.FieldCleared(screeningrunmetric.FieldTotalCost) {
+		fields = append(fields, screeningrunmetric.FieldTotalCost)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ScreeningRunMetricMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ScreeningRunMetricMutation) ClearField(name string) error {
+	switch name {
+	case screeningrunmetric.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case screeningrunmetric.FieldAvgScore:
+		m.ClearAvgScore()
+		return nil
+	case screeningrunmetric.FieldHistogram:
+		m.ClearHistogram()
+		return nil
+	case screeningrunmetric.FieldTokensInput:
+		m.ClearTokensInput()
+		return nil
+	case screeningrunmetric.FieldTokensOutput:
+		m.ClearTokensOutput()
+		return nil
+	case screeningrunmetric.FieldTotalCost:
+		m.ClearTotalCost()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningRunMetric nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ScreeningRunMetricMutation) ResetField(name string) error {
+	switch name {
+	case screeningrunmetric.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case screeningrunmetric.FieldTaskID:
+		m.ResetTaskID()
+		return nil
+	case screeningrunmetric.FieldAvgScore:
+		m.ResetAvgScore()
+		return nil
+	case screeningrunmetric.FieldHistogram:
+		m.ResetHistogram()
+		return nil
+	case screeningrunmetric.FieldTokensInput:
+		m.ResetTokensInput()
+		return nil
+	case screeningrunmetric.FieldTokensOutput:
+		m.ResetTokensOutput()
+		return nil
+	case screeningrunmetric.FieldTotalCost:
+		m.ResetTotalCost()
+		return nil
+	case screeningrunmetric.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case screeningrunmetric.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningRunMetric field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ScreeningRunMetricMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.task != nil {
+		edges = append(edges, screeningrunmetric.EdgeTask)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ScreeningRunMetricMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case screeningrunmetric.EdgeTask:
+		if id := m.task; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ScreeningRunMetricMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ScreeningRunMetricMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ScreeningRunMetricMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedtask {
+		edges = append(edges, screeningrunmetric.EdgeTask)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ScreeningRunMetricMutation) EdgeCleared(name string) bool {
+	switch name {
+	case screeningrunmetric.EdgeTask:
+		return m.clearedtask
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ScreeningRunMetricMutation) ClearEdge(name string) error {
+	switch name {
+	case screeningrunmetric.EdgeTask:
+		m.ClearTask()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningRunMetric unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ScreeningRunMetricMutation) ResetEdge(name string) error {
+	switch name {
+	case screeningrunmetric.EdgeTask:
+		m.ResetTask()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningRunMetric edge %s", name)
+}
+
+// ScreeningTaskMutation represents an operation that mutates the ScreeningTask nodes in the graph.
+type ScreeningTaskMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	deleted_at          *time.Time
+	status              *string
+	dimension_weights   *map[string]interface{}
+	llm_config          *map[string]interface{}
+	notes               *string
+	resume_total        *int
+	addresume_total     *int
+	resume_processed    *int
+	addresume_processed *int
+	resume_succeeded    *int
+	addresume_succeeded *int
+	resume_failed       *int
+	addresume_failed    *int
+	agent_version       *string
+	started_at          *time.Time
+	finished_at         *time.Time
+	created_at          *time.Time
+	updated_at          *time.Time
+	clearedFields       map[string]struct{}
+	job_position        *uuid.UUID
+	clearedjob_position bool
+	creator             *uuid.UUID
+	clearedcreator      bool
+	task_resumes        map[uuid.UUID]struct{}
+	removedtask_resumes map[uuid.UUID]struct{}
+	clearedtask_resumes bool
+	results             map[uuid.UUID]struct{}
+	removedresults      map[uuid.UUID]struct{}
+	clearedresults      bool
+	run_metrics         map[uuid.UUID]struct{}
+	removedrun_metrics  map[uuid.UUID]struct{}
+	clearedrun_metrics  bool
+	done                bool
+	oldValue            func(context.Context) (*ScreeningTask, error)
+	predicates          []predicate.ScreeningTask
+}
+
+var _ ent.Mutation = (*ScreeningTaskMutation)(nil)
+
+// screeningtaskOption allows management of the mutation configuration using functional options.
+type screeningtaskOption func(*ScreeningTaskMutation)
+
+// newScreeningTaskMutation creates new mutation for the ScreeningTask entity.
+func newScreeningTaskMutation(c config, op Op, opts ...screeningtaskOption) *ScreeningTaskMutation {
+	m := &ScreeningTaskMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeScreeningTask,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withScreeningTaskID sets the ID field of the mutation.
+func withScreeningTaskID(id uuid.UUID) screeningtaskOption {
+	return func(m *ScreeningTaskMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ScreeningTask
+		)
+		m.oldValue = func(ctx context.Context) (*ScreeningTask, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ScreeningTask.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withScreeningTask sets the old ScreeningTask of the mutation.
+func withScreeningTask(node *ScreeningTask) screeningtaskOption {
+	return func(m *ScreeningTaskMutation) {
+		m.oldValue = func(context.Context) (*ScreeningTask, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ScreeningTaskMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ScreeningTaskMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ScreeningTask entities.
+func (m *ScreeningTaskMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ScreeningTaskMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ScreeningTaskMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ScreeningTask.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ScreeningTaskMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ScreeningTaskMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ScreeningTaskMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[screeningtask.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ScreeningTaskMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[screeningtask.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ScreeningTaskMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, screeningtask.FieldDeletedAt)
+}
+
+// SetJobPositionID sets the "job_position_id" field.
+func (m *ScreeningTaskMutation) SetJobPositionID(u uuid.UUID) {
+	m.job_position = &u
+}
+
+// JobPositionID returns the value of the "job_position_id" field in the mutation.
+func (m *ScreeningTaskMutation) JobPositionID() (r uuid.UUID, exists bool) {
+	v := m.job_position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJobPositionID returns the old "job_position_id" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldJobPositionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJobPositionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJobPositionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJobPositionID: %w", err)
+	}
+	return oldValue.JobPositionID, nil
+}
+
+// ResetJobPositionID resets all changes to the "job_position_id" field.
+func (m *ScreeningTaskMutation) ResetJobPositionID() {
+	m.job_position = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *ScreeningTaskMutation) SetCreatedBy(u uuid.UUID) {
+	m.creator = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *ScreeningTaskMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldCreatedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *ScreeningTaskMutation) ResetCreatedBy() {
+	m.creator = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ScreeningTaskMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ScreeningTaskMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ScreeningTaskMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetDimensionWeights sets the "dimension_weights" field.
+func (m *ScreeningTaskMutation) SetDimensionWeights(value map[string]interface{}) {
+	m.dimension_weights = &value
+}
+
+// DimensionWeights returns the value of the "dimension_weights" field in the mutation.
+func (m *ScreeningTaskMutation) DimensionWeights() (r map[string]interface{}, exists bool) {
+	v := m.dimension_weights
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDimensionWeights returns the old "dimension_weights" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldDimensionWeights(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDimensionWeights is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDimensionWeights requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDimensionWeights: %w", err)
+	}
+	return oldValue.DimensionWeights, nil
+}
+
+// ClearDimensionWeights clears the value of the "dimension_weights" field.
+func (m *ScreeningTaskMutation) ClearDimensionWeights() {
+	m.dimension_weights = nil
+	m.clearedFields[screeningtask.FieldDimensionWeights] = struct{}{}
+}
+
+// DimensionWeightsCleared returns if the "dimension_weights" field was cleared in this mutation.
+func (m *ScreeningTaskMutation) DimensionWeightsCleared() bool {
+	_, ok := m.clearedFields[screeningtask.FieldDimensionWeights]
+	return ok
+}
+
+// ResetDimensionWeights resets all changes to the "dimension_weights" field.
+func (m *ScreeningTaskMutation) ResetDimensionWeights() {
+	m.dimension_weights = nil
+	delete(m.clearedFields, screeningtask.FieldDimensionWeights)
+}
+
+// SetLlmConfig sets the "llm_config" field.
+func (m *ScreeningTaskMutation) SetLlmConfig(value map[string]interface{}) {
+	m.llm_config = &value
+}
+
+// LlmConfig returns the value of the "llm_config" field in the mutation.
+func (m *ScreeningTaskMutation) LlmConfig() (r map[string]interface{}, exists bool) {
+	v := m.llm_config
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLlmConfig returns the old "llm_config" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldLlmConfig(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLlmConfig is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLlmConfig requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLlmConfig: %w", err)
+	}
+	return oldValue.LlmConfig, nil
+}
+
+// ClearLlmConfig clears the value of the "llm_config" field.
+func (m *ScreeningTaskMutation) ClearLlmConfig() {
+	m.llm_config = nil
+	m.clearedFields[screeningtask.FieldLlmConfig] = struct{}{}
+}
+
+// LlmConfigCleared returns if the "llm_config" field was cleared in this mutation.
+func (m *ScreeningTaskMutation) LlmConfigCleared() bool {
+	_, ok := m.clearedFields[screeningtask.FieldLlmConfig]
+	return ok
+}
+
+// ResetLlmConfig resets all changes to the "llm_config" field.
+func (m *ScreeningTaskMutation) ResetLlmConfig() {
+	m.llm_config = nil
+	delete(m.clearedFields, screeningtask.FieldLlmConfig)
+}
+
+// SetNotes sets the "notes" field.
+func (m *ScreeningTaskMutation) SetNotes(s string) {
+	m.notes = &s
+}
+
+// Notes returns the value of the "notes" field in the mutation.
+func (m *ScreeningTaskMutation) Notes() (r string, exists bool) {
+	v := m.notes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotes returns the old "notes" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldNotes(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotes: %w", err)
+	}
+	return oldValue.Notes, nil
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (m *ScreeningTaskMutation) ClearNotes() {
+	m.notes = nil
+	m.clearedFields[screeningtask.FieldNotes] = struct{}{}
+}
+
+// NotesCleared returns if the "notes" field was cleared in this mutation.
+func (m *ScreeningTaskMutation) NotesCleared() bool {
+	_, ok := m.clearedFields[screeningtask.FieldNotes]
+	return ok
+}
+
+// ResetNotes resets all changes to the "notes" field.
+func (m *ScreeningTaskMutation) ResetNotes() {
+	m.notes = nil
+	delete(m.clearedFields, screeningtask.FieldNotes)
+}
+
+// SetResumeTotal sets the "resume_total" field.
+func (m *ScreeningTaskMutation) SetResumeTotal(i int) {
+	m.resume_total = &i
+	m.addresume_total = nil
+}
+
+// ResumeTotal returns the value of the "resume_total" field in the mutation.
+func (m *ScreeningTaskMutation) ResumeTotal() (r int, exists bool) {
+	v := m.resume_total
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeTotal returns the old "resume_total" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldResumeTotal(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeTotal is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeTotal requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeTotal: %w", err)
+	}
+	return oldValue.ResumeTotal, nil
+}
+
+// AddResumeTotal adds i to the "resume_total" field.
+func (m *ScreeningTaskMutation) AddResumeTotal(i int) {
+	if m.addresume_total != nil {
+		*m.addresume_total += i
+	} else {
+		m.addresume_total = &i
+	}
+}
+
+// AddedResumeTotal returns the value that was added to the "resume_total" field in this mutation.
+func (m *ScreeningTaskMutation) AddedResumeTotal() (r int, exists bool) {
+	v := m.addresume_total
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResumeTotal resets all changes to the "resume_total" field.
+func (m *ScreeningTaskMutation) ResetResumeTotal() {
+	m.resume_total = nil
+	m.addresume_total = nil
+}
+
+// SetResumeProcessed sets the "resume_processed" field.
+func (m *ScreeningTaskMutation) SetResumeProcessed(i int) {
+	m.resume_processed = &i
+	m.addresume_processed = nil
+}
+
+// ResumeProcessed returns the value of the "resume_processed" field in the mutation.
+func (m *ScreeningTaskMutation) ResumeProcessed() (r int, exists bool) {
+	v := m.resume_processed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeProcessed returns the old "resume_processed" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldResumeProcessed(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeProcessed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeProcessed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeProcessed: %w", err)
+	}
+	return oldValue.ResumeProcessed, nil
+}
+
+// AddResumeProcessed adds i to the "resume_processed" field.
+func (m *ScreeningTaskMutation) AddResumeProcessed(i int) {
+	if m.addresume_processed != nil {
+		*m.addresume_processed += i
+	} else {
+		m.addresume_processed = &i
+	}
+}
+
+// AddedResumeProcessed returns the value that was added to the "resume_processed" field in this mutation.
+func (m *ScreeningTaskMutation) AddedResumeProcessed() (r int, exists bool) {
+	v := m.addresume_processed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResumeProcessed resets all changes to the "resume_processed" field.
+func (m *ScreeningTaskMutation) ResetResumeProcessed() {
+	m.resume_processed = nil
+	m.addresume_processed = nil
+}
+
+// SetResumeSucceeded sets the "resume_succeeded" field.
+func (m *ScreeningTaskMutation) SetResumeSucceeded(i int) {
+	m.resume_succeeded = &i
+	m.addresume_succeeded = nil
+}
+
+// ResumeSucceeded returns the value of the "resume_succeeded" field in the mutation.
+func (m *ScreeningTaskMutation) ResumeSucceeded() (r int, exists bool) {
+	v := m.resume_succeeded
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeSucceeded returns the old "resume_succeeded" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldResumeSucceeded(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeSucceeded is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeSucceeded requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeSucceeded: %w", err)
+	}
+	return oldValue.ResumeSucceeded, nil
+}
+
+// AddResumeSucceeded adds i to the "resume_succeeded" field.
+func (m *ScreeningTaskMutation) AddResumeSucceeded(i int) {
+	if m.addresume_succeeded != nil {
+		*m.addresume_succeeded += i
+	} else {
+		m.addresume_succeeded = &i
+	}
+}
+
+// AddedResumeSucceeded returns the value that was added to the "resume_succeeded" field in this mutation.
+func (m *ScreeningTaskMutation) AddedResumeSucceeded() (r int, exists bool) {
+	v := m.addresume_succeeded
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResumeSucceeded resets all changes to the "resume_succeeded" field.
+func (m *ScreeningTaskMutation) ResetResumeSucceeded() {
+	m.resume_succeeded = nil
+	m.addresume_succeeded = nil
+}
+
+// SetResumeFailed sets the "resume_failed" field.
+func (m *ScreeningTaskMutation) SetResumeFailed(i int) {
+	m.resume_failed = &i
+	m.addresume_failed = nil
+}
+
+// ResumeFailed returns the value of the "resume_failed" field in the mutation.
+func (m *ScreeningTaskMutation) ResumeFailed() (r int, exists bool) {
+	v := m.resume_failed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeFailed returns the old "resume_failed" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldResumeFailed(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeFailed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeFailed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeFailed: %w", err)
+	}
+	return oldValue.ResumeFailed, nil
+}
+
+// AddResumeFailed adds i to the "resume_failed" field.
+func (m *ScreeningTaskMutation) AddResumeFailed(i int) {
+	if m.addresume_failed != nil {
+		*m.addresume_failed += i
+	} else {
+		m.addresume_failed = &i
+	}
+}
+
+// AddedResumeFailed returns the value that was added to the "resume_failed" field in this mutation.
+func (m *ScreeningTaskMutation) AddedResumeFailed() (r int, exists bool) {
+	v := m.addresume_failed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResumeFailed resets all changes to the "resume_failed" field.
+func (m *ScreeningTaskMutation) ResetResumeFailed() {
+	m.resume_failed = nil
+	m.addresume_failed = nil
+}
+
+// SetAgentVersion sets the "agent_version" field.
+func (m *ScreeningTaskMutation) SetAgentVersion(s string) {
+	m.agent_version = &s
+}
+
+// AgentVersion returns the value of the "agent_version" field in the mutation.
+func (m *ScreeningTaskMutation) AgentVersion() (r string, exists bool) {
+	v := m.agent_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAgentVersion returns the old "agent_version" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldAgentVersion(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAgentVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAgentVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAgentVersion: %w", err)
+	}
+	return oldValue.AgentVersion, nil
+}
+
+// ClearAgentVersion clears the value of the "agent_version" field.
+func (m *ScreeningTaskMutation) ClearAgentVersion() {
+	m.agent_version = nil
+	m.clearedFields[screeningtask.FieldAgentVersion] = struct{}{}
+}
+
+// AgentVersionCleared returns if the "agent_version" field was cleared in this mutation.
+func (m *ScreeningTaskMutation) AgentVersionCleared() bool {
+	_, ok := m.clearedFields[screeningtask.FieldAgentVersion]
+	return ok
+}
+
+// ResetAgentVersion resets all changes to the "agent_version" field.
+func (m *ScreeningTaskMutation) ResetAgentVersion() {
+	m.agent_version = nil
+	delete(m.clearedFields, screeningtask.FieldAgentVersion)
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *ScreeningTaskMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *ScreeningTaskMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldStartedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (m *ScreeningTaskMutation) ClearStartedAt() {
+	m.started_at = nil
+	m.clearedFields[screeningtask.FieldStartedAt] = struct{}{}
+}
+
+// StartedAtCleared returns if the "started_at" field was cleared in this mutation.
+func (m *ScreeningTaskMutation) StartedAtCleared() bool {
+	_, ok := m.clearedFields[screeningtask.FieldStartedAt]
+	return ok
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *ScreeningTaskMutation) ResetStartedAt() {
+	m.started_at = nil
+	delete(m.clearedFields, screeningtask.FieldStartedAt)
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (m *ScreeningTaskMutation) SetFinishedAt(t time.Time) {
+	m.finished_at = &t
+}
+
+// FinishedAt returns the value of the "finished_at" field in the mutation.
+func (m *ScreeningTaskMutation) FinishedAt() (r time.Time, exists bool) {
+	v := m.finished_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFinishedAt returns the old "finished_at" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldFinishedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFinishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFinishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFinishedAt: %w", err)
+	}
+	return oldValue.FinishedAt, nil
+}
+
+// ClearFinishedAt clears the value of the "finished_at" field.
+func (m *ScreeningTaskMutation) ClearFinishedAt() {
+	m.finished_at = nil
+	m.clearedFields[screeningtask.FieldFinishedAt] = struct{}{}
+}
+
+// FinishedAtCleared returns if the "finished_at" field was cleared in this mutation.
+func (m *ScreeningTaskMutation) FinishedAtCleared() bool {
+	_, ok := m.clearedFields[screeningtask.FieldFinishedAt]
+	return ok
+}
+
+// ResetFinishedAt resets all changes to the "finished_at" field.
+func (m *ScreeningTaskMutation) ResetFinishedAt() {
+	m.finished_at = nil
+	delete(m.clearedFields, screeningtask.FieldFinishedAt)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ScreeningTaskMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ScreeningTaskMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ScreeningTaskMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ScreeningTaskMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ScreeningTaskMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ScreeningTask entity.
+// If the ScreeningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ScreeningTaskMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearJobPosition clears the "job_position" edge to the JobPosition entity.
+func (m *ScreeningTaskMutation) ClearJobPosition() {
+	m.clearedjob_position = true
+	m.clearedFields[screeningtask.FieldJobPositionID] = struct{}{}
+}
+
+// JobPositionCleared reports if the "job_position" edge to the JobPosition entity was cleared.
+func (m *ScreeningTaskMutation) JobPositionCleared() bool {
+	return m.clearedjob_position
+}
+
+// JobPositionIDs returns the "job_position" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// JobPositionID instead. It exists only for internal usage by the builders.
+func (m *ScreeningTaskMutation) JobPositionIDs() (ids []uuid.UUID) {
+	if id := m.job_position; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetJobPosition resets all changes to the "job_position" edge.
+func (m *ScreeningTaskMutation) ResetJobPosition() {
+	m.job_position = nil
+	m.clearedjob_position = false
+}
+
+// SetCreatorID sets the "creator" edge to the User entity by id.
+func (m *ScreeningTaskMutation) SetCreatorID(id uuid.UUID) {
+	m.creator = &id
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (m *ScreeningTaskMutation) ClearCreator() {
+	m.clearedcreator = true
+	m.clearedFields[screeningtask.FieldCreatedBy] = struct{}{}
+}
+
+// CreatorCleared reports if the "creator" edge to the User entity was cleared.
+func (m *ScreeningTaskMutation) CreatorCleared() bool {
+	return m.clearedcreator
+}
+
+// CreatorID returns the "creator" edge ID in the mutation.
+func (m *ScreeningTaskMutation) CreatorID() (id uuid.UUID, exists bool) {
+	if m.creator != nil {
+		return *m.creator, true
+	}
+	return
+}
+
+// CreatorIDs returns the "creator" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CreatorID instead. It exists only for internal usage by the builders.
+func (m *ScreeningTaskMutation) CreatorIDs() (ids []uuid.UUID) {
+	if id := m.creator; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCreator resets all changes to the "creator" edge.
+func (m *ScreeningTaskMutation) ResetCreator() {
+	m.creator = nil
+	m.clearedcreator = false
+}
+
+// AddTaskResumeIDs adds the "task_resumes" edge to the ScreeningTaskResume entity by ids.
+func (m *ScreeningTaskMutation) AddTaskResumeIDs(ids ...uuid.UUID) {
+	if m.task_resumes == nil {
+		m.task_resumes = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.task_resumes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTaskResumes clears the "task_resumes" edge to the ScreeningTaskResume entity.
+func (m *ScreeningTaskMutation) ClearTaskResumes() {
+	m.clearedtask_resumes = true
+}
+
+// TaskResumesCleared reports if the "task_resumes" edge to the ScreeningTaskResume entity was cleared.
+func (m *ScreeningTaskMutation) TaskResumesCleared() bool {
+	return m.clearedtask_resumes
+}
+
+// RemoveTaskResumeIDs removes the "task_resumes" edge to the ScreeningTaskResume entity by IDs.
+func (m *ScreeningTaskMutation) RemoveTaskResumeIDs(ids ...uuid.UUID) {
+	if m.removedtask_resumes == nil {
+		m.removedtask_resumes = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.task_resumes, ids[i])
+		m.removedtask_resumes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTaskResumes returns the removed IDs of the "task_resumes" edge to the ScreeningTaskResume entity.
+func (m *ScreeningTaskMutation) RemovedTaskResumesIDs() (ids []uuid.UUID) {
+	for id := range m.removedtask_resumes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TaskResumesIDs returns the "task_resumes" edge IDs in the mutation.
+func (m *ScreeningTaskMutation) TaskResumesIDs() (ids []uuid.UUID) {
+	for id := range m.task_resumes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTaskResumes resets all changes to the "task_resumes" edge.
+func (m *ScreeningTaskMutation) ResetTaskResumes() {
+	m.task_resumes = nil
+	m.clearedtask_resumes = false
+	m.removedtask_resumes = nil
+}
+
+// AddResultIDs adds the "results" edge to the ScreeningResult entity by ids.
+func (m *ScreeningTaskMutation) AddResultIDs(ids ...uuid.UUID) {
+	if m.results == nil {
+		m.results = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.results[ids[i]] = struct{}{}
+	}
+}
+
+// ClearResults clears the "results" edge to the ScreeningResult entity.
+func (m *ScreeningTaskMutation) ClearResults() {
+	m.clearedresults = true
+}
+
+// ResultsCleared reports if the "results" edge to the ScreeningResult entity was cleared.
+func (m *ScreeningTaskMutation) ResultsCleared() bool {
+	return m.clearedresults
+}
+
+// RemoveResultIDs removes the "results" edge to the ScreeningResult entity by IDs.
+func (m *ScreeningTaskMutation) RemoveResultIDs(ids ...uuid.UUID) {
+	if m.removedresults == nil {
+		m.removedresults = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.results, ids[i])
+		m.removedresults[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedResults returns the removed IDs of the "results" edge to the ScreeningResult entity.
+func (m *ScreeningTaskMutation) RemovedResultsIDs() (ids []uuid.UUID) {
+	for id := range m.removedresults {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResultsIDs returns the "results" edge IDs in the mutation.
+func (m *ScreeningTaskMutation) ResultsIDs() (ids []uuid.UUID) {
+	for id := range m.results {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetResults resets all changes to the "results" edge.
+func (m *ScreeningTaskMutation) ResetResults() {
+	m.results = nil
+	m.clearedresults = false
+	m.removedresults = nil
+}
+
+// AddRunMetricIDs adds the "run_metrics" edge to the ScreeningRunMetric entity by ids.
+func (m *ScreeningTaskMutation) AddRunMetricIDs(ids ...uuid.UUID) {
+	if m.run_metrics == nil {
+		m.run_metrics = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.run_metrics[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRunMetrics clears the "run_metrics" edge to the ScreeningRunMetric entity.
+func (m *ScreeningTaskMutation) ClearRunMetrics() {
+	m.clearedrun_metrics = true
+}
+
+// RunMetricsCleared reports if the "run_metrics" edge to the ScreeningRunMetric entity was cleared.
+func (m *ScreeningTaskMutation) RunMetricsCleared() bool {
+	return m.clearedrun_metrics
+}
+
+// RemoveRunMetricIDs removes the "run_metrics" edge to the ScreeningRunMetric entity by IDs.
+func (m *ScreeningTaskMutation) RemoveRunMetricIDs(ids ...uuid.UUID) {
+	if m.removedrun_metrics == nil {
+		m.removedrun_metrics = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.run_metrics, ids[i])
+		m.removedrun_metrics[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRunMetrics returns the removed IDs of the "run_metrics" edge to the ScreeningRunMetric entity.
+func (m *ScreeningTaskMutation) RemovedRunMetricsIDs() (ids []uuid.UUID) {
+	for id := range m.removedrun_metrics {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RunMetricsIDs returns the "run_metrics" edge IDs in the mutation.
+func (m *ScreeningTaskMutation) RunMetricsIDs() (ids []uuid.UUID) {
+	for id := range m.run_metrics {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRunMetrics resets all changes to the "run_metrics" edge.
+func (m *ScreeningTaskMutation) ResetRunMetrics() {
+	m.run_metrics = nil
+	m.clearedrun_metrics = false
+	m.removedrun_metrics = nil
+}
+
+// Where appends a list predicates to the ScreeningTaskMutation builder.
+func (m *ScreeningTaskMutation) Where(ps ...predicate.ScreeningTask) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ScreeningTaskMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ScreeningTaskMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ScreeningTask, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ScreeningTaskMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ScreeningTaskMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ScreeningTask).
+func (m *ScreeningTaskMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ScreeningTaskMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.deleted_at != nil {
+		fields = append(fields, screeningtask.FieldDeletedAt)
+	}
+	if m.job_position != nil {
+		fields = append(fields, screeningtask.FieldJobPositionID)
+	}
+	if m.creator != nil {
+		fields = append(fields, screeningtask.FieldCreatedBy)
+	}
+	if m.status != nil {
+		fields = append(fields, screeningtask.FieldStatus)
+	}
+	if m.dimension_weights != nil {
+		fields = append(fields, screeningtask.FieldDimensionWeights)
+	}
+	if m.llm_config != nil {
+		fields = append(fields, screeningtask.FieldLlmConfig)
+	}
+	if m.notes != nil {
+		fields = append(fields, screeningtask.FieldNotes)
+	}
+	if m.resume_total != nil {
+		fields = append(fields, screeningtask.FieldResumeTotal)
+	}
+	if m.resume_processed != nil {
+		fields = append(fields, screeningtask.FieldResumeProcessed)
+	}
+	if m.resume_succeeded != nil {
+		fields = append(fields, screeningtask.FieldResumeSucceeded)
+	}
+	if m.resume_failed != nil {
+		fields = append(fields, screeningtask.FieldResumeFailed)
+	}
+	if m.agent_version != nil {
+		fields = append(fields, screeningtask.FieldAgentVersion)
+	}
+	if m.started_at != nil {
+		fields = append(fields, screeningtask.FieldStartedAt)
+	}
+	if m.finished_at != nil {
+		fields = append(fields, screeningtask.FieldFinishedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, screeningtask.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, screeningtask.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ScreeningTaskMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case screeningtask.FieldDeletedAt:
+		return m.DeletedAt()
+	case screeningtask.FieldJobPositionID:
+		return m.JobPositionID()
+	case screeningtask.FieldCreatedBy:
+		return m.CreatedBy()
+	case screeningtask.FieldStatus:
+		return m.Status()
+	case screeningtask.FieldDimensionWeights:
+		return m.DimensionWeights()
+	case screeningtask.FieldLlmConfig:
+		return m.LlmConfig()
+	case screeningtask.FieldNotes:
+		return m.Notes()
+	case screeningtask.FieldResumeTotal:
+		return m.ResumeTotal()
+	case screeningtask.FieldResumeProcessed:
+		return m.ResumeProcessed()
+	case screeningtask.FieldResumeSucceeded:
+		return m.ResumeSucceeded()
+	case screeningtask.FieldResumeFailed:
+		return m.ResumeFailed()
+	case screeningtask.FieldAgentVersion:
+		return m.AgentVersion()
+	case screeningtask.FieldStartedAt:
+		return m.StartedAt()
+	case screeningtask.FieldFinishedAt:
+		return m.FinishedAt()
+	case screeningtask.FieldCreatedAt:
+		return m.CreatedAt()
+	case screeningtask.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ScreeningTaskMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case screeningtask.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case screeningtask.FieldJobPositionID:
+		return m.OldJobPositionID(ctx)
+	case screeningtask.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case screeningtask.FieldStatus:
+		return m.OldStatus(ctx)
+	case screeningtask.FieldDimensionWeights:
+		return m.OldDimensionWeights(ctx)
+	case screeningtask.FieldLlmConfig:
+		return m.OldLlmConfig(ctx)
+	case screeningtask.FieldNotes:
+		return m.OldNotes(ctx)
+	case screeningtask.FieldResumeTotal:
+		return m.OldResumeTotal(ctx)
+	case screeningtask.FieldResumeProcessed:
+		return m.OldResumeProcessed(ctx)
+	case screeningtask.FieldResumeSucceeded:
+		return m.OldResumeSucceeded(ctx)
+	case screeningtask.FieldResumeFailed:
+		return m.OldResumeFailed(ctx)
+	case screeningtask.FieldAgentVersion:
+		return m.OldAgentVersion(ctx)
+	case screeningtask.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case screeningtask.FieldFinishedAt:
+		return m.OldFinishedAt(ctx)
+	case screeningtask.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case screeningtask.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ScreeningTask field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningTaskMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case screeningtask.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case screeningtask.FieldJobPositionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJobPositionID(v)
+		return nil
+	case screeningtask.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case screeningtask.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case screeningtask.FieldDimensionWeights:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDimensionWeights(v)
+		return nil
+	case screeningtask.FieldLlmConfig:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLlmConfig(v)
+		return nil
+	case screeningtask.FieldNotes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotes(v)
+		return nil
+	case screeningtask.FieldResumeTotal:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeTotal(v)
+		return nil
+	case screeningtask.FieldResumeProcessed:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeProcessed(v)
+		return nil
+	case screeningtask.FieldResumeSucceeded:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeSucceeded(v)
+		return nil
+	case screeningtask.FieldResumeFailed:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeFailed(v)
+		return nil
+	case screeningtask.FieldAgentVersion:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAgentVersion(v)
+		return nil
+	case screeningtask.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case screeningtask.FieldFinishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFinishedAt(v)
+		return nil
+	case screeningtask.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case screeningtask.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTask field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ScreeningTaskMutation) AddedFields() []string {
+	var fields []string
+	if m.addresume_total != nil {
+		fields = append(fields, screeningtask.FieldResumeTotal)
+	}
+	if m.addresume_processed != nil {
+		fields = append(fields, screeningtask.FieldResumeProcessed)
+	}
+	if m.addresume_succeeded != nil {
+		fields = append(fields, screeningtask.FieldResumeSucceeded)
+	}
+	if m.addresume_failed != nil {
+		fields = append(fields, screeningtask.FieldResumeFailed)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ScreeningTaskMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case screeningtask.FieldResumeTotal:
+		return m.AddedResumeTotal()
+	case screeningtask.FieldResumeProcessed:
+		return m.AddedResumeProcessed()
+	case screeningtask.FieldResumeSucceeded:
+		return m.AddedResumeSucceeded()
+	case screeningtask.FieldResumeFailed:
+		return m.AddedResumeFailed()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningTaskMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case screeningtask.FieldResumeTotal:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResumeTotal(v)
+		return nil
+	case screeningtask.FieldResumeProcessed:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResumeProcessed(v)
+		return nil
+	case screeningtask.FieldResumeSucceeded:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResumeSucceeded(v)
+		return nil
+	case screeningtask.FieldResumeFailed:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResumeFailed(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTask numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ScreeningTaskMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(screeningtask.FieldDeletedAt) {
+		fields = append(fields, screeningtask.FieldDeletedAt)
+	}
+	if m.FieldCleared(screeningtask.FieldDimensionWeights) {
+		fields = append(fields, screeningtask.FieldDimensionWeights)
+	}
+	if m.FieldCleared(screeningtask.FieldLlmConfig) {
+		fields = append(fields, screeningtask.FieldLlmConfig)
+	}
+	if m.FieldCleared(screeningtask.FieldNotes) {
+		fields = append(fields, screeningtask.FieldNotes)
+	}
+	if m.FieldCleared(screeningtask.FieldAgentVersion) {
+		fields = append(fields, screeningtask.FieldAgentVersion)
+	}
+	if m.FieldCleared(screeningtask.FieldStartedAt) {
+		fields = append(fields, screeningtask.FieldStartedAt)
+	}
+	if m.FieldCleared(screeningtask.FieldFinishedAt) {
+		fields = append(fields, screeningtask.FieldFinishedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ScreeningTaskMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ScreeningTaskMutation) ClearField(name string) error {
+	switch name {
+	case screeningtask.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case screeningtask.FieldDimensionWeights:
+		m.ClearDimensionWeights()
+		return nil
+	case screeningtask.FieldLlmConfig:
+		m.ClearLlmConfig()
+		return nil
+	case screeningtask.FieldNotes:
+		m.ClearNotes()
+		return nil
+	case screeningtask.FieldAgentVersion:
+		m.ClearAgentVersion()
+		return nil
+	case screeningtask.FieldStartedAt:
+		m.ClearStartedAt()
+		return nil
+	case screeningtask.FieldFinishedAt:
+		m.ClearFinishedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTask nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ScreeningTaskMutation) ResetField(name string) error {
+	switch name {
+	case screeningtask.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case screeningtask.FieldJobPositionID:
+		m.ResetJobPositionID()
+		return nil
+	case screeningtask.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case screeningtask.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case screeningtask.FieldDimensionWeights:
+		m.ResetDimensionWeights()
+		return nil
+	case screeningtask.FieldLlmConfig:
+		m.ResetLlmConfig()
+		return nil
+	case screeningtask.FieldNotes:
+		m.ResetNotes()
+		return nil
+	case screeningtask.FieldResumeTotal:
+		m.ResetResumeTotal()
+		return nil
+	case screeningtask.FieldResumeProcessed:
+		m.ResetResumeProcessed()
+		return nil
+	case screeningtask.FieldResumeSucceeded:
+		m.ResetResumeSucceeded()
+		return nil
+	case screeningtask.FieldResumeFailed:
+		m.ResetResumeFailed()
+		return nil
+	case screeningtask.FieldAgentVersion:
+		m.ResetAgentVersion()
+		return nil
+	case screeningtask.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case screeningtask.FieldFinishedAt:
+		m.ResetFinishedAt()
+		return nil
+	case screeningtask.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case screeningtask.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTask field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ScreeningTaskMutation) AddedEdges() []string {
+	edges := make([]string, 0, 5)
+	if m.job_position != nil {
+		edges = append(edges, screeningtask.EdgeJobPosition)
+	}
+	if m.creator != nil {
+		edges = append(edges, screeningtask.EdgeCreator)
+	}
+	if m.task_resumes != nil {
+		edges = append(edges, screeningtask.EdgeTaskResumes)
+	}
+	if m.results != nil {
+		edges = append(edges, screeningtask.EdgeResults)
+	}
+	if m.run_metrics != nil {
+		edges = append(edges, screeningtask.EdgeRunMetrics)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ScreeningTaskMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case screeningtask.EdgeJobPosition:
+		if id := m.job_position; id != nil {
+			return []ent.Value{*id}
+		}
+	case screeningtask.EdgeCreator:
+		if id := m.creator; id != nil {
+			return []ent.Value{*id}
+		}
+	case screeningtask.EdgeTaskResumes:
+		ids := make([]ent.Value, 0, len(m.task_resumes))
+		for id := range m.task_resumes {
+			ids = append(ids, id)
+		}
+		return ids
+	case screeningtask.EdgeResults:
+		ids := make([]ent.Value, 0, len(m.results))
+		for id := range m.results {
+			ids = append(ids, id)
+		}
+		return ids
+	case screeningtask.EdgeRunMetrics:
+		ids := make([]ent.Value, 0, len(m.run_metrics))
+		for id := range m.run_metrics {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ScreeningTaskMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 5)
+	if m.removedtask_resumes != nil {
+		edges = append(edges, screeningtask.EdgeTaskResumes)
+	}
+	if m.removedresults != nil {
+		edges = append(edges, screeningtask.EdgeResults)
+	}
+	if m.removedrun_metrics != nil {
+		edges = append(edges, screeningtask.EdgeRunMetrics)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ScreeningTaskMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case screeningtask.EdgeTaskResumes:
+		ids := make([]ent.Value, 0, len(m.removedtask_resumes))
+		for id := range m.removedtask_resumes {
+			ids = append(ids, id)
+		}
+		return ids
+	case screeningtask.EdgeResults:
+		ids := make([]ent.Value, 0, len(m.removedresults))
+		for id := range m.removedresults {
+			ids = append(ids, id)
+		}
+		return ids
+	case screeningtask.EdgeRunMetrics:
+		ids := make([]ent.Value, 0, len(m.removedrun_metrics))
+		for id := range m.removedrun_metrics {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ScreeningTaskMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 5)
+	if m.clearedjob_position {
+		edges = append(edges, screeningtask.EdgeJobPosition)
+	}
+	if m.clearedcreator {
+		edges = append(edges, screeningtask.EdgeCreator)
+	}
+	if m.clearedtask_resumes {
+		edges = append(edges, screeningtask.EdgeTaskResumes)
+	}
+	if m.clearedresults {
+		edges = append(edges, screeningtask.EdgeResults)
+	}
+	if m.clearedrun_metrics {
+		edges = append(edges, screeningtask.EdgeRunMetrics)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ScreeningTaskMutation) EdgeCleared(name string) bool {
+	switch name {
+	case screeningtask.EdgeJobPosition:
+		return m.clearedjob_position
+	case screeningtask.EdgeCreator:
+		return m.clearedcreator
+	case screeningtask.EdgeTaskResumes:
+		return m.clearedtask_resumes
+	case screeningtask.EdgeResults:
+		return m.clearedresults
+	case screeningtask.EdgeRunMetrics:
+		return m.clearedrun_metrics
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ScreeningTaskMutation) ClearEdge(name string) error {
+	switch name {
+	case screeningtask.EdgeJobPosition:
+		m.ClearJobPosition()
+		return nil
+	case screeningtask.EdgeCreator:
+		m.ClearCreator()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTask unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ScreeningTaskMutation) ResetEdge(name string) error {
+	switch name {
+	case screeningtask.EdgeJobPosition:
+		m.ResetJobPosition()
+		return nil
+	case screeningtask.EdgeCreator:
+		m.ResetCreator()
+		return nil
+	case screeningtask.EdgeTaskResumes:
+		m.ResetTaskResumes()
+		return nil
+	case screeningtask.EdgeResults:
+		m.ResetResults()
+		return nil
+	case screeningtask.EdgeRunMetrics:
+		m.ResetRunMetrics()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTask edge %s", name)
+}
+
+// ScreeningTaskResumeMutation represents an operation that mutates the ScreeningTaskResume nodes in the graph.
+type ScreeningTaskResumeMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	deleted_at    *time.Time
+	status        *string
+	error_message *string
+	ranking       *int
+	addranking    *int
+	score         *float64
+	addscore      *float64
+	processed_at  *time.Time
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	task          *uuid.UUID
+	clearedtask   bool
+	resume        *uuid.UUID
+	clearedresume bool
+	done          bool
+	oldValue      func(context.Context) (*ScreeningTaskResume, error)
+	predicates    []predicate.ScreeningTaskResume
+}
+
+var _ ent.Mutation = (*ScreeningTaskResumeMutation)(nil)
+
+// screeningtaskresumeOption allows management of the mutation configuration using functional options.
+type screeningtaskresumeOption func(*ScreeningTaskResumeMutation)
+
+// newScreeningTaskResumeMutation creates new mutation for the ScreeningTaskResume entity.
+func newScreeningTaskResumeMutation(c config, op Op, opts ...screeningtaskresumeOption) *ScreeningTaskResumeMutation {
+	m := &ScreeningTaskResumeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeScreeningTaskResume,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withScreeningTaskResumeID sets the ID field of the mutation.
+func withScreeningTaskResumeID(id uuid.UUID) screeningtaskresumeOption {
+	return func(m *ScreeningTaskResumeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ScreeningTaskResume
+		)
+		m.oldValue = func(ctx context.Context) (*ScreeningTaskResume, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ScreeningTaskResume.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withScreeningTaskResume sets the old ScreeningTaskResume of the mutation.
+func withScreeningTaskResume(node *ScreeningTaskResume) screeningtaskresumeOption {
+	return func(m *ScreeningTaskResumeMutation) {
+		m.oldValue = func(context.Context) (*ScreeningTaskResume, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ScreeningTaskResumeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ScreeningTaskResumeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ScreeningTaskResume entities.
+func (m *ScreeningTaskResumeMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ScreeningTaskResumeMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ScreeningTaskResumeMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ScreeningTaskResume.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ScreeningTaskResumeMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ScreeningTaskResumeMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ScreeningTaskResumeMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[screeningtaskresume.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[screeningtaskresume.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ScreeningTaskResumeMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, screeningtaskresume.FieldDeletedAt)
+}
+
+// SetTaskID sets the "task_id" field.
+func (m *ScreeningTaskResumeMutation) SetTaskID(u uuid.UUID) {
+	m.task = &u
+}
+
+// TaskID returns the value of the "task_id" field in the mutation.
+func (m *ScreeningTaskResumeMutation) TaskID() (r uuid.UUID, exists bool) {
+	v := m.task
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTaskID returns the old "task_id" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldTaskID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTaskID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTaskID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTaskID: %w", err)
+	}
+	return oldValue.TaskID, nil
+}
+
+// ResetTaskID resets all changes to the "task_id" field.
+func (m *ScreeningTaskResumeMutation) ResetTaskID() {
+	m.task = nil
+}
+
+// SetResumeID sets the "resume_id" field.
+func (m *ScreeningTaskResumeMutation) SetResumeID(u uuid.UUID) {
+	m.resume = &u
+}
+
+// ResumeID returns the value of the "resume_id" field in the mutation.
+func (m *ScreeningTaskResumeMutation) ResumeID() (r uuid.UUID, exists bool) {
+	v := m.resume
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResumeID returns the old "resume_id" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldResumeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResumeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResumeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResumeID: %w", err)
+	}
+	return oldValue.ResumeID, nil
+}
+
+// ResetResumeID resets all changes to the "resume_id" field.
+func (m *ScreeningTaskResumeMutation) ResetResumeID() {
+	m.resume = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ScreeningTaskResumeMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ScreeningTaskResumeMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ScreeningTaskResumeMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *ScreeningTaskResumeMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *ScreeningTaskResumeMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldErrorMessage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (m *ScreeningTaskResumeMutation) ClearErrorMessage() {
+	m.error_message = nil
+	m.clearedFields[screeningtaskresume.FieldErrorMessage] = struct{}{}
+}
+
+// ErrorMessageCleared returns if the "error_message" field was cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) ErrorMessageCleared() bool {
+	_, ok := m.clearedFields[screeningtaskresume.FieldErrorMessage]
+	return ok
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *ScreeningTaskResumeMutation) ResetErrorMessage() {
+	m.error_message = nil
+	delete(m.clearedFields, screeningtaskresume.FieldErrorMessage)
+}
+
+// SetRanking sets the "ranking" field.
+func (m *ScreeningTaskResumeMutation) SetRanking(i int) {
+	m.ranking = &i
+	m.addranking = nil
+}
+
+// Ranking returns the value of the "ranking" field in the mutation.
+func (m *ScreeningTaskResumeMutation) Ranking() (r int, exists bool) {
+	v := m.ranking
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRanking returns the old "ranking" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldRanking(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRanking is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRanking requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRanking: %w", err)
+	}
+	return oldValue.Ranking, nil
+}
+
+// AddRanking adds i to the "ranking" field.
+func (m *ScreeningTaskResumeMutation) AddRanking(i int) {
+	if m.addranking != nil {
+		*m.addranking += i
+	} else {
+		m.addranking = &i
+	}
+}
+
+// AddedRanking returns the value that was added to the "ranking" field in this mutation.
+func (m *ScreeningTaskResumeMutation) AddedRanking() (r int, exists bool) {
+	v := m.addranking
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearRanking clears the value of the "ranking" field.
+func (m *ScreeningTaskResumeMutation) ClearRanking() {
+	m.ranking = nil
+	m.addranking = nil
+	m.clearedFields[screeningtaskresume.FieldRanking] = struct{}{}
+}
+
+// RankingCleared returns if the "ranking" field was cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) RankingCleared() bool {
+	_, ok := m.clearedFields[screeningtaskresume.FieldRanking]
+	return ok
+}
+
+// ResetRanking resets all changes to the "ranking" field.
+func (m *ScreeningTaskResumeMutation) ResetRanking() {
+	m.ranking = nil
+	m.addranking = nil
+	delete(m.clearedFields, screeningtaskresume.FieldRanking)
+}
+
+// SetScore sets the "score" field.
+func (m *ScreeningTaskResumeMutation) SetScore(f float64) {
+	m.score = &f
+	m.addscore = nil
+}
+
+// Score returns the value of the "score" field in the mutation.
+func (m *ScreeningTaskResumeMutation) Score() (r float64, exists bool) {
+	v := m.score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScore returns the old "score" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldScore(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScore: %w", err)
+	}
+	return oldValue.Score, nil
+}
+
+// AddScore adds f to the "score" field.
+func (m *ScreeningTaskResumeMutation) AddScore(f float64) {
+	if m.addscore != nil {
+		*m.addscore += f
+	} else {
+		m.addscore = &f
+	}
+}
+
+// AddedScore returns the value that was added to the "score" field in this mutation.
+func (m *ScreeningTaskResumeMutation) AddedScore() (r float64, exists bool) {
+	v := m.addscore
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearScore clears the value of the "score" field.
+func (m *ScreeningTaskResumeMutation) ClearScore() {
+	m.score = nil
+	m.addscore = nil
+	m.clearedFields[screeningtaskresume.FieldScore] = struct{}{}
+}
+
+// ScoreCleared returns if the "score" field was cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) ScoreCleared() bool {
+	_, ok := m.clearedFields[screeningtaskresume.FieldScore]
+	return ok
+}
+
+// ResetScore resets all changes to the "score" field.
+func (m *ScreeningTaskResumeMutation) ResetScore() {
+	m.score = nil
+	m.addscore = nil
+	delete(m.clearedFields, screeningtaskresume.FieldScore)
+}
+
+// SetProcessedAt sets the "processed_at" field.
+func (m *ScreeningTaskResumeMutation) SetProcessedAt(t time.Time) {
+	m.processed_at = &t
+}
+
+// ProcessedAt returns the value of the "processed_at" field in the mutation.
+func (m *ScreeningTaskResumeMutation) ProcessedAt() (r time.Time, exists bool) {
+	v := m.processed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProcessedAt returns the old "processed_at" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldProcessedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProcessedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProcessedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProcessedAt: %w", err)
+	}
+	return oldValue.ProcessedAt, nil
+}
+
+// ClearProcessedAt clears the value of the "processed_at" field.
+func (m *ScreeningTaskResumeMutation) ClearProcessedAt() {
+	m.processed_at = nil
+	m.clearedFields[screeningtaskresume.FieldProcessedAt] = struct{}{}
+}
+
+// ProcessedAtCleared returns if the "processed_at" field was cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) ProcessedAtCleared() bool {
+	_, ok := m.clearedFields[screeningtaskresume.FieldProcessedAt]
+	return ok
+}
+
+// ResetProcessedAt resets all changes to the "processed_at" field.
+func (m *ScreeningTaskResumeMutation) ResetProcessedAt() {
+	m.processed_at = nil
+	delete(m.clearedFields, screeningtaskresume.FieldProcessedAt)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ScreeningTaskResumeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ScreeningTaskResumeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ScreeningTaskResumeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ScreeningTaskResumeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ScreeningTaskResumeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ScreeningTaskResume entity.
+// If the ScreeningTaskResume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ScreeningTaskResumeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ScreeningTaskResumeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearTask clears the "task" edge to the ScreeningTask entity.
+func (m *ScreeningTaskResumeMutation) ClearTask() {
+	m.clearedtask = true
+	m.clearedFields[screeningtaskresume.FieldTaskID] = struct{}{}
+}
+
+// TaskCleared reports if the "task" edge to the ScreeningTask entity was cleared.
+func (m *ScreeningTaskResumeMutation) TaskCleared() bool {
+	return m.clearedtask
+}
+
+// TaskIDs returns the "task" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TaskID instead. It exists only for internal usage by the builders.
+func (m *ScreeningTaskResumeMutation) TaskIDs() (ids []uuid.UUID) {
+	if id := m.task; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTask resets all changes to the "task" edge.
+func (m *ScreeningTaskResumeMutation) ResetTask() {
+	m.task = nil
+	m.clearedtask = false
+}
+
+// ClearResume clears the "resume" edge to the Resume entity.
+func (m *ScreeningTaskResumeMutation) ClearResume() {
+	m.clearedresume = true
+	m.clearedFields[screeningtaskresume.FieldResumeID] = struct{}{}
+}
+
+// ResumeCleared reports if the "resume" edge to the Resume entity was cleared.
+func (m *ScreeningTaskResumeMutation) ResumeCleared() bool {
+	return m.clearedresume
+}
+
+// ResumeIDs returns the "resume" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ResumeID instead. It exists only for internal usage by the builders.
+func (m *ScreeningTaskResumeMutation) ResumeIDs() (ids []uuid.UUID) {
+	if id := m.resume; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetResume resets all changes to the "resume" edge.
+func (m *ScreeningTaskResumeMutation) ResetResume() {
+	m.resume = nil
+	m.clearedresume = false
+}
+
+// Where appends a list predicates to the ScreeningTaskResumeMutation builder.
+func (m *ScreeningTaskResumeMutation) Where(ps ...predicate.ScreeningTaskResume) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ScreeningTaskResumeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ScreeningTaskResumeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ScreeningTaskResume, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ScreeningTaskResumeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ScreeningTaskResumeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ScreeningTaskResume).
+func (m *ScreeningTaskResumeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ScreeningTaskResumeMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.deleted_at != nil {
+		fields = append(fields, screeningtaskresume.FieldDeletedAt)
+	}
+	if m.task != nil {
+		fields = append(fields, screeningtaskresume.FieldTaskID)
+	}
+	if m.resume != nil {
+		fields = append(fields, screeningtaskresume.FieldResumeID)
+	}
+	if m.status != nil {
+		fields = append(fields, screeningtaskresume.FieldStatus)
+	}
+	if m.error_message != nil {
+		fields = append(fields, screeningtaskresume.FieldErrorMessage)
+	}
+	if m.ranking != nil {
+		fields = append(fields, screeningtaskresume.FieldRanking)
+	}
+	if m.score != nil {
+		fields = append(fields, screeningtaskresume.FieldScore)
+	}
+	if m.processed_at != nil {
+		fields = append(fields, screeningtaskresume.FieldProcessedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, screeningtaskresume.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, screeningtaskresume.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ScreeningTaskResumeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case screeningtaskresume.FieldDeletedAt:
+		return m.DeletedAt()
+	case screeningtaskresume.FieldTaskID:
+		return m.TaskID()
+	case screeningtaskresume.FieldResumeID:
+		return m.ResumeID()
+	case screeningtaskresume.FieldStatus:
+		return m.Status()
+	case screeningtaskresume.FieldErrorMessage:
+		return m.ErrorMessage()
+	case screeningtaskresume.FieldRanking:
+		return m.Ranking()
+	case screeningtaskresume.FieldScore:
+		return m.Score()
+	case screeningtaskresume.FieldProcessedAt:
+		return m.ProcessedAt()
+	case screeningtaskresume.FieldCreatedAt:
+		return m.CreatedAt()
+	case screeningtaskresume.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ScreeningTaskResumeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case screeningtaskresume.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case screeningtaskresume.FieldTaskID:
+		return m.OldTaskID(ctx)
+	case screeningtaskresume.FieldResumeID:
+		return m.OldResumeID(ctx)
+	case screeningtaskresume.FieldStatus:
+		return m.OldStatus(ctx)
+	case screeningtaskresume.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
+	case screeningtaskresume.FieldRanking:
+		return m.OldRanking(ctx)
+	case screeningtaskresume.FieldScore:
+		return m.OldScore(ctx)
+	case screeningtaskresume.FieldProcessedAt:
+		return m.OldProcessedAt(ctx)
+	case screeningtaskresume.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case screeningtaskresume.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ScreeningTaskResume field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningTaskResumeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case screeningtaskresume.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case screeningtaskresume.FieldTaskID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTaskID(v)
+		return nil
+	case screeningtaskresume.FieldResumeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResumeID(v)
+		return nil
+	case screeningtaskresume.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case screeningtaskresume.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
+		return nil
+	case screeningtaskresume.FieldRanking:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRanking(v)
+		return nil
+	case screeningtaskresume.FieldScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScore(v)
+		return nil
+	case screeningtaskresume.FieldProcessedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProcessedAt(v)
+		return nil
+	case screeningtaskresume.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case screeningtaskresume.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTaskResume field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ScreeningTaskResumeMutation) AddedFields() []string {
+	var fields []string
+	if m.addranking != nil {
+		fields = append(fields, screeningtaskresume.FieldRanking)
+	}
+	if m.addscore != nil {
+		fields = append(fields, screeningtaskresume.FieldScore)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ScreeningTaskResumeMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case screeningtaskresume.FieldRanking:
+		return m.AddedRanking()
+	case screeningtaskresume.FieldScore:
+		return m.AddedScore()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ScreeningTaskResumeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case screeningtaskresume.FieldRanking:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRanking(v)
+		return nil
+	case screeningtaskresume.FieldScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddScore(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTaskResume numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ScreeningTaskResumeMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(screeningtaskresume.FieldDeletedAt) {
+		fields = append(fields, screeningtaskresume.FieldDeletedAt)
+	}
+	if m.FieldCleared(screeningtaskresume.FieldErrorMessage) {
+		fields = append(fields, screeningtaskresume.FieldErrorMessage)
+	}
+	if m.FieldCleared(screeningtaskresume.FieldRanking) {
+		fields = append(fields, screeningtaskresume.FieldRanking)
+	}
+	if m.FieldCleared(screeningtaskresume.FieldScore) {
+		fields = append(fields, screeningtaskresume.FieldScore)
+	}
+	if m.FieldCleared(screeningtaskresume.FieldProcessedAt) {
+		fields = append(fields, screeningtaskresume.FieldProcessedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ScreeningTaskResumeMutation) ClearField(name string) error {
+	switch name {
+	case screeningtaskresume.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case screeningtaskresume.FieldErrorMessage:
+		m.ClearErrorMessage()
+		return nil
+	case screeningtaskresume.FieldRanking:
+		m.ClearRanking()
+		return nil
+	case screeningtaskresume.FieldScore:
+		m.ClearScore()
+		return nil
+	case screeningtaskresume.FieldProcessedAt:
+		m.ClearProcessedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTaskResume nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ScreeningTaskResumeMutation) ResetField(name string) error {
+	switch name {
+	case screeningtaskresume.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case screeningtaskresume.FieldTaskID:
+		m.ResetTaskID()
+		return nil
+	case screeningtaskresume.FieldResumeID:
+		m.ResetResumeID()
+		return nil
+	case screeningtaskresume.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case screeningtaskresume.FieldErrorMessage:
+		m.ResetErrorMessage()
+		return nil
+	case screeningtaskresume.FieldRanking:
+		m.ResetRanking()
+		return nil
+	case screeningtaskresume.FieldScore:
+		m.ResetScore()
+		return nil
+	case screeningtaskresume.FieldProcessedAt:
+		m.ResetProcessedAt()
+		return nil
+	case screeningtaskresume.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case screeningtaskresume.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTaskResume field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ScreeningTaskResumeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.task != nil {
+		edges = append(edges, screeningtaskresume.EdgeTask)
+	}
+	if m.resume != nil {
+		edges = append(edges, screeningtaskresume.EdgeResume)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ScreeningTaskResumeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case screeningtaskresume.EdgeTask:
+		if id := m.task; id != nil {
+			return []ent.Value{*id}
+		}
+	case screeningtaskresume.EdgeResume:
+		if id := m.resume; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ScreeningTaskResumeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ScreeningTaskResumeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedtask {
+		edges = append(edges, screeningtaskresume.EdgeTask)
+	}
+	if m.clearedresume {
+		edges = append(edges, screeningtaskresume.EdgeResume)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ScreeningTaskResumeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case screeningtaskresume.EdgeTask:
+		return m.clearedtask
+	case screeningtaskresume.EdgeResume:
+		return m.clearedresume
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ScreeningTaskResumeMutation) ClearEdge(name string) error {
+	switch name {
+	case screeningtaskresume.EdgeTask:
+		m.ClearTask()
+		return nil
+	case screeningtaskresume.EdgeResume:
+		m.ClearResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTaskResume unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ScreeningTaskResumeMutation) ResetEdge(name string) error {
+	switch name {
+	case screeningtaskresume.EdgeTask:
+		m.ResetTask()
+		return nil
+	case screeningtaskresume.EdgeResume:
+		m.ResetResume()
+		return nil
+	}
+	return fmt.Errorf("unknown ScreeningTaskResume edge %s", name)
+}
+
 // SettingMutation represents an operation that mutates the Setting nodes in the graph.
 type SettingMutation struct {
 	config
@@ -22261,37 +28346,40 @@ func (m *SettingMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *uuid.UUID
-	deleted_at               *time.Time
-	username                 *string
-	password                 *string
-	email                    *string
-	avatar_url               *string
-	platform                 *consts.UserPlatform
-	status                   *consts.UserStatus
-	created_at               *time.Time
-	updated_at               *time.Time
-	clearedFields            map[string]struct{}
-	login_histories          map[uuid.UUID]struct{}
-	removedlogin_histories   map[uuid.UUID]struct{}
-	clearedlogin_histories   bool
-	identities               map[uuid.UUID]struct{}
-	removedidentities        map[uuid.UUID]struct{}
-	clearedidentities        bool
-	conversations            map[uuid.UUID]struct{}
-	removedconversations     map[uuid.UUID]struct{}
-	clearedconversations     bool
-	resumes                  map[uuid.UUID]struct{}
-	removedresumes           map[uuid.UUID]struct{}
-	clearedresumes           bool
-	created_positions        map[uuid.UUID]struct{}
-	removedcreated_positions map[uuid.UUID]struct{}
-	clearedcreated_positions bool
-	done                     bool
-	oldValue                 func(context.Context) (*User, error)
-	predicates               []predicate.User
+	op                             Op
+	typ                            string
+	id                             *uuid.UUID
+	deleted_at                     *time.Time
+	username                       *string
+	password                       *string
+	email                          *string
+	avatar_url                     *string
+	platform                       *consts.UserPlatform
+	status                         *consts.UserStatus
+	created_at                     *time.Time
+	updated_at                     *time.Time
+	clearedFields                  map[string]struct{}
+	login_histories                map[uuid.UUID]struct{}
+	removedlogin_histories         map[uuid.UUID]struct{}
+	clearedlogin_histories         bool
+	identities                     map[uuid.UUID]struct{}
+	removedidentities              map[uuid.UUID]struct{}
+	clearedidentities              bool
+	conversations                  map[uuid.UUID]struct{}
+	removedconversations           map[uuid.UUID]struct{}
+	clearedconversations           bool
+	resumes                        map[uuid.UUID]struct{}
+	removedresumes                 map[uuid.UUID]struct{}
+	clearedresumes                 bool
+	created_positions              map[uuid.UUID]struct{}
+	removedcreated_positions       map[uuid.UUID]struct{}
+	clearedcreated_positions       bool
+	created_screening_tasks        map[uuid.UUID]struct{}
+	removedcreated_screening_tasks map[uuid.UUID]struct{}
+	clearedcreated_screening_tasks bool
+	done                           bool
+	oldValue                       func(context.Context) (*User, error)
+	predicates                     []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -23057,6 +29145,60 @@ func (m *UserMutation) ResetCreatedPositions() {
 	m.removedcreated_positions = nil
 }
 
+// AddCreatedScreeningTaskIDs adds the "created_screening_tasks" edge to the ScreeningTask entity by ids.
+func (m *UserMutation) AddCreatedScreeningTaskIDs(ids ...uuid.UUID) {
+	if m.created_screening_tasks == nil {
+		m.created_screening_tasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.created_screening_tasks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCreatedScreeningTasks clears the "created_screening_tasks" edge to the ScreeningTask entity.
+func (m *UserMutation) ClearCreatedScreeningTasks() {
+	m.clearedcreated_screening_tasks = true
+}
+
+// CreatedScreeningTasksCleared reports if the "created_screening_tasks" edge to the ScreeningTask entity was cleared.
+func (m *UserMutation) CreatedScreeningTasksCleared() bool {
+	return m.clearedcreated_screening_tasks
+}
+
+// RemoveCreatedScreeningTaskIDs removes the "created_screening_tasks" edge to the ScreeningTask entity by IDs.
+func (m *UserMutation) RemoveCreatedScreeningTaskIDs(ids ...uuid.UUID) {
+	if m.removedcreated_screening_tasks == nil {
+		m.removedcreated_screening_tasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.created_screening_tasks, ids[i])
+		m.removedcreated_screening_tasks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCreatedScreeningTasks returns the removed IDs of the "created_screening_tasks" edge to the ScreeningTask entity.
+func (m *UserMutation) RemovedCreatedScreeningTasksIDs() (ids []uuid.UUID) {
+	for id := range m.removedcreated_screening_tasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CreatedScreeningTasksIDs returns the "created_screening_tasks" edge IDs in the mutation.
+func (m *UserMutation) CreatedScreeningTasksIDs() (ids []uuid.UUID) {
+	for id := range m.created_screening_tasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCreatedScreeningTasks resets all changes to the "created_screening_tasks" edge.
+func (m *UserMutation) ResetCreatedScreeningTasks() {
+	m.created_screening_tasks = nil
+	m.clearedcreated_screening_tasks = false
+	m.removedcreated_screening_tasks = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -23359,7 +29501,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.login_histories != nil {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -23374,6 +29516,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.created_positions != nil {
 		edges = append(edges, user.EdgeCreatedPositions)
+	}
+	if m.created_screening_tasks != nil {
+		edges = append(edges, user.EdgeCreatedScreeningTasks)
 	}
 	return edges
 }
@@ -23412,13 +29557,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCreatedScreeningTasks:
+		ids := make([]ent.Value, 0, len(m.created_screening_tasks))
+		for id := range m.created_screening_tasks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedlogin_histories != nil {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -23433,6 +29584,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedcreated_positions != nil {
 		edges = append(edges, user.EdgeCreatedPositions)
+	}
+	if m.removedcreated_screening_tasks != nil {
+		edges = append(edges, user.EdgeCreatedScreeningTasks)
 	}
 	return edges
 }
@@ -23471,13 +29625,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCreatedScreeningTasks:
+		ids := make([]ent.Value, 0, len(m.removedcreated_screening_tasks))
+		for id := range m.removedcreated_screening_tasks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedlogin_histories {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -23492,6 +29652,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedcreated_positions {
 		edges = append(edges, user.EdgeCreatedPositions)
+	}
+	if m.clearedcreated_screening_tasks {
+		edges = append(edges, user.EdgeCreatedScreeningTasks)
 	}
 	return edges
 }
@@ -23510,6 +29673,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedresumes
 	case user.EdgeCreatedPositions:
 		return m.clearedcreated_positions
+	case user.EdgeCreatedScreeningTasks:
+		return m.clearedcreated_screening_tasks
 	}
 	return false
 }
@@ -23540,6 +29705,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeCreatedPositions:
 		m.ResetCreatedPositions()
+		return nil
+	case user.EdgeCreatedScreeningTasks:
+		m.ResetCreatedScreeningTasks()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

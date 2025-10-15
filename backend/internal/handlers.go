@@ -7,6 +7,7 @@ import (
 	jobapplicationV1 "github.com/chaitin/WhaleHire/backend/internal/job_application/handler/v1"
 	jobprofileV1 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
 	resumeV1 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
+	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 )
 
@@ -19,4 +20,5 @@ type APIHandlers struct {
 	JobApplicationHandler *jobapplicationV1.JobApplicationHandler
 	FileHandler           *fileV1.FileHandler
 	DepartmentHandler     *departmentV1.DepartmentHandler
+	ScreeningHandler      *screeningV1.ScreeningHandler
 }

@@ -101,6 +101,11 @@ type Config struct {
 		Timeout    int    `mapstructure:"timeout" json:"timeout"`
 		MaxRetries int    `mapstructure:"max_retries" json:"max_retries"`
 	} `mapstructure:"document_parser" json:"document_parser"`
+
+	// Langsmith 配置
+	Langsmith struct {
+		APIKey string `mapstructure:"api_key" json:"api_key"`
+	} `mapstructure:"langsmith" json:"langsmith"`
 }
 
 func (c *Config) GetBaseURL(req *http.Request, settings *domain.Setting) string {
@@ -195,12 +200,16 @@ func Init() (*Config, error) {
 	v.SetDefault("document_parser.timeout", 30)
 	v.SetDefault("document_parser.max_retries", 3)
 
+	// Langsmith 默认配置
+	v.SetDefault("langsmith.api_key", "")
+
 	// 打印从环境变量中读取的所有配置值
 	fmt.Println("从环境变量读取的配置值:")
 	fmt.Println("Database Master:", v.GetString("database.master"))
 	fmt.Println("Database Slave:", v.GetString("database.slave"))
 	fmt.Println("Embedding API Key:", v.GetString("embedding.api_key"))
 	fmt.Println("Document Parser API Key:", v.GetString("document_parser.api_key"))
+	fmt.Println("Langsmith API Key:", v.GetString("langsmith.api_key"))
 
 	c := Config{}
 	if err := v.Unmarshal(&c); err != nil {

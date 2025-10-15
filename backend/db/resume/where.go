@@ -1285,6 +1285,52 @@ func HasJobApplicationsWith(preds ...predicate.ResumeJobApplication) predicate.R
 	})
 }
 
+// HasScreeningTaskResumes applies the HasEdge predicate on the "screening_task_resumes" edge.
+func HasScreeningTaskResumes() predicate.Resume {
+	return predicate.Resume(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ScreeningTaskResumesTable, ScreeningTaskResumesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasScreeningTaskResumesWith applies the HasEdge predicate on the "screening_task_resumes" edge with a given conditions (other predicates).
+func HasScreeningTaskResumesWith(preds ...predicate.ScreeningTaskResume) predicate.Resume {
+	return predicate.Resume(func(s *sql.Selector) {
+		step := newScreeningTaskResumesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasScreeningResults applies the HasEdge predicate on the "screening_results" edge.
+func HasScreeningResults() predicate.Resume {
+	return predicate.Resume(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ScreeningResultsTable, ScreeningResultsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasScreeningResultsWith applies the HasEdge predicate on the "screening_results" edge with a given conditions (other predicates).
+func HasScreeningResultsWith(preds ...predicate.ScreeningResult) predicate.Resume {
+	return predicate.Resume(func(s *sql.Selector) {
+		step := newScreeningResultsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Resume) predicate.Resume {
 	return predicate.Resume(sql.AndPredicates(predicates...))

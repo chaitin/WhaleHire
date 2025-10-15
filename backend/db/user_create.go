@@ -16,6 +16,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -235,6 +236,21 @@ func (uc *UserCreate) AddCreatedPositions(j ...*JobPosition) *UserCreate {
 		ids[i] = j[i].ID
 	}
 	return uc.AddCreatedPositionIDs(ids...)
+}
+
+// AddCreatedScreeningTaskIDs adds the "created_screening_tasks" edge to the ScreeningTask entity by IDs.
+func (uc *UserCreate) AddCreatedScreeningTaskIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddCreatedScreeningTaskIDs(ids...)
+	return uc
+}
+
+// AddCreatedScreeningTasks adds the "created_screening_tasks" edges to the ScreeningTask entity.
+func (uc *UserCreate) AddCreatedScreeningTasks(s ...*ScreeningTask) *UserCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uc.AddCreatedScreeningTaskIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -458,6 +474,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CreatedScreeningTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedScreeningTasksTable,
+			Columns: []string{user.CreatedScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

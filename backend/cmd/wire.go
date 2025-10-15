@@ -18,6 +18,7 @@ import (
 	jobapplicationV1 "github.com/chaitin/WhaleHire/backend/internal/job_application/handler/v1"
 	jobprofileV1 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
 	resumeV1 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
+	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 )
@@ -33,6 +34,7 @@ type Server struct {
 	jobprofileV1     *jobprofileV1.JobProfileHandler
 	departmentV1     *departmentV1.DepartmentHandler
 	jobapplicationV1 *jobapplicationV1.JobApplicationHandler
+	screeningV1      *screeningV1.ScreeningHandler
 	fileV1           *fileV1.FileHandler
 	version          *version.VersionInfo
 }

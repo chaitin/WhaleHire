@@ -385,8 +385,8 @@ type ListJobProfileRepoReq struct {
 
 // ListJobProfileResp contains paginated job profiles.
 type ListJobProfileResp struct {
-	Items    []*JobProfile `json:"items"`
-	PageInfo *db.PageInfo  `json:"page_info"`
+	Items []*JobProfile `json:"items"`
+	*db.PageInfo
 }
 
 // SearchJobProfileReq defines search filters for job profiles.

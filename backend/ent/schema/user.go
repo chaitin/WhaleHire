@@ -56,5 +56,6 @@ func (User) Edges() []ent.Edge {
 		edge.To("conversations", Conversation.Type),
 		edge.To("resumes", Resume.Type),
 		edge.To("created_positions", JobPosition.Type),
+		edge.To("created_screening_tasks", ScreeningTask.Type),
 	}
 }

@@ -21,6 +21,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobresponsibility"
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
+	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
+	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
 )
@@ -311,6 +313,36 @@ func (jpc *JobPositionCreate) AddResumeApplications(r ...*ResumeJobApplication) 
 		ids[i] = r[i].ID
 	}
 	return jpc.AddResumeApplicationIDs(ids...)
+}
+
+// AddScreeningTaskIDs adds the "screening_tasks" edge to the ScreeningTask entity by IDs.
+func (jpc *JobPositionCreate) AddScreeningTaskIDs(ids ...uuid.UUID) *JobPositionCreate {
+	jpc.mutation.AddScreeningTaskIDs(ids...)
+	return jpc
+}
+
+// AddScreeningTasks adds the "screening_tasks" edges to the ScreeningTask entity.
+func (jpc *JobPositionCreate) AddScreeningTasks(s ...*ScreeningTask) *JobPositionCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpc.AddScreeningTaskIDs(ids...)
+}
+
+// AddScreeningResultIDs adds the "screening_results" edge to the ScreeningResult entity by IDs.
+func (jpc *JobPositionCreate) AddScreeningResultIDs(ids ...uuid.UUID) *JobPositionCreate {
+	jpc.mutation.AddScreeningResultIDs(ids...)
+	return jpc
+}
+
+// AddScreeningResults adds the "screening_results" edges to the ScreeningResult entity.
+func (jpc *JobPositionCreate) AddScreeningResults(s ...*ScreeningResult) *JobPositionCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return jpc.AddScreeningResultIDs(ids...)
 }
 
 // Mutation returns the JobPositionMutation object of the builder.
@@ -607,6 +639,38 @@ func (jpc *JobPositionCreate) createSpec() (*JobPosition, *sqlgraph.CreateSpec) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resumejobapplication.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := jpc.mutation.ScreeningTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningTasksTable,
+			Columns: []string{jobposition.ScreeningTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := jpc.mutation.ScreeningResultsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   jobposition.ScreeningResultsTable,
+			Columns: []string{jobposition.ScreeningResultsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningresult.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
