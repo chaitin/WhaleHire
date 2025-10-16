@@ -64,6 +64,11 @@ func (m *AuditMiddleware) Audit() echo.MiddlewareFunc {
 				return next(c)
 			}
 
+			// 跳过 GET 请求（查看操作）
+			if c.Request().Method == "GET" {
+				return next(c)
+			}
+
 			// 读取请求体
 			var requestBody []byte
 			if c.Request().Body != nil {
@@ -233,7 +238,7 @@ func (m *AuditMiddleware) getSessionID(c echo.Context) string {
 			return id
 		}
 	}
-	
+
 	// 尝试从 cookie 中获取会话ID
 	if cookie, err := c.Cookie("session"); err == nil {
 		return cookie.Value
@@ -241,7 +246,7 @@ func (m *AuditMiddleware) getSessionID(c echo.Context) string {
 	if cookie, err := c.Cookie("user_session"); err == nil {
 		return cookie.Value
 	}
-	
+
 	// 如果都没有，返回空字符串
 	return ""
 }
