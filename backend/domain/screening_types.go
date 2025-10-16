@@ -280,30 +280,6 @@ type CompanyMatchInfo struct {
 	IsExact bool `json:"is_exact" example:"false"`
 }
 
-// MatchLevel 匹配等级
-type MatchLevel string
-
-const (
-	MatchLevelExcellent MatchLevel = "excellent" // 90-100分
-	MatchLevelGood      MatchLevel = "good"      // 75-89分
-	MatchLevelFair      MatchLevel = "fair"      // 60-74分
-	MatchLevelPoor      MatchLevel = "poor"      // 0-59分
-)
-
-// GetMatchLevel 根据分数获取匹配等级
-func GetMatchLevel(score float64) MatchLevel {
-	switch {
-	case score >= 90:
-		return MatchLevelExcellent
-	case score >= 75:
-		return MatchLevelGood
-	case score >= 60:
-		return MatchLevelFair
-	default:
-		return MatchLevelPoor
-	}
-}
-
 // DimensionWeights 维度权重
 type DimensionWeights struct {
 	Skill          float64 `json:"skill"`          // 技能匹配权重 35%
