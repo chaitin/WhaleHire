@@ -52,9 +52,11 @@ type ScreeningTaskResumeEdges struct {
 	Task *ScreeningTask `json:"task,omitempty"`
 	// Resume holds the value of the resume edge.
 	Resume *Resume `json:"resume,omitempty"`
+	// NodeRuns holds the value of the node_runs edge.
+	NodeRuns []*ScreeningNodeRun `json:"node_runs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // TaskOrErr returns the Task value or an error if the edge
@@ -77,6 +79,15 @@ func (e ScreeningTaskResumeEdges) ResumeOrErr() (*Resume, error) {
 		return nil, &NotFoundError{label: resume.Label}
 	}
 	return nil, &NotLoadedError{edge: "resume"}
+}
+
+// NodeRunsOrErr returns the NodeRuns value or an error if the edge
+// was not loaded in eager-loading.
+func (e ScreeningTaskResumeEdges) NodeRunsOrErr() ([]*ScreeningNodeRun, error) {
+	if e.loadedTypes[2] {
+		return e.NodeRuns, nil
+	}
+	return nil, &NotLoadedError{edge: "node_runs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -196,6 +207,11 @@ func (str *ScreeningTaskResume) QueryTask() *ScreeningTaskQuery {
 // QueryResume queries the "resume" edge of the ScreeningTaskResume entity.
 func (str *ScreeningTaskResume) QueryResume() *ResumeQuery {
 	return NewScreeningTaskResumeClient(str.config).QueryResume(str)
+}
+
+// QueryNodeRuns queries the "node_runs" edge of the ScreeningTaskResume entity.
+func (str *ScreeningTaskResume) QueryNodeRuns() *ScreeningNodeRunQuery {
+	return NewScreeningTaskResumeClient(str.config).QueryNodeRuns(str)
 }
 
 // Update returns a builder for updating this ScreeningTaskResume.

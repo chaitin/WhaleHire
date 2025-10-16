@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	TaskMetaDataNode    = "task_meta_data"
+	TaskMetaDataNode    = "TaskMetaDataNode"
 	DispatcherNode      = "DispatcherNode"
 	BasicInfoAgent      = "BasicInfoAgent"
 	SkillAgent          = "SkillAgent"
@@ -40,159 +40,244 @@ type JobResumeMatch struct {
 
 // BasicMatchDetail 基本信息匹配详情
 type BasicMatchDetail struct {
-	Score     float64            `json:"score"`
-	SubScores map[string]float64 `json:"sub_scores"`
-	Evidence  []string           `json:"evidence"`
-	Notes     string             `json:"notes"`
+	// Score 基本信息匹配总分 (0-100)
+	Score float64 `json:"score" example:"85.5"`
+	// SubScores 各子项匹配分数，如地点、薪资等
+	SubScores map[string]float64 `json:"sub_scores" example:"{\"location\":90,\"salary\":80}"`
+	// Evidence 匹配证据列表
+	Evidence []string `json:"evidence" example:"[\"工作地点匹配\",\"薪资期望符合\"]"`
+	// Notes 匹配备注说明
+	Notes string `json:"notes" example:"候选人基本信息与岗位要求高度匹配"`
 }
 
 // SkillMatchDetail 技能匹配详情
 type SkillMatchDetail struct {
-	Score         float64           `json:"score"`
-	MatchedSkills []*MatchedSkill   `json:"matched_skills"` // 匹配的技能
-	MissingSkills []*JobSkill       `json:"missing_skills"` // 缺失的技能
-	ExtraSkills   []string          `json:"extra_skills"`   // 额外的技能
-	LLMAnalysis   *SkillLLMAnalysis `json:"llm_analysis"`   // 大模型整体分析
+	// Score 技能匹配总分 (0-100)
+	Score float64 `json:"score" example:"78.5"`
+	// MatchedSkills 匹配的技能列表
+	MatchedSkills []*MatchedSkill `json:"matched_skills"`
+	// MissingSkills 缺失的技能列表
+	MissingSkills []*JobSkill `json:"missing_skills"`
+	// ExtraSkills 额外的技能列表
+	ExtraSkills []string `json:"extra_skills" example:"[\"Docker\",\"Kubernetes\"]"`
+	// LLMAnalysis 大模型整体分析结果
+	LLMAnalysis *SkillLLMAnalysis `json:"llm_analysis"`
 }
 
 // MatchedSkill 匹配的技能
 type MatchedSkill struct {
-	JobSkillID     string             `json:"job_skill_id"`
-	ResumeSkillID  string             `json:"resume_skill_id,omitempty"`
-	MatchType      string             `json:"match_type"`      // exact, semantic, related, none
-	LLMScore       float64            `json:"llm_score"`       // 大模型评分 (0-100)
-	ProficiencyGap float64            `json:"proficiency_gap"` // 熟练度差距
-	Score          float64            `json:"score"`           // 该技能得分
-	LLMAnalysis    *SkillItemAnalysis `json:"llm_analysis"`    // 大模型分析详情
+	// JobSkillID 岗位技能ID
+	JobSkillID string `json:"job_skill_id" example:"skill_001"`
+	// ResumeSkillID 简历技能ID，可选
+	ResumeSkillID string `json:"resume_skill_id,omitempty" example:"resume_skill_001"`
+	// MatchType 匹配类型: exact(完全匹配), semantic(语义匹配), related(相关匹配), none(无匹配)
+	MatchType string `json:"match_type" example:"exact" enums:"exact,semantic,related,none"`
+	// LLMScore 大模型评分 (0-100)
+	LLMScore float64 `json:"llm_score" example:"85.0"`
+	// ProficiencyGap 熟练度差距
+	ProficiencyGap float64 `json:"proficiency_gap" example:"0.2"`
+	// Score 该技能匹配得分
+	Score float64 `json:"score" example:"82.5"`
+	// LLMAnalysis 大模型分析详情
+	LLMAnalysis *SkillItemAnalysis `json:"llm_analysis"`
 }
 
 // SkillLLMAnalysis 技能大模型分析
 type SkillLLMAnalysis struct {
-	OverallMatch    float64  `json:"overall_match"`   // 整体匹配度 (0-100)
-	TechnicalFit    float64  `json:"technical_fit"`   // 技术契合度
-	LearningCurve   string   `json:"learning_curve"`  // 学习曲线评估 (low/medium/high)
-	StrengthAreas   []string `json:"strength_areas"`  // 优势技能领域
-	GapAreas        []string `json:"gap_areas"`       // 技能缺口领域
-	Recommendations []string `json:"recommendations"` // 技能提升建议
-	AnalysisDetail  string   `json:"analysis_detail"` // 详细分析说明
+	// OverallMatch 整体匹配度 (0-100)
+	OverallMatch float64 `json:"overall_match" example:"78.5"`
+	// TechnicalFit 技术契合度
+	TechnicalFit float64 `json:"technical_fit" example:"85.0"`
+	// LearningCurve 学习曲线评估: low(低), medium(中), high(高)
+	LearningCurve string `json:"learning_curve" example:"medium" enums:"low,medium,high"`
+	// StrengthAreas 优势技能领域
+	StrengthAreas []string `json:"strength_areas" example:"[\"后端开发\",\"数据库设计\"]"`
+	// GapAreas 技能缺口领域
+	GapAreas []string `json:"gap_areas" example:"[\"前端框架\",\"云原生技术\"]"`
+	// Recommendations 技能提升建议
+	Recommendations []string `json:"recommendations" example:"[\"建议学习React框架\",\"加强Docker容器化技能\"]"`
+	// AnalysisDetail 详细分析说明
+	AnalysisDetail string `json:"analysis_detail" example:"候选人在后端开发方面经验丰富，但前端技能有待提升"`
 }
 
 // SkillItemAnalysis 技能项分析
 type SkillItemAnalysis struct {
-	MatchLevel      string  `json:"match_level"`      // 匹配等级: perfect/good/partial/none
-	MatchPercentage float64 `json:"match_percentage"` // 匹配百分比 (0-100)
-	ProficiencyGap  string  `json:"proficiency_gap"`  // 熟练度差距: none/minor/moderate/major
-	Transferability string  `json:"transferability"`  // 技能可迁移性: high/medium/low
-	LearningEffort  string  `json:"learning_effort"`  // 学习难度: minimal/moderate/significant
-	MatchReason     string  `json:"match_reason"`     // 匹配原因说明
+	// MatchLevel 匹配等级: perfect(完美), good(良好), partial(部分), none(无匹配)
+	MatchLevel string `json:"match_level" example:"good" enums:"perfect,good,partial,none"`
+	// MatchPercentage 匹配百分比 (0-100)
+	MatchPercentage float64 `json:"match_percentage" example:"85.0"`
+	// ProficiencyGap 熟练度差距: none(无差距), minor(轻微), moderate(中等), major(较大)
+	ProficiencyGap string `json:"proficiency_gap" example:"minor" enums:"none,minor,moderate,major"`
+	// Transferability 技能可迁移性: high(高), medium(中), low(低)
+	Transferability string `json:"transferability" example:"high" enums:"high,medium,low"`
+	// LearningEffort 学习难度: minimal(最小), moderate(中等), significant(较大)
+	LearningEffort string `json:"learning_effort" example:"moderate" enums:"minimal,moderate,significant"`
+	// MatchReason 匹配原因说明
+	MatchReason string `json:"match_reason" example:"具备相关技术栈经验，可快速上手"`
 }
 
 // ResponsibilityMatchDetail 职责匹配详情
 type ResponsibilityMatchDetail struct {
-	Score                     float64                  `json:"score"`
-	MatchedResponsibilities   []*MatchedResponsibility `json:"matched_responsibilities"`   // 匹配的职责
-	UnmatchedResponsibilities []*JobResponsibility     `json:"unmatched_responsibilities"` // 未匹配的职责
-	RelevantExperiences       []string                 `json:"relevant_experiences"`       // 相关工作经历ID
+	// Score 职责匹配总分 (0-100)
+	Score float64 `json:"score" example:"82.0"`
+	// MatchedResponsibilities 匹配的职责列表
+	MatchedResponsibilities []*MatchedResponsibility `json:"matched_responsibilities"`
+	// UnmatchedResponsibilities 未匹配的职责列表
+	UnmatchedResponsibilities []*JobResponsibility `json:"unmatched_responsibilities"`
+	// RelevantExperiences 相关工作经历ID列表
+	RelevantExperiences []string `json:"relevant_experiences" example:"[\"exp_001\",\"exp_002\"]"`
 }
 
 // MatchedResponsibility 匹配的职责
 type MatchedResponsibility struct {
-	JobResponsibilityID string            `json:"job_responsibility_id"`
-	ResumeExperienceID  string            `json:"resume_experience_id,omitempty"`
-	LLMAnalysis         *LLMMatchAnalysis `json:"llm_analysis"` // 大模型分析结果
-	MatchScore          float64           `json:"match_score"`  // 该职责匹配得分
-	MatchReason         string            `json:"match_reason"` // 匹配原因说明
+	// JobResponsibilityID 岗位职责ID
+	JobResponsibilityID string `json:"job_responsibility_id" example:"resp_001"`
+	// ResumeExperienceID 简历工作经历ID，可选
+	ResumeExperienceID string `json:"resume_experience_id,omitempty" example:"exp_001"`
+	// LLMAnalysis 大模型分析结果
+	LLMAnalysis *LLMMatchAnalysis `json:"llm_analysis"`
+	// MatchScore 该职责匹配得分 (0-100)
+	MatchScore float64 `json:"match_score" example:"85.5"`
+	// MatchReason 匹配原因说明
+	MatchReason string `json:"match_reason" example:"具备相关项目管理经验"`
 }
 
 // LLMMatchAnalysis 大模型匹配分析
 type LLMMatchAnalysis struct {
-	MatchLevel         string   `json:"match_level"`         // 匹配等级: excellent/good/fair/poor
-	MatchPercentage    float64  `json:"match_percentage"`    // 匹配百分比 (0-100)
-	StrengthPoints     []string `json:"strength_points"`     // 匹配优势点
-	WeakPoints         []string `json:"weak_points"`         // 不足之处
-	RecommendedActions []string `json:"recommended_actions"` // 建议改进措施
-	AnalysisDetail     string   `json:"analysis_detail"`     // 详细分析说明
+	// MatchLevel 匹配等级: excellent(优秀), good(良好), fair(一般), poor(较差)
+	MatchLevel string `json:"match_level" example:"good" enums:"excellent,good,fair,poor"`
+	// MatchPercentage 匹配百分比 (0-100)
+	MatchPercentage float64 `json:"match_percentage" example:"85.0"`
+	// StrengthPoints 匹配优势点
+	StrengthPoints []string `json:"strength_points" example:"[\"项目管理经验丰富\",\"团队协作能力强\"]"`
+	// WeakPoints 不足之处
+	WeakPoints []string `json:"weak_points" example:"[\"缺乏敏捷开发经验\",\"跨部门沟通待提升\"]"`
+	// RecommendedActions 建议改进措施
+	RecommendedActions []string `json:"recommended_actions" example:"[\"参加敏捷开发培训\",\"加强跨部门协作\"]"`
+	// AnalysisDetail 详细分析说明
+	AnalysisDetail string `json:"analysis_detail" example:"候选人在项目管理方面有丰富经验，但需要加强敏捷开发方法论"`
 }
 
 // ExperienceMatchDetail 经验匹配详情
 type ExperienceMatchDetail struct {
-	Score           float64              `json:"score"`
-	YearsMatch      *YearsMatchInfo      `json:"years_match"`
+	// Score 经验匹配总分 (0-100)
+	Score float64 `json:"score" example:"78.5"`
+	// YearsMatch 工作年限匹配信息
+	YearsMatch *YearsMatchInfo `json:"years_match"`
+	// PositionMatches 职位匹配列表
 	PositionMatches []*PositionMatchInfo `json:"position_matches"`
+	// IndustryMatches 行业匹配列表
 	IndustryMatches []*IndustryMatchInfo `json:"industry_matches"`
 }
 
 // YearsMatchInfo 年限匹配信息
 type YearsMatchInfo struct {
-	RequiredYears float64 `json:"required_years"`
-	ActualYears   float64 `json:"actual_years"`
-	Score         float64 `json:"score"`
-	Gap           float64 `json:"gap"`
+	// RequiredYears 要求工作年限
+	RequiredYears float64 `json:"required_years" example:"5.0"`
+	// ActualYears 实际工作年限
+	ActualYears float64 `json:"actual_years" example:"6.5"`
+	// Score 年限匹配得分 (0-100)
+	Score float64 `json:"score" example:"95.0"`
+	// Gap 年限差距（正数表示超出要求，负数表示不足）
+	Gap float64 `json:"gap" example:"1.5"`
 }
 
 // PositionMatchInfo 职位匹配信息
 type PositionMatchInfo struct {
-	ResumeExperienceID string  `json:"resume_experience_id"`
-	Position           string  `json:"position"`
-	Relevance          float64 `json:"relevance"`
-	Score              float64 `json:"score"`
+	// ResumeExperienceID 简历工作经历ID
+	ResumeExperienceID string `json:"resume_experience_id" example:"exp_001"`
+	// Position 职位名称
+	Position string `json:"position" example:"高级软件工程师"`
+	// Relevance 相关度 (0-1)
+	Relevance float64 `json:"relevance" example:"0.85"`
+	// Score 职位匹配得分 (0-100)
+	Score float64 `json:"score" example:"85.0"`
 }
 
 // IndustryMatchInfo 行业匹配信息
 type IndustryMatchInfo struct {
-	ResumeExperienceID string  `json:"resume_experience_id"`
-	Company            string  `json:"company"`
-	Industry           string  `json:"industry"`
-	Relevance          float64 `json:"relevance"`
-	Score              float64 `json:"score"`
+	// ResumeExperienceID 简历工作经历ID
+	ResumeExperienceID string `json:"resume_experience_id" example:"exp_001"`
+	// Company 公司名称
+	Company string `json:"company" example:"腾讯科技"`
+	// Industry 行业名称
+	Industry string `json:"industry" example:"互联网"`
+	// Relevance 相关度 (0-1)
+	Relevance float64 `json:"relevance" example:"0.90"`
+	// Score 行业匹配得分 (0-100)
+	Score float64 `json:"score" example:"90.0"`
 }
 
 // EducationMatchDetail 教育匹配详情
 type EducationMatchDetail struct {
-	Score         float64            `json:"score"`
-	DegreeMatch   *DegreeMatchInfo   `json:"degree_match"`
-	MajorMatches  []*MajorMatchInfo  `json:"major_matches"`
+	// Score 教育匹配总分 (0-100)
+	Score float64 `json:"score" example:"88.0"`
+	// DegreeMatch 学历匹配信息
+	DegreeMatch *DegreeMatchInfo `json:"degree_match"`
+	// MajorMatches 专业匹配列表
+	MajorMatches []*MajorMatchInfo `json:"major_matches"`
+	// SchoolMatches 学校匹配列表
 	SchoolMatches []*SchoolMatchInfo `json:"school_matches"`
 }
 
 // DegreeMatchInfo 学历匹配信息
 type DegreeMatchInfo struct {
-	RequiredDegree string  `json:"required_degree"`
-	ActualDegree   string  `json:"actual_degree"`
-	Score          float64 `json:"score"`
-	Meets          bool    `json:"meets"`
+	// RequiredDegree 要求学历
+	RequiredDegree string `json:"required_degree" example:"本科"`
+	// ActualDegree 实际学历
+	ActualDegree string `json:"actual_degree" example:"硕士"`
+	// Score 学历匹配得分 (0-100)
+	Score float64 `json:"score" example:"100.0"`
+	// Meets 是否满足学历要求
+	Meets bool `json:"meets" example:"true"`
 }
 
 // MajorMatchInfo 专业匹配信息
 type MajorMatchInfo struct {
-	ResumeEducationID string  `json:"resume_education_id"`
-	Major             string  `json:"major"`
-	Relevance         float64 `json:"relevance"`
-	Score             float64 `json:"score"`
+	// ResumeEducationID 简历教育经历ID
+	ResumeEducationID string `json:"resume_education_id" example:"edu_001"`
+	// Major 专业名称
+	Major string `json:"major" example:"计算机科学与技术"`
+	// Relevance 相关度 (0-1)
+	Relevance float64 `json:"relevance" example:"0.95"`
+	// Score 专业匹配得分 (0-100)
+	Score float64 `json:"score" example:"95.0"`
 }
 
 // SchoolMatchInfo 学校匹配信息
 type SchoolMatchInfo struct {
-	ResumeEducationID string  `json:"resume_education_id"`
-	School            string  `json:"school"`
-	Reputation        float64 `json:"reputation"`
-	Score             float64 `json:"score"`
+	// ResumeEducationID 简历教育经历ID
+	ResumeEducationID string `json:"resume_education_id" example:"edu_001"`
+	// School 学校名称
+	School string `json:"school" example:"清华大学"`
+	// Reputation 学校声誉评分 (0-1)
+	Reputation float64 `json:"reputation" example:"0.98"`
+	// Score 学校匹配得分 (0-100)
+	Score float64 `json:"score" example:"98.0"`
 }
 
 // IndustryMatchDetail 行业匹配详情
 type IndustryMatchDetail struct {
-	Score           float64              `json:"score"`
+	// Score 行业匹配总分 (0-100)
+	Score float64 `json:"score" example:"85.0"`
+	// IndustryMatches 行业匹配列表
 	IndustryMatches []*IndustryMatchInfo `json:"industry_matches"`
-	CompanyMatches  []*CompanyMatchInfo  `json:"company_matches"`
+	// CompanyMatches 公司匹配列表
+	CompanyMatches []*CompanyMatchInfo `json:"company_matches"`
 }
 
 // CompanyMatchInfo 公司匹配信息
 type CompanyMatchInfo struct {
-	ResumeExperienceID string  `json:"resume_experience_id"`
-	Company            string  `json:"company"`
-	TargetCompany      string  `json:"target_company"`
-	Score              float64 `json:"score"`
-	IsExact            bool    `json:"is_exact"`
+	// ResumeExperienceID 简历工作经历ID
+	ResumeExperienceID string `json:"resume_experience_id" example:"exp_001"`
+	// Company 简历中的公司名称
+	Company string `json:"company" example:"阿里巴巴"`
+	// TargetCompany 目标公司名称
+	TargetCompany string `json:"target_company" example:"腾讯"`
+	// Score 公司匹配得分 (0-100)
+	Score float64 `json:"score" example:"88.0"`
+	// IsExact 是否完全匹配
+	IsExact bool `json:"is_exact" example:"false"`
 }
 
 // MatchLevel 匹配等级

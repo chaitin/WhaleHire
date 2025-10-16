@@ -69,7 +69,7 @@ func NewSkillAgent(ctx context.Context, llm model.ToolCallingChatModel) (*SkillA
 	chain.
 		AppendLambda(compose.InvokableLambdaWithOption(newInputLambda), compose.WithNodeName("input_processing")).
 		AppendChatTemplate(chatTemplate, compose.WithNodeName("chat_template")).
-		AppendChatModel(llm, compose.WithNodeName("chat_model")).
+		AppendChatModel(llm, compose.WithNodeName("chat_model"), compose.WithNodeKey("chat_model")).
 		AppendLambda(compose.InvokableLambdaWithOption(newOutputLambda), compose.WithNodeName("output_processing"))
 
 	return &SkillAgent{

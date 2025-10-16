@@ -72,6 +72,7 @@ func (ScreeningTask) Edges() []ent.Edge {
 		edge.To("task_resumes", ScreeningTaskResume.Type),
 		edge.To("results", ScreeningResult.Type),
 		edge.To("run_metrics", ScreeningRunMetric.Type),
+		edge.To("node_runs", ScreeningNodeRun.Type),
 	}
 }
 

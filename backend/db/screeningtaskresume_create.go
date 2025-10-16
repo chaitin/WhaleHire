@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/google/uuid"
@@ -172,6 +173,21 @@ func (strc *ScreeningTaskResumeCreate) SetTask(s *ScreeningTask) *ScreeningTaskR
 // SetResume sets the "resume" edge to the Resume entity.
 func (strc *ScreeningTaskResumeCreate) SetResume(r *Resume) *ScreeningTaskResumeCreate {
 	return strc.SetResumeID(r.ID)
+}
+
+// AddNodeRunIDs adds the "node_runs" edge to the ScreeningNodeRun entity by IDs.
+func (strc *ScreeningTaskResumeCreate) AddNodeRunIDs(ids ...uuid.UUID) *ScreeningTaskResumeCreate {
+	strc.mutation.AddNodeRunIDs(ids...)
+	return strc
+}
+
+// AddNodeRuns adds the "node_runs" edges to the ScreeningNodeRun entity.
+func (strc *ScreeningTaskResumeCreate) AddNodeRuns(s ...*ScreeningNodeRun) *ScreeningTaskResumeCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return strc.AddNodeRunIDs(ids...)
 }
 
 // Mutation returns the ScreeningTaskResumeMutation object of the builder.
@@ -362,6 +378,22 @@ func (strc *ScreeningTaskResumeCreate) createSpec() (*ScreeningTaskResume, *sqlg
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ResumeID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := strc.mutation.NodeRunsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtaskresume.NodeRunsTable,
+			Columns: []string{screeningtaskresume.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

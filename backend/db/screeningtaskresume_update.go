@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/google/uuid"
@@ -204,6 +205,21 @@ func (stru *ScreeningTaskResumeUpdate) SetResume(r *Resume) *ScreeningTaskResume
 	return stru.SetResumeID(r.ID)
 }
 
+// AddNodeRunIDs adds the "node_runs" edge to the ScreeningNodeRun entity by IDs.
+func (stru *ScreeningTaskResumeUpdate) AddNodeRunIDs(ids ...uuid.UUID) *ScreeningTaskResumeUpdate {
+	stru.mutation.AddNodeRunIDs(ids...)
+	return stru
+}
+
+// AddNodeRuns adds the "node_runs" edges to the ScreeningNodeRun entity.
+func (stru *ScreeningTaskResumeUpdate) AddNodeRuns(s ...*ScreeningNodeRun) *ScreeningTaskResumeUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return stru.AddNodeRunIDs(ids...)
+}
+
 // Mutation returns the ScreeningTaskResumeMutation object of the builder.
 func (stru *ScreeningTaskResumeUpdate) Mutation() *ScreeningTaskResumeMutation {
 	return stru.mutation
@@ -219,6 +235,27 @@ func (stru *ScreeningTaskResumeUpdate) ClearTask() *ScreeningTaskResumeUpdate {
 func (stru *ScreeningTaskResumeUpdate) ClearResume() *ScreeningTaskResumeUpdate {
 	stru.mutation.ClearResume()
 	return stru
+}
+
+// ClearNodeRuns clears all "node_runs" edges to the ScreeningNodeRun entity.
+func (stru *ScreeningTaskResumeUpdate) ClearNodeRuns() *ScreeningTaskResumeUpdate {
+	stru.mutation.ClearNodeRuns()
+	return stru
+}
+
+// RemoveNodeRunIDs removes the "node_runs" edge to ScreeningNodeRun entities by IDs.
+func (stru *ScreeningTaskResumeUpdate) RemoveNodeRunIDs(ids ...uuid.UUID) *ScreeningTaskResumeUpdate {
+	stru.mutation.RemoveNodeRunIDs(ids...)
+	return stru
+}
+
+// RemoveNodeRuns removes "node_runs" edges to ScreeningNodeRun entities.
+func (stru *ScreeningTaskResumeUpdate) RemoveNodeRuns(s ...*ScreeningNodeRun) *ScreeningTaskResumeUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return stru.RemoveNodeRunIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -385,6 +422,51 @@ func (stru *ScreeningTaskResumeUpdate) sqlSave(ctx context.Context) (n int, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resume.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if stru.mutation.NodeRunsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtaskresume.NodeRunsTable,
+			Columns: []string{screeningtaskresume.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := stru.mutation.RemovedNodeRunsIDs(); len(nodes) > 0 && !stru.mutation.NodeRunsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtaskresume.NodeRunsTable,
+			Columns: []string{screeningtaskresume.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := stru.mutation.NodeRunsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtaskresume.NodeRunsTable,
+			Columns: []string{screeningtaskresume.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -586,6 +668,21 @@ func (struo *ScreeningTaskResumeUpdateOne) SetResume(r *Resume) *ScreeningTaskRe
 	return struo.SetResumeID(r.ID)
 }
 
+// AddNodeRunIDs adds the "node_runs" edge to the ScreeningNodeRun entity by IDs.
+func (struo *ScreeningTaskResumeUpdateOne) AddNodeRunIDs(ids ...uuid.UUID) *ScreeningTaskResumeUpdateOne {
+	struo.mutation.AddNodeRunIDs(ids...)
+	return struo
+}
+
+// AddNodeRuns adds the "node_runs" edges to the ScreeningNodeRun entity.
+func (struo *ScreeningTaskResumeUpdateOne) AddNodeRuns(s ...*ScreeningNodeRun) *ScreeningTaskResumeUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return struo.AddNodeRunIDs(ids...)
+}
+
 // Mutation returns the ScreeningTaskResumeMutation object of the builder.
 func (struo *ScreeningTaskResumeUpdateOne) Mutation() *ScreeningTaskResumeMutation {
 	return struo.mutation
@@ -601,6 +698,27 @@ func (struo *ScreeningTaskResumeUpdateOne) ClearTask() *ScreeningTaskResumeUpdat
 func (struo *ScreeningTaskResumeUpdateOne) ClearResume() *ScreeningTaskResumeUpdateOne {
 	struo.mutation.ClearResume()
 	return struo
+}
+
+// ClearNodeRuns clears all "node_runs" edges to the ScreeningNodeRun entity.
+func (struo *ScreeningTaskResumeUpdateOne) ClearNodeRuns() *ScreeningTaskResumeUpdateOne {
+	struo.mutation.ClearNodeRuns()
+	return struo
+}
+
+// RemoveNodeRunIDs removes the "node_runs" edge to ScreeningNodeRun entities by IDs.
+func (struo *ScreeningTaskResumeUpdateOne) RemoveNodeRunIDs(ids ...uuid.UUID) *ScreeningTaskResumeUpdateOne {
+	struo.mutation.RemoveNodeRunIDs(ids...)
+	return struo
+}
+
+// RemoveNodeRuns removes "node_runs" edges to ScreeningNodeRun entities.
+func (struo *ScreeningTaskResumeUpdateOne) RemoveNodeRuns(s ...*ScreeningNodeRun) *ScreeningTaskResumeUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return struo.RemoveNodeRunIDs(ids...)
 }
 
 // Where appends a list predicates to the ScreeningTaskResumeUpdate builder.
@@ -797,6 +915,51 @@ func (struo *ScreeningTaskResumeUpdateOne) sqlSave(ctx context.Context) (_node *
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(resume.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if struo.mutation.NodeRunsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtaskresume.NodeRunsTable,
+			Columns: []string{screeningtaskresume.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := struo.mutation.RemovedNodeRunsIDs(); len(nodes) > 0 && !struo.mutation.NodeRunsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtaskresume.NodeRunsTable,
+			Columns: []string{screeningtaskresume.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := struo.mutation.NodeRunsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtaskresume.NodeRunsTable,
+			Columns: []string{screeningtaskresume.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

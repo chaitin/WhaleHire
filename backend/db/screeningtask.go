@@ -71,9 +71,11 @@ type ScreeningTaskEdges struct {
 	Results []*ScreeningResult `json:"results,omitempty"`
 	// RunMetrics holds the value of the run_metrics edge.
 	RunMetrics []*ScreeningRunMetric `json:"run_metrics,omitempty"`
+	// NodeRuns holds the value of the node_runs edge.
+	NodeRuns []*ScreeningNodeRun `json:"node_runs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // JobPositionOrErr returns the JobPosition value or an error if the edge
@@ -123,6 +125,15 @@ func (e ScreeningTaskEdges) RunMetricsOrErr() ([]*ScreeningRunMetric, error) {
 		return e.RunMetrics, nil
 	}
 	return nil, &NotLoadedError{edge: "run_metrics"}
+}
+
+// NodeRunsOrErr returns the NodeRuns value or an error if the edge
+// was not loaded in eager-loading.
+func (e ScreeningTaskEdges) NodeRunsOrErr() ([]*ScreeningNodeRun, error) {
+	if e.loadedTypes[5] {
+		return e.NodeRuns, nil
+	}
+	return nil, &NotLoadedError{edge: "node_runs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -297,6 +308,11 @@ func (st *ScreeningTask) QueryResults() *ScreeningResultQuery {
 // QueryRunMetrics queries the "run_metrics" edge of the ScreeningTask entity.
 func (st *ScreeningTask) QueryRunMetrics() *ScreeningRunMetricQuery {
 	return NewScreeningTaskClient(st.config).QueryRunMetrics(st)
+}
+
+// QueryNodeRuns queries the "node_runs" edge of the ScreeningTask entity.
+func (st *ScreeningTask) QueryNodeRuns() *ScreeningNodeRunQuery {
+	return NewScreeningTaskClient(st.config).QueryNodeRuns(st)
 }
 
 // Update returns a builder for updating this ScreeningTask.

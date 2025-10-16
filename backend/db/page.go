@@ -333,6 +333,20 @@ func (r *RoleQuery) Page(ctx context.Context, page, size int) ([]*Role, *PageInf
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (snr *ScreeningNodeRunQuery) Page(ctx context.Context, page, size int) ([]*ScreeningNodeRun, *PageInfo, error) {
+	cnt, err := snr.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := snr.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (sr *ScreeningResultQuery) Page(ctx context.Context, page, size int) ([]*ScreeningResult, *PageInfo, error) {
 	cnt, err := sr.Count(ctx)
 	if err != nil {

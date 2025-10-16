@@ -97,3 +97,13 @@ func (d *Dispatcher) Process(ctx context.Context, input *domain.MatchInput) (map
 
 	return data, nil
 }
+
+// GetAgentType 返回Agent类型
+func (a *Dispatcher) GetAgentType() string {
+	return "Dispatcher"
+}
+
+// GetVersion 返回Agent版本
+func (a *Dispatcher) GetVersion() string {
+	return "1.0.0"
+}

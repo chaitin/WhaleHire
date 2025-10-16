@@ -60,6 +60,8 @@ type Tx struct {
 	ResumeSkill *ResumeSkillClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// ScreeningNodeRun is the client for interacting with the ScreeningNodeRun builders.
+	ScreeningNodeRun *ScreeningNodeRunClient
 	// ScreeningResult is the client for interacting with the ScreeningResult builders.
 	ScreeningResult *ScreeningResultClient
 	// ScreeningRunMetric is the client for interacting with the ScreeningRunMetric builders.
@@ -230,6 +232,7 @@ func (tx *Tx) init() {
 	tx.ResumeProject = NewResumeProjectClient(tx.config)
 	tx.ResumeSkill = NewResumeSkillClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
+	tx.ScreeningNodeRun = NewScreeningNodeRunClient(tx.config)
 	tx.ScreeningResult = NewScreeningResultClient(tx.config)
 	tx.ScreeningRunMetric = NewScreeningRunMetricClient(tx.config)
 	tx.ScreeningTask = NewScreeningTaskClient(tx.config)

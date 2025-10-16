@@ -645,6 +645,94 @@ var (
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
 	}
+	// ScreeningNodeRunsColumns holds the columns for the "screening_node_runs" table.
+	ScreeningNodeRunsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "node_key", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "attempt_no", Type: field.TypeInt, Default: 1},
+		{Name: "trace_id", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "agent_version", Type: field.TypeString, Nullable: true, Size: 50},
+		{Name: "model_name", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "model_provider", Type: field.TypeString, Nullable: true, Size: 50},
+		{Name: "llm_params", Type: field.TypeJSON, Nullable: true},
+		{Name: "input_payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "output_payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "tokens_input", Type: field.TypeInt64, Nullable: true},
+		{Name: "tokens_output", Type: field.TypeInt64, Nullable: true},
+		{Name: "total_cost", Type: field.TypeFloat64, Nullable: true},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+		{Name: "duration_ms", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "task_id", Type: field.TypeUUID},
+		{Name: "task_resume_id", Type: field.TypeUUID},
+	}
+	// ScreeningNodeRunsTable holds the schema information for the "screening_node_runs" table.
+	ScreeningNodeRunsTable = &schema.Table{
+		Name:       "screening_node_runs",
+		Columns:    ScreeningNodeRunsColumns,
+		PrimaryKey: []*schema.Column{ScreeningNodeRunsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "screening_node_runs_screening_tasks_node_runs",
+				Columns:    []*schema.Column{ScreeningNodeRunsColumns[21]},
+				RefColumns: []*schema.Column{ScreeningTasksColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "screening_node_runs_screening_task_resumes_node_runs",
+				Columns:    []*schema.Column{ScreeningNodeRunsColumns[22]},
+				RefColumns: []*schema.Column{ScreeningTaskResumesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "screeningnoderun_task_id",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[21]},
+			},
+			{
+				Name:    "screeningnoderun_task_resume_id",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[22]},
+			},
+			{
+				Name:    "screeningnoderun_node_key",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[2]},
+			},
+			{
+				Name:    "screeningnoderun_status",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[3]},
+			},
+			{
+				Name:    "screeningnoderun_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[19]},
+			},
+			{
+				Name:    "screeningnoderun_task_resume_id_node_key_attempt_no",
+				Unique:  true,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[22], ScreeningNodeRunsColumns[2], ScreeningNodeRunsColumns[4]},
+			},
+			{
+				Name:    "screeningnoderun_task_id_node_key",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[21], ScreeningNodeRunsColumns[2]},
+			},
+			{
+				Name:    "screeningnoderun_node_key_status",
+				Unique:  false,
+				Columns: []*schema.Column{ScreeningNodeRunsColumns[2], ScreeningNodeRunsColumns[3]},
+			},
+		},
+	}
 	// ScreeningResultsColumns holds the columns for the "screening_results" table.
 	ScreeningResultsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1021,6 +1109,7 @@ var (
 		ResumeProjectsTable,
 		ResumeSkillsTable,
 		RolesTable,
+		ScreeningNodeRunsTable,
 		ScreeningResultsTable,
 		ScreeningRunMetricsTable,
 		ScreeningTasksTable,
@@ -1124,6 +1213,11 @@ func init() {
 	}
 	RolesTable.Annotation = &entsql.Annotation{
 		Table: "roles",
+	}
+	ScreeningNodeRunsTable.ForeignKeys[0].RefTable = ScreeningTasksTable
+	ScreeningNodeRunsTable.ForeignKeys[1].RefTable = ScreeningTaskResumesTable
+	ScreeningNodeRunsTable.Annotation = &entsql.Annotation{
+		Table: "screening_node_runs",
 	}
 	ScreeningResultsTable.ForeignKeys[0].RefTable = JobPositionTable
 	ScreeningResultsTable.ForeignKeys[1].RefTable = ResumesTable

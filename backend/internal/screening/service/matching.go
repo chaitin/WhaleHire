@@ -35,21 +35,24 @@ type MatchRequest struct {
 
 // MatchResult 匹配结果
 type MatchResult struct {
-	Match        *domain.JobResumeMatch
-	TokenUsages  map[string]*model.TokenUsage
-	Version      string
-	Duration     time.Duration
-	DimensionMap map[string]float64
+	Match           *domain.JobResumeMatch
+	TokenUsages     map[string]*model.TokenUsage
+	Version         string
+	SubAgentVersion map[string]string
+	Duration        time.Duration
+	DimensionMap    map[string]float64
+	Collector       *screening.AgentCallbackCollector
 }
 
 type matchingService struct {
-	logger   *slog.Logger
-	cfg      *config.Config
-	factory  *models.ModelFactory
-	runnable compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch]
-	version  string
-	initOnce sync.Once
-	initErr  error
+	logger            *slog.Logger
+	cfg               *config.Config
+	factory           *models.ModelFactory
+	runnable          compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch]
+	version           string
+	sub_agent_version map[string]string
+	initOnce          sync.Once
+	initErr           error
 }
 
 // NewMatchingService 创建匹配服务
@@ -89,8 +92,8 @@ func (s *matchingService) Match(ctx context.Context, req *MatchRequest) (*MatchR
 		return nil, fmt.Errorf("setup model failed: %w", err)
 	}
 
-	if err := s.ensureRunnable(ctx, modelType, modelName); err != nil {
-		return nil, err
+	if errRun := s.ensureRunnable(ctx, modelType, modelName); errRun != nil {
+		return nil, errRun
 	}
 
 	weights := buildDimensionWeights(req.DimensionWeights)
@@ -101,7 +104,7 @@ func (s *matchingService) Match(ctx context.Context, req *MatchRequest) (*MatchR
 		MatchTaskID:      fmt.Sprintf("%s:%s", req.TaskID.String(), req.ResumeID.String()),
 	}
 
-	collector := screening.NewAgentOutputCollector()
+	collector := screening.NewAgentCallbackCollector()
 	start := time.Now()
 	match, err := screening.InvokeWithCollector(ctx, s.runnable, matchInput, collector)
 	duration := time.Since(start)
@@ -110,11 +113,13 @@ func (s *matchingService) Match(ctx context.Context, req *MatchRequest) (*MatchR
 	}
 
 	result := &MatchResult{
-		Match:        match,
-		TokenUsages:  collector.TokenUsages(),
-		Version:      s.version,
-		Duration:     duration,
-		DimensionMap: weightsToMap(weights),
+		Match:           match,
+		TokenUsages:     collector.TokenUsages(),
+		Version:         s.version,
+		SubAgentVersion: s.sub_agent_version,
+		Duration:        duration,
+		DimensionMap:    weightsToMap(weights),
+		Collector:       collector,
 	}
 	return result, nil
 }
@@ -227,6 +232,7 @@ func (s *matchingService) ensureRunnable(ctx context.Context, modelType models.M
 		}
 		s.runnable = runnable
 		s.version = graph.GetVersion()
+		s.sub_agent_version = graph.GetSubAgentVersions()
 	})
 	return s.initErr
 }

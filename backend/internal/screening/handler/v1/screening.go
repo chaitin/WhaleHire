@@ -34,6 +34,7 @@ func NewScreeningHandler(
 	group.Use(auth.UserAuth())
 	group.POST("/tasks", web.BindHandler(handler.CreateTask))
 	group.POST("/tasks/:id/start", web.BaseHandler(handler.StartTask))
+	group.POST("/tasks/:id/cancel", web.BaseHandler(handler.CancelTask))
 	group.DELETE("/tasks/:id", web.BaseHandler(handler.DeleteTask))
 	group.GET("/tasks", web.BindHandler(handler.ListTasks, web.WithPage()))
 	group.GET("/tasks/:id", web.BaseHandler(handler.GetTask))
@@ -102,6 +103,33 @@ func (h *ScreeningHandler) StartTask(c *web.Context) error {
 	})
 	if err != nil {
 		h.logger.Error("启动筛选任务失败", slog.Any("err", err), slog.Any("task_id", taskID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// CancelTask 取消筛选任务
+//
+//	@Tags			Screening
+//	@Summary		取消筛选任务
+//	@Description	取消正在进行中的筛选任务，停止剩余简历的匹配过程
+//	@ID				cancel-screening-task
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"任务ID"
+//	@Success		200	{object}	web.Resp{data=domain.CancelScreeningTaskResp}
+//	@Router			/api/v1/screening/tasks/{id}/cancel [post]
+func (h *ScreeningHandler) CancelTask(c *web.Context) error {
+	taskID, err := parseUUIDParam(c.Param("id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+	}
+
+	resp, err := h.usecase.CancelScreeningTask(c.Request().Context(), &domain.CancelScreeningTaskReq{
+		TaskID: taskID,
+	})
+	if err != nil {
+		h.logger.Error("取消筛选任务失败", slog.Any("err", err), slog.Any("task_id", taskID))
 		return err
 	}
 	return c.Success(resp)

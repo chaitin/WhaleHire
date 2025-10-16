@@ -28,6 +28,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
 	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
@@ -571,6 +572,51 @@ func init() {
 	roleDescCreatedAt := roleFields[3].Descriptor()
 	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
 	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	screeningnoderunMixin := schema.ScreeningNodeRun{}.Mixin()
+	screeningnoderunMixinHooks0 := screeningnoderunMixin[0].Hooks()
+	screeningnoderun.Hooks[0] = screeningnoderunMixinHooks0[0]
+	screeningnoderunMixinInters0 := screeningnoderunMixin[0].Interceptors()
+	screeningnoderun.Interceptors[0] = screeningnoderunMixinInters0[0]
+	screeningnoderunFields := schema.ScreeningNodeRun{}.Fields()
+	_ = screeningnoderunFields
+	// screeningnoderunDescStatus is the schema descriptor for status field.
+	screeningnoderunDescStatus := screeningnoderunFields[4].Descriptor()
+	// screeningnoderun.DefaultStatus holds the default value on creation for the status field.
+	screeningnoderun.DefaultStatus = screeningnoderunDescStatus.Default.(string)
+	// screeningnoderunDescAttemptNo is the schema descriptor for attempt_no field.
+	screeningnoderunDescAttemptNo := screeningnoderunFields[5].Descriptor()
+	// screeningnoderun.DefaultAttemptNo holds the default value on creation for the attempt_no field.
+	screeningnoderun.DefaultAttemptNo = screeningnoderunDescAttemptNo.Default.(int)
+	// screeningnoderunDescTraceID is the schema descriptor for trace_id field.
+	screeningnoderunDescTraceID := screeningnoderunFields[6].Descriptor()
+	// screeningnoderun.TraceIDValidator is a validator for the "trace_id" field. It is called by the builders before save.
+	screeningnoderun.TraceIDValidator = screeningnoderunDescTraceID.Validators[0].(func(string) error)
+	// screeningnoderunDescAgentVersion is the schema descriptor for agent_version field.
+	screeningnoderunDescAgentVersion := screeningnoderunFields[7].Descriptor()
+	// screeningnoderun.AgentVersionValidator is a validator for the "agent_version" field. It is called by the builders before save.
+	screeningnoderun.AgentVersionValidator = screeningnoderunDescAgentVersion.Validators[0].(func(string) error)
+	// screeningnoderunDescModelName is the schema descriptor for model_name field.
+	screeningnoderunDescModelName := screeningnoderunFields[8].Descriptor()
+	// screeningnoderun.ModelNameValidator is a validator for the "model_name" field. It is called by the builders before save.
+	screeningnoderun.ModelNameValidator = screeningnoderunDescModelName.Validators[0].(func(string) error)
+	// screeningnoderunDescModelProvider is the schema descriptor for model_provider field.
+	screeningnoderunDescModelProvider := screeningnoderunFields[9].Descriptor()
+	// screeningnoderun.ModelProviderValidator is a validator for the "model_provider" field. It is called by the builders before save.
+	screeningnoderun.ModelProviderValidator = screeningnoderunDescModelProvider.Validators[0].(func(string) error)
+	// screeningnoderunDescCreatedAt is the schema descriptor for created_at field.
+	screeningnoderunDescCreatedAt := screeningnoderunFields[20].Descriptor()
+	// screeningnoderun.DefaultCreatedAt holds the default value on creation for the created_at field.
+	screeningnoderun.DefaultCreatedAt = screeningnoderunDescCreatedAt.Default.(func() time.Time)
+	// screeningnoderunDescUpdatedAt is the schema descriptor for updated_at field.
+	screeningnoderunDescUpdatedAt := screeningnoderunFields[21].Descriptor()
+	// screeningnoderun.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	screeningnoderun.DefaultUpdatedAt = screeningnoderunDescUpdatedAt.Default.(func() time.Time)
+	// screeningnoderun.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	screeningnoderun.UpdateDefaultUpdatedAt = screeningnoderunDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// screeningnoderunDescID is the schema descriptor for id field.
+	screeningnoderunDescID := screeningnoderunFields[0].Descriptor()
+	// screeningnoderun.DefaultID holds the default value on creation for the id field.
+	screeningnoderun.DefaultID = screeningnoderunDescID.Default.(func() uuid.UUID)
 	screeningresultMixin := schema.ScreeningResult{}.Mixin()
 	screeningresultMixinHooks0 := screeningresultMixin[0].Hooks()
 	screeningresult.Hooks[0] = screeningresultMixinHooks0[0]

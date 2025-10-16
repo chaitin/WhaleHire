@@ -39,6 +39,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
 	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
@@ -102,6 +103,8 @@ type Client struct {
 	ResumeSkill *ResumeSkillClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// ScreeningNodeRun is the client for interacting with the ScreeningNodeRun builders.
+	ScreeningNodeRun *ScreeningNodeRunClient
 	// ScreeningResult is the client for interacting with the ScreeningResult builders.
 	ScreeningResult *ScreeningResultClient
 	// ScreeningRunMetric is the client for interacting with the ScreeningRunMetric builders.
@@ -152,6 +155,7 @@ func (c *Client) init() {
 	c.ResumeProject = NewResumeProjectClient(c.config)
 	c.ResumeSkill = NewResumeSkillClient(c.config)
 	c.Role = NewRoleClient(c.config)
+	c.ScreeningNodeRun = NewScreeningNodeRunClient(c.config)
 	c.ScreeningResult = NewScreeningResultClient(c.config)
 	c.ScreeningRunMetric = NewScreeningRunMetricClient(c.config)
 	c.ScreeningTask = NewScreeningTaskClient(c.config)
@@ -275,6 +279,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
+		ScreeningNodeRun:         NewScreeningNodeRunClient(cfg),
 		ScreeningResult:          NewScreeningResultClient(cfg),
 		ScreeningRunMetric:       NewScreeningRunMetricClient(cfg),
 		ScreeningTask:            NewScreeningTaskClient(cfg),
@@ -325,6 +330,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
+		ScreeningNodeRun:         NewScreeningNodeRunClient(cfg),
 		ScreeningResult:          NewScreeningResultClient(cfg),
 		ScreeningRunMetric:       NewScreeningRunMetricClient(cfg),
 		ScreeningTask:            NewScreeningTaskClient(cfg),
@@ -367,9 +373,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
 		c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog, c.ResumeProject,
-		c.ResumeSkill, c.Role, c.ScreeningResult, c.ScreeningRunMetric,
-		c.ScreeningTask, c.ScreeningTaskResume, c.Setting, c.User, c.UserIdentity,
-		c.UserLoginHistory,
+		c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
+		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
+		c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Use(hooks...)
 	}
@@ -384,9 +390,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.JobIndustryRequirement, c.JobPosition, c.JobResponsibility, c.JobSkill,
 		c.JobSkillMeta, c.Message, c.Resume, c.ResumeDocumentParse, c.ResumeEducation,
 		c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog, c.ResumeProject,
-		c.ResumeSkill, c.Role, c.ScreeningResult, c.ScreeningRunMetric,
-		c.ScreeningTask, c.ScreeningTaskResume, c.Setting, c.User, c.UserIdentity,
-		c.UserLoginHistory,
+		c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
+		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
+		c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -441,6 +447,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ResumeSkill.mutate(ctx, m)
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
+	case *ScreeningNodeRunMutation:
+		return c.ScreeningNodeRun.mutate(ctx, m)
 	case *ScreeningResultMutation:
 		return c.ScreeningResult.mutate(ctx, m)
 	case *ScreeningRunMetricMutation:
@@ -4343,6 +4351,173 @@ func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error)
 	}
 }
 
+// ScreeningNodeRunClient is a client for the ScreeningNodeRun schema.
+type ScreeningNodeRunClient struct {
+	config
+}
+
+// NewScreeningNodeRunClient returns a client for the ScreeningNodeRun from the given config.
+func NewScreeningNodeRunClient(c config) *ScreeningNodeRunClient {
+	return &ScreeningNodeRunClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `screeningnoderun.Hooks(f(g(h())))`.
+func (c *ScreeningNodeRunClient) Use(hooks ...Hook) {
+	c.hooks.ScreeningNodeRun = append(c.hooks.ScreeningNodeRun, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `screeningnoderun.Intercept(f(g(h())))`.
+func (c *ScreeningNodeRunClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ScreeningNodeRun = append(c.inters.ScreeningNodeRun, interceptors...)
+}
+
+// Create returns a builder for creating a ScreeningNodeRun entity.
+func (c *ScreeningNodeRunClient) Create() *ScreeningNodeRunCreate {
+	mutation := newScreeningNodeRunMutation(c.config, OpCreate)
+	return &ScreeningNodeRunCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ScreeningNodeRun entities.
+func (c *ScreeningNodeRunClient) CreateBulk(builders ...*ScreeningNodeRunCreate) *ScreeningNodeRunCreateBulk {
+	return &ScreeningNodeRunCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ScreeningNodeRunClient) MapCreateBulk(slice any, setFunc func(*ScreeningNodeRunCreate, int)) *ScreeningNodeRunCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ScreeningNodeRunCreateBulk{err: fmt.Errorf("calling to ScreeningNodeRunClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ScreeningNodeRunCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ScreeningNodeRunCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ScreeningNodeRun.
+func (c *ScreeningNodeRunClient) Update() *ScreeningNodeRunUpdate {
+	mutation := newScreeningNodeRunMutation(c.config, OpUpdate)
+	return &ScreeningNodeRunUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ScreeningNodeRunClient) UpdateOne(snr *ScreeningNodeRun) *ScreeningNodeRunUpdateOne {
+	mutation := newScreeningNodeRunMutation(c.config, OpUpdateOne, withScreeningNodeRun(snr))
+	return &ScreeningNodeRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ScreeningNodeRunClient) UpdateOneID(id uuid.UUID) *ScreeningNodeRunUpdateOne {
+	mutation := newScreeningNodeRunMutation(c.config, OpUpdateOne, withScreeningNodeRunID(id))
+	return &ScreeningNodeRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ScreeningNodeRun.
+func (c *ScreeningNodeRunClient) Delete() *ScreeningNodeRunDelete {
+	mutation := newScreeningNodeRunMutation(c.config, OpDelete)
+	return &ScreeningNodeRunDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ScreeningNodeRunClient) DeleteOne(snr *ScreeningNodeRun) *ScreeningNodeRunDeleteOne {
+	return c.DeleteOneID(snr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ScreeningNodeRunClient) DeleteOneID(id uuid.UUID) *ScreeningNodeRunDeleteOne {
+	builder := c.Delete().Where(screeningnoderun.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ScreeningNodeRunDeleteOne{builder}
+}
+
+// Query returns a query builder for ScreeningNodeRun.
+func (c *ScreeningNodeRunClient) Query() *ScreeningNodeRunQuery {
+	return &ScreeningNodeRunQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeScreeningNodeRun},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ScreeningNodeRun entity by its id.
+func (c *ScreeningNodeRunClient) Get(ctx context.Context, id uuid.UUID) (*ScreeningNodeRun, error) {
+	return c.Query().Where(screeningnoderun.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ScreeningNodeRunClient) GetX(ctx context.Context, id uuid.UUID) *ScreeningNodeRun {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTask queries the task edge of a ScreeningNodeRun.
+func (c *ScreeningNodeRunClient) QueryTask(snr *ScreeningNodeRun) *ScreeningTaskQuery {
+	query := (&ScreeningTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := snr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningnoderun.Table, screeningnoderun.FieldID, id),
+			sqlgraph.To(screeningtask.Table, screeningtask.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningnoderun.TaskTable, screeningnoderun.TaskColumn),
+		)
+		fromV = sqlgraph.Neighbors(snr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTaskResume queries the task_resume edge of a ScreeningNodeRun.
+func (c *ScreeningNodeRunClient) QueryTaskResume(snr *ScreeningNodeRun) *ScreeningTaskResumeQuery {
+	query := (&ScreeningTaskResumeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := snr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningnoderun.Table, screeningnoderun.FieldID, id),
+			sqlgraph.To(screeningtaskresume.Table, screeningtaskresume.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, screeningnoderun.TaskResumeTable, screeningnoderun.TaskResumeColumn),
+		)
+		fromV = sqlgraph.Neighbors(snr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ScreeningNodeRunClient) Hooks() []Hook {
+	hooks := c.hooks.ScreeningNodeRun
+	return append(hooks[:len(hooks):len(hooks)], screeningnoderun.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ScreeningNodeRunClient) Interceptors() []Interceptor {
+	inters := c.inters.ScreeningNodeRun
+	return append(inters[:len(inters):len(inters)], screeningnoderun.Interceptors[:]...)
+}
+
+func (c *ScreeningNodeRunClient) mutate(ctx context.Context, m *ScreeningNodeRunMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ScreeningNodeRunCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ScreeningNodeRunUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ScreeningNodeRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ScreeningNodeRunDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ScreeningNodeRun mutation op: %q", m.Op())
+	}
+}
+
 // ScreeningResultClient is a client for the ScreeningResult schema.
 type ScreeningResultClient struct {
 	config
@@ -4865,6 +5040,22 @@ func (c *ScreeningTaskClient) QueryRunMetrics(st *ScreeningTask) *ScreeningRunMe
 	return query
 }
 
+// QueryNodeRuns queries the node_runs edge of a ScreeningTask.
+func (c *ScreeningTaskClient) QueryNodeRuns(st *ScreeningTask) *ScreeningNodeRunQuery {
+	query := (&ScreeningNodeRunClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := st.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, id),
+			sqlgraph.To(screeningnoderun.Table, screeningnoderun.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, screeningtask.NodeRunsTable, screeningtask.NodeRunsColumn),
+		)
+		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ScreeningTaskClient) Hooks() []Hook {
 	hooks := c.hooks.ScreeningTask
@@ -5025,6 +5216,22 @@ func (c *ScreeningTaskResumeClient) QueryResume(str *ScreeningTaskResume) *Resum
 			sqlgraph.From(screeningtaskresume.Table, screeningtaskresume.FieldID, id),
 			sqlgraph.To(resume.Table, resume.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, screeningtaskresume.ResumeTable, screeningtaskresume.ResumeColumn),
+		)
+		fromV = sqlgraph.Neighbors(str.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNodeRuns queries the node_runs edge of a ScreeningTaskResume.
+func (c *ScreeningTaskResumeClient) QueryNodeRuns(str *ScreeningTaskResume) *ScreeningNodeRunQuery {
+	query := (&ScreeningNodeRunClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := str.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtaskresume.Table, screeningtaskresume.FieldID, id),
+			sqlgraph.To(screeningnoderun.Table, screeningnoderun.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, screeningtaskresume.NodeRunsTable, screeningtaskresume.NodeRunsColumn),
 		)
 		fromV = sqlgraph.Neighbors(str.driver.Dialect(), step)
 		return fromV, nil
@@ -5730,7 +5937,7 @@ type (
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
 		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeJobApplication,
-		ResumeLog, ResumeProject, ResumeSkill, Role, ScreeningResult,
+		ResumeLog, ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
 		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
 		UserIdentity, UserLoginHistory []ent.Hook
 	}
@@ -5739,7 +5946,7 @@ type (
 		JobEducationRequirement, JobExperienceRequirement, JobIndustryRequirement,
 		JobPosition, JobResponsibility, JobSkill, JobSkillMeta, Message, Resume,
 		ResumeDocumentParse, ResumeEducation, ResumeExperience, ResumeJobApplication,
-		ResumeLog, ResumeProject, ResumeSkill, Role, ScreeningResult,
+		ResumeLog, ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
 		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
 		UserIdentity, UserLoginHistory []ent.Interceptor
 	}

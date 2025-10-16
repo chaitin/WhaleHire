@@ -21,8 +21,17 @@ import (
 
 // 智能简历匹配图结构
 type ScreeningChatGraph struct {
-	graph   *compose.Graph[*domain.MatchInput, *domain.JobResumeMatch]
-	version string
+	graph               *compose.Graph[*domain.MatchInput, *domain.JobResumeMatch]
+	version             string
+	basicInfoAgent      *basicinfo.BasicInfoAgent
+	educationAgent      *education.EducationAgent
+	experienceAgent     *experience.ExperienceAgent
+	industryAgent       *industry.IndustryAgent
+	responsibilityAgent *responsibility.ResponsibilityAgent
+	skillAgent          *skill.SkillAgent
+	aggregatorAgent     *aggregator.AggregatorAgent
+	taskMetaProcessor   *taskmeta.TaskMetaProcessor
+	dispatcher          *dispatcher.Dispatcher
 }
 
 // GetGraph 获取图结构
@@ -42,6 +51,41 @@ func (r *ScreeningChatGraph) Compile(ctx context.Context) (compose.Runnable[*dom
 // GetVersion 返回Agent版本
 func (r *ScreeningChatGraph) GetVersion() string {
 	return r.version
+}
+
+// GetSubAgentVersions 返回各个子Agent的版本信息
+func (r *ScreeningChatGraph) GetSubAgentVersions() map[string]string {
+	versions := make(map[string]string)
+
+	if r.basicInfoAgent != nil {
+		versions[domain.BasicInfoAgent] = r.basicInfoAgent.GetVersion()
+	}
+	if r.educationAgent != nil {
+		versions[domain.EducationAgent] = r.educationAgent.GetVersion()
+	}
+	if r.experienceAgent != nil {
+		versions[domain.ExperienceAgent] = r.experienceAgent.GetVersion()
+	}
+	if r.industryAgent != nil {
+		versions[domain.IndustryAgent] = r.industryAgent.GetVersion()
+	}
+	if r.responsibilityAgent != nil {
+		versions[domain.ResponsibilityAgent] = r.responsibilityAgent.GetVersion()
+	}
+	if r.skillAgent != nil {
+		versions[domain.SkillAgent] = r.skillAgent.GetVersion()
+	}
+	if r.aggregatorAgent != nil {
+		versions[domain.AggregatorAgent] = r.aggregatorAgent.GetVersion()
+	}
+	if r.taskMetaProcessor != nil {
+		versions[domain.TaskMetaDataNode] = r.taskMetaProcessor.GetVersion()
+	}
+	if r.dispatcher != nil {
+		versions[domain.DispatcherNode] = r.dispatcher.GetVersion()
+	}
+
+	return versions
 }
 
 // NewScreeningChatGraph 使用配置创建智能简历匹配图
@@ -84,6 +128,10 @@ func NewScreeningChatGraph(ctx context.Context, chatModel model.ToolCallingChatM
 	if err != nil {
 		return nil, fmt.Errorf("failed to create aggregator: %w", err)
 	}
+	taskMetaProcessor := taskmeta.NewTaskMetaProcessor()
+	if taskMetaProcessor == nil {
+		return nil, fmt.Errorf("failed to create task meta processor")
+	}
 
 	// 添加调度节点
 	_ = g.AddLambdaNode(domain.DispatcherNode, compose.InvokableLambda(dispatcher.Process), compose.WithNodeName(domain.DispatcherNode))
@@ -119,7 +167,7 @@ func NewScreeningChatGraph(ctx context.Context, chatModel model.ToolCallingChatM
 		compose.WithOutputKey(domain.SkillAgent),
 		compose.WithNodeName(domain.SkillAgent))
 
-	_ = g.AddLambdaNode(domain.TaskMetaDataNode, compose.InvokableLambda(taskmeta.NewLambdaTaskMeta),
+	_ = g.AddLambdaNode(domain.TaskMetaDataNode, compose.InvokableLambda(taskMetaProcessor.ProcessTaskMeta),
 		compose.WithInputKey(domain.TaskMetaDataNode),
 		compose.WithOutputKey(domain.TaskMetaDataNode),
 		compose.WithNodeName(domain.TaskMetaDataNode))
@@ -147,7 +195,16 @@ func NewScreeningChatGraph(ctx context.Context, chatModel model.ToolCallingChatM
 	_ = g.AddEdge(domain.AggregatorAgent, compose.END)
 
 	return &ScreeningChatGraph{
-		graph:   g,
-		version: "1.0.0",
+		graph:               g,
+		version:             "1.0.0",
+		basicInfoAgent:      baseinfoAgent,
+		educationAgent:      educationAgent,
+		experienceAgent:     experienceAgent,
+		industryAgent:       industryAgent,
+		responsibilityAgent: responseIndustryAgent,
+		skillAgent:          skillAgent,
+		aggregatorAgent:     aggregatorAgent,
+		taskMetaProcessor:   taskMetaProcessor,
+		dispatcher:          dispatcher,
 	}, nil
 }

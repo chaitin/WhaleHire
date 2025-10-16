@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,12 +23,22 @@ type ScreeningUsecase struct {
 	resumeUsecase domain.ResumeUsecase
 	matcher       service.MatchingService
 	logger        *slog.Logger
+	// 任务上下文管理器
+	taskContexts sync.Map // map[uuid.UUID]context.CancelFunc
 }
 
 // processScreeningTaskAsync 异步处理筛选任务
 func (u *ScreeningUsecase) processScreeningTaskAsync(task *db.ScreeningTask, taskResumes []*db.ScreeningTaskResume, jobDetail *domain.JobProfileDetail) {
-	// 为异步处理创建独立的context，避免客户端断开连接导致处理中断
-	processCtx := context.Background()
+	// 为异步处理创建可取消的context
+	processCtx, cancel := context.WithCancel(context.Background())
+
+	// 保存取消函数到任务上下文管理器
+	u.taskContexts.Store(task.ID, cancel)
+
+	// 确保任务完成后清理上下文
+	defer func() {
+		u.taskContexts.Delete(task.ID)
+	}()
 
 	// 使用并发处理简历，提升处理效率
 	collector := NewResultCollector()
@@ -38,15 +49,16 @@ func (u *ScreeningUsecase) processScreeningTaskAsync(task *db.ScreeningTask, tas
 	// 获取最终统计结果
 	processed, succeeded, failed, scoreSum, scoreCnt, histogram, tokenInput, tokenOutput := collector.GetStats()
 
-	u.logger.Info("processed: %d, succeeded: %d, failed: %d, scoreSum: %f, scoreCnt: %d, histogram: %v, tokenInput: %d, tokenOutput: %d",
-		slog.Int("processed", processed),
-		slog.Int("succeeded", succeeded),
-		slog.Int("failed", failed),
-		slog.Float64("scoreSum", scoreSum),
-		slog.Float64("scoreCnt", scoreCnt),
-		slog.Any("histogram", histogram),
-		slog.Int64("tokenInput", tokenInput),
-		slog.Int64("tokenOutput", tokenOutput))
+	u.logger.Info("screening task processing completed",
+		"processed", processed,
+		"succeeded", succeeded,
+		"failed", failed,
+		"scoreSum", scoreSum,
+		"scoreCnt", scoreCnt,
+		"histogram", histogram,
+		"tokenInput", tokenInput,
+		"tokenOutput", tokenOutput,
+	)
 
 	finalStatus := consts.ScreeningTaskStatusCompleted
 	if failed > 0 && succeeded == 0 {
@@ -225,6 +237,78 @@ func (u *ScreeningUsecase) StartScreeningTask(ctx context.Context, req *domain.S
 	go u.processScreeningTaskAsync(task, taskResumes, jobDetail)
 
 	return &domain.StartScreeningTaskResp{TaskID: task.ID}, nil
+}
+
+// CancelScreeningTask 取消任务
+func (u *ScreeningUsecase) CancelScreeningTask(ctx context.Context, req *domain.CancelScreeningTaskReq) (*domain.CancelScreeningTaskResp, error) {
+	if req == nil || req.TaskID == uuid.Nil {
+		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID不能为空"))
+	}
+
+	// 获取任务信息
+	task, err := u.repo.GetScreeningTask(ctx, req.TaskID)
+	if err != nil {
+		if db.IsNotFound(err) {
+			return nil, errcode.ErrScreeningTaskNotFound
+		}
+		return nil, fmt.Errorf("获取任务信息失败: %w", err)
+	}
+
+	// 检查任务状态，只有运行中的任务可以取消
+	if task.Status != string(consts.ScreeningTaskStatusRunning) {
+		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("只有运行中的任务可以取消，当前状态: %s", task.Status))
+	}
+
+	// 调用取消函数停止正在运行的任务
+	if cancelFunc, ok := u.taskContexts.LoadAndDelete(req.TaskID); ok {
+		if cancel, ok := cancelFunc.(context.CancelFunc); ok {
+			cancel() // 取消正在运行的上下文
+			u.logger.Info("成功取消正在运行的任务上下文", slog.Any("task_id", req.TaskID))
+		}
+	}
+
+	// 更新任务状态为已取消
+	now := time.Now()
+	if updateErr := u.repo.UpdateScreeningTask(ctx, req.TaskID, map[string]any{
+		"status":      consts.ScreeningTaskStatusCancelled,
+		"finished_at": now,
+	}); updateErr != nil {
+		u.logger.Error("更新任务取消状态失败", slog.Any("err", err), slog.Any("task_id", req.TaskID))
+		return nil, fmt.Errorf("取消任务失败: %w", err)
+	}
+
+	// 更新所有待处理的简历状态为已取消
+	resumeFilter := &domain.ScreeningTaskResumeFilter{
+		TaskID: &req.TaskID,
+	}
+	taskResumes, _, err := u.repo.ListScreeningTaskResumes(ctx, resumeFilter)
+	if err != nil {
+		u.logger.Warn("获取任务简历列表失败", slog.Any("task_id", req.TaskID), slog.Any("err", err))
+	} else {
+		for _, taskResume := range taskResumes {
+			// 只更新待处理和处理中的简历状态
+			if taskResume.Status == string(consts.ScreeningTaskResumeStatusPending) ||
+				taskResume.Status == string(consts.ScreeningTaskResumeStatusRunning) {
+				if updateErr := u.repo.UpdateScreeningTaskResume(ctx, taskResume.TaskID, taskResume.ResumeID, map[string]any{
+					"status":        consts.ScreeningTaskResumeStatusCancelled,
+					"error_message": "任务已被取消",
+					"processed_at":  now,
+				}); updateErr != nil {
+					u.logger.Warn("更新简历取消状态失败",
+						slog.Any("task_id", taskResume.TaskID),
+						slog.Any("resume_id", taskResume.ResumeID),
+						slog.Any("err", updateErr))
+				}
+			}
+		}
+	}
+
+	u.logger.Info("成功取消筛选任务", slog.Any("task_id", req.TaskID))
+
+	return &domain.CancelScreeningTaskResp{
+		TaskID:  req.TaskID,
+		Message: "任务已成功取消",
+	}, nil
 }
 
 // DeleteScreeningTask 删除任务

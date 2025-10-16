@@ -35,6 +35,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
 	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
@@ -126,6 +127,7 @@ func checkColumn(table, column string) error {
 			resumeproject.Table:            resumeproject.ValidColumn,
 			resumeskill.Table:              resumeskill.ValidColumn,
 			role.Table:                     role.ValidColumn,
+			screeningnoderun.Table:         screeningnoderun.ValidColumn,
 			screeningresult.Table:          screeningresult.ValidColumn,
 			screeningrunmetric.Table:       screeningrunmetric.ValidColumn,
 			screeningtask.Table:            screeningtask.ValidColumn,

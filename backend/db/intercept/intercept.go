@@ -32,6 +32,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
 	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
@@ -719,6 +720,33 @@ func (f TraverseRole) Traverse(ctx context.Context, q db.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *db.RoleQuery", q)
 }
 
+// The ScreeningNodeRunFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ScreeningNodeRunFunc func(context.Context, *db.ScreeningNodeRunQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ScreeningNodeRunFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ScreeningNodeRunQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ScreeningNodeRunQuery", q)
+}
+
+// The TraverseScreeningNodeRun type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseScreeningNodeRun func(context.Context, *db.ScreeningNodeRunQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseScreeningNodeRun) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseScreeningNodeRun) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ScreeningNodeRunQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ScreeningNodeRunQuery", q)
+}
+
 // The ScreeningResultFunc type is an adapter to allow the use of ordinary function as a Querier.
 type ScreeningResultFunc func(context.Context, *db.ScreeningResultQuery) (db.Value, error)
 
@@ -984,6 +1012,8 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.ResumeSkillQuery, predicate.ResumeSkill, resumeskill.OrderOption]{typ: db.TypeResumeSkill, tq: q}, nil
 	case *db.RoleQuery:
 		return &query[*db.RoleQuery, predicate.Role, role.OrderOption]{typ: db.TypeRole, tq: q}, nil
+	case *db.ScreeningNodeRunQuery:
+		return &query[*db.ScreeningNodeRunQuery, predicate.ScreeningNodeRun, screeningnoderun.OrderOption]{typ: db.TypeScreeningNodeRun, tq: q}, nil
 	case *db.ScreeningResultQuery:
 		return &query[*db.ScreeningResultQuery, predicate.ScreeningResult, screeningresult.OrderOption]{typ: db.TypeScreeningResult, tq: q}, nil
 	case *db.ScreeningRunMetricQuery:

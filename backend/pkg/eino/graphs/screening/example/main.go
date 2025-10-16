@@ -15,7 +15,6 @@ import (
 	screening "github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
 	"github.com/cloudwego/eino-ext/callbacks/langsmith"
-	"github.com/cloudwego/eino/callbacks"
 )
 
 func main() {
@@ -26,17 +25,17 @@ func main() {
 		panic(err)
 	}
 
-	cfgls := &langsmith.Config{
-		APIKey: cfg.Langsmith.APIKey,
-	}
-	// ft := langsmith.NewFlowTrace(cfg)
-	cbh, err := langsmith.NewLangsmithHandler(cfgls)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// cfgls := &langsmith.Config{
+	// 	APIKey: cfg.Langsmith.APIKey,
+	// }
+	// // ft := langsmith.NewFlowTrace(cfg)
+	// cbh, err := langsmith.NewLangsmithHandler(cfgls)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	// 设置全局上报handler
-	callbacks.AppendGlobalHandlers(cbh)
+	// // 设置全局上报handler
+	// callbacks.AppendGlobalHandlers(cbh)
 
 	ctx := context.Background()
 	ctx = langsmith.SetTrace(ctx,
@@ -77,7 +76,7 @@ func main() {
 		log.Fatalf("failed to compile screening graph: %v", err)
 	}
 
-	outputCollector := screening.NewAgentOutputCollector()
+	outputCollector := screening.NewAgentCallbackCollector()
 
 	// 准备测试数据
 	matchInput := createTestMatchInput()
@@ -130,6 +129,71 @@ func main() {
 		fmt.Printf("[AggregatorAgent] 综合得分: %.2f\n", aggregated.OverallScore)
 	}
 
+	// 打印各 Agent 的 Token 消耗情况
+	fmt.Println("\n========== Token 消耗统计 ==========")
+	var totalPromptTokens, totalCompletionTokens, totalTokens int
+
+	if basicTokenUsage, ok := outputCollector.BasicInfoTokenUsage(); ok {
+		fmt.Printf("[BasicInfoAgent] Prompt: %d, Completion: %d, Total: %d tokens\n",
+			basicTokenUsage.PromptTokens, basicTokenUsage.CompletionTokens, basicTokenUsage.TotalTokens)
+		totalPromptTokens += basicTokenUsage.PromptTokens
+		totalCompletionTokens += basicTokenUsage.CompletionTokens
+		totalTokens += basicTokenUsage.TotalTokens
+	}
+
+	if educationTokenUsage, ok := outputCollector.EducationTokenUsage(); ok {
+		fmt.Printf("[EducationAgent] Prompt: %d, Completion: %d, Total: %d tokens\n",
+			educationTokenUsage.PromptTokens, educationTokenUsage.CompletionTokens, educationTokenUsage.TotalTokens)
+		totalPromptTokens += educationTokenUsage.PromptTokens
+		totalCompletionTokens += educationTokenUsage.CompletionTokens
+		totalTokens += educationTokenUsage.TotalTokens
+	}
+
+	if experienceTokenUsage, ok := outputCollector.ExperienceTokenUsage(); ok {
+		fmt.Printf("[ExperienceAgent] Prompt: %d, Completion: %d, Total: %d tokens\n",
+			experienceTokenUsage.PromptTokens, experienceTokenUsage.CompletionTokens, experienceTokenUsage.TotalTokens)
+		totalPromptTokens += experienceTokenUsage.PromptTokens
+		totalCompletionTokens += experienceTokenUsage.CompletionTokens
+		totalTokens += experienceTokenUsage.TotalTokens
+	}
+
+	if industryTokenUsage, ok := outputCollector.IndustryTokenUsage(); ok {
+		fmt.Printf("[IndustryAgent] Prompt: %d, Completion: %d, Total: %d tokens\n",
+			industryTokenUsage.PromptTokens, industryTokenUsage.CompletionTokens, industryTokenUsage.TotalTokens)
+		totalPromptTokens += industryTokenUsage.PromptTokens
+		totalCompletionTokens += industryTokenUsage.CompletionTokens
+		totalTokens += industryTokenUsage.TotalTokens
+	}
+
+	if responsibilityTokenUsage, ok := outputCollector.ResponsibilityTokenUsage(); ok {
+		fmt.Printf("[ResponsibilityAgent] Prompt: %d, Completion: %d, Total: %d tokens\n",
+			responsibilityTokenUsage.PromptTokens, responsibilityTokenUsage.CompletionTokens, responsibilityTokenUsage.TotalTokens)
+		totalPromptTokens += responsibilityTokenUsage.PromptTokens
+		totalCompletionTokens += responsibilityTokenUsage.CompletionTokens
+		totalTokens += responsibilityTokenUsage.TotalTokens
+	}
+
+	if skillTokenUsage, ok := outputCollector.SkillTokenUsage(); ok {
+		fmt.Printf("[SkillAgent] Prompt: %d, Completion: %d, Total: %d tokens\n",
+			skillTokenUsage.PromptTokens, skillTokenUsage.CompletionTokens, skillTokenUsage.TotalTokens)
+		totalPromptTokens += skillTokenUsage.PromptTokens
+		totalCompletionTokens += skillTokenUsage.CompletionTokens
+		totalTokens += skillTokenUsage.TotalTokens
+	}
+
+	if aggregatorTokenUsage, ok := outputCollector.AggregatorTokenUsage(); ok {
+		fmt.Printf("[AggregatorAgent] Prompt: %d, Completion: %d, Total: %d tokens\n",
+			aggregatorTokenUsage.PromptTokens, aggregatorTokenUsage.CompletionTokens, aggregatorTokenUsage.TotalTokens)
+		totalPromptTokens += aggregatorTokenUsage.PromptTokens
+		totalCompletionTokens += aggregatorTokenUsage.CompletionTokens
+		totalTokens += aggregatorTokenUsage.TotalTokens
+	}
+
+	fmt.Println("----------------------------------------")
+	fmt.Printf("总计消耗: Prompt: %d, Completion: %d, Total: %d tokens\n",
+		totalPromptTokens, totalCompletionTokens, totalTokens)
+	fmt.Println("========================================")
+
 	// Blocking process exits
 	// sigs := make(chan os.Signal, 1)
 	// signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -160,7 +224,7 @@ func createTestMatchInput() *domain.MatchInput {
 			{
 				ID:             "resp-002",
 				JobID:          "job-ant-pay-001",
-				Responsibility: "参与分布式事务处理、资金安全、风控系统等关键模块的技术方案设计",
+				Responsibility: "参与分布式事务处理、资金安全、风控系统等关键模块技术方案设计",
 			},
 			{
 				ID:             "resp-003",

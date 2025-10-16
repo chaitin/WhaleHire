@@ -285,6 +285,18 @@ func (f RoleFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.RoleMutation", m)
 }
 
+// The ScreeningNodeRunFunc type is an adapter to allow the use of ordinary
+// function as ScreeningNodeRun mutator.
+type ScreeningNodeRunFunc func(context.Context, *db.ScreeningNodeRunMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScreeningNodeRunFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ScreeningNodeRunMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ScreeningNodeRunMutation", m)
+}
+
 // The ScreeningResultFunc type is an adapter to allow the use of ordinary
 // function as ScreeningResult mutator.
 type ScreeningResultFunc func(context.Context, *db.ScreeningResultMutation) (db.Value, error)
