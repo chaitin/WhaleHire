@@ -96,11 +96,12 @@ func newServer() (*Server, error) {
 	departmentHandler := v1_5.NewDepartmentHandler(web, departmentUsecase, authMiddleware, slogLogger)
 	jobApplicationHandler := v1_6.NewJobApplicationHandler(web, jobApplicationUsecase, resumeUsecase, authMiddleware, slogLogger)
 	screeningRepo := repo7.NewScreeningRepo(client)
-	matchingService, err := service2.NewMatchingService(configConfig, slogLogger)
+	screeningNodeRunRepo := repo7.NewScreeningNodeRunRepo(client)
+	matchingService, err := service2.NewMatchingService(configConfig, slogLogger, screeningNodeRunRepo, screeningRepo)
 	if err != nil {
 		return nil, err
 	}
-	screeningUsecase := usecase7.NewScreeningUsecase(screeningRepo, jobProfileUsecase, resumeUsecase, matchingService, slogLogger)
+	screeningUsecase := usecase7.NewScreeningUsecase(screeningRepo, screeningNodeRunRepo, jobProfileUsecase, resumeUsecase, matchingService, slogLogger)
 	screeningHandler := v1_7.NewScreeningHandler(web, screeningUsecase, authMiddleware, slogLogger)
 	fileUsecase := usecase8.NewFileUsecase(slogLogger, minioClient, configConfig)
 	fileHandler := v1_8.NewFileHandler(web, fileUsecase, authMiddleware)

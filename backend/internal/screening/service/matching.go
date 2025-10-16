@@ -50,30 +50,41 @@ type matchingService struct {
 	factory           *models.ModelFactory
 	version           string
 	sub_agent_version map[string]string
+	nodeRunRepo       domain.ScreeningNodeRunRepo
+	screeningRepo     domain.ScreeningRepo
 
 	// 图编译缓存相关
 	compiledGraph    compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch]
+	currentGraph     *screening.ScreeningChatGraph
 	currentModelType models.ModelType
 	currentModelName string
 	compileMutex     sync.RWMutex
 }
 
 // NewMatchingService 创建匹配服务
-func NewMatchingService(cfg *config.Config, logger *slog.Logger) (MatchingService, error) {
+func NewMatchingService(cfg *config.Config, logger *slog.Logger, nodeRunRepo domain.ScreeningNodeRunRepo, screeningRepo domain.ScreeningRepo) (MatchingService, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config is required")
 	}
 	if logger == nil {
 		logger = slog.Default()
 	}
+	if nodeRunRepo == nil {
+		return nil, fmt.Errorf("nodeRunRepo is required")
+	}
+	if screeningRepo == nil {
+		return nil, fmt.Errorf("screeningRepo is required")
+	}
 
 	factory := models.NewModelFactory()
 
 	return &matchingService{
-		logger:  logger,
-		cfg:     cfg,
-		factory: factory,
-		version: "1.0.0",
+		logger:        logger,
+		cfg:           cfg,
+		factory:       factory,
+		version:       "1.0.0",
+		nodeRunRepo:   nodeRunRepo,
+		screeningRepo: screeningRepo,
 	}, nil
 }
 
@@ -109,9 +120,17 @@ func (s *matchingService) Match(ctx context.Context, req *MatchRequest) (*MatchR
 		MatchTaskID:      fmt.Sprintf("%s:%s", req.TaskID.String(), req.ResumeID.String()),
 	}
 
+	// 创建带数据库存储功能的CallbackCollectorWrapper
+	wrapper := NewCallbackCollectorWrapper(s.nodeRunRepo, s.screeningRepo, s.currentGraph, req.TaskID, req.ResumeID, req.TaskID.String(), s.logger)
 	collector := screening.NewAgentCallbackCollector()
+
+	// 合并包装器的选项和collector的选项
+	wrapperOptions := wrapper.ComposeOptions()
+	collectorOptions := collector.ComposeOptions()
+	allOptions := append(wrapperOptions, collectorOptions...)
+
 	start := time.Now()
-	match, err := screening.InvokeWithCollector(ctx, compiledGraph, matchInput, collector)
+	match, err := compiledGraph.Invoke(ctx, matchInput, allOptions...)
 	duration := time.Since(start)
 	if err != nil {
 		return nil, fmt.Errorf("invoke screening graph failed: %w", err)
@@ -259,6 +278,7 @@ func (s *matchingService) ensureCompiledGraph(ctx context.Context, modelType mod
 
 	// 缓存编译结果和模型配置
 	s.compiledGraph = compiledGraph
+	s.currentGraph = graph
 	s.currentModelType = modelType
 	s.currentModelName = modelName
 	s.version = graph.GetVersion()

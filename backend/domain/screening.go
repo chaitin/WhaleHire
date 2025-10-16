@@ -23,6 +23,7 @@ type ScreeningUsecase interface {
 	GetScreeningMetrics(ctx context.Context, req *GetScreeningMetricsReq) (*GetScreeningMetricsResp, error)
 	GetTaskProgress(ctx context.Context, req *GetTaskProgressReq) (*GetTaskProgressResp, error)
 	GetResumeProgress(ctx context.Context, req *GetResumeProgressReq) (*GetResumeProgressResp, error)
+	GetNodeRuns(ctx context.Context, req *GetNodeRunsReq) (*GetNodeRunsResp, error)
 }
 
 // ScreeningRepo 筛选数据访问接口
@@ -261,6 +262,20 @@ type GetResumeProgressResp struct {
 	CreatedAt time.Time `json:"created_at"`
 	// UpdatedAt 记录更新时间
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// GetNodeRunsReq 获取节点运行记录请求
+type GetNodeRunsReq struct {
+	// TaskID 筛选任务ID
+	TaskID uuid.UUID `json:"task_id" validate:"required"`
+	// ResumeID 简历ID
+	ResumeID uuid.UUID `json:"resume_id" validate:"required"`
+}
+
+// GetNodeRunsResp 获取节点运行记录响应
+type GetNodeRunsResp struct {
+	// AgentStatus Agent状态映射，Key为Agent名称，Value为对应的节点运行记录
+	AgentStatus map[string]*ScreeningNodeRun `json:"agent_status"`
 }
 
 // =========================

@@ -10,6 +10,7 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
 	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
@@ -165,6 +166,11 @@ func (r *ScreeningRepo) DeleteScreeningTask(ctx context.Context, id uuid.UUID) e
 	// 删除相关的任务简历关联
 	if _, err = tx.ScreeningTaskResume.Delete().Where(screeningtaskresume.TaskID(id)).Exec(ctx); err != nil {
 		return fmt.Errorf("delete screening task resumes failed: %w", err)
+	}
+
+	// 删除相关的节点运行记录
+	if _, err = tx.ScreeningNodeRun.Delete().Where(screeningnoderun.TaskID(id)).Exec(ctx); err != nil {
+		return fmt.Errorf("delete screening node runs failed: %w", err)
 	}
 
 	// 删除相关的运行指标

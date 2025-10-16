@@ -18,6 +18,9 @@ type AgentCallbackCollector struct {
 	taskMetaInput            *domain.TaskMetaData
 	taskMetaOutput           *domain.TaskMetaData
 	taskMetaErr              error
+	dispatcherInput          *domain.MatchInput
+	dispatcherOutput         map[string]any
+	dispatcherErr            error
 	basicInfoInput           *domain.BasicInfoData
 	basicInfo                *domain.BasicMatchDetail
 	basicInfoErr             error
@@ -70,6 +73,9 @@ func (c *AgentCallbackCollector) Reset() {
 	c.taskMetaInput = nil
 	c.taskMetaOutput = nil
 	c.taskMetaErr = nil
+	c.dispatcherInput = nil
+	c.dispatcherOutput = nil
+	c.dispatcherErr = nil
 	c.basicInfoInput = nil
 	c.basicInfo = nil
 	c.basicInfoErr = nil
@@ -114,6 +120,7 @@ func (c *AgentCallbackCollector) ComposeOptions() []compose.Option {
 		compose.WithCallbacks(c.newResponsibilityHandler()).DesignateNode(domain.ResponsibilityAgent),
 		compose.WithCallbacks(c.newSkillHandler()).DesignateNode(domain.SkillAgent),
 		compose.WithCallbacks(c.newTaskMetaHandler()).DesignateNode(domain.TaskMetaDataNode),
+		compose.WithCallbacks(c.newDispatcherHandler()).DesignateNode(domain.DispatcherNode),
 		compose.WithCallbacks(c.newAggregatorHandler()).DesignateNode(domain.AggregatorAgent),
 
 		// Model usage handlers
@@ -134,8 +141,8 @@ func (c *AgentCallbackCollector) ComposeOptions() []compose.Option {
 	}
 }
 
-// BasicInfo 返回基础信息匹配结果
-func (c *AgentCallbackCollector) BasicInfo() (*domain.BasicMatchDetail, bool) {
+// BasicInfoOutput 返回基础信息匹配结果
+func (c *AgentCallbackCollector) BasicInfoOutput() (*domain.BasicMatchDetail, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.basicInfo == nil {
@@ -164,8 +171,8 @@ func (c *AgentCallbackCollector) BasicInfoError() (error, bool) {
 	return c.basicInfoErr, true
 }
 
-// Education 返回教育匹配结果
-func (c *AgentCallbackCollector) Education() (*domain.EducationMatchDetail, bool) {
+// EducationOutput 返回教育匹配结果
+func (c *AgentCallbackCollector) EducationOutput() (*domain.EducationMatchDetail, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.education == nil {
@@ -194,8 +201,8 @@ func (c *AgentCallbackCollector) EducationError() (error, bool) {
 	return c.educationErr, true
 }
 
-// Experience 返回经验匹配结果
-func (c *AgentCallbackCollector) Experience() (*domain.ExperienceMatchDetail, bool) {
+// ExperienceOutput 返回经验匹配结果
+func (c *AgentCallbackCollector) ExperienceOutput() (*domain.ExperienceMatchDetail, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.experience == nil {
@@ -224,8 +231,8 @@ func (c *AgentCallbackCollector) ExperienceError() (error, bool) {
 	return c.experienceErr, true
 }
 
-// Industry 返回行业匹配结果
-func (c *AgentCallbackCollector) Industry() (*domain.IndustryMatchDetail, bool) {
+// IndustryOutput 返回行业匹配结果
+func (c *AgentCallbackCollector) IndustryOutput() (*domain.IndustryMatchDetail, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.industry == nil {
@@ -254,8 +261,8 @@ func (c *AgentCallbackCollector) IndustryError() (error, bool) {
 	return c.industryErr, true
 }
 
-// Responsibility 返回职责匹配结果
-func (c *AgentCallbackCollector) Responsibility() (*domain.ResponsibilityMatchDetail, bool) {
+// ResponsibilityOutput 返回职责匹配结果
+func (c *AgentCallbackCollector) ResponsibilityOutput() (*domain.ResponsibilityMatchDetail, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.responsibility == nil {
@@ -284,8 +291,8 @@ func (c *AgentCallbackCollector) ResponsibilityError() (error, bool) {
 	return c.responsibilityErr, true
 }
 
-// Skill 返回技能匹配结果
-func (c *AgentCallbackCollector) Skill() (*domain.SkillMatchDetail, bool) {
+// SkillOutput 返回技能匹配结果
+func (c *AgentCallbackCollector) SkillOutput() (*domain.SkillMatchDetail, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.skill == nil {
@@ -384,8 +391,8 @@ func (c *AgentCallbackCollector) AggregatorTokenUsage() (*model.TokenUsage, bool
 	return cloneTokenUsage(c.aggregatorTokenUsage), true
 }
 
-// AggregatedMatch 返回聚合后的最终匹配结果
-func (c *AgentCallbackCollector) AggregatedMatch() (*domain.JobResumeMatch, bool) {
+// AggregatedMatchOutput 返回聚合后的最终匹配结果
+func (c *AgentCallbackCollector) AggregatedMatchOutput() (*domain.JobResumeMatch, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.aggregatedMatch == nil {
@@ -528,6 +535,36 @@ func (c *AgentCallbackCollector) TaskMetaError() (error, bool) {
 		return nil, false
 	}
 	return c.taskMetaErr, true
+}
+
+// DispatcherInput 返回分发器节点输入
+func (c *AgentCallbackCollector) DispatcherInput() (*domain.MatchInput, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.dispatcherInput == nil {
+		return nil, false
+	}
+	return c.dispatcherInput, true
+}
+
+// DispatcherOutput 返回分发器节点输出
+func (c *AgentCallbackCollector) DispatcherOutput() (map[string]any, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.dispatcherOutput == nil {
+		return nil, false
+	}
+	return cloneAnyMap(c.dispatcherOutput), true
+}
+
+// DispatcherError 返回分发器节点错误
+func (c *AgentCallbackCollector) DispatcherError() (error, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.dispatcherErr == nil {
+		return nil, false
+	}
+	return c.dispatcherErr, true
 }
 
 func (c *AgentCallbackCollector) newBasicInfoHandler() callbacks.Handler {
@@ -722,15 +759,43 @@ func (c *AgentCallbackCollector) newTaskMetaHandler() callbacks.Handler {
 			return ctx
 		}).
 		OnEndFn(func(ctx context.Context, info *callbacks.RunInfo, output callbacks.CallbackOutput) context.Context {
-			if meta, ok := output.(*domain.TaskMetaData); ok {
-				c.record(domain.TaskMetaDataNode, meta, func() { c.taskMetaOutput = meta })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, meta)
+			if info.Name != domain.TaskMetaDataNode {
+				return ctx
+			}
+			if data, ok := output.(*domain.TaskMetaData); ok {
+				c.record(domain.TaskMetaDataNode, data, func() { c.taskMetaOutput = data })
 			}
 			return ctx
 		}).
 		OnErrorFn(func(ctx context.Context, info *callbacks.RunInfo, err error) context.Context {
 			if err != nil {
 				c.recordError(domain.TaskMetaDataNode, err, func() { c.taskMetaErr = err })
+			}
+			return ctx
+		}).Build()
+}
+
+func (c *AgentCallbackCollector) newDispatcherHandler() callbacks.Handler {
+	return callbacks.NewHandlerBuilder().
+		OnStartFn(func(ctx context.Context, info *callbacks.RunInfo, input callbacks.CallbackInput) context.Context {
+			if data, ok := input.(*domain.MatchInput); ok {
+				c.recordInput(domain.DispatcherNode, data, func() { c.dispatcherInput = data })
+			}
+			return ctx
+		}).
+		OnEndFn(func(ctx context.Context, info *callbacks.RunInfo, output callbacks.CallbackOutput) context.Context {
+			if info.Name != domain.DispatcherNode {
+				return ctx
+			}
+			if data, ok := output.(map[string]any); ok {
+				c.record(domain.DispatcherNode, data, func() { c.dispatcherOutput = data })
+				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, data)
+			}
+			return ctx
+		}).
+		OnErrorFn(func(ctx context.Context, info *callbacks.RunInfo, err error) context.Context {
+			if err != nil {
+				c.recordError(domain.DispatcherNode, err, func() { c.dispatcherErr = err })
 			}
 			return ctx
 		}).Build()

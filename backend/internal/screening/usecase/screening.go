@@ -19,6 +19,7 @@ import (
 // ScreeningUsecase 筛选业务实现
 type ScreeningUsecase struct {
 	repo          domain.ScreeningRepo
+	nodeRunRepo   domain.ScreeningNodeRunRepo
 	jobUsecase    domain.JobProfileUsecase
 	resumeUsecase domain.ResumeUsecase
 	matcher       service.MatchingService
@@ -94,6 +95,7 @@ func (u *ScreeningUsecase) processScreeningTaskAsync(task *db.ScreeningTask, tas
 // NewScreeningUsecase 实例化用例
 func NewScreeningUsecase(
 	repo domain.ScreeningRepo,
+	nodeRunRepo domain.ScreeningNodeRunRepo,
 	jobUsecase domain.JobProfileUsecase,
 	resumeUsecase domain.ResumeUsecase,
 	matcher service.MatchingService,
@@ -104,6 +106,7 @@ func NewScreeningUsecase(
 	}
 	return &ScreeningUsecase{
 		repo:          repo,
+		nodeRunRepo:   nodeRunRepo,
 		jobUsecase:    jobUsecase,
 		resumeUsecase: resumeUsecase,
 		matcher:       matcher,
@@ -577,6 +580,53 @@ func (u *ScreeningUsecase) GetResumeProgress(ctx context.Context, req *domain.Ge
 		ProcessedAt:  timeToPtr(taskResume.ProcessedAt),
 		CreatedAt:    taskResume.CreatedAt,
 		UpdatedAt:    taskResume.UpdatedAt,
+	}, nil
+}
+
+// GetNodeRuns 获取节点运行记录
+func (u *ScreeningUsecase) GetNodeRuns(ctx context.Context, req *domain.GetNodeRunsReq) (*domain.GetNodeRunsResp, error) {
+	// 验证任务和简历是否存在
+	taskResume, err := u.repo.GetScreeningTaskResume(ctx, req.TaskID, req.ResumeID)
+	if err != nil {
+		u.logger.Error("failed to get task resume", "error", err, "task_id", req.TaskID, "resume_id", req.ResumeID)
+		return nil, errcode.ErrScreeningTaskNotFound
+	}
+
+	// 构建查询请求，不使用分页，获取所有节点运行记录
+	listReq := &domain.ListNodeRunsReq{
+		TaskID:       &req.TaskID,
+		TaskResumeID: &taskResume.ID,
+	}
+
+	// 查询节点运行记录
+	nodeRuns, _, err := u.nodeRunRepo.List(ctx, &domain.ListNodeRunsRepoReq{ListNodeRunsReq: listReq})
+	if err != nil {
+		u.logger.Error("failed to list node runs", "error", err, "task_id", req.TaskID, "resume_id", req.ResumeID)
+		return nil, errcode.ErrInvalidParam
+	}
+
+	// 转换为Key-Value格式的Agent状态映射
+	agentStatus := make(map[string]*domain.ScreeningNodeRun)
+
+	// 初始化所有Agent状态为nil
+	agentStatus[domain.TaskMetaDataNode] = nil
+	agentStatus[domain.DispatcherNode] = nil
+	agentStatus[domain.BasicInfoAgent] = nil
+	agentStatus[domain.SkillAgent] = nil
+	agentStatus[domain.ResponsibilityAgent] = nil
+	agentStatus[domain.ExperienceAgent] = nil
+	agentStatus[domain.EducationAgent] = nil
+	agentStatus[domain.IndustryAgent] = nil
+	agentStatus[domain.AggregatorAgent] = nil
+
+	// 填充实际的节点运行记录
+	for _, nodeRun := range nodeRuns {
+		domainNodeRun := new(domain.ScreeningNodeRun).From(nodeRun)
+		agentStatus[nodeRun.NodeKey] = domainNodeRun
+	}
+
+	return &domain.GetNodeRunsResp{
+		AgentStatus: agentStatus,
 	}, nil
 }
 

@@ -42,6 +42,7 @@ func NewScreeningHandler(
 	group.GET("/tasks/:id/metrics", web.BaseHandler(handler.GetMetrics))
 	group.GET("/tasks/:task_id/results/:resume_id", web.BaseHandler(handler.GetResult))
 	group.GET("/tasks/:task_id/resumes/:resume_id/progress", web.BaseHandler(handler.GetResumeProgress))
+	group.GET("/tasks/:task_id/resumes/:resume_id/node-runs", web.BaseHandler(handler.GetNodeRuns))
 	group.GET("/results", web.BindHandler(handler.ListResults, web.WithPage()))
 
 	return handler
@@ -358,6 +359,39 @@ func (h *ScreeningHandler) GetMetrics(c *web.Context) error {
 	})
 	if err != nil {
 		h.logger.Error("获取筛选任务指标失败", slog.Any("err", err), slog.Any("task_id", taskID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// GetNodeRuns 查询节点运行记录
+//
+//	@Tags			Screening
+//	@Summary		查询节点运行记录
+//	@Description	根据任务ID和简历ID查询匹配过程中的节点运行记录
+//	@ID				get-screening-node-runs
+//	@Accept			json
+//	@Produce		json
+//	@Param			task_id		path		string	true	"任务ID"
+//	@Param			resume_id	path		string	true	"简历ID"
+//	@Success		200			{object}	web.Resp{data=domain.GetNodeRunsResp}
+//	@Router			/api/v1/screening/tasks/{task_id}/resumes/{resume_id}/node-runs [get]
+func (h *ScreeningHandler) GetNodeRuns(c *web.Context) error {
+	taskID, err := parseUUIDParam(c.Param("task_id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+	}
+	resumeID, err := parseUUIDParam(c.Param("resume_id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("简历ID格式不正确"))
+	}
+
+	resp, err := h.usecase.GetNodeRuns(c.Request().Context(), &domain.GetNodeRunsReq{
+		TaskID:   taskID,
+		ResumeID: resumeID,
+	})
+	if err != nil {
+		h.logger.Error("获取节点运行记录失败", slog.Any("err", err), slog.Any("task_id", taskID), slog.Any("resume_id", resumeID))
 		return err
 	}
 	return c.Success(resp)

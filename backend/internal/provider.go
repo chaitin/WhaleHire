@@ -82,6 +82,7 @@ var Provider = wire.NewSet(
 	fileusecase.NewFileUsecase,
 	fileV1.NewFileHandler,
 	screeningrepo.NewScreeningRepo,
+	screeningrepo.NewScreeningNodeRunRepo,
 	screeningservice.NewMatchingService,
 	screeningusecase.NewScreeningUsecase,
 	screeningV1.NewScreeningHandler,
