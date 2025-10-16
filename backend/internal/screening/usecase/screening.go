@@ -61,6 +61,13 @@ func (u *ScreeningUsecase) processScreeningTaskAsync(task *db.ScreeningTask, tas
 		"tokenOutput", tokenOutput,
 	)
 
+	// 如果有成功处理的简历，进行排名更新
+	if succeeded > 0 {
+		if err := u.updateResumeRankings(processCtx, task.ID); err != nil {
+			u.logger.Warn("更新简历排名失败", slog.Any("task_id", task.ID), slog.Any("err", err))
+		}
+	}
+
 	finalStatus := consts.ScreeningTaskStatusCompleted
 	if failed > 0 && succeeded == 0 {
 		finalStatus = consts.ScreeningTaskStatusFailed
@@ -700,10 +707,71 @@ func timeToPtr(t time.Time) *time.Time {
 	return &t
 }
 
-// 辅助函数：float64 指针转换
+// 辅助函数：float64指针转换
 func float64ToPtr(f float64) *float64 {
 	if f == 0 {
 		return nil
 	}
 	return &f
+}
+
+// updateResumeRankings 更新任务内简历的排名
+func (u *ScreeningUsecase) updateResumeRankings(ctx context.Context, taskID uuid.UUID) error {
+	// 获取任务内所有已完成的简历及其分数
+	filter := &domain.ScreeningTaskResumeFilter{
+		TaskID: &taskID,
+		Status: (*consts.ScreeningTaskResumeStatus)(&[]consts.ScreeningTaskResumeStatus{consts.ScreeningTaskResumeStatusCompleted}[0]),
+	}
+	
+	taskResumes, _, err := u.repo.ListScreeningTaskResumes(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("获取任务简历列表失败: %w", err)
+	}
+
+	if len(taskResumes) == 0 {
+		return nil // 没有已完成的简历，无需排名
+	}
+
+	// 按分数降序排序简历
+	type resumeScore struct {
+		resumeID uuid.UUID
+		score    float64
+	}
+
+	var resumeScores []resumeScore
+	for _, tr := range taskResumes {
+		if tr.Score != 0 { // 只处理有分数的简历
+			resumeScores = append(resumeScores, resumeScore{
+				resumeID: tr.ResumeID,
+				score:    tr.Score,
+			})
+		}
+	}
+
+	if len(resumeScores) == 0 {
+		return nil // 没有有效分数的简历
+	}
+
+	// 按分数降序排序
+	for i := 0; i < len(resumeScores)-1; i++ {
+		for j := i + 1; j < len(resumeScores); j++ {
+			if resumeScores[i].score < resumeScores[j].score {
+				resumeScores[i], resumeScores[j] = resumeScores[j], resumeScores[i]
+			}
+		}
+	}
+
+	// 构建排名映射，处理相同分数的情况
+	rankings := make(map[uuid.UUID]int)
+	currentRank := 1
+	
+	for i, rs := range resumeScores {
+		if i > 0 && resumeScores[i-1].score != rs.score {
+			currentRank = i + 1 // 分数不同时，排名为当前位置+1
+		}
+		rankings[rs.resumeID] = currentRank
+	}
+
+	// 批量更新排名
+	return u.repo.BatchUpdateScreeningTaskResumeRankings(ctx, taskID, rankings)
 }

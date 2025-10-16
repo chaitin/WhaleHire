@@ -46,6 +46,9 @@ type ScreeningRepo interface {
 
 	CreateScreeningRunMetric(ctx context.Context, metric *db.ScreeningRunMetric) (*db.ScreeningRunMetric, error)
 	GetScreeningRunMetric(ctx context.Context, taskID uuid.UUID) (*db.ScreeningRunMetric, error)
+
+	// BatchUpdateScreeningTaskResumeRankings 批量更新筛选任务简历排名
+	BatchUpdateScreeningTaskResumeRankings(ctx context.Context, taskID uuid.UUID, rankings map[uuid.UUID]int) error
 }
 
 // =========================

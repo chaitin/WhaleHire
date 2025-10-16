@@ -199,8 +199,14 @@ func (h *ScreeningHandler) GetTask(c *web.Context) error {
 //	@ID				list-screening-tasks
 //	@Accept			json
 //	@Produce		json
-//	@Param			page	query		web.Pagination	true	"分页参数"
-//	@Success		200		{object}	web.Resp{data=domain.ListScreeningTasksResp}
+//	@Param			page			query		int							false	"页码，默认为1"
+//	@Param			size			query		int							false	"每页大小，默认为10"
+//	@Param			job_position_id	query		string						false	"职位ID过滤条件"
+//	@Param			status			query		consts.ScreeningTaskStatus	false	"任务状态过滤条件"
+//	@Param			created_by		query		string						false	"创建者用户ID过滤条件"
+//	@Param			start_time		query		string						false	"任务创建时间范围起始时间，格式：2006-01-02T15:04:05Z07:00"
+//	@Param			end_time		query		string						false	"任务创建时间范围结束时间，格式：2006-01-02T15:04:05Z07:00"
+//	@Success		200				{object}	web.Resp{data=domain.ListScreeningTasksResp}
 //	@Router			/api/v1/screening/tasks [get]
 func (h *ScreeningHandler) ListTasks(c *web.Context, req domain.ListScreeningTasksReq) error {
 	if req.Page <= 0 {
@@ -225,8 +231,13 @@ func (h *ScreeningHandler) ListTasks(c *web.Context, req domain.ListScreeningTas
 //	@ID				list-screening-results
 //	@Accept			json
 //	@Produce		json
-//	@Param			page	query		web.Pagination	true	"分页参数"
-//	@Success		200		{object}	web.Resp{data=domain.ListScreeningResultsResp}
+//	@Param			page		query		int		false	"页码，默认为1"
+//	@Param			size		query		int		false	"每页大小，默认为10"
+//	@Param			task_id		query		string	false	"筛选任务ID过滤条件"
+//	@Param			resume_id	query		string	false	"简历ID过滤条件"
+//	@Param			min_score	query		number	false	"最小匹配分数过滤条件"
+//	@Param			max_score	query		number	false	"最大匹配分数过滤条件"
+//	@Success		200			{object}	web.Resp{data=domain.ListScreeningResultsResp}
 //	@Router			/api/v1/screening/results [get]
 func (h *ScreeningHandler) ListResults(c *web.Context, req domain.ListScreeningResultsReq) error {
 	if req.Page <= 0 {

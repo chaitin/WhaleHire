@@ -289,6 +289,47 @@ func (r *ScreeningRepo) UpdateScreeningTaskResume(ctx context.Context, taskID, r
 	return nil
 }
 
+// BatchUpdateScreeningTaskResumeRankings 批量更新任务简历排名
+func (r *ScreeningRepo) BatchUpdateScreeningTaskResumeRankings(ctx context.Context, taskID uuid.UUID, rankings map[uuid.UUID]int) error {
+	if len(rankings) == 0 {
+		return nil
+	}
+
+	// 使用事务确保数据一致性
+	tx, err := r.db.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction failed: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				err = fmt.Errorf("rollback failed: %w (original error: %v)", rollbackErr, err)
+			}
+		} else {
+			if commitErr := tx.Commit(); commitErr != nil {
+				err = fmt.Errorf("commit failed: %w", commitErr)
+			}
+		}
+	}()
+
+	// 批量更新排名
+	for resumeID, ranking := range rankings {
+		_, updateErr := tx.ScreeningTaskResume.Update().
+			Where(
+				screeningtaskresume.TaskID(taskID),
+				screeningtaskresume.ResumeID(resumeID),
+			).
+			SetRanking(ranking).
+			Save(ctx)
+		if updateErr != nil {
+			err = fmt.Errorf("update ranking for resume %s failed: %w", resumeID, updateErr)
+			return err
+		}
+	}
+
+	return nil
+}
+
 // CreateScreeningResult 新建筛选结果
 func (r *ScreeningRepo) CreateScreeningResult(ctx context.Context, result *db.ScreeningResult) (*db.ScreeningResult, error) {
 	if result == nil {
