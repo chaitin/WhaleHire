@@ -10,8 +10,9 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MatchingTaskDetail } from '@/types/matching';
-import { getMockMatchingTaskDetail } from '@/data/mockMatchingData';
 import { ReportDetailModal } from './report-detail-modal';
+import { getScreeningTask } from '@/services/screening';
+import { getResumeDetail } from '@/services/resume';
 
 interface MatchingDetailDrawerProps {
   open: boolean;
@@ -30,12 +31,92 @@ export function MatchingDetailDrawer({
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [selectedResumeName, setSelectedResumeName] = useState<string>('');
 
-  // 加载任务详情
+  // 加载任务详情（真实接口）
   useEffect(() => {
-    if (taskId && open) {
-      const detail = getMockMatchingTaskDetail(taskId, currentPage, 3);
-      setTaskDetail(detail);
-    }
+    if (!taskId || !open) return;
+
+    const fetchDetail = async () => {
+      try {
+        const resp = await getScreeningTask(taskId);
+
+        // 计算分页信息
+        const total = resp.resumes.length;
+        const pageSize = 3;
+        const totalPages = Math.ceil(total / pageSize);
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        // 构造任务头信息
+        const header: MatchingTaskDetail = {
+          id: resp.task.id,
+          taskId: resp.task.task_id,
+          jobPositions: [resp.task.job_position_name],
+          resumeCount: total,
+          status:
+            resp.task.status === 'completed'
+              ? 'completed'
+              : resp.task.status === 'failed'
+                ? 'failed'
+                : 'in_progress',
+          creator: resp.task.created_by,
+          createdAt: resp.task.created_at,
+          results: [],
+          resultsPagination: {
+            current: currentPage,
+            pageSize,
+            total,
+            totalPages,
+          },
+        };
+
+        // 当前页结果映射
+        const pageResumes = resp.resumes.slice(start, end);
+        const results = await Promise.all(
+          pageResumes.map(async (r) => {
+            // 获取简历详情以补充信息（兼容后端字段）
+            let resumeName = r.resume_name;
+            let highestEducation = '';
+            let yearsExperience = 0;
+            try {
+              const detail = await getResumeDetail(r.resume_id);
+              resumeName = detail.name || resumeName;
+              highestEducation = detail.highest_education || '';
+              yearsExperience = detail.years_experience || 0;
+            } catch (e) {
+              console.warn('获取简历详情失败，使用任务返回的名称作为回退:', e);
+            }
+
+            return {
+              id: r.resume_id,
+              resume: {
+                id: r.resume_id,
+                name: resumeName,
+                age: 0,
+                education: highestEducation || '—',
+                experience: yearsExperience ? `${yearsExperience}年` : '—',
+              },
+              job: {
+                id: resp.task.job_position_id,
+                title: resp.task.job_position_name,
+                department: '—',
+                jobId: resp.task.job_position_id,
+              },
+              matchScore: r.score || 0,
+            };
+          })
+        );
+
+        setTaskDetail({
+          ...header,
+          results,
+        });
+      } catch (err) {
+        console.error('加载任务详情失败:', err);
+        setTaskDetail(null);
+      }
+    };
+
+    fetchDetail();
   }, [taskId, open, currentPage]);
 
   // 重置页码当打开新任务时

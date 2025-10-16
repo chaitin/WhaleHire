@@ -27,10 +27,11 @@ import {
   Pagination,
   MatchingTaskStatus,
 } from '@/types/matching';
-import {
-  getMockMatchingTasks,
-  getMockMatchingStats,
-} from '@/data/mockMatchingData';
+// Mock数据已移除，统一使用真实接口数据
+// import {
+//   getMockMatchingTasks,
+//   getMockMatchingStats,
+// } from '@/data/mockMatchingData';
 import { MatchingDetailDrawer } from '@/components/matching/matching-detail-drawer';
 import { SelectJobModal } from '@/components/matching/select-job-modal';
 import { SelectResumeModal } from '@/components/matching/select-resume-modal';
@@ -168,22 +169,10 @@ export function IntelligentMatchingPage() {
       setStats(statsData);
     } catch (error) {
       console.error('加载任务列表失败:', error);
-      // 使用Mock数据作为fallback
-      const statsData = getMockMatchingStats();
-      setStats(statsData);
-
-      const result = getMockMatchingTasks(
-        pagination.current,
-        pagination.pageSize,
-        {
-          position: filters.position !== 'all' ? filters.position : undefined,
-          status: filters.status !== 'all' ? filters.status : undefined,
-          keywords: filters.keywords,
-        }
-      );
-
-      setTasks(result.data);
-      setPagination(result.pagination);
+      // 取消Mock回退：展示空列表并重置统计与分页
+      setTasks([]);
+      setStats({ total: 0, inProgress: 0, completed: 0 });
+      setPagination({ ...pagination, total: 0, totalPages: 0 });
     }
   };
 
@@ -200,6 +189,11 @@ export function IntelligentMatchingPage() {
   const handlePageChange = (page: number) => {
     setPagination({ ...pagination, current: page });
   };
+
+  // 当筛选器变更时，重置到第一页
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, current: 1 }));
+  }, [filters.status, filters.keywords]);
 
   // 处理选择岗位完成
   const handleJobsSelected = (jobIds: string[]) => {
@@ -632,7 +626,7 @@ export function IntelligentMatchingPage() {
                             size="sm"
                             className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
                             onClick={() => {
-                              setSelectedTaskId(task.id);
+                              setSelectedTaskId(task.taskId);
                               setIsDetailDrawerOpen(true);
                             }}
                             title="查看详情"

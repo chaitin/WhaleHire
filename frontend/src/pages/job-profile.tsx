@@ -167,6 +167,7 @@ export function JobProfilePage() {
   // 页面加载时获取部门数据
   useEffect(() => {
     fetchDepartments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 新建岗位弹窗状态管理
@@ -195,6 +196,9 @@ export function JobProfilePage() {
   >([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
   const [departmentsError, setDepartmentsError] = useState<string | null>(null);
+  const [departmentsPage, setDepartmentsPage] = useState(1);
+  const [departmentsPageSize] = useState(20);
+  const [departmentsHasMore, setDepartmentsHasMore] = useState(false);
 
   const [editMode, setEditMode] = useState<'manual' | 'ai'>('manual');
   const [jobFormData, setJobFormData] = useState({
@@ -380,21 +384,59 @@ export function JobProfilePage() {
     setSelectedOptionalSkills(updatedSkills);
   };
 
-  // 获取部门列表（目前使用硬编码数据，可以后续扩展为API调用）
-  const fetchDepartments = async () => {
+  // 获取部门列表（分页）
+  const fetchDepartments = async (page = 1) => {
     try {
       setDepartmentsLoading(true);
       setDepartmentsError(null);
-      // 调用真实的API获取部门列表
-      const response = await listDepartments();
-      setAvailableDepartments(response.items || []);
+      const response = await listDepartments({
+        page,
+        size: departmentsPageSize,
+      });
+      const items = response.items || [];
+      setAvailableDepartments(items);
+      setDepartmentsPage(page);
+      // 依据has_next_page或next_token判断是否还有更多
+      const hasMore = !!response.has_next_page || !!response.next_token;
+      setDepartmentsHasMore(hasMore);
     } catch (err) {
       console.error('获取部门列表失败:', err);
       setDepartmentsError(
         err instanceof Error ? err.message : '获取部门列表失败'
       );
-      // 即使失败也设置为空数组，确保下拉框能正常显示
       setAvailableDepartments([]);
+      setDepartmentsHasMore(false);
+    } finally {
+      setDepartmentsLoading(false);
+    }
+  };
+
+  // 加载更多部门
+  const loadMoreDepartments = async () => {
+    if (departmentsLoading || !departmentsHasMore) return;
+    try {
+      setDepartmentsLoading(true);
+      const nextPage = departmentsPage + 1;
+      const response = await listDepartments({
+        page: nextPage,
+        size: departmentsPageSize,
+      });
+      const items = response.items || [];
+      setAvailableDepartments((prev) => {
+        // 去重追加
+        const existingIds = new Set(prev.map((d) => d.id));
+        const merged = [...prev];
+        for (const item of items) {
+          if (!existingIds.has(item.id)) merged.push(item);
+        }
+        return merged;
+      });
+      setDepartmentsPage(nextPage);
+      const hasMore = !!response.has_next_page || !!response.next_token;
+      setDepartmentsHasMore(hasMore);
+    } catch (err) {
+      console.error('加载更多部门失败:', err);
+      setDepartmentsHasMore(false);
     } finally {
       setDepartmentsLoading(false);
     }
@@ -441,7 +483,11 @@ export function JobProfilePage() {
     setIsCreateJobModalOpen(true);
     // 然后异步获取数据，不阻塞弹窗显示
     fetchSkills();
-    fetchDepartments();
+    // 重置部门分页并拉取第一页
+    setDepartmentsPage(1);
+    setAvailableDepartments([]);
+    setDepartmentsHasMore(false);
+    fetchDepartments(1);
   };
 
   // 关闭新建岗位弹窗
@@ -1197,13 +1243,22 @@ export function JobProfilePage() {
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="所属部门" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                onLoadMore={loadMoreDepartments}
+                hasMore={departmentsHasMore}
+                loading={departmentsLoading}
+              >
                 <SelectItem value="all">所属部门</SelectItem>
                 {availableDepartments.map((department) => (
                   <SelectItem key={department.id} value={department.id}>
                     {department.name}
                   </SelectItem>
                 ))}
+                {departmentsLoading && (
+                  <SelectItem value="__loading_more__" disabled>
+                    加载中...
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -1659,8 +1714,13 @@ export function JobProfilePage() {
                     <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
                       <SelectValue placeholder="请选择所属部门" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {departmentsLoading ? (
+                    <SelectContent
+                      onLoadMore={loadMoreDepartments}
+                      hasMore={departmentsHasMore}
+                      loading={departmentsLoading}
+                    >
+                      {departmentsLoading &&
+                      availableDepartments.length === 0 ? (
                         <SelectItem value="__loading__" disabled>
                           <div className="flex items-center gap-2">
                             <RefreshCw className="h-3 w-3 animate-spin" />
@@ -1683,11 +1743,21 @@ export function JobProfilePage() {
                           </Button>
                         </div>
                       ) : availableDepartments.length > 0 ? (
-                        availableDepartments.map((department) => (
-                          <SelectItem key={department.id} value={department.id}>
-                            {department.name}
-                          </SelectItem>
-                        ))
+                        <>
+                          {availableDepartments.map((department) => (
+                            <SelectItem
+                              key={department.id}
+                              value={department.id}
+                            >
+                              {department.name}
+                            </SelectItem>
+                          ))}
+                          {departmentsLoading && (
+                            <SelectItem value="__loading_more__" disabled>
+                              加载中...
+                            </SelectItem>
+                          )}
+                        </>
                       ) : (
                         <SelectItem value="__empty__" disabled>
                           暂无部门选项
@@ -2179,8 +2249,13 @@ export function JobProfilePage() {
                     <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
                       <SelectValue placeholder="请选择所属部门" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {departmentsLoading ? (
+                    <SelectContent
+                      onLoadMore={loadMoreDepartments}
+                      hasMore={departmentsHasMore}
+                      loading={departmentsLoading}
+                    >
+                      {departmentsLoading &&
+                      availableDepartments.length === 0 ? (
                         <SelectItem value="__loading__" disabled>
                           <div className="flex items-center gap-2">
                             <RefreshCw className="h-3 w-3 animate-spin" />
@@ -2195,11 +2270,21 @@ export function JobProfilePage() {
                           </div>
                         </SelectItem>
                       ) : (
-                        availableDepartments.map((department) => (
-                          <SelectItem key={department.id} value={department.id}>
-                            {department.name}
-                          </SelectItem>
-                        ))
+                        <>
+                          {availableDepartments.map((department) => (
+                            <SelectItem
+                              key={department.id}
+                              value={department.id}
+                            >
+                              {department.name}
+                            </SelectItem>
+                          ))}
+                          {departmentsLoading && (
+                            <SelectItem value="__loading_more__" disabled>
+                              加载中...
+                            </SelectItem>
+                          )}
+                        </>
                       )}
                     </SelectContent>
                   </Select>
