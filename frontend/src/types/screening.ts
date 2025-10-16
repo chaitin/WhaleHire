@@ -99,6 +99,7 @@ export interface ScreeningTaskItem {
   status: ScreeningTaskStatus;
   resume_count: number;
   created_by: string;
+  creator_name?: string;
   created_at: number;
 }
 
@@ -328,4 +329,15 @@ export interface ScreeningResult {
 // 获取筛选结果响应
 export interface GetScreeningResultResp {
   result: ScreeningResult;
+}
+
+// 获取筛选任务进度响应
+export interface GetResumeProgressResp {
+  task_id: string; // 任务ID
+  resume_id: string; // 简历ID
+  status: ScreeningTaskStatus; // 状态：pending/processing/completed/failed
+  progress_percent?: number; // 完成百分比 (0-100)
+  stage?: string; // 当前阶段描述
+  error_message?: string; // 错误信息
+  updated_at?: string; // 最近更新时间
 }

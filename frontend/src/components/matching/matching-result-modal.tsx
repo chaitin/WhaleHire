@@ -5,7 +5,6 @@ import {
   FileText,
   TrendingUp,
   Award,
-  Target,
   Briefcase,
   User,
   Scale,
@@ -217,7 +216,7 @@ export function MatchingResultModal({
   const getMatchLevelColor = (level: MatchLevel) => {
     switch (level) {
       case 'excellent':
-        return 'bg-[#E6F7ED] text-[#10B981]';
+        return 'bg-primary/10 text-primary';
       case 'good':
         return 'bg-[#E6F0FF] text-[#2563EB]';
       case 'fair':
@@ -344,7 +343,7 @@ export function MatchingResultModal({
                 <div className="grid grid-cols-5 gap-4">
                   {/* 匹配总数 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#667EEA] to-[#764BA2]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                       <FileText className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -360,8 +359,8 @@ export function MatchingResultModal({
 
                   {/* 非常匹配 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F7ED]">
-                      <TrendingUp className="h-5 w-5 text-[#10B981]" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                      <TrendingUp className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -383,7 +382,7 @@ export function MatchingResultModal({
                   {/* 高匹配 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F0FF]">
-                      <Target className="h-5 w-5 text-[#3B82F6]" />
+                      <BarChart3 className="h-5 w-5 text-[#3B82F6]" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -421,7 +420,7 @@ export function MatchingResultModal({
                   {/* 低匹配 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F3F4F6]">
-                      <Target className="h-5 w-5 text-[#6B7280]" />
+                      <BarChart3 className="h-5 w-5 text-[#6B7280]" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -484,10 +483,21 @@ export function MatchingResultModal({
                             {resumeNameMap[result.id] || result.candidateName}
                           </td>
                           <td className="px-3 py-4 text-sm text-[#333333]">
-                            {jobPositionName || result.position}
+                            <div className="flex flex-col gap-1">
+                              <span>
+                                {jobPositionName ||
+                                  result.position ||
+                                  '未知岗位'}
+                              </span>
+                              {taskData?.task?.job_position_id && (
+                                <span className="text-xs text-gray-500">
+                                  ID: {taskData.task.job_position_id}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-3 py-4">
-                            <span className="text-lg font-bold text-[#10B981]">
+                            <span className="text-lg font-bold text-primary">
                               {result.totalScore}
                             </span>
                           </td>
@@ -503,9 +513,9 @@ export function MatchingResultModal({
                           </td>
                           <td className="px-3 py-4">
                             <Button
-                              variant="link"
+                              variant="ghost"
                               size="sm"
-                              className="h-auto p-0 text-sm text-primary hover:text-primary/90"
+                              className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
                               onClick={() => {
                                 setSelectedResumeId(result.id);
                                 setSelectedResumeName(
@@ -514,8 +524,9 @@ export function MatchingResultModal({
                                 );
                                 setIsReportOpen(true);
                               }}
+                              title="查看报告详情"
                             >
-                              查看详情
+                              <FileText className="h-4 w-4" />
                             </Button>
                           </td>
                         </tr>

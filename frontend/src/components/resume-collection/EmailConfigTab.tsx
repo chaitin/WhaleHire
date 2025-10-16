@@ -792,7 +792,7 @@ function AddEmailConfigModal({
       >
         {/* 弹窗头部 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-[#1E3C72]">添加邮箱配置</h2>
+          <h2 className="text-lg font-semibold text-primary">添加邮箱配置</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors w-6 h-6"
@@ -805,7 +805,7 @@ function AddEmailConfigModal({
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] space-y-6">
           {/* 基本信息部分 */}
           <div className="space-y-4">
-            <h3 className="text-base font-semibold text-[#1E3C72] pb-3 border-b-2 border-gray-200">
+            <h3 className="text-base font-semibold text-primary pb-3 border-b-2 border-gray-200">
               基本信息
             </h3>
 
@@ -819,7 +819,7 @@ function AddEmailConfigModal({
                 value={formData.email_address}
                 onChange={(e) => onFormChange('email_address', e.target.value)}
                 placeholder="example@company.com"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700 placeholder-gray-400"
+                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 placeholder-gray-400"
               />
             </div>
 
@@ -849,7 +849,7 @@ function AddEmailConfigModal({
                 value={formData.display_name}
                 onChange={(e) => onFormChange('display_name', e.target.value)}
                 placeholder="用于区分多个邮箱"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700 placeholder-gray-400"
+                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 placeholder-gray-400"
               />
             </div>
           </div>
@@ -886,7 +886,7 @@ function AddEmailConfigModal({
                   onFormChange('imap_port', parseInt(e.target.value) || 993)
                 }
                 placeholder="993"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 placeholder-gray-400"
               />
             </div>
 

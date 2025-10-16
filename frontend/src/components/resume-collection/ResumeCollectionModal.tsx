@@ -34,7 +34,7 @@ export function ResumeCollectionModal({
       >
         {/* 弹窗头部 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-[#1E3C72]">简历收集配置</h2>
+          <h2 className="text-xl font-semibold text-primary">简历收集配置</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors w-6 h-6"
@@ -53,7 +53,7 @@ export function ResumeCollectionModal({
                 relative px-8 py-4 text-sm font-medium transition-all
                 ${
                   activeTab === tab.id
-                    ? 'text-[#667EEA] bg-white border-b-2 border-[#667EEA]'
+                    ? 'text-primary bg-white border-b-2 border-primary'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }
               `}

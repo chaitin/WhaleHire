@@ -21,6 +21,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Resume, ResumeStatus } from '@/types/resume';
 import { getResumeList } from '@/services/resume';
@@ -309,6 +315,51 @@ export function SelectResumeModal({
     return `${years}年`;
   };
 
+  const renderJobPositionsCell = (resume: Resume) => {
+    const jobPositions = resume.job_positions || [];
+
+    if (jobPositions.length === 0) {
+      return <span className="text-[#999999]">-</span>;
+    }
+
+    if (jobPositions.length === 1) {
+      return (
+        <span className="text-sm text-[#333333]">
+          {jobPositions[0].job_title}
+        </span>
+      );
+    }
+
+    const firstJobTitle = jobPositions[0].job_title;
+    const remainingCount = jobPositions.length - 1;
+
+    return (
+      <div className="text-sm text-[#333333]">
+        {firstJobTitle}等
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-primary cursor-pointer underline decoration-dotted">
+                {remainingCount}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <div className="text-sm">
+                <div className="font-medium mb-1">所有岗位：</div>
+                <div className="flex flex-col gap-1">
+                  {jobPositions.map((jp, index) => (
+                    <div key={index}>{jp.job_title}</div>
+                  ))}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        个岗位
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl">
@@ -541,7 +592,9 @@ export function SelectResumeModal({
                         <td className="px-3 py-4 text-sm font-medium text-[#333333]">
                           {resume.name}
                         </td>
-                        <td className="px-3 py-4 text-sm text-[#333333]">-</td>
+                        <td className="px-3 py-4 text-sm text-[#333333]">
+                          {renderJobPositionsCell(resume)}
+                        </td>
                         <td className="px-3 py-4 text-sm text-[#333333]">
                           {formatExperience(resume.years_experience)}
                         </td>

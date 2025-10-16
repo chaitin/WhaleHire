@@ -172,12 +172,7 @@ export function ConfigWeightModal({
                           step.active ? 'bg-white' : 'bg-white opacity-60'
                         )}
                       >
-                        <IconComponent
-                          className={cn(
-                            'h-5 w-5',
-                            step.active ? 'text-[#10B981]' : 'text-[#999999]'
-                          )}
-                        />
+                        <IconComponent className={'h-5 w-5 text-[#999999]'} />
                       </div>
                     </div>
 

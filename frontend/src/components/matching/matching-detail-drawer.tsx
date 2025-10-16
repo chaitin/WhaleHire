@@ -5,6 +5,7 @@ import {
   ChevronRight,
   FileText,
   Download,
+  Award,
 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { MatchingTaskDetail } from '@/types/matching';
 import { ReportDetailModal } from './report-detail-modal';
 import { getScreeningTask } from '@/services/screening';
 import { getResumeDetail } from '@/services/resume';
+import { getJobProfile } from '@/services/job-profile';
 
 interface MatchingDetailDrawerProps {
   open: boolean;
@@ -47,10 +49,20 @@ export function MatchingDetailDrawer({
         const end = start + pageSize;
 
         // 构造任务头信息
+        const jobProfileName = await (async () => {
+          try {
+            const profile = await getJobProfile(resp.task.job_position_id);
+            return profile?.name || resp.task.job_position_name;
+          } catch (e) {
+            console.error('获取岗位画像失败:', e);
+            return resp.task.job_position_name;
+          }
+        })();
+
         const header: MatchingTaskDetail = {
           id: resp.task.id,
           taskId: resp.task.task_id,
-          jobPositions: [resp.task.job_position_name],
+          jobPositions: [jobProfileName],
           resumeCount: total,
           status:
             resp.task.status === 'completed'
@@ -208,7 +220,7 @@ export function MatchingDetailDrawer({
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="text-lg font-medium text-[#1D2129]">
-                  高级前端工程师匹配任务 #{taskDetail.taskId}
+                  {taskDetail.jobPositions[0]}匹配任务 #{taskDetail.taskId}
                 </h3>
                 <span
                   className={cn(
@@ -256,23 +268,7 @@ export function MatchingDetailDrawer({
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-[#4E5969]">
                     <div className="flex items-center gap-1">
                       <span>匹配分数</span>
-                      <svg
-                        width="13"
-                        height="16"
-                        viewBox="0 0 13 16"
-                        fill="none"
-                        className="text-[#4E5969]"
-                      >
-                        <path
-                          d="M6.5 0L12.1292 8H0.870835L6.5 0Z"
-                          fill="currentColor"
-                          opacity="0.3"
-                        />
-                        <path
-                          d="M6.5 16L0.870835 8H12.1292L6.5 16Z"
-                          fill="currentColor"
-                        />
-                      </svg>
+                      <Award className="h-4 w-4 text-[#4E5969]" />
                     </div>
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider text-[#4E5969]">
@@ -311,7 +307,7 @@ export function MatchingDetailDrawer({
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-[#10B981]" />
+                        <Award className="h-4 w-4 text-[#10B981]" />
                         <span className="text-sm font-medium text-[#1D2129]">
                           {result.matchScore}分
                         </span>
@@ -335,7 +331,7 @@ export function MatchingDetailDrawer({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-[#4E5969] hover:text-[#4E5969]/80 hover:bg-gray-100"
+                          className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
                           onClick={() => console.log('下载', result.id)}
                           title="下载"
                         >
@@ -391,8 +387,8 @@ export function MatchingDetailDrawer({
                   currentPage >= taskDetail.resultsPagination.totalPages
                 }
                 className={cn(
-                  'h-[30px] w-[34px] rounded-md border border-[#C9CDD4] bg-white p-0 hover:border-[#10B981] hover:text-[#10B981]',
-                  currentPage >= taskDetail.resultsPagination.totalPages &&
+                  'h-[30px] w-[34px] rounded-md border border-[#C9CDD4] bg-white p-0 hover:border-primary hover:text-primary',
+                  currentPage === taskDetail.resultsPagination.totalPages &&
                     'opacity-50 cursor-not-allowed'
                 )}
               >

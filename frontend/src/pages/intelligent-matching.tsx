@@ -112,9 +112,18 @@ export function IntelligentMatchingPage() {
             : undefined,
       });
 
+      // 更稳健地提取后端任务数组
+      const backendTasks = Array.isArray(response?.tasks) ? response.tasks : [];
+      if (!Array.isArray(response?.tasks)) {
+        console.warn(
+          'listScreeningTasks 返回 tasks 非数组，使用空数组回退',
+          response
+        );
+      }
+
       // 转换API响应到前端格式，并获取岗位名称
       const tasksWithJobNames = await Promise.all(
-        response.tasks.map(async (task) => {
+        backendTasks.map(async (task) => {
           let jobPositionName = '未知岗位';
           try {
             const jobProfile = await getJobProfile(task.job_position_id);
@@ -139,37 +148,44 @@ export function IntelligentMatchingPage() {
             jobPositions: [jobPositionName],
             resumeCount: task.resume_count,
             status: frontendStatus,
-            creator: task.created_by,
+            creator: task.creator_name || '',
             createdAt: task.created_at,
           };
         })
       );
 
+      // 新增：确保最新任务显示在首行（按创建时间倒序）
+      tasksWithJobNames.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
       setTasks(tasksWithJobNames);
 
-      // 更新分页信息（使用total和计算pageSize）
+      // 更新分页信息（使用 total 的健壮回退）
       const pageSize = pagination.pageSize;
-      const totalPages = Math.ceil(response.total / pageSize);
+      const totalVal =
+        typeof response?.total === 'number'
+          ? response.total
+          : backendTasks.length;
+      const totalPages = Math.ceil((totalVal || 0) / pageSize);
       setPagination({
         current: pagination.current,
         pageSize: pageSize,
-        total: response.total,
-        totalPages: totalPages,
+        total: totalVal || 0,
+        totalPages: totalPages || 0,
       });
 
-      // 计算统计数据
+      // 统计数据：匹配任务总数、匹配简历总数（所有任务的简历数加和）、匹配已完成
       const statsData = {
-        total: response.total,
-        inProgress: response.tasks.filter(
-          (t) => t.status === 'in_progress' || t.status === 'pending'
-        ).length,
-        completed: response.tasks.filter((t) => t.status === 'completed')
-          .length,
+        total: totalVal || 0,
+        inProgress: backendTasks.reduce(
+          (sum, task) => sum + (task.resume_count || 0),
+          0
+        ),
+        completed: backendTasks.filter((t) => t.status === 'completed').length,
       };
       setStats(statsData);
     } catch (error) {
       console.error('加载任务列表失败:', error);
-      // 取消Mock回退：展示空列表并重置统计与分页
+      // 展示空列表并重置统计与分页
       setTasks([]);
       setStats({ total: 0, inProgress: 0, completed: 0 });
       setPagination({ ...pagination, total: 0, totalPages: 0 });
@@ -369,7 +385,7 @@ export function IntelligentMatchingPage() {
           className={cn(
             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
             i === pagination.current &&
-              'border-[#10B981] bg-[#10B981] text-white'
+              'border-primary bg-primary text-primary-foreground'
           )}
         >
           {i}
@@ -405,7 +421,7 @@ export function IntelligentMatchingPage() {
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">匹配总数</p>
+              <p className="text-sm font-medium text-gray-600">匹配任务总数</p>
               <p className="text-2xl font-bold text-blue-600 mt-1">
                 {stats.total}
               </p>
@@ -416,11 +432,11 @@ export function IntelligentMatchingPage() {
           </div>
         </div>
 
-        {/* 匹配中 */}
+        {/* 匹配简历总数 */}
         <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">匹配中</p>
+              <p className="text-sm font-medium text-gray-600">匹配简历总数</p>
               <p className="text-2xl font-bold text-orange-600 mt-1">
                 {stats.inProgress}
               </p>
@@ -527,8 +543,8 @@ export function IntelligentMatchingPage() {
           <table className="w-full table-auto min-w-max">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
-                  任务ID
+                <th className="px-8 py-4 text-center text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                  序号/任务ID
                 </th>
                 <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
                   匹配岗位
@@ -580,13 +596,21 @@ export function IntelligentMatchingPage() {
                   </td>
                 </tr>
               ) : (
-                tasks.map((task) => {
+                tasks.map((task, index) => {
                   const statusStyle = getStatusStyle(task.status);
 
                   return (
                     <tr key={task.id} className="hover:bg-gray-50">
-                      <td className="px-8 py-5 text-sm font-medium text-gray-900 whitespace-nowrap">
-                        {task.taskId}
+                      <td className="px-8 py-5 text-sm font-medium text-gray-500 whitespace-nowrap text-left">
+                        <div className="text-sm text-gray-500">{index + 1}</div>
+                        <div
+                          className="text-sm text-gray-500 cursor-help truncate max-w-[120px]"
+                          title={task.taskId}
+                        >
+                          {task.taskId.length > 8
+                            ? `${task.taskId.substring(0, 8)}...`
+                            : task.taskId}
+                        </div>
                       </td>
                       <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
                         <div
@@ -755,6 +779,9 @@ export function IntelligentMatchingPage() {
         onComplete={() => {
           setIsMatchingProcessModalOpen(false);
           setIsMatchingResultModalOpen(true);
+          // 刷新任务列表，确保创建完成后数据展示，并重置到第一页
+          setPagination((prev) => ({ ...prev, current: 1 }));
+          loadTasks();
         }}
         selectedJobCount={selectedJobIds.length}
         selectedResumeCount={selectedResumeIds.length}
@@ -767,7 +794,8 @@ export function IntelligentMatchingPage() {
         onOpenChange={setIsMatchingResultModalOpen}
         onBackToHome={() => {
           setIsMatchingResultModalOpen(false);
-          // 刷新任务列表
+          // 返回主页面后，重置到第一页以显示最新任务
+          setPagination((prev) => ({ ...prev, current: 1 }));
           loadTasks();
         }}
         taskId={currentTaskId}
