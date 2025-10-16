@@ -83,3 +83,120 @@ COMMENT ON COLUMN screening_node_runs.duration_ms IS '执行时长(毫秒)';
 COMMENT ON COLUMN screening_node_runs.created_at IS '创建时间';
 COMMENT ON COLUMN screening_node_runs.updated_at IS '更新时间';
 COMMENT ON COLUMN screening_node_runs.deleted_at IS '软删除时间';
+
+-- 创建 audit_logs 表
+CREATE TABLE audit_logs (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "operator_type" VARCHAR(20) NOT NULL,
+    "operator_id" UUID,
+    "operator_name" VARCHAR(255),
+    "operation_type" VARCHAR(20) NOT NULL,
+    "resource_type" VARCHAR(50) NOT NULL,
+    "resource_id" VARCHAR(255),
+    "resource_name" VARCHAR(255),
+    "method" VARCHAR(10) NOT NULL,
+    "path" VARCHAR(500) NOT NULL,
+    "query_params" TEXT,
+    "request_body" TEXT,
+    "user_agent" TEXT,
+    "status_code" INTEGER NOT NULL,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'success',
+    "response_body" TEXT,
+    "error_message" TEXT,
+    "ip" VARCHAR(45) NOT NULL,
+    "country" VARCHAR(100),
+    "province" VARCHAR(100),
+    "city" VARCHAR(100),
+    "isp" VARCHAR(100),
+    "session_id" VARCHAR(255),
+    "trace_id" VARCHAR(255),
+    "business_data" TEXT,
+    "changes" TEXT,
+    "description" TEXT,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
+    "updated_at" timestamptz NOT NULL DEFAULT now(),
+    "deleted_at" timestamptz NULL,
+    "duration_ms" BIGINT
+);
+
+-- 创建索引
+CREATE INDEX idx_audit_logs_operator_type_id ON audit_logs(operator_type, operator_id);
+CREATE INDEX idx_audit_logs_operator_type_created_at ON audit_logs(operator_type, created_at);
+CREATE INDEX idx_audit_logs_operation_type_created_at ON audit_logs(operation_type, created_at);
+CREATE INDEX idx_audit_logs_resource_type_created_at ON audit_logs(resource_type, created_at);
+CREATE INDEX idx_audit_logs_resource_type_id ON audit_logs(resource_type, resource_id);
+CREATE INDEX idx_audit_logs_status_created_at ON audit_logs(status, created_at);
+CREATE INDEX idx_audit_logs_status_code_created_at ON audit_logs(status_code, created_at);
+CREATE INDEX idx_audit_logs_ip_created_at ON audit_logs(ip, created_at);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX idx_audit_logs_session_id ON audit_logs(session_id);
+CREATE INDEX idx_audit_logs_trace_id ON audit_logs(trace_id);
+
+-- 创建复合索引用于常见查询场景
+CREATE INDEX idx_audit_logs_operator_operation_created_at ON audit_logs(operator_type, operation_type, created_at);
+CREATE INDEX idx_audit_logs_resource_operation_created_at ON audit_logs(resource_type, operation_type, created_at);
+
+-- 添加检查约束
+ALTER TABLE audit_logs
+ADD CONSTRAINT chk_audit_logs_operator_type CHECK (
+    operator_type IN ('user', 'admin')
+);
+
+ALTER TABLE audit_logs
+ADD CONSTRAINT chk_audit_logs_operation_type CHECK (
+    operation_type IN ('create', 'update', 'delete', 'view', 'login', 'logout')
+);
+
+ALTER TABLE audit_logs
+ADD CONSTRAINT chk_audit_logs_resource_type CHECK (
+    resource_type IN ('user', 'admin', 'role', 'department', 'job_position', 'resume', 'screening', 'setting', 'attachment', 'conversation', 'message')
+);
+
+ALTER TABLE audit_logs
+ADD CONSTRAINT chk_audit_logs_status CHECK (
+    status IN ('success', 'failed')
+);
+
+ALTER TABLE audit_logs
+ADD CONSTRAINT chk_audit_logs_status_code CHECK (
+    status_code >= 100 AND status_code < 600
+);
+
+ALTER TABLE audit_logs
+ADD CONSTRAINT chk_audit_logs_duration_ms CHECK (
+    duration_ms >= 0
+);
+
+-- 添加注释
+COMMENT ON TABLE audit_logs IS '操作审计日志表';
+COMMENT ON COLUMN audit_logs.id IS '主键ID';
+COMMENT ON COLUMN audit_logs.operator_type IS '操作者类型：user/admin';
+COMMENT ON COLUMN audit_logs.operator_id IS '操作者ID';
+COMMENT ON COLUMN audit_logs.operator_name IS '操作者名称';
+COMMENT ON COLUMN audit_logs.operation_type IS '操作类型：create/update/delete/view/login/logout';
+COMMENT ON COLUMN audit_logs.resource_type IS '资源类型';
+COMMENT ON COLUMN audit_logs.resource_id IS '资源ID';
+COMMENT ON COLUMN audit_logs.resource_name IS '资源名称';
+COMMENT ON COLUMN audit_logs.method IS 'HTTP方法';
+COMMENT ON COLUMN audit_logs.path IS '请求路径';
+COMMENT ON COLUMN audit_logs.query_params IS '查询参数';
+COMMENT ON COLUMN audit_logs.request_body IS '请求体（敏感信息已脱敏）';
+COMMENT ON COLUMN audit_logs.user_agent IS '用户代理';
+COMMENT ON COLUMN audit_logs.status_code IS 'HTTP状态码';
+COMMENT ON COLUMN audit_logs.status IS '操作状态：success/failed';
+COMMENT ON COLUMN audit_logs.response_body IS '响应体（敏感信息已脱敏）';
+COMMENT ON COLUMN audit_logs.error_message IS '错误信息';
+COMMENT ON COLUMN audit_logs.ip IS '客户端IP';
+COMMENT ON COLUMN audit_logs.country IS '国家';
+COMMENT ON COLUMN audit_logs.province IS '省份';
+COMMENT ON COLUMN audit_logs.city IS '城市';
+COMMENT ON COLUMN audit_logs.isp IS '运营商';
+COMMENT ON COLUMN audit_logs.session_id IS '会话ID';
+COMMENT ON COLUMN audit_logs.trace_id IS '链路追踪ID';
+COMMENT ON COLUMN audit_logs.business_data IS '业务相关数据（JSON格式）';
+COMMENT ON COLUMN audit_logs.changes IS '变更内容（JSON格式，记录before/after）';
+COMMENT ON COLUMN audit_logs.description IS '操作描述';
+COMMENT ON COLUMN audit_logs.created_at IS '创建时间';
+COMMENT ON COLUMN audit_logs.updated_at IS '更新时间';
+COMMENT ON COLUMN audit_logs.deleted_at IS '软删除时间';
+COMMENT ON COLUMN audit_logs.duration_ms IS '请求处理时长（毫秒）';

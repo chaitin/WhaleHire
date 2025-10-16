@@ -43,9 +43,9 @@ type BasicMatchDetail struct {
 	// Score 基本信息匹配总分 (0-100)
 	Score float64 `json:"score" example:"85.5"`
 	// SubScores 各子项匹配分数，如地点、薪资等
-	SubScores map[string]float64 `json:"sub_scores" example:"{\"location\":90,\"salary\":80}"`
+	SubScores map[string]float64 `json:"sub_scores"`
 	// Evidence 匹配证据列表
-	Evidence []string `json:"evidence" example:"[\"工作地点匹配\",\"薪资期望符合\"]"`
+	Evidence []string `json:"evidence" `
 	// Notes 匹配备注说明
 	Notes string `json:"notes" example:"候选人基本信息与岗位要求高度匹配"`
 }

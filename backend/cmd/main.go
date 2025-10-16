@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
+	"github.com/chaitin/WhaleHire/backend/pkg"
 	"github.com/chaitin/WhaleHire/backend/pkg/web"
 	"github.com/google/wire"
 
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/docs"
 	"github.com/chaitin/WhaleHire/backend/internal"
-	"github.com/chaitin/WhaleHire/backend/pkg"
 	"github.com/chaitin/WhaleHire/backend/pkg/service"
 	"github.com/chaitin/WhaleHire/backend/pkg/store"
 )

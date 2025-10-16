@@ -111,6 +111,113 @@ var (
 			},
 		},
 	}
+	// AuditLogsColumns holds the columns for the "audit_logs" table.
+	AuditLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "operator_type", Type: field.TypeString},
+		{Name: "operator_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "operator_name", Type: field.TypeString, Nullable: true},
+		{Name: "operation_type", Type: field.TypeString},
+		{Name: "resource_type", Type: field.TypeString},
+		{Name: "resource_id", Type: field.TypeString, Nullable: true},
+		{Name: "resource_name", Type: field.TypeString, Nullable: true},
+		{Name: "method", Type: field.TypeString},
+		{Name: "path", Type: field.TypeString},
+		{Name: "query_params", Type: field.TypeString, Nullable: true},
+		{Name: "request_body", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "status_code", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Default: "success"},
+		{Name: "response_body", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "ip", Type: field.TypeString},
+		{Name: "country", Type: field.TypeString, Nullable: true},
+		{Name: "province", Type: field.TypeString, Nullable: true},
+		{Name: "city", Type: field.TypeString, Nullable: true},
+		{Name: "isp", Type: field.TypeString, Nullable: true},
+		{Name: "session_id", Type: field.TypeString, Nullable: true},
+		{Name: "trace_id", Type: field.TypeString, Nullable: true},
+		{Name: "business_data", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "changes", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "duration_ms", Type: field.TypeInt64, Nullable: true},
+	}
+	// AuditLogsTable holds the schema information for the "audit_logs" table.
+	AuditLogsTable = &schema.Table{
+		Name:       "audit_logs",
+		Columns:    AuditLogsColumns,
+		PrimaryKey: []*schema.Column{AuditLogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "auditlog_operator_type_operator_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[2], AuditLogsColumns[3]},
+			},
+			{
+				Name:    "auditlog_operator_type_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[2], AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_operation_type_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[5], AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_resource_type_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[6], AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_resource_type_resource_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[6], AuditLogsColumns[7]},
+			},
+			{
+				Name:    "auditlog_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[15], AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_status_code_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[14], AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_ip_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[18], AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_session_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[23]},
+			},
+			{
+				Name:    "auditlog_trace_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[24]},
+			},
+			{
+				Name:    "auditlog_operator_type_operation_type_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[2], AuditLogsColumns[5], AuditLogsColumns[28]},
+			},
+			{
+				Name:    "auditlog_resource_type_operation_type_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[6], AuditLogsColumns[5], AuditLogsColumns[28]},
+			},
+		},
+	}
 	// ConversationsColumns holds the columns for the "conversations" table.
 	ConversationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1090,6 +1197,7 @@ var (
 		AdminLoginHistoriesTable,
 		AdminRolesTable,
 		AttachmentsTable,
+		AuditLogsTable,
 		ConversationsTable,
 		DepartmentTable,
 		JobEducationRequirementTable,
@@ -1137,6 +1245,9 @@ func init() {
 	AttachmentsTable.ForeignKeys[0].RefTable = MessagesTable
 	AttachmentsTable.Annotation = &entsql.Annotation{
 		Table: "attachments",
+	}
+	AuditLogsTable.Annotation = &entsql.Annotation{
+		Table: "audit_logs",
 	}
 	ConversationsTable.ForeignKeys[0].RefTable = UsersTable
 	ConversationsTable.Annotation = &entsql.Annotation{

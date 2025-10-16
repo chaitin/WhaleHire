@@ -11,31 +11,32 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/internal/audit/repo"
 	v1_5 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
-	repo6 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
+	repo7 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
 	usecase6 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
 	v1_8 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
 	usecase8 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	v1_3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
-	repo5 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
+	repo6 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	usecase4 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
 	v1_6 "github.com/chaitin/WhaleHire/backend/internal/job_application/handler/v1"
-	repo3 "github.com/chaitin/WhaleHire/backend/internal/job_application/repo"
+	repo4 "github.com/chaitin/WhaleHire/backend/internal/job_application/repo"
 	usecase2 "github.com/chaitin/WhaleHire/backend/internal/job_application/usecase"
 	v1_4 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
-	repo4 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
+	repo5 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
 	usecase5 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
 	v1_2 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
-	repo2 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
+	repo3 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	usecase3 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
 	v1_7 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
-	repo7 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
+	repo8 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	service2 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
 	usecase7 "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
 	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
-	"github.com/chaitin/WhaleHire/backend/internal/user/repo"
+	repo2 "github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
 	"github.com/chaitin/WhaleHire/backend/pkg/ipdb"
@@ -54,49 +55,51 @@ func newServer() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	web := pkg.NewWeb(configConfig)
 	loggerConfig := configConfig.Logger
 	slogLogger := logger.NewLogger(loggerConfig)
 	client, err := store.NewEntDB(configConfig, slogLogger)
 	if err != nil {
 		return nil, err
 	}
-	redisClient := store.NewRedisCli(configConfig)
+	auditRepo := repo.NewAuditRepo(client, slogLogger)
 	ipdbIPDB, err := ipdb.NewIPDB(slogLogger)
 	if err != nil {
 		return nil, err
 	}
-	userRepo := repo.NewUserRepo(client, ipdbIPDB, redisClient, configConfig)
+	auditMiddleware := middleware.NewAuditMiddleware(auditRepo, ipdbIPDB, slogLogger)
+	web := pkg.NewWeb(configConfig, auditMiddleware)
+	redisClient := store.NewRedisCli(configConfig)
+	userRepo := repo2.NewUserRepo(client, ipdbIPDB, redisClient, configConfig)
 	sessionSession := session.NewSession(configConfig)
 	userUsecase := usecase.NewUserUsecase(configConfig, redisClient, userRepo, slogLogger, sessionSession)
 	authMiddleware := middleware.NewAuthMiddleware(userUsecase, sessionSession, slogLogger)
 	activeMiddleware := middleware.NewActiveMiddleware(redisClient, slogLogger)
 	readOnlyMiddleware := middleware.NewReadOnlyMiddleware(configConfig)
 	userHandler := v1.NewUserHandler(web, userUsecase, authMiddleware, activeMiddleware, readOnlyMiddleware, sessionSession, slogLogger, configConfig)
-	resumeRepo := repo2.NewResumeRepo(client)
+	resumeRepo := repo3.NewResumeRepo(client)
 	parserService := service.NewParserService(configConfig, slogLogger, resumeRepo)
 	minioClient, err := s3.NewMinioClient(configConfig)
 	if err != nil {
 		return nil, err
 	}
 	storageService := service.NewStorageService(minioClient, configConfig, slogLogger, userRepo)
-	jobApplicationRepo := repo3.NewJobApplicationRepo(client)
-	jobProfileRepo := repo4.NewJobProfileRepo(client)
+	jobApplicationRepo := repo4.NewJobApplicationRepo(client)
+	jobProfileRepo := repo5.NewJobProfileRepo(client)
 	jobApplicationUsecase := usecase2.NewJobApplicationUsecase(jobApplicationRepo, jobProfileRepo)
 	resumeUsecase := usecase3.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, jobApplicationUsecase, slogLogger)
 	resumeHandler := v1_2.NewResumeHandler(web, resumeUsecase, jobApplicationUsecase, authMiddleware, slogLogger)
-	generalAgentRepo := repo5.NewGeneralAgentRepo(client)
+	generalAgentRepo := repo6.NewGeneralAgentRepo(client)
 	generalAgentUsecase := usecase4.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
 	generalAgentHandler := v1_3.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
-	jobSkillMetaRepo := repo4.NewJobSkillMetaRepo(client)
+	jobSkillMetaRepo := repo5.NewJobSkillMetaRepo(client)
 	jobProfileUsecase := usecase5.NewJobProfileUsecase(jobProfileRepo, jobSkillMetaRepo, slogLogger)
 	jobProfileHandler := v1_4.NewJobProfileHandler(web, jobProfileUsecase, authMiddleware, slogLogger)
-	departmentRepo := repo6.NewDepartmentRepo(client)
+	departmentRepo := repo7.NewDepartmentRepo(client)
 	departmentUsecase := usecase6.NewDepartmentUsecase(departmentRepo, slogLogger)
 	departmentHandler := v1_5.NewDepartmentHandler(web, departmentUsecase, authMiddleware, slogLogger)
 	jobApplicationHandler := v1_6.NewJobApplicationHandler(web, jobApplicationUsecase, resumeUsecase, authMiddleware, slogLogger)
-	screeningRepo := repo7.NewScreeningRepo(client)
-	screeningNodeRunRepo := repo7.NewScreeningNodeRunRepo(client)
+	screeningRepo := repo8.NewScreeningRepo(client)
+	screeningNodeRunRepo := repo8.NewScreeningNodeRunRepo(client)
 	matchingService, err := service2.NewMatchingService(configConfig, slogLogger, screeningNodeRunRepo, screeningRepo)
 	if err != nil {
 		return nil, err

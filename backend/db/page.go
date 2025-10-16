@@ -67,6 +67,20 @@ func (a *AttachmentQuery) Page(ctx context.Context, page, size int) ([]*Attachme
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (al *AuditLogQuery) Page(ctx context.Context, page, size int) ([]*AuditLog, *PageInfo, error) {
+	cnt, err := al.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := al.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (c *ConversationQuery) Page(ctx context.Context, page, size int) ([]*Conversation, *PageInfo, error) {
 	cnt, err := c.Count(ctx)
 	if err != nil {
