@@ -432,22 +432,22 @@ type ScreeningResult struct {
 	ResumeID uuid.UUID `json:"resume_id"`
 	// OverallScore 总体匹配分数 (0-100)
 	OverallScore float64 `json:"overall_score"`
-	// MatchLevel 匹配等级 (非常匹配/高匹配/一般匹配/低匹配/不匹配)
+	// MatchLevel 匹配等级 (非常匹配85-100分/高匹配70-84分/一般匹配55-69分/低匹配40-54分/不匹配0-39分)
 	MatchLevel consts.MatchLevel `json:"match_level"`
 	// DimensionScores 各维度匹配分数，可选
 	DimensionScores map[string]float64 `json:"dimension_scores,omitempty"`
 	// BasicDetail 基本信息匹配详情，包含地点、薪资等基础信息的匹配分析，可选
-	BasicDetail *BasicMatchDetail `json:"basic_detail,omitempty" swaggertype:"object"`
+	BasicDetail *BasicMatchDetail `json:"basic_detail,omitempty"`
 	// EducationDetail 教育背景匹配详情，包含学历、专业、院校等教育信息的匹配分析，可选
-	EducationDetail *EducationMatchDetail `json:"education_detail,omitempty" swaggertype:"object"`
+	EducationDetail *EducationMatchDetail `json:"education_detail,omitempty"`
 	// ExperienceDetail 工作经验匹配详情，包含工作年限、职位、行业等经验信息的匹配分析，可选
-	ExperienceDetail *ExperienceMatchDetail `json:"experience_detail,omitempty" swaggertype:"object"`
+	ExperienceDetail *ExperienceMatchDetail `json:"experience_detail,omitempty"`
 	// IndustryDetail 行业背景匹配详情，包含行业经验、公司背景等行业信息的匹配分析，可选
-	IndustryDetail *IndustryMatchDetail `json:"industry_detail,omitempty" swaggertype:"object"`
+	IndustryDetail *IndustryMatchDetail `json:"industry_detail,omitempty"`
 	// Responsibility 职责匹配详情，包含工作职责、项目经验等职责信息的匹配分析，可选
-	Responsibility *ResponsibilityMatchDetail `json:"responsibility_detail,omitempty" swaggertype:"object"`
+	Responsibility *ResponsibilityMatchDetail `json:"responsibility_detail,omitempty"`
 	// SkillDetail 技能匹配详情，包含技术技能、工具使用等技能信息的匹配分析，可选
-	SkillDetail *SkillMatchDetail `json:"skill_detail,omitempty" swaggertype:"object"`
+	SkillDetail *SkillMatchDetail `json:"skill_detail,omitempty"`
 	// Recommendations 推荐建议列表，可选
 	Recommendations []string `json:"recommendations,omitempty"`
 	// TraceID 追踪ID，用于调试和日志关联，可选

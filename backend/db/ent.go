@@ -16,6 +16,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/adminloginhistory"
 	"github.com/chaitin/WhaleHire/backend/db/adminrole"
 	"github.com/chaitin/WhaleHire/backend/db/attachment"
+	"github.com/chaitin/WhaleHire/backend/db/auditlog"
 	"github.com/chaitin/WhaleHire/backend/db/conversation"
 	"github.com/chaitin/WhaleHire/backend/db/department"
 	"github.com/chaitin/WhaleHire/backend/db/jobeducationrequirement"
@@ -108,6 +109,7 @@ func checkColumn(table, column string) error {
 			adminloginhistory.Table:        adminloginhistory.ValidColumn,
 			adminrole.Table:                adminrole.ValidColumn,
 			attachment.Table:               attachment.ValidColumn,
+			auditlog.Table:                 auditlog.ValidColumn,
 			conversation.Table:             conversation.ValidColumn,
 			department.Table:               department.ValidColumn,
 			jobeducationrequirement.Table:  jobeducationrequirement.ValidColumn,

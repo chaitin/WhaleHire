@@ -22,6 +22,8 @@ type Tx struct {
 	AdminRole *AdminRoleClient
 	// Attachment is the client for interacting with the Attachment builders.
 	Attachment *AttachmentClient
+	// AuditLog is the client for interacting with the AuditLog builders.
+	AuditLog *AuditLogClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
 	// Department is the client for interacting with the Department builders.
@@ -213,6 +215,7 @@ func (tx *Tx) init() {
 	tx.AdminLoginHistory = NewAdminLoginHistoryClient(tx.config)
 	tx.AdminRole = NewAdminRoleClient(tx.config)
 	tx.Attachment = NewAttachmentClient(tx.config)
+	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Department = NewDepartmentClient(tx.config)
 	tx.JobEducationRequirement = NewJobEducationRequirementClient(tx.config)
