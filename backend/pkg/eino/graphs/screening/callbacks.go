@@ -47,10 +47,10 @@ type AgentCallbackCollector struct {
 	aggregatedMatch          *domain.JobResumeMatch
 	aggregatorErr            error
 
-	raw         map[string]any
-	rawInputs   map[string]any
-	rawErrors   map[string]error
-	tokenUsages map[string]*model.TokenUsage
+	raw         map[string]any               // 输出汇总
+	rawInputs   map[string]any               // 输入汇总
+	rawErrors   map[string]error             // 错误汇总
+	tokenUsages map[string]*model.TokenUsage // 令牌使用汇总
 }
 
 // NewAgentCallbackCollector 创建 Agent 输出收集器
