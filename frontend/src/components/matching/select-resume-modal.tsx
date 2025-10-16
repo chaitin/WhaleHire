@@ -63,18 +63,15 @@ export function SelectResumeModal({
   // 加载筛选条件选项
   const loadFilterOptions = async () => {
     try {
-      // 加载所有简历以提取筛选选项
+      // 工作经验范围选项（与筛选逻辑保持一致的值）
+      setExperienceOptions(['0-1', '1-3', '3-5', '5-10', '10+']);
+
+      // 学历选项：从接口第一页数据中提取（避免一次性加载过多数据）
       const response = await getResumeList({
         page: 1,
-        size: 1000,
+        size: 50,
         status: ResumeStatus.COMPLETED,
       });
-
-      // 设置工作经验范围选项
-      const expRanges = ['1年以下', '1-3年', '3-5年', '5-10年', '10年以上'];
-      setExperienceOptions(expRanges);
-
-      // 提取学历选项（去重）
       const educations = Array.from(
         new Set(
           (response.resumes || [])
@@ -88,7 +85,7 @@ export function SelectResumeModal({
     }
   };
 
-  // 加载简历数据
+  // 加载简历数据（服务端分页）
   const loadResumes = useCallback(async () => {
     setLoading(true);
     try {
@@ -99,12 +96,12 @@ export function SelectResumeModal({
         status: ResumeStatus.COMPLETED, // 只显示已完成解析的简历
       });
 
-      // 根据筛选条件过滤简历
-      let filteredResumes = response.resumes || [];
+      // 当前页数据基础上应用前端附加筛选（仅影响当前页显示，不影响总数与分页）
+      let pageResumes = response.resumes || [];
 
-      // 工作经验筛选
+      // 工作经验筛选（与选项值保持一致）
       if (experienceFilter && experienceFilter !== 'all') {
-        filteredResumes = filteredResumes.filter((resume) => {
+        pageResumes = pageResumes.filter((resume) => {
           const exp = resume.years_experience || 0;
           switch (experienceFilter) {
             case '0-1':
@@ -123,15 +120,15 @@ export function SelectResumeModal({
         });
       }
 
-      // 学历筛选
+      // 学历筛选（仅影响当前页显示）
       if (educationFilter && educationFilter !== 'all') {
-        filteredResumes = filteredResumes.filter(
+        pageResumes = pageResumes.filter(
           (resume) => resume.highest_education === educationFilter
         );
       }
 
-      setResumes(filteredResumes);
-      const totalCount = filteredResumes.length;
+      setResumes(pageResumes);
+      const totalCount = response.total_count || 0;
       setTotalResults(totalCount);
       setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (error) {
@@ -416,7 +413,11 @@ export function SelectResumeModal({
                     <SelectItem value="all">全部经验</SelectItem>
                     {experienceOptions.map((exp) => (
                       <SelectItem key={exp} value={exp}>
-                        {exp}
+                        {exp === '0-1' && '1年以下'}
+                        {exp === '1-3' && '1-3年'}
+                        {exp === '3-5' && '3-5年'}
+                        {exp === '5-10' && '5-10年'}
+                        {exp === '10+' && '10年以上'}
                       </SelectItem>
                     ))}
                   </SelectContent>

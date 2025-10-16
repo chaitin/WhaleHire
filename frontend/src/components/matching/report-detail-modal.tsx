@@ -1,10 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+
 import { getScreeningResult } from '@/services/screening';
 import { ScreeningResult, MatchLevel } from '@/types/screening';
+import { getResumeDetail } from '@/services/resume';
+import { ResumeDetail as ResumeDetailType } from '@/types/resume';
+import { getJobProfile } from '@/services/job-profile';
 
 interface ReportDetailModalProps {
   open: boolean;
@@ -24,6 +27,10 @@ export function ReportDetailModal({
   const [result, setResult] = useState<ScreeningResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resumeDetail, setResumeDetail] = useState<ResumeDetailType | null>(
+    null
+  );
+  const [jobPositionName, setJobPositionName] = useState<string | null>(null);
 
   const loadReportDetail = useCallback(async () => {
     if (!taskId || !resumeId) return;
@@ -48,6 +55,51 @@ export function ReportDetailModal({
       loadReportDetail();
     }
   }, [open, taskId, resumeId, loadReportDetail]);
+
+  // 加载简历详情
+  useEffect(() => {
+    if (open && resumeId) {
+      (async () => {
+        try {
+          const detail = await getResumeDetail(resumeId);
+          setResumeDetail(detail);
+        } catch (e) {
+          console.error('加载简历详情失败:', e);
+        }
+      })();
+    } else {
+      setResumeDetail(null);
+    }
+  }, [open, resumeId]);
+
+  // 解析应聘岗位名称（优先从简历的岗位关联中匹配当前任务岗位ID，失败则回退到岗位画像接口）
+  useEffect(() => {
+    if (!result?.job_position_id) {
+      setJobPositionName(null);
+      return;
+    }
+    const jobId = result.job_position_id;
+
+    // 优先从简历详情的 job_positions 中匹配
+    const matchedFromResume = resumeDetail?.job_positions?.find(
+      (jp) => jp.job_position_id === jobId
+    );
+    if (matchedFromResume?.job_title) {
+      setJobPositionName(matchedFromResume.job_title);
+      return;
+    }
+
+    // 回退到根据岗位ID请求岗位画像详情
+    (async () => {
+      try {
+        const job = await getJobProfile(jobId);
+        setJobPositionName(job.name || null);
+      } catch (e) {
+        console.error('加载岗位名称失败:', e);
+        setJobPositionName(null);
+      }
+    })();
+  }, [result, resumeDetail]);
 
   // 获取匹配等级的样式和文本
   const getMatchLevelInfo = (level: MatchLevel) => {
@@ -108,18 +160,16 @@ export function ReportDetailModal({
     if (!result?.dimension_scores) return null;
 
     return (
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
         {Object.entries(result.dimension_scores).map(([key, score]) => (
           <div
             key={key}
-            className="rounded-xl bg-[#F9F9F9] p-6 flex flex-col gap-2"
+            className="rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm flex flex-col items-center gap-2.5"
           >
-            <div className="text-center">
-              <div className="text-[#667EEA] text-[32px] font-bold leading-tight">
-                {Math.round(score)}
-              </div>
+            <div className="text-[#667EEA] text-[32px] font-bold leading-tight">
+              {Math.round(score)}
             </div>
-            <div className="text-center text-sm text-[#666666]">
+            <div className="text-sm font-medium text-gray-700">
               {getDimensionName(key)}
             </div>
           </div>
@@ -147,90 +197,6 @@ export function ReportDetailModal({
     );
   };
 
-  // 渲染优势和待提升点
-  const renderStrengthsAndWeaknesses = () => {
-    if (!result) return null;
-
-    const strengths: string[] = [];
-    const weaknesses: string[] = [];
-
-    // 从各个维度提取优势和不足
-    if (result.skill_detail?.llm_analysis) {
-      strengths.push(
-        ...result.skill_detail.llm_analysis.strength_areas.map((s) => `✓ ${s}`)
-      );
-      weaknesses.push(
-        ...result.skill_detail.llm_analysis.gap_areas.map((g) => `⚠ ${g}`)
-      );
-    }
-
-    if (result.responsibility_detail) {
-      const matched = result.responsibility_detail.matched_responsibilities;
-      if (matched.length > 0) {
-        strengths.push(`✓ 匹配 ${matched.length} 项职责要求`);
-      }
-      const unmatched = result.responsibility_detail.unmatched_responsibilities;
-      if (unmatched.length > 0) {
-        weaknesses.push(`⚠ ${unmatched.length} 项职责待加强`);
-      }
-    }
-
-    if (result.experience_detail?.years_match) {
-      const years = result.experience_detail.years_match;
-      if (years.gap <= 0) {
-        strengths.push(`✓ 工作年限${years.actual_years}年，满足要求`);
-      } else {
-        weaknesses.push(`⚠ 工作年限差距${years.gap.toFixed(1)}年`);
-      }
-    }
-
-    return renderDetailSection(
-      '关键匹配点分析',
-      '✨',
-      <div className="flex gap-5">
-        {/* 优势匹配点 */}
-        {strengths.length > 0 && (
-          <div className="flex-1 rounded-xl bg-[#E8F5E9] border-l-4 border-[#4CAF50] p-5 flex flex-col gap-2.5">
-            <div className="font-semibold text-[#333333]">✅ 优势匹配点</div>
-            <div className="flex flex-col gap-0">
-              {strengths.map((item, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    'py-2.5 text-sm text-[#666666]',
-                    index < strengths.length - 1 && 'border-b border-black/5'
-                  )}
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 待提升点 */}
-        {weaknesses.length > 0 && (
-          <div className="flex-1 rounded-xl bg-[#FFF3E0] border-l-4 border-[#FF9800] p-5 flex flex-col gap-2.5">
-            <div className="font-semibold text-[#333333]">📈 待提升点</div>
-            <div className="flex flex-col gap-0">
-              {weaknesses.map((item, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    'py-2.5 text-sm text-[#666666]',
-                    index < weaknesses.length - 1 && 'border-b border-black/5'
-                  )}
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   // 渲染推荐建议
   const renderRecommendations = () => {
     if (!result?.recommendations || result.recommendations.length === 0) {
@@ -238,7 +204,7 @@ export function ReportDetailModal({
     }
 
     return renderDetailSection(
-      '简历优化建议',
+      '简历匹配综合意见',
       '💡',
       <div className="flex flex-col gap-[15px]">
         {result.recommendations.map((rec, index) => (
@@ -290,11 +256,58 @@ export function ReportDetailModal({
   const matchLevelInfo = getMatchLevelInfo(result.match_level);
   const MatchLevelIcon = matchLevelInfo.icon;
 
+  const renderResumeInfo = () => {
+    if (!resumeDetail) {
+      return (
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-5 space-y-3">
+          <div className="text-base font-semibold text-[#333333]">简历信息</div>
+          <div className="text-sm text-[#666666]">
+            姓名：{resumeName || '未知'}
+          </div>
+          <div className="text-sm text-[#666666]">
+            应聘岗位：{jobPositionName || '-'}
+          </div>
+        </div>
+      );
+    }
+    const r = resumeDetail;
+    return (
+      <div className="rounded-xl border border-[#E5E7EB] bg-white p-5 space-y-3">
+        <div className="text-base font-semibold text-[#333333]">简历信息</div>
+        <div className="text-sm text-[#666666]">
+          姓名：{r.name || resumeName || '未知'}
+        </div>
+        <div className="text-sm text-[#666666]">
+          应聘岗位：{jobPositionName || '-'}
+        </div>
+        {r.phone && (
+          <div className="text-sm text-[#666666]">电话：{r.phone}</div>
+        )}
+        {r.email && (
+          <div className="text-sm text-[#666666]">邮箱：{r.email}</div>
+        )}
+        {r.current_city && (
+          <div className="text-sm text-[#666666]">城市：{r.current_city}</div>
+        )}
+        {r.highest_education && (
+          <div className="text-sm text-[#666666]">
+            最高学历：{r.highest_education}
+          </div>
+        )}
+        {typeof r.years_experience === 'number' && (
+          <div className="text-sm text-[#666666]">
+            工作年限：{r.years_experience} 年
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1200px] max-h-[90vh] p-0 overflow-hidden flex flex-col">
         {/* 顶部标题栏 - 渐变背景 */}
-        <div className="bg-gradient-to-r from-[#667EEA] to-[#764BA2] px-10 py-7 flex items-center justify-between">
+        <div className="bg-[#667EEA] px-10 py-7 flex items-center justify-between">
           <h2 className="text-[28px] font-semibold text-white">报告详情</h2>
           <Button
             variant="ghost"
@@ -309,35 +322,47 @@ export function ReportDetailModal({
         {/* 滚动内容区域 */}
         <div className="flex-1 overflow-y-auto px-10 py-10">
           <div className="flex flex-col gap-7">
-            {/* 总体匹配分数卡片 */}
-            <div className="rounded-xl bg-gradient-to-br from-[#667EEA] to-[#764BA2] px-3 py-1 flex flex-col gap-2.5">
-              <div className="flex items-center justify-center h-[84.5px]">
-                <span className="text-[72px] font-bold text-white leading-tight">
-                  {Math.round(result.overall_score)}
-                </span>
-                <span className="text-[36px] font-semibold text-white leading-tight ml-1">
-                  分
-                </span>
-              </div>
-              <div className="text-center opacity-90">
-                <div className="text-[11px] font-semibold text-white flex items-center justify-center gap-1">
-                  <span>综合匹配度 - {matchLevelInfo.text}</span>
-                  <MatchLevelIcon className="h-3 w-3" />
-                </div>
-              </div>
-              <div className="text-center opacity-90 pb-1.5">
-                <div className="text-sm font-semibold text-white">
-                  {resumeName && `投递人：${resumeName}`}
-                </div>
-              </div>
-              {result.matched_at && (
-                <div className="text-center opacity-90 pb-1">
-                  <div className="text-xs text-white">
-                    匹配完成时间：
-                    {new Date(result.matched_at).toLocaleString('zh-CN')}
+            {/* 顶部信息区：先总体分数，再简历信息 */}
+            <div className="flex flex-col gap-7">
+              <div>
+                <div className="rounded-xl bg-[#667EEA] px-3 py-1 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-center h-[84.5px]">
+                    <span className="text-[72px] font-bold text-white leading-tight">
+                      {Math.round(result.overall_score)}
+                    </span>
+                    <span className="text-[36px] font-semibold text-white leading-tight ml-1">
+                      分
+                    </span>
                   </div>
+                  <div className="text-center opacity-90">
+                    <div className="text-[11px] font-semibold text-white flex items-center justify-center gap-1">
+                      <span>综合匹配度 - {matchLevelInfo.text}</span>
+                      <MatchLevelIcon className="h-3 w-3" />
+                    </div>
+                  </div>
+                  <div className="text-center opacity-90 pb-1.5">
+                    <div className="text-sm font-semibold text-white">
+                      {resumeName && `投递人：${resumeName}`}
+                    </div>
+                  </div>
+                  {jobPositionName && (
+                    <div className="text-center opacity-90 pb-1.5">
+                      <div className="text-sm font-semibold text-white">
+                        应聘岗位：{jobPositionName}
+                      </div>
+                    </div>
+                  )}
+                  {result.matched_at && (
+                    <div className="text-center opacity-90 pb-1">
+                      <div className="text-xs text-white">
+                        匹配完成时间：
+                        {new Date(result.matched_at).toLocaleString('zh-CN')}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+              <div>{renderResumeInfo()}</div>
             </div>
 
             {/* 各维度匹配分数 */}
@@ -347,8 +372,8 @@ export function ReportDetailModal({
               </div>
             )}
 
-            {/* 关键匹配点分析 */}
-            {renderStrengthsAndWeaknesses()}
+            {/* 关键匹配点分析 - 按要求移除亮点，不再展示 */}
+            {/* （已移除 renderStrengthsAndWeaknesses() 调用） */}
 
             {/* 基本信息匹配详情 */}
             {result.basic_detail && result.basic_detail.evidence.length > 0 && (
@@ -577,13 +602,19 @@ export function ReportDetailModal({
                       <span className="font-medium text-gray-700">
                         额外的技能：
                       </span>
-                      <ul className="mt-1 space-y-1">
+                      <div className="mt-2 flex flex-wrap gap-2">
                         {result.skill_detail.extra_skills.map((skill, idx) => (
-                          <li key={idx} className="text-gray-600">
-                            • {skill}
-                          </li>
+                          <div
+                            key={idx}
+                            className="inline-flex items-center gap-1 rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1 shadow-sm"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-[#667EEA]" />
+                            <span className="text-[12px] text-gray-700">
+                              {skill}
+                            </span>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
                 </div>
