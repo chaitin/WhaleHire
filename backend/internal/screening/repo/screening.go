@@ -81,7 +81,9 @@ func (r *ScreeningRepo) GetScreeningTask(ctx context.Context, id uuid.UUID) (*db
 
 // ListScreeningTasks 查询任务列表
 func (r *ScreeningRepo) ListScreeningTasks(ctx context.Context, filter *domain.ScreeningTaskFilter) ([]*db.ScreeningTask, *db.PageInfo, error) {
-	query := r.db.ScreeningTask.Query()
+	query := r.db.ScreeningTask.Query().
+		WithJobPosition(). // 预加载职位信息
+		WithCreator()      // 预加载创建者信息
 
 	if filter != nil {
 		if filter.JobPositionID != nil {
@@ -231,7 +233,9 @@ func (r *ScreeningRepo) GetScreeningTaskResume(ctx context.Context, taskID, resu
 
 // ListScreeningTaskResumes 查询任务简历关联列表
 func (r *ScreeningRepo) ListScreeningTaskResumes(ctx context.Context, filter *domain.ScreeningTaskResumeFilter) ([]*db.ScreeningTaskResume, *db.PageInfo, error) {
-	query := r.db.ScreeningTaskResume.Query()
+	query := r.db.ScreeningTaskResume.Query().
+		WithTask().
+		WithResume()
 
 	if filter != nil {
 		if filter.TaskID != nil {

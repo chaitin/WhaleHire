@@ -722,7 +722,7 @@ func (u *ScreeningUsecase) updateResumeRankings(ctx context.Context, taskID uuid
 		TaskID: &taskID,
 		Status: (*consts.ScreeningTaskResumeStatus)(&[]consts.ScreeningTaskResumeStatus{consts.ScreeningTaskResumeStatusCompleted}[0]),
 	}
-	
+
 	taskResumes, _, err := u.repo.ListScreeningTaskResumes(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("获取任务简历列表失败: %w", err)
@@ -764,7 +764,7 @@ func (u *ScreeningUsecase) updateResumeRankings(ctx context.Context, taskID uuid
 	// 构建排名映射，处理相同分数的情况
 	rankings := make(map[uuid.UUID]int)
 	currentRank := 1
-	
+
 	for i, rs := range resumeScores {
 		if i > 0 && resumeScores[i-1].score != rs.score {
 			currentRank = i + 1 // 分数不同时，排名为当前位置+1
