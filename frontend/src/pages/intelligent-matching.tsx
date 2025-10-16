@@ -25,6 +25,7 @@ import {
   MatchingStats,
   MatchingFilters,
   Pagination,
+  MatchingTaskStatus,
 } from '@/types/matching';
 import {
   getMockMatchingTasks,
@@ -39,8 +40,15 @@ import {
 } from '@/components/matching/config-weight-modal';
 import { MatchingProcessModal } from '@/components/matching/matching-process-modal';
 import { MatchingResultModal } from '@/components/matching/matching-result-modal';
-import { createScreeningTask, startScreeningTask } from '@/services/screening';
-import { DimensionWeights } from '@/types/screening';
+import {
+  createScreeningTask,
+  startScreeningTask,
+  listScreeningTasks,
+  deleteScreeningTask,
+} from '@/services/screening';
+import { DimensionWeights, ScreeningTaskStatus } from '@/types/screening';
+import { getJobProfile } from '@/services/job-profile';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export function IntelligentMatchingPage() {
   const [stats, setStats] = useState<MatchingStats>({
@@ -73,34 +81,111 @@ export function IntelligentMatchingPage() {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [selectedResumeIds, setSelectedResumeIds] = useState<string[]>([]);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<{
+    id: string;
+    taskId: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // 加载数据
   useEffect(() => {
-    // 加载统计数据
-    const statsData = getMockMatchingStats();
-    setStats(statsData);
-
-    // 加载任务列表
-    const result = getMockMatchingTasks(
-      pagination.current,
-      pagination.pageSize,
-      {
-        position: filters.position !== 'all' ? filters.position : undefined,
-        status: filters.status !== 'all' ? filters.status : undefined,
-        keywords: filters.keywords,
-      }
-    );
-
-    setTasks(result.data);
-    setPagination(result.pagination);
+    loadTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     pagination.current,
     pagination.pageSize,
-    filters.position,
     filters.status,
     filters.keywords,
   ]);
+
+  // 加载任务列表
+  const loadTasks = async () => {
+    try {
+      const response = await listScreeningTasks({
+        page: pagination.current,
+        size: pagination.pageSize,
+        status:
+          filters.status !== 'all'
+            ? (filters.status as ScreeningTaskStatus)
+            : undefined,
+      });
+
+      // 转换API响应到前端格式，并获取岗位名称
+      const tasksWithJobNames = await Promise.all(
+        response.tasks.map(async (task) => {
+          let jobPositionName = '未知岗位';
+          try {
+            const jobProfile = await getJobProfile(task.job_position_id);
+            jobPositionName = jobProfile.name || '未知岗位';
+          } catch (error) {
+            console.error('获取岗位名称失败:', error);
+          }
+
+          // 状态映射：将后端状态映射到前端状态
+          let frontendStatus: MatchingTaskStatus;
+          if (task.status === 'pending' || task.status === 'in_progress') {
+            frontendStatus = 'in_progress';
+          } else if (task.status === 'completed') {
+            frontendStatus = 'completed';
+          } else {
+            frontendStatus = 'failed';
+          }
+
+          return {
+            id: task.id,
+            taskId: task.task_id,
+            jobPositions: [jobPositionName],
+            resumeCount: task.resume_count,
+            status: frontendStatus,
+            creator: task.created_by,
+            createdAt: task.created_at,
+          };
+        })
+      );
+
+      setTasks(tasksWithJobNames);
+
+      // 更新分页信息（使用total和计算pageSize）
+      const pageSize = pagination.pageSize;
+      const totalPages = Math.ceil(response.total / pageSize);
+      setPagination({
+        current: pagination.current,
+        pageSize: pageSize,
+        total: response.total,
+        totalPages: totalPages,
+      });
+
+      // 计算统计数据
+      const statsData = {
+        total: response.total,
+        inProgress: response.tasks.filter(
+          (t) => t.status === 'in_progress' || t.status === 'pending'
+        ).length,
+        completed: response.tasks.filter((t) => t.status === 'completed')
+          .length,
+      };
+      setStats(statsData);
+    } catch (error) {
+      console.error('加载任务列表失败:', error);
+      // 使用Mock数据作为fallback
+      const statsData = getMockMatchingStats();
+      setStats(statsData);
+
+      const result = getMockMatchingTasks(
+        pagination.current,
+        pagination.pageSize,
+        {
+          position: filters.position !== 'all' ? filters.position : undefined,
+          status: filters.status !== 'all' ? filters.status : undefined,
+          keywords: filters.keywords,
+        }
+      );
+
+      setTasks(result.data);
+      setPagination(result.pagination);
+    }
+  };
 
   // 处理搜索
   const handleSearch = () => {
@@ -191,6 +276,25 @@ export function IntelligentMatchingPage() {
     setIsConfigWeightModalOpen(true);
   };
 
+  // 处理删除任务
+  const handleDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    setDeleting(true);
+    try {
+      await deleteScreeningTask(taskToDelete.id);
+      // 删除成功后重新加载任务列表
+      await loadTasks();
+      setIsDeleteConfirmOpen(false);
+      setTaskToDelete(null);
+    } catch (error) {
+      console.error('删除任务失败:', error);
+      alert('删除任务失败，请重试');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // 获取状态样式
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -199,23 +303,31 @@ export function IntelligentMatchingPage() {
           bg: 'bg-green-50',
           text: 'text-green-700',
           border: 'border-green-200',
-          label: '已完成',
+          label: '匹配完成',
           icon: CheckCircle2,
         };
-      case 'in_progress':
+      case 'running':
         return {
           bg: 'bg-orange-50',
           text: 'text-orange-700',
           border: 'border-orange-200',
-          label: '进行中',
+          label: '匹配中',
           icon: Clock,
+        };
+      case 'pending':
+        return {
+          bg: 'bg-blue-50',
+          text: 'text-blue-700',
+          border: 'border-blue-200',
+          label: '创建完成',
+          icon: CheckCircle2,
         };
       case 'failed':
         return {
           bg: 'bg-red-50',
           text: 'text-red-700',
           border: 'border-red-200',
-          label: '失败',
+          label: '匹配失败',
           icon: CheckCircle2,
         };
       default:
@@ -357,9 +469,10 @@ export function IntelligentMatchingPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="completed">已完成</SelectItem>
-                <SelectItem value="in_progress">进行中</SelectItem>
-                <SelectItem value="failed">失败</SelectItem>
+                <SelectItem value="pending">创建完成</SelectItem>
+                <SelectItem value="running">匹配中</SelectItem>
+                <SelectItem value="completed">匹配完成</SelectItem>
+                <SelectItem value="failed">匹配失败</SelectItem>
               </SelectContent>
             </Select>
 
@@ -531,7 +644,11 @@ export function IntelligentMatchingPage() {
                             size="sm"
                             className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
                             onClick={() => {
-                              console.log('删除', task.id);
+                              setTaskToDelete({
+                                id: task.id,
+                                taskId: task.taskId,
+                              });
+                              setIsDeleteConfirmOpen(true);
                             }}
                             title="删除任务"
                           >
@@ -657,9 +774,34 @@ export function IntelligentMatchingPage() {
         onBackToHome={() => {
           setIsMatchingResultModalOpen(false);
           // 刷新任务列表
-          window.location.reload();
+          loadTasks();
         }}
         taskId={currentTaskId}
+      />
+
+      {/* 删除确认对话框 */}
+      <ConfirmDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title="确认删除"
+        description={
+          taskToDelete ? (
+            <div>
+              确定要删除任务{' '}
+              <span className="font-semibold text-gray-900">
+                {taskToDelete.taskId}
+              </span>{' '}
+              吗？此操作不可恢复。
+            </div>
+          ) : (
+            ''
+          )
+        }
+        confirmText="确定"
+        cancelText="取消"
+        onConfirm={handleDeleteTask}
+        variant="destructive"
+        loading={deleting}
       />
     </div>
   );

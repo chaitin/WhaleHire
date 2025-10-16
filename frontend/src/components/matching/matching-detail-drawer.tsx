@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MatchingTaskDetail } from '@/types/matching';
 import { getMockMatchingTaskDetail } from '@/data/mockMatchingData';
+import { ReportDetailModal } from './report-detail-modal';
 
 interface MatchingDetailDrawerProps {
   open: boolean;
@@ -25,6 +26,9 @@ export function MatchingDetailDrawer({
 }: MatchingDetailDrawerProps) {
   const [taskDetail, setTaskDetail] = useState<MatchingTaskDetail | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [selectedResumeName, setSelectedResumeName] = useState<string>('');
 
   // 加载任务详情
   useEffect(() => {
@@ -238,7 +242,11 @@ export function MatchingDetailDrawer({
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
-                          onClick={() => console.log('查看报告', result.id)}
+                          onClick={() => {
+                            setSelectedResumeId(result.id);
+                            setSelectedResumeName(result.resume.name);
+                            setIsReportModalOpen(true);
+                          }}
                           title="查看报告"
                         >
                           <FileText className="h-4 w-4" />
@@ -313,6 +321,15 @@ export function MatchingDetailDrawer({
           </div>
         </div>
       </SheetContent>
+
+      {/* 报告详情模态框 */}
+      <ReportDetailModal
+        open={isReportModalOpen}
+        onOpenChange={setIsReportModalOpen}
+        taskId={taskId}
+        resumeId={selectedResumeId}
+        resumeName={selectedResumeName}
+      />
     </Sheet>
   );
 }

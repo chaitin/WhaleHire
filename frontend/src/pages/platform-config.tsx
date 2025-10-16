@@ -12,10 +12,12 @@ import {
   Loader2,
   AlertCircle,
   Wrench,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
+import { ResumeCollectionModal } from '@/components/resume-collection/ResumeCollectionModal';
 import {
   Department,
   listDepartments,
@@ -47,6 +49,10 @@ export default function PlatformConfig() {
   // 技能配置弹窗状态管理
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
   const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState(false);
+
+  // 简历收集配置弹窗状态管理
+  const [isResumeCollectionModalOpen, setIsResumeCollectionModalOpen] =
+    useState(false);
 
   // 删除确认弹窗状态
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -525,6 +531,19 @@ export default function PlatformConfig() {
     return pages;
   };
 
+  // ==================== 简历收集配置相关函数 ====================
+
+  // 打开简历收集配置弹窗
+  const handleOpenResumeCollectionModal = () => {
+    console.log('🔧 打开简历收集配置弹窗...');
+    setIsResumeCollectionModalOpen(true);
+  };
+
+  // 关闭简历收集配置弹窗
+  const handleCloseResumeCollectionModal = () => {
+    setIsResumeCollectionModalOpen(false);
+  };
+
   // 初始化数据加载
   useEffect(() => {
     fetchDepartments();
@@ -541,6 +560,9 @@ export default function PlatformConfig() {
   useEffect(() => {
     const openModal = searchParams.get('openModal');
     const openSkillModal = searchParams.get('openSkillModal');
+    const openResumeCollectionModal = searchParams.get(
+      'openResumeCollectionModal'
+    );
 
     if (openModal === 'true') {
       setIsModalOpen(true);
@@ -548,6 +570,10 @@ export default function PlatformConfig() {
 
     if (openSkillModal === 'true') {
       handleOpenSkillModal();
+    }
+
+    if (openResumeCollectionModal === 'true') {
+      handleOpenResumeCollectionModal();
     }
   }, [searchParams, handleOpenSkillModal]);
 
@@ -661,6 +687,38 @@ export default function PlatformConfig() {
               </button>
             </div>
           ) : null}
+        </div>
+      </div>
+
+      {/* 简历收集配置卡片 */}
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden">
+        {/* 卡片头部 */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-4">
+            {/* 图标容器 */}
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-purple-50">
+              <FileText className="w-4 h-4 text-purple-500" />
+            </div>
+
+            {/* 标题和描述 */}
+            <div className="flex flex-col">
+              <h3 className="text-sm font-medium text-gray-900">
+                简历收集配置
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                管理简历收集渠道和链接
+              </p>
+            </div>
+          </div>
+
+          {/* 配置按钮 */}
+          <Button
+            className="gap-2 rounded-lg px-5 py-2 shadow-sm"
+            onClick={handleOpenResumeCollectionModal}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            配置
+          </Button>
         </div>
       </div>
 
@@ -1390,6 +1448,12 @@ export default function PlatformConfig() {
         variant="destructive"
         loading={skillToDelete ? skillDeletingId === skillToDelete.id : false}
         zIndex="z-[1002]"
+      />
+
+      {/* 简历收集配置弹窗 - 使用新的模态框组件 */}
+      <ResumeCollectionModal
+        isOpen={isResumeCollectionModalOpen}
+        onClose={handleCloseResumeCollectionModal}
       />
     </div>
   );

@@ -9,6 +9,7 @@ import {
   ListScreeningTasksParams,
   DeleteScreeningTaskResp,
   GetScreeningMetricsResp,
+  GetScreeningResultResp,
 } from '@/types/screening';
 
 /**
@@ -91,5 +92,18 @@ export const getScreeningMetrics = async (
 ): Promise<GetScreeningMetricsResp> => {
   return apiGet<GetScreeningMetricsResp>(
     `/v1/screening/tasks/${taskId}/metrics`
+  );
+};
+
+/**
+ * 获取单个简历的匹配报告详情
+ * GET /api/v1/screening/tasks/{task_id}/results/{resume_id}
+ */
+export const getScreeningResult = async (
+  taskId: string,
+  resumeId: string
+): Promise<GetScreeningResultResp> => {
+  return apiGet<GetScreeningResultResp>(
+    `/v1/screening/tasks/${taskId}/results/${resumeId}`
   );
 };
