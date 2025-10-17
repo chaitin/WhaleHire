@@ -298,7 +298,7 @@ func (u *ScreeningUsecase) StartScreeningTask(ctx context.Context, req *domain.S
 // CancelScreeningTask 取消任务
 func (u *ScreeningUsecase) CancelScreeningTask(ctx context.Context, req *domain.CancelScreeningTaskReq) (*domain.CancelScreeningTaskResp, error) {
 	if req == nil || req.TaskID == uuid.Nil {
-		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID不能为空"))
+		return nil, errcode.ErrInvalidParam.WithData("message", "任务ID不能为空")
 	}
 
 	// 获取任务信息
@@ -312,7 +312,7 @@ func (u *ScreeningUsecase) CancelScreeningTask(ctx context.Context, req *domain.
 
 	// 检查任务状态，只有运行中的任务可以取消
 	if task.Status != string(consts.ScreeningTaskStatusRunning) {
-		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("只有运行中的任务可以取消，当前状态: %s", task.Status))
+		return nil, errcode.ErrInvalidParam.WithData("message", fmt.Sprintf("只有运行中的任务可以取消，当前状态: %s", task.Status))
 	}
 
 	// 调用取消函数停止正在运行的任务
@@ -370,7 +370,7 @@ func (u *ScreeningUsecase) CancelScreeningTask(ctx context.Context, req *domain.
 // DeleteScreeningTask 删除任务
 func (u *ScreeningUsecase) DeleteScreeningTask(ctx context.Context, req *domain.DeleteScreeningTaskReq) (*domain.DeleteScreeningTaskResp, error) {
 	if req == nil || req.TaskID == uuid.Nil {
-		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID不能为空"))
+		return nil, errcode.ErrInvalidParam.WithData("message", "任务ID不能为空")
 	}
 
 	// 获取任务信息
@@ -655,7 +655,7 @@ func (u *ScreeningUsecase) GetNodeRuns(ctx context.Context, req *domain.GetNodeR
 	nodeRuns, _, err := u.nodeRunRepo.List(ctx, &domain.ListNodeRunsRepoReq{ListNodeRunsReq: listReq})
 	if err != nil {
 		u.logger.Error("failed to list node runs", "error", err, "task_id", req.TaskID, "resume_id", req.ResumeID)
-		return nil, errcode.ErrInvalidParam
+		return nil, errcode.ErrInvalidParam.WithData("message", "获取节点运行记录失败")
 	}
 
 	// 转换为Key-Value格式的Agent状态映射

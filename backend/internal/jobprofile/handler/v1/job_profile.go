@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/chaitin/WhaleHire/backend/pkg/web"
@@ -60,13 +59,13 @@ func (h *JobProfileHandler) Create(c *web.Context, req domain.CreateJobProfileRe
 	// 校验请求参数中的常量值
 	if err := req.Validate(); err != nil {
 		h.logger.Error("invalid request parameters", "error", err)
-		return errcode.ErrInvalidParam.Wrap(err)
+		return errcode.ErrInvalidParam.WithData("message", err.Error())
 	}
 
 	// 获取当前用户
 	user := middleware.GetUser(c)
 	if user == nil {
-		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
+		return errcode.ErrPermission.WithData("message", "user not found")
 	}
 
 	// 设置创建者ID
@@ -101,7 +100,7 @@ func (h *JobProfileHandler) Update(c *web.Context, req domain.UpdateJobProfileRe
 	// 校验请求参数中的常量值
 	if err := req.Validate(); err != nil {
 		h.logger.Error("invalid request parameters", "error", err, "job_id", req.ID)
-		return errcode.ErrInvalidParam.Wrap(err)
+		return errcode.ErrInvalidParam.WithData("message", err.Error())
 	}
 
 	profile, err := h.usecase.Update(c.Request().Context(), &req)

@@ -66,12 +66,12 @@ func (h *ScreeningHandler) CreateTask(c *web.Context, req domain.CreateScreening
 	}
 	userID, err := uuid.Parse(user.ID)
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("当前用户ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "当前用户ID格式不正确")
 	}
 	req.CreatedBy = userID
 
 	if len(req.ResumeIDs) == 0 {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("请至少选择一份简历"))
+		return errcode.ErrInvalidParam.WithData("message", "请至少选择一份简历")
 	}
 
 	resp, err := h.usecase.CreateScreeningTask(c.Request().Context(), &req)
@@ -96,7 +96,7 @@ func (h *ScreeningHandler) CreateTask(c *web.Context, req domain.CreateScreening
 func (h *ScreeningHandler) StartTask(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 
 	resp, err := h.usecase.StartScreeningTask(c.Request().Context(), &domain.StartScreeningTaskReq{
@@ -123,7 +123,7 @@ func (h *ScreeningHandler) StartTask(c *web.Context) error {
 func (h *ScreeningHandler) CancelTask(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 
 	resp, err := h.usecase.CancelScreeningTask(c.Request().Context(), &domain.CancelScreeningTaskReq{
@@ -150,7 +150,7 @@ func (h *ScreeningHandler) CancelTask(c *web.Context) error {
 func (h *ScreeningHandler) DeleteTask(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 
 	resp, err := h.usecase.DeleteScreeningTask(c.Request().Context(), &domain.DeleteScreeningTaskReq{
@@ -178,7 +178,7 @@ func (h *ScreeningHandler) DeleteTask(c *web.Context) error {
 func (h *ScreeningHandler) GetTask(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 
 	resp, err := h.usecase.GetScreeningTask(c.Request().Context(), &domain.GetScreeningTaskReq{
@@ -270,11 +270,11 @@ func (h *ScreeningHandler) ListResults(c *web.Context, req domain.ListScreeningR
 func (h *ScreeningHandler) GetResult(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("task_id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 	resumeID, err := parseUUIDParam(c.Param("resume_id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("简历ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "简历ID格式不正确")
 	}
 
 	resp, err := h.usecase.GetScreeningResult(c.Request().Context(), &domain.GetScreeningResultReq{
@@ -302,7 +302,7 @@ func (h *ScreeningHandler) GetResult(c *web.Context) error {
 func (h *ScreeningHandler) GetTaskProgress(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 
 	resp, err := h.usecase.GetTaskProgress(c.Request().Context(), &domain.GetTaskProgressReq{
@@ -330,11 +330,11 @@ func (h *ScreeningHandler) GetTaskProgress(c *web.Context) error {
 func (h *ScreeningHandler) GetResumeProgress(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("task_id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 	resumeID, err := parseUUIDParam(c.Param("resume_id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("简历ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "简历ID格式不正确")
 	}
 
 	resp, err := h.usecase.GetResumeProgress(c.Request().Context(), &domain.GetResumeProgressReq{
@@ -362,7 +362,7 @@ func (h *ScreeningHandler) GetResumeProgress(c *web.Context) error {
 func (h *ScreeningHandler) GetMetrics(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 
 	resp, err := h.usecase.GetScreeningMetrics(c.Request().Context(), &domain.GetScreeningMetricsReq{
@@ -390,11 +390,11 @@ func (h *ScreeningHandler) GetMetrics(c *web.Context) error {
 func (h *ScreeningHandler) GetNodeRuns(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("task_id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "任务ID格式不正确")
 	}
 	resumeID, err := parseUUIDParam(c.Param("resume_id"))
 	if err != nil {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("简历ID格式不正确"))
+		return errcode.ErrInvalidParam.WithData("message", "简历ID格式不正确")
 	}
 
 	resp, err := h.usecase.GetNodeRuns(c.Request().Context(), &domain.GetNodeRunsReq{

@@ -36,10 +36,10 @@ func (u *AuditUsecase) List(ctx context.Context, req *domain.ListAuditLogReq) (*
 	}
 
 	// 时间范围验证
-	if req.StartTime != nil && req.StartTime.Time != nil && 
-	   req.EndTime != nil && req.EndTime.Time != nil && 
-	   req.StartTime.Time.After(*req.EndTime.Time) {
-		return nil, errcode.ErrInvalidParam.WithData("field", "start_time", "message", "开始时间不能晚于结束时间")
+	if req.StartTime != nil && req.StartTime.Time != nil &&
+		req.EndTime != nil && req.EndTime.Time != nil &&
+		req.StartTime.Time.After(*req.EndTime.Time) {
+		return nil, errcode.ErrInvalidParam.WithData("message", "开始时间不能晚于结束时间")
 	}
 
 	logs, pageInfo, err := u.repo.List(ctx, req)
@@ -57,7 +57,7 @@ func (u *AuditUsecase) List(ctx context.Context, req *domain.ListAuditLogReq) (*
 // GetByID 根据ID获取审计日志详情
 func (u *AuditUsecase) GetByID(ctx context.Context, id string) (*domain.AuditLog, error) {
 	if id == "" {
-		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("审计日志ID不能为空"))
+		return nil, errcode.ErrInvalidParam.WithData("message", "审计日志ID不能为空")
 	}
 
 	log, err := u.repo.GetByID(ctx, id)
@@ -73,7 +73,7 @@ func (u *AuditUsecase) GetByID(ctx context.Context, id string) (*domain.AuditLog
 func (u *AuditUsecase) GetStats(ctx context.Context, req *domain.AuditStatsReq) (*domain.AuditStatsResp, error) {
 	// 参数验证
 	if req.StartTime != nil && req.EndTime != nil && req.StartTime.After(*req.EndTime) {
-		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("开始时间不能晚于结束时间"))
+		return nil, errcode.ErrInvalidParam.WithData("message", "开始时间不能晚于结束时间")
 	}
 
 	// 如果没有指定时间范围，默认查询最近7天
@@ -97,14 +97,14 @@ func (u *AuditUsecase) GetStats(ctx context.Context, req *domain.AuditStatsReq) 
 // Delete 删除审计日志（软删除）
 func (u *AuditUsecase) Delete(ctx context.Context, id string) error {
 	if id == "" {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("审计日志ID不能为空"))
+		return errcode.ErrInvalidParam.WithData("message", "审计日志ID不能为空")
 	}
 
 	// 检查日志是否存在
 	_, err := u.repo.GetByID(ctx, id)
 	if err != nil {
 		u.logger.With("error", err).With("id", id).Error("audit log not found for deletion")
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("审计日志不存在"))
+		return errcode.ErrInvalidParam.WithData("message", "审计日志不存在")
 	}
 
 	err = u.repo.Delete(ctx, id)
@@ -120,17 +120,17 @@ func (u *AuditUsecase) Delete(ctx context.Context, id string) error {
 // BatchDelete 批量删除审计日志
 func (u *AuditUsecase) BatchDelete(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("删除ID列表不能为空"))
+		return errcode.ErrInvalidParam.WithData("message", "删除ID列表不能为空")
 	}
 
 	if len(ids) > 100 {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("批量删除数量不能超过100条"))
+		return errcode.ErrInvalidParam.WithData("message", "批量删除数量不能超过100条")
 	}
 
 	// 验证所有ID格式
 	for _, id := range ids {
 		if id == "" {
-			return errcode.ErrInvalidParam.Wrap(fmt.Errorf("审计日志ID不能为空"))
+			return errcode.ErrInvalidParam.WithData("message", "审计日志ID不能为空")
 		}
 	}
 
@@ -147,11 +147,11 @@ func (u *AuditUsecase) BatchDelete(ctx context.Context, ids []string) error {
 // CleanupOldLogs 清理过期的审计日志
 func (u *AuditUsecase) CleanupOldLogs(ctx context.Context, days int) error {
 	if days <= 0 {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("清理天数必须大于0"))
+		return errcode.ErrInvalidParam.WithData("message", "清理天数必须大于0")
 	}
 
 	if days < 30 {
-		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("为了数据安全，清理天数不能少于30天"))
+		return errcode.ErrInvalidParam.WithData("message", "为了数据安全，清理天数不能少于30天")
 	}
 
 	err := u.repo.CleanupOldLogs(ctx, days)
@@ -167,7 +167,7 @@ func (u *AuditUsecase) CleanupOldLogs(ctx context.Context, days int) error {
 // GetOperationSummary 获取操作摘要统计
 func (u *AuditUsecase) GetOperationSummary(ctx context.Context, operatorID string, days int) (*domain.OperationSummary, error) {
 	if operatorID == "" {
-		return nil, errcode.ErrInvalidParam.Wrap(fmt.Errorf("操作者ID不能为空"))
+		return nil, errcode.ErrInvalidParam.WithData("message", "操作者ID不能为空")
 	}
 
 	if days <= 0 || days > 365 {
