@@ -581,7 +581,7 @@ export default function PlatformConfig() {
     <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6">
       {/* 页面标题 */}
       <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-gray-900">平台配置</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">基础功能配置</h1>
       </div>
 
       {/* 所属部门配置卡片 */}
@@ -719,6 +719,11 @@ export default function PlatformConfig() {
             <Settings className="w-3.5 h-3.5" />
             配置
           </Button>
+        </div>
+
+        {/* 卡片底部状态信息 */}
+        <div className="px-6 py-5">
+          {/* 此卡片目前无加载/错误状态，预留占位以统一布局 */}
         </div>
       </div>
 
@@ -924,7 +929,7 @@ export default function PlatformConfig() {
                           className={cn(
                             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                             page === currentPage &&
-                              'border-[#10B981] bg-[#10B981] text-white'
+                              'border-[#36CFC9] bg-[#36CFC9] text-white'
                           )}
                         >
                           {page}
@@ -1303,7 +1308,7 @@ export default function PlatformConfig() {
                           className={cn(
                             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                             page === skillCurrentPage &&
-                              'border-[#10B981] bg-[#10B981] text-white'
+                              'border-[#36CFC9] bg-[#36CFC9] text-white'
                           )}
                         >
                           {page}

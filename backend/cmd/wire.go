@@ -12,6 +12,7 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
+	auditV1 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
 	departmentV1 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
 	fileV1 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
 	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
@@ -35,6 +36,7 @@ type Server struct {
 	departmentV1     *departmentV1.DepartmentHandler
 	jobapplicationV1 *jobapplicationV1.JobApplicationHandler
 	screeningV1      *screeningV1.ScreeningHandler
+	auditV1          *auditV1.AuditHandler
 	fileV1           *fileV1.FileHandler
 	version          *version.VersionInfo
 }

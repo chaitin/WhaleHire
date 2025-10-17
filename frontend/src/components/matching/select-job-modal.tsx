@@ -242,7 +242,7 @@ export function SelectJobModal({
                       className={cn(
                         'text-sm text-center',
                         step.active
-                          ? 'text-[#10B981] font-semibold'
+                          ? 'text-[#36CFC9] font-semibold'
                           : 'text-[#666666]'
                       )}
                     >

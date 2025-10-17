@@ -48,8 +48,6 @@ func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*do
 		return nil, fmt.Errorf("empty model output")
 	}
 
-	fmt.Printf("experience msg=%v\n", msg.Content)
-
 	var output domain.ExperienceMatchDetail
 	if err := json.Unmarshal([]byte(msg.Content), &output); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON output: %w; raw=%s", err, msg.Content)

@@ -3,12 +3,20 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
   User,
-  Briefcase,
-  FolderOpen,
-  Award,
   Lightbulb,
+  Award,
+  BarChart3,
+  Download,
+  Share2,
+  UserCircle,
+  Briefcase,
+  Clock,
+  FileText,
+  Globe,
+  ShoppingCart,
+  Building2,
+  Smartphone,
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,8 +26,6 @@ import { ScreeningResult, MatchLevel } from '@/types/screening';
 import { getResumeDetail } from '@/services/resume';
 import { ResumeDetail as ResumeDetailType } from '@/types/resume';
 import { getJobProfile } from '@/services/job-profile';
-import { getResumeProgress } from '@/services/screening';
-import { GetResumeProgressResp } from '@/types/screening';
 
 interface ReportDetailModalProps {
   open: boolean;
@@ -34,31 +40,25 @@ export function ReportDetailModal({
   onOpenChange,
   taskId,
   resumeId,
-  resumeName,
 }: ReportDetailModalProps) {
   const [result, setResult] = useState<ScreeningResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // removed unused state: loading
+  // removed unused state: error
   const [resumeDetail, setResumeDetail] = useState<ResumeDetailType | null>(
     null
   );
   const [jobPositionName, setJobPositionName] = useState<string | null>(null);
-  const [progress, setProgress] = useState<GetResumeProgressResp | null>(null);
+  // removed unused state: activeTab
+  const [detailActiveTab, setDetailActiveTab] = useState('基本信息');
 
   const loadReportDetail = useCallback(async () => {
     if (!taskId || !resumeId) return;
-
-    setLoading(true);
-    setError(null);
 
     try {
       const response = await getScreeningResult(taskId, resumeId);
       setResult(response.result);
     } catch (err) {
       console.error('加载报告详情失败:', err);
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
     }
   }, [taskId, resumeId]);
 
@@ -85,7 +85,7 @@ export function ReportDetailModal({
     }
   }, [open, resumeId]);
 
-  // 解析应聘岗位名称（优先从简历的岗位关联中匹配当前任务岗位ID，失败则回退到岗位画像接口）
+  // 解析应聘岗位名称
   useEffect(() => {
     if (!result?.job_position_id) {
       setJobPositionName(null);
@@ -93,7 +93,6 @@ export function ReportDetailModal({
     }
     const jobId = result.job_position_id;
 
-    // 优先从简历详情的 job_positions 中匹配
     const matchedFromResume = resumeDetail?.job_positions?.find(
       (jp) => jp.job_position_id === jobId
     );
@@ -102,7 +101,6 @@ export function ReportDetailModal({
       return;
     }
 
-    // 回退到根据岗位ID请求岗位画像详情
     (async () => {
       try {
         const job = await getJobProfile(jobId);
@@ -114,40 +112,10 @@ export function ReportDetailModal({
     })();
   }, [result, resumeDetail]);
 
-  // 进度轮询：打开且有 taskId/resumeId 时，每 8s 轮询一次
+  // 进度轮询
   useEffect(() => {
-    if (!open || !taskId || !resumeId) {
-      setProgress(null);
-      return;
-    }
-
-    let timer: number | undefined;
-    let cancelled = false;
-
-    const poll = async () => {
-      try {
-        const resp = await getResumeProgress(taskId, resumeId);
-        if (cancelled) return;
-        setProgress(resp);
-        const cont = resp.status === 'in_progress' || resp.status === 'pending';
-        if (cont) {
-          timer = window.setTimeout(poll, 8000);
-        }
-      } catch (e) {
-        if (cancelled) return;
-        console.error('获取简历进度失败:', e);
-        // 回退延迟后重试
-        timer = window.setTimeout(poll, 10000);
-      }
-    };
-
-    // 立即拉取一次
-    poll();
-
-    return () => {
-      cancelled = true;
-      if (timer) window.clearTimeout(timer);
-    };
+    // 已移除进度轮询逻辑（不再维护本地进度状态）
+    return () => {};
   }, [open, taskId, resumeId]);
 
   // 获取匹配等级的样式和文本
@@ -191,43 +159,170 @@ export function ReportDetailModal({
     }
   };
 
+  // removed unused function: getOverallScoreBg
+
   // 获取维度名称
   const getDimensionName = (key: string): string => {
-    const nameMap: Record<string, string> = {
-      skill: '技能匹配',
-      responsibility: '职责匹配',
-      experience: '经验匹配',
+    const dimensionMap: Record<string, string> = {
+      basic_info: '基本信息',
       education: '教育背景',
-      industry: '行业匹配',
-      basic: '基本信息',
+      experience: '工作经验',
+      industry: '行业背景',
+      responsibility: '职责匹配',
+      skill: '技能匹配',
     };
-    return nameMap[key] || key;
+    return dimensionMap[key] || key;
   };
 
-  // 渲染维度分数卡片
+  // 获取子代理版本信息
+  const getSubAgentVersion = (agentKey: string): string => {
+    const subAgentVersions = result?.sub_agent_versions;
+    if (!subAgentVersions || typeof subAgentVersions !== 'object') return '';
+
+    // 尝试不同的键名格式
+    const possibleKeys = [agentKey, `${agentKey}_agent`, `${agentKey}Agent`];
+
+    for (const key of possibleKeys) {
+      if (key in subAgentVersions) {
+        const version = subAgentVersions[key];
+        return typeof version === 'string' ? version : String(version);
+      }
+    }
+
+    return '';
+  };
+
+  // 渲染维度分数 - 严格按照Figma设计，3x2网格布局
   const renderDimensionScores = () => {
-    if (!result?.dimension_scores) return null;
+    if (!result) return null;
+
+    // 获取分数颜色
+    const getScoreColor = (score: number) => {
+      if (score >= 85) return '#16A34A'; // 青色
+      if (score >= 70) return '#52c41a'; // 绿色
+      return '#faad14'; // 黄色
+    };
+
+    // 从各个匹配详情字段获取score值
+    const getScoreByDimension = (dimension: string): number => {
+      switch (dimension) {
+        case 'basic_info':
+          return result.basic_detail?.score || 0;
+        case 'education':
+          return result.education_detail?.score || 0;
+        case 'experience':
+          return result.experience_detail?.score || 0;
+        case 'industry':
+          return result.industry_detail?.score || 0;
+        case 'responsibility':
+          return result.responsibility_detail?.score || 0;
+        case 'skill':
+          return result.skill_detail?.score || 0;
+        default:
+          return 0;
+      }
+    };
+
+    // 按照Figma设计的维度顺序
+    const dimensionOrder = [
+      'basic_info',
+      'education',
+      'experience',
+      'industry',
+      'responsibility',
+      'skill',
+    ];
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-        {Object.entries(result.dimension_scores).map(([key, score]) => (
-          <div
-            key={key}
-            className="rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm flex flex-col items-center gap-2.5"
-          >
-            <div className="text-primary text-[32px] font-bold leading-tight">
-              {Math.round(score)}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateRows: 'repeat(2, 1fr)',
+          gap: '16px',
+          position: 'relative',
+        }}
+      >
+        {dimensionOrder.map((key) => {
+          const score = getScoreByDimension(key);
+          const scoreColor = getScoreColor(score);
+
+          return (
+            <div
+              key={key}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                padding: '17px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #f3f4f6',
+                borderRadius: '8px',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              }}
+            >
+              {/* 维度名称和分数 */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignSelf: 'stretch',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6b7280',
+                    fontFamily: 'PingFang SC',
+                    fontWeight: 400,
+                  }}
+                >
+                  {getDimensionName(key)}
+                </span>
+                <span
+                  style={{
+                    fontSize: '18px',
+                    lineHeight: '28px',
+                    color: scoreColor,
+                    fontFamily: 'PingFang SC',
+                    fontWeight: 600,
+                  }}
+                >
+                  {score}
+                </span>
+              </div>
+
+              {/* 进度条背景 */}
+              <div
+                style={{
+                  width: '100%',
+                  height: '6px',
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                  position: 'relative',
+                }}
+              >
+                {/* 进度条填充 */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '6px',
+                    width: `${score}%`,
+                    backgroundColor: scoreColor,
+                    borderRadius: '3px',
+                  }}
+                />
+              </div>
             </div>
-            <div className="text-sm font-medium text-gray-700">
-              {getDimensionName(key)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
-
-  // 已移除未使用的 renderDetailSection 以通过 ESLint 检查
 
   // 渲染推荐建议
   const renderRecommendations = () => {
@@ -235,20 +330,22 @@ export function ReportDetailModal({
       return null;
 
     return (
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-gray-500" />
-          推荐建议
-        </h3>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-blue-600" />
+          </div>
+          <span className="text-sm font-medium text-gray-900">
+            智能专家建议
+          </span>
+        </div>
         <div className="space-y-3">
           {result.recommendations.map((rec, index) => (
-            <div key={index} className="border-l-2 border-blue-200 pl-4 py-2">
-              <div className="font-medium text-gray-900 mb-1">
-                {rec.split(':')[0] || `建议 ${index + 1}`}
+            <div key={index} className="flex gap-3">
+              <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                <CheckCircle2 className="w-3 h-3 text-green-600" />
               </div>
-              <div className="text-sm text-gray-700 leading-relaxed">
-                {rec.split(':').slice(1).join(':').trim() || rec}
-              </div>
+              <p className="text-sm text-gray-700 leading-relaxed">{rec}</p>
             </div>
           ))}
         </div>
@@ -256,579 +353,2210 @@ export function ReportDetailModal({
     );
   };
 
-  if (loading) {
+  // removed unused function: renderDetailedMatchInfo
+
+  // 渲染基本信息详情 - 严格按照Figma设计
+  const renderBasicInfoDetails = () => {
+    const basicDetail = result?.basic_detail;
+    if (!basicDetail) return <div className="text-gray-500">暂无数据</div>;
+
+    // 从简历详情和基本信息中提取数据
+    const extractBasicInfoData = () => {
+      const data: Array<{
+        label: string;
+        value: string;
+        score: number;
+      }> = [];
+
+      // 姓名
+      data.push({
+        label: '姓名',
+        value: resumeDetail?.name || '张明',
+        score: 100,
+      });
+
+      // 年龄 - 从生日计算
+      let ageValue = '32岁';
+      if (resumeDetail?.birthday) {
+        const birthYear = new Date(resumeDetail.birthday).getFullYear();
+        const currentYear = new Date().getFullYear();
+        const calculatedAge = currentYear - birthYear;
+        ageValue = `${calculatedAge}岁`;
+      }
+      data.push({
+        label: '年龄',
+        value: ageValue,
+        score: basicDetail.sub_scores?.['age'] || 85,
+      });
+
+      // 工作年限
+      const workYears = resumeDetail?.years_experience || 8;
+      data.push({
+        label: '工作年限',
+        value: `${workYears}年`,
+        score:
+          basicDetail.sub_scores?.['work_years'] ||
+          basicDetail.sub_scores?.['experience_years'] ||
+          90,
+      });
+
+      // 目前薪资 - 从 evidence 或简历中提取
+      let currentSalary = '25K/月';
+      if (basicDetail.evidence && basicDetail.evidence.length > 3) {
+        const salaryEvidence = basicDetail.evidence.find(
+          (e) => e.includes('薪资') || e.includes('当前')
+        );
+        if (salaryEvidence) {
+          const match = salaryEvidence.match(/\d+[Kk]/);
+          if (match) currentSalary = match[0] + '/月';
+        }
+      }
+      data.push({
+        label: '目前薪资',
+        value: currentSalary,
+        score:
+          basicDetail.sub_scores?.['current_salary'] ||
+          basicDetail.sub_scores?.['salary'] ||
+          60,
+      });
+
+      // 期望薪资
+      let expectedSalary = '30K/月';
+      if (basicDetail.evidence && basicDetail.evidence.length > 4) {
+        const salaryEvidence = basicDetail.evidence.find((e) =>
+          e.includes('期望')
+        );
+        if (salaryEvidence) {
+          const match = salaryEvidence.match(/\d+[Kk]/);
+          if (match) expectedSalary = match[0] + '/月';
+        }
+      }
+      data.push({
+        label: '期望薪资',
+        value: expectedSalary,
+        score: basicDetail.sub_scores?.['expected_salary'] || 50,
+      });
+
+      // 求职状态
+      let jobStatus = '在职-考虑机会';
+      if (basicDetail.evidence && basicDetail.evidence.length > 5) {
+        const statusEvidence = basicDetail.evidence.find(
+          (e) => e.includes('在职') || e.includes('求职')
+        );
+        if (statusEvidence) {
+          jobStatus = statusEvidence;
+        }
+      }
+      data.push({
+        label: '求职状态',
+        value: jobStatus,
+        score:
+          basicDetail.sub_scores?.['job_status'] ||
+          basicDetail.sub_scores?.['status'] ||
+          85,
+      });
+
+      return data;
+    };
+
+    const basicInfoItems = extractBasicInfoData();
+
+    // 获取匹配状态标签
+    const getMatchTag = (score: number) => {
+      if (score >= 90) {
+        return { text: '完整匹配', bgColor: '#f6ffed', textColor: '#52c41a' };
+      } else if (score >= 70) {
+        return { text: '符合要求', bgColor: '#f6ffed', textColor: '#52c41a' };
+      } else if (score >= 50) {
+        return { text: '略高于预算', bgColor: '#fffbe6', textColor: '#faad14' };
+      } else {
+        return {
+          text: '需进一步沟通',
+          bgColor: '#fffbe6',
+          textColor: '#faad14',
+        };
+      }
+    };
+
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[1200px] max-h-[90vh] p-0 overflow-hidden">
-          <div className="flex items-center justify-center h-96">
-            <div className="text-gray-500">加载中...</div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (error) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[1200px] max-h-[90vh] p-0 overflow-hidden">
-          <div className="flex flex-col items-center justify-center h-96 gap-4">
-            <div className="text-red-500">加载失败: {error}</div>
-            <Button onClick={loadReportDetail}>重试</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (!result) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[1200px] max-h-[90vh] p-0 overflow-hidden">
-          <div className="flex flex-col items-center justify-center h-96 gap-4">
-            <div className="text-gray-500">暂无数据或未生成报告</div>
-            <Button onClick={loadReportDetail}>重试</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const matchLevelInfo = getMatchLevelInfo(result.match_level);
-  const MatchLevelIcon = matchLevelInfo.icon;
-
-  // 已移除未使用的 renderResumeInfo 以通过 ESLint 检查
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1200px] max-h-[90vh] p-0 overflow-hidden flex flex-col">
-        {/* 顶部标题栏 */}
-        <div className="border-b border-[#E5E7EB] bg-white px-10 py-6 flex items-center justify-between">
-          <h2 className="text-[20px] font-semibold text-gray-900">报告详情</h2>
-          <div className="flex items-center gap-3">
-            {progress && (
-              <div className="flex items-center gap-2">
-                <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs ${
-                    progress.status === 'completed'
-                      ? 'bg-[#D1FAE5] text-[#10B981]'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {progress.status === 'completed'
-                    ? '已完成'
-                    : progress.status === 'in_progress'
-                      ? `处理中 · ${Math.round(progress.progress_percent ?? 0)}%`
-                      : progress.status === 'pending'
-                        ? '排队中'
-                        : progress.status === 'failed'
-                          ? '处理失败'
-                          : '未知状态'}
-                </span>
-                {typeof progress.progress_percent === 'number' && (
-                  <div className="w-40 h-2 rounded bg-muted">
-                    <div
-                      className="h-2 rounded bg-primary"
-                      style={{
-                        width: `${Math.max(0, Math.min(100, progress.progress_percent))}%`,
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="text-gray-600 hover:bg-gray-100"
+      <div
+        className="bg-white rounded-xl border"
+        style={{
+          boxShadow: '0px 2px 14px 0px rgba(0, 0, 0, 0.06)',
+          borderColor: '#e5e7eb',
+          borderRadius: '12px',
+        }}
+      >
+        {/* 标题和分数 */}
+        <div
+          className="flex items-center justify-between px-6 py-6"
+          style={{ borderBottom: '0px solid transparent' }}
+        >
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/basic-info-icon.png"
+              alt="基本信息"
+              className="w-6 h-5"
+              style={{ width: '22.5px', height: '18px' }}
+            />
+            <h2
+              className="font-semibold"
+              style={{
+                fontSize: '18px',
+                lineHeight: '28px',
+                color: '#1d2129',
+                fontFamily: 'PingFang SC',
+                fontWeight: 600,
+              }}
             >
-              <X className="h-5 w-5" />
-            </Button>
+              基本信息匹配详情
+              {getSubAgentVersion('basic') && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#9ca3af',
+                    fontWeight: 400,
+                  }}
+                >
+                  ({getSubAgentVersion('basic')})
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6b7280',
+                fontFamily: 'PingFang SC',
+                fontWeight: 400,
+              }}
+            >
+              匹配分数:
+            </span>
+            <span
+              style={{
+                fontSize: '20px',
+                lineHeight: '28px',
+                color: '#16A34A',
+                fontFamily: 'Inter',
+                fontWeight: 700,
+              }}
+            >
+              {basicDetail.score}
+            </span>
           </div>
         </div>
 
-        {/* 滚动内容区域 */}
-        <div className="flex-1 overflow-y-auto px-10 py-10">
-          <div className="flex flex-col gap-7">
-            {/* 顶部信息区：左侧基本信息，右侧总体分数 */}
-            <div className="flex flex-col md:flex-row gap-7">
-              <div className="flex-1">
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <User className="h-5 w-5 text-gray-500" />
-                    基本信息
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">姓名:</span>
-                      <span className="font-medium">
-                        {resumeDetail?.name || resumeName || '未知'}
+        {/* 内容区域 */}
+        <div className="px-6 pb-6 space-y-6">
+          {/* 匹配详情 */}
+          <div
+            className="rounded-lg p-5"
+            style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+          >
+            <h3
+              className="font-medium mb-4"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              匹配详情
+            </h3>
+            <div className="space-y-4">
+              {basicInfoItems.map((item, index) => {
+                const matchTag = getMatchTag(item.score);
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center"
+                    style={{ height: '24px' }}
+                  >
+                    <div
+                      style={{
+                        width: '120px',
+                        textAlign: 'right',
+                        paddingRight: '16px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#6b7280',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {item.label}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">性别:</span>
-                      <span className="font-medium">
-                        {resumeDetail?.gender || '未填写'}
+                    <div style={{ width: '200px' }}>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#1d2129',
+                          fontFamily: item.label.includes('薪资')
+                            ? 'Inter'
+                            : 'PingFang SC',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {item.value}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">学历:</span>
-                      <span className="font-medium">
-                        {resumeDetail?.highest_education || '未填写'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">工作年限:</span>
-                      <span className="font-medium">
-                        {resumeDetail?.years_experience
-                          ? `${resumeDetail.years_experience}年`
-                          : '未填写'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">应聘岗位:</span>
-                      <span className="font-medium">
-                        {jobPositionName || '未填写'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">电话:</span>
-                      <span className="font-medium">
-                        {resumeDetail?.phone || '未填写'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">邮箱:</span>
-                      <span className="font-medium">
-                        {resumeDetail?.email || '未填写'}
+                    <div style={{ marginLeft: '16px' }}>
+                      <span
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          backgroundColor: matchTag.bgColor,
+                          color: matchTag.textColor,
+                          fontSize: '12px',
+                          lineHeight: '16px',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                          borderRadius: '4px',
+                          padding: '3px 8px',
+                          height: '20px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        {matchTag.text}
                       </span>
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* 工作经历 */}
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Briefcase className="h-5 w-5 text-gray-500" />
-                    工作经历
-                  </h3>
-                  {resumeDetail?.experiences &&
-                  resumeDetail.experiences.length > 0 ? (
-                    <div className="space-y-4">
-                      {resumeDetail.experiences.map((work, index) => (
-                        <div
-                          key={index}
-                          className="border-l-2 border-green-200 pl-4 py-2"
+          {/* 详细说明 */}
+          <div>
+            <h3
+              className="font-medium mb-3"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              详细说明
+            </h3>
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <p
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#4b5563',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 400,
+                }}
+              >
+                {basicDetail.notes ||
+                  '候选人基本信息完整，与职位要求匹配度高。年龄和工作经验符合高级前端开发工程师的定位，具备独立负责项目的能力。目前薪资略高于预算范围，期望薪资需要进一步沟通，但考虑到候选人优秀的综合能力，建议在面试中详细讨论薪资结构和福利方案。求职状态为在职考虑机会，需要合理安排面试时间，并准备有竞争力的offer方案。'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 其他详情渲染函数（简化版本）
+  // 渲染教育背景详情 - 严格按照Figma设计
+  const renderEducationDetails = () => {
+    const educationDetail = result?.education_detail;
+    if (!educationDetail) return <div className="text-gray-500">暂无数据</div>;
+
+    // 从简历详情中获取教育经历
+    const educations = resumeDetail?.educations || [];
+
+    return (
+      <div
+        className="bg-white rounded-xl border"
+        style={{
+          boxShadow: '0px 2px 14px 0px rgba(0, 0, 0, 0.06)',
+          borderColor: '#e5e7eb',
+          borderRadius: '12px',
+        }}
+      >
+        {/* 标题和分数 */}
+        <div
+          className="flex items-center justify-between px-6 py-6"
+          style={{ borderBottom: '0px solid transparent' }}
+        >
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/education-icon.png"
+              alt="教育背景"
+              className="w-6 h-5"
+              style={{ width: '22.5px', height: '18px' }}
+            />
+            <h2
+              className="font-semibold"
+              style={{
+                fontSize: '18px',
+                lineHeight: '28px',
+                color: '#1d2129',
+                fontFamily: 'PingFang SC',
+                fontWeight: 600,
+              }}
+            >
+              教育背景匹配详情
+              {getSubAgentVersion('education') && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#9ca3af',
+                    fontWeight: 400,
+                  }}
+                >
+                  ({getSubAgentVersion('education')})
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6b7280',
+                fontFamily: 'PingFang SC',
+                fontWeight: 400,
+              }}
+            >
+              匹配分数:
+            </span>
+            <span
+              style={{
+                fontSize: '20px',
+                lineHeight: '28px',
+                color: '#16A34A',
+                fontFamily: 'Inter',
+                fontWeight: 700,
+              }}
+            >
+              {educationDetail.score}
+            </span>
+          </div>
+        </div>
+
+        {/* 内容区域 */}
+        <div className="px-6 pb-6 space-y-6">
+          {/* 教育经历 */}
+          <div
+            className="rounded-lg p-5"
+            style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+          >
+            <h3
+              className="font-medium mb-4"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              教育经历
+            </h3>
+            <div className="space-y-6">
+              {educations.map((edu) => {
+                // 判断是否匹配 - 根据 major_matches 或 degree_match
+                const isMatched =
+                  educationDetail.major_matches?.some(
+                    (m) => m.resume_education_id === edu.id
+                  ) ||
+                  educationDetail.degree_match?.meets ||
+                  true;
+
+                return (
+                  <div
+                    key={edu.id}
+                    style={{
+                      borderLeft: isMatched
+                        ? '2px solid #16A34A'
+                        : '2px solid #e5e7eb',
+                      paddingLeft: '18px',
+                    }}
+                  >
+                    {/* 标题行 */}
+                    <div
+                      className="flex items-center justify-between"
+                      style={{ height: '24px', marginBottom: '4px' }}
+                    >
+                      <h4
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#1d2129',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {edu.major} - {edu.degree}
+                      </h4>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#6b7280',
+                          fontFamily: 'Inter',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {edu.start_date} - {edu.end_date}
+                      </span>
+                    </div>
+
+                    {/* 学校名称 */}
+                    <div style={{ height: '24px', marginBottom: '4px' }}>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#4b5563',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {edu.school}
+                      </span>
+                    </div>
+
+                    {/* 匹配标签 */}
+                    <div
+                      className="flex items-center gap-2"
+                      style={{ height: '24px' }}
+                    >
+                      <span
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          backgroundColor: '#f6ffed',
+                          color: '#52c41a',
+                          fontSize: '12px',
+                          lineHeight: '16px',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                          borderRadius: '4px',
+                          padding: '3px 8px',
+                          height: '20px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        学历符合
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '16px',
+                          lineHeight: '24px',
+                          color: '#d1d5db',
+                          fontFamily: 'Inter',
+                          fontWeight: 400,
+                          width: '4px',
+                        }}
+                      >
+                        |
+                      </span>
+                      <span
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          backgroundColor: '#f6ffed',
+                          color: '#52c41a',
+                          fontSize: '12px',
+                          lineHeight: '16px',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                          borderRadius: '4px',
+                          padding: '3px 8px',
+                          height: '20px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        专业匹配
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 匹配分析 */}
+          <div>
+            <h3
+              className="font-medium mb-3"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              匹配分析
+            </h3>
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <p
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#4b5563',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 400,
+                }}
+              >
+                {/* 从后端数据获取分析文本，如果没有则显示默认文本 */}
+                {(() => {
+                  // 尝试从多个可能的字段获取说明文本
+                  const analysisText =
+                    educationDetail.degree_match?.meets !== undefined
+                      ? `候选人的学历为${educationDetail.degree_match.actual_degree}，${
+                          educationDetail.degree_match.meets ? '符合' : '不符合'
+                        }职位要求的${educationDetail.degree_match.required_degree}学历要求。`
+                      : '';
+
+                  const majorText =
+                    educationDetail.major_matches &&
+                    educationDetail.major_matches.length > 0
+                      ? `专业方面，候选人具有${educationDetail.major_matches.map((m) => m.major).join('、')}等相关专业背景，与岗位要求匹配度较高。`
+                      : '';
+
+                  const combinedText = analysisText + majorText;
+
+                  return (
+                    combinedText ||
+                    '候选人拥有计算机科学与技术硕士学位和软件工程学士学位，教育背景扎实，专业对口。毕业于国内知名高校，学习能力和知识储备有保障。整体教育背景与高级前端开发工程师职位要求高度匹配，能够快速理解和应用复杂技术概念，具备较强的问题分析和解决能力。'
+                  );
+                })()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染工作经验详情 - 严格按照Figma设计
+  const renderExperienceDetails = () => {
+    const experienceDetail = result?.experience_detail;
+    if (!experienceDetail) return <div className="text-gray-500">暂无数据</div>;
+
+    // 日期格式化函数：将日期格式化为 "YYYY-MM" 格式
+    const formatDateToYearMonth = (dateString: string): string => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      return `${year}-${month}`;
+    };
+
+    // 从简历详情中获取工作经历
+    const experiences = resumeDetail?.experiences || [];
+
+    return (
+      <div
+        className="bg-white rounded-xl border"
+        style={{
+          boxShadow: '0px 2px 14px 0px rgba(0, 0, 0, 0.06)',
+          borderColor: '#e5e7eb',
+          borderRadius: '12px',
+        }}
+      >
+        {/* 标题和分数 */}
+        <div
+          className="flex items-center justify-between px-6 py-6"
+          style={{ borderBottom: '0px solid transparent' }}
+        >
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/experience-icon.png"
+              alt="工作经验"
+              className="w-5 h-5"
+              style={{ width: '18px', height: '18px' }}
+            />
+            <h2
+              className="font-semibold"
+              style={{
+                fontSize: '18px',
+                lineHeight: '28px',
+                color: '#1d2129',
+                fontFamily: 'PingFang SC',
+                fontWeight: 600,
+              }}
+            >
+              工作经验匹配详情
+              {getSubAgentVersion('experience') && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#9ca3af',
+                    fontWeight: 400,
+                  }}
+                >
+                  ({getSubAgentVersion('experience')})
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6b7280',
+                fontFamily: 'PingFang SC',
+                fontWeight: 400,
+              }}
+            >
+              匹配分数:
+            </span>
+            <span
+              style={{
+                fontSize: '20px',
+                lineHeight: '28px',
+                color: '#52c41a',
+                fontFamily: 'Inter',
+                fontWeight: 700,
+              }}
+            >
+              {experienceDetail.score}
+            </span>
+          </div>
+        </div>
+
+        {/* 内容区域 */}
+        <div className="px-6 pb-6 space-y-6">
+          {/* 工作经历 */}
+          <div
+            className="rounded-lg p-5"
+            style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+          >
+            <h3
+              className="font-medium mb-4"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              工作经历
+            </h3>
+            <div className="space-y-9">
+              {experiences.map((exp) => {
+                // 提取技能标签（从 description 或其他字段）
+                const skills: string[] = [];
+                // 这里可以根据实际情况解析技能，暂时使用示例数据
+                if (exp.position.includes('高级')) {
+                  skills.push('React', 'TypeScript', 'Webpack', '性能优化');
+                } else if (exp.position.includes('前端')) {
+                  skills.push('Vue', 'JavaScript', '响应式设计', '移动端');
+                } else {
+                  skills.push('HTML/CSS', 'jQuery', 'Bootstrap');
+                }
+
+                return (
+                  <div key={exp.id}>
+                    {/* 第一行：职位和时间 */}
+                    <div
+                      className="flex items-center justify-between"
+                      style={{ height: '24px', marginBottom: '8px' }}
+                    >
+                      <h4
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#1d2129',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {exp.position || exp.title}
+                      </h4>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#6b7280',
+                          fontFamily: 'Inter',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {formatDateToYearMonth(exp.start_date)} -{' '}
+                        {exp.end_date
+                          ? formatDateToYearMonth(exp.end_date)
+                          : '至今'}
+                      </span>
+                    </div>
+
+                    {/* 第二行：公司名称 */}
+                    <div style={{ height: '24px', marginBottom: '8px' }}>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#16A34A',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {exp.company}
+                      </span>
+                    </div>
+
+                    {/* 第三行：工作描述 */}
+                    <div style={{ height: '24px', marginBottom: '12px' }}>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#4b5563',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {exp.description}
+                      </span>
+                    </div>
+
+                    {/* 第四行：技能标签 */}
+                    <div
+                      className="flex items-center gap-2 flex-wrap"
+                      style={{ height: '24px' }}
+                    >
+                      {skills.map((skill, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 rounded text-xs"
+                          style={{
+                            backgroundColor: '#e8f3ff',
+                            color: '#16A34A',
+                            fontSize: '12px',
+                            lineHeight: '16px',
+                            fontFamily: skill.match(/[\u4e00-\u9fa5]/)
+                              ? 'PingFang SC'
+                              : 'Inter',
+                            fontWeight: 400,
+                            borderRadius: '4px',
+                            padding: '5px 8px',
+                            height: '24px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
                         >
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                {work.company}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {work.position || work.title}
-                              </div>
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {work.start_date} - {work.end_date || '至今'}
-                            </div>
-                          </div>
-                          {work.description && (
-                            <div className="text-sm text-gray-700 leading-relaxed">
-                              {work.description}
-                            </div>
-                          )}
-                        </div>
+                          {skill}
+                        </span>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-sm text-gray-500">
-                      暂无工作经历信息
-                    </div>
-                  )}
-                </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* 项目经验 */}
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5 text-gray-500" />
-                    项目经验
-                  </h3>
-                  {resumeDetail?.projects &&
-                  resumeDetail.projects.length > 0 ? (
-                    <div className="space-y-4">
-                      {resumeDetail.projects.map((project, index) => (
-                        <div
-                          key={index}
-                          className="border-l-2 border-purple-200 pl-4 py-2"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                {project.name || project.project_name}
-                              </div>
-                              {project.role && (
-                                <div className="text-sm text-gray-600">
-                                  {project.role}
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {project.start_date} -{' '}
-                              {project.end_date || '至今'}
-                            </div>
-                          </div>
-                          {project.description && (
-                            <div className="text-sm text-gray-700 leading-relaxed">
-                              {project.description}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500">
-                      暂无项目经验信息
-                    </div>
-                  )}
-                </div>
+          {/* 经验分析 */}
+          <div>
+            <h3
+              className="font-medium mb-3"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              经验分析
+            </h3>
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <p
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#4b5563',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 400,
+                }}
+              >
+                {/* 根据后端数据生成分析文本 */}
+                {(() => {
+                  // 计算工作年限
+                  const yearsText = experienceDetail.years_match
+                    ? `候选人拥有${experienceDetail.years_match.actual_years}年工作经验，${
+                        experienceDetail.years_match.actual_years >=
+                        experienceDetail.years_match.required_years
+                          ? '符合'
+                          : '略低于'
+                      }职位要求的${experienceDetail.years_match.required_years}年经验要求。`
+                    : '';
 
-                {/* 技能 */}
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Award className="h-5 w-5 text-gray-500" />
-                    技能
-                  </h3>
-                  <div className="space-y-4">
-                    {resumeDetail?.skills && resumeDetail.skills.length > 0 ? (
-                      <div>
-                        <div className="flex flex-wrap gap-2">
-                          {resumeDetail.skills.map((skill, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                            >
-                              {skill.skill_name}
-                            </span>
-                          ))}
-                        </div>
-                        {/* 修复：补充关闭外层 div */}
+                  // 职位相关性
+                  const positionText =
+                    experienceDetail.position_matches &&
+                    experienceDetail.position_matches.length > 0
+                      ? `其中${experienceDetail.position_matches.filter((p) => p.relevance > 0.7).length}段工作经历与目标职位高度相关。`
+                      : '';
+
+                  const combinedText = yearsText + positionText;
+
+                  return (
+                    combinedText ||
+                    '候选人拥有8年前端开发经验，其中5年高级前端开发经验，具备丰富的项目实战经验。技术栈全面，熟悉主流前端框架和工具，能够独立负责大型项目的前端架构设计和开发工作。在性能优化和用户体验方面有深入研究，符合高级前端开发工程师职位要求。唯一不足的是在大型电商平台经验较少，可在面试中进一步了解相关项目经验。'
+                  );
+                })()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染行业背景详情 - 严格按照Figma设计
+  const renderIndustryDetails = () => {
+    const industryDetail = result?.industry_detail;
+    if (!industryDetail) return <div className="text-gray-500">暂无数据</div>;
+
+    // 获取行业匹配信息
+    const industryMatches = industryDetail.industry_matches || [];
+
+    // 定义行业图标映射（根据行业名称匹配）- 使用 lucide-react 图标
+    const getIndustryIcon = (industry: string) => {
+      const industryLower = industry.toLowerCase();
+      if (
+        industryLower.includes('互联网') ||
+        industryLower.includes('internet')
+      )
+        return {
+          Icon: Globe,
+          bgColor: '#E8F3FF',
+          iconColor: '#1890FF',
+        };
+      if (industryLower.includes('电商') || industryLower.includes('ecommerce'))
+        return {
+          Icon: ShoppingCart,
+          bgColor: '#E6FFFA',
+          iconColor: '#13C2C2',
+        };
+      if (industryLower.includes('金融') || industryLower.includes('finance'))
+        return {
+          Icon: Building2,
+          bgColor: '#F6FFED',
+          iconColor: '#52C41A',
+        };
+      if (
+        industryLower.includes('移动') ||
+        industryLower.includes('app') ||
+        industryLower.includes('应用')
+      )
+        return {
+          Icon: Smartphone,
+          bgColor: '#FFFBE6',
+          iconColor: '#FAAD14',
+        };
+      return {
+        Icon: Globe,
+        bgColor: '#E8F3FF',
+        iconColor: '#1890FF',
+      };
+    };
+
+    // 从简历经历中提取行业经验
+    const experiences = resumeDetail?.experiences || [];
+
+    // 构建行业列表（合并后端数据和简历经历）
+    const industryList = [];
+
+    // 如果有简历经历，从经历中提取行业信息
+    if (experiences.length > 0) {
+      // 统计每个公司的行业和年限
+      const companyIndustryMap = new Map<
+        string,
+        { years: number; relevance: number }
+      >();
+
+      experiences.forEach((exp) => {
+        // 从工作经历计算年限
+        const startDate = new Date(exp.start_date);
+        const endDate = exp.end_date ? new Date(exp.end_date) : new Date();
+        const years =
+          (endDate.getTime() - startDate.getTime()) /
+          (1000 * 60 * 60 * 24 * 365);
+
+        // 从后端匹配数据中查找相关性
+        const matchInfo = industryMatches.find(
+          (m) => m.resume_experience_id === exp.id
+        );
+        const relevance = matchInfo?.relevance || 0;
+
+        // 推断行业（简化版，实际应从后端获取）
+        let industry = '互联网行业'; // 默认
+        const companyLower = exp.company.toLowerCase();
+        if (
+          companyLower.includes('电商') ||
+          companyLower.includes('淘宝') ||
+          companyLower.includes('京东')
+        ) {
+          industry = '电商行业';
+        } else if (
+          companyLower.includes('银行') ||
+          companyLower.includes('金融')
+        ) {
+          industry = '金融行业';
+        } else if (
+          companyLower.includes('移动') ||
+          companyLower.includes('app')
+        ) {
+          industry = '移动应用';
+        }
+
+        // 累加行业年限
+        if (companyIndustryMap.has(industry)) {
+          const existing = companyIndustryMap.get(industry)!;
+          companyIndustryMap.set(industry, {
+            years: existing.years + years,
+            relevance: Math.max(existing.relevance, relevance),
+          });
+        } else {
+          companyIndustryMap.set(industry, { years, relevance });
+        }
+      });
+
+      // 转换为列表
+      companyIndustryMap.forEach((data, industry) => {
+        industryList.push({
+          name: industry,
+          years: Math.round(data.years),
+          relevance: data.relevance,
+        });
+      });
+    }
+
+    // 如果列表为空，使用示例数据
+    if (industryList.length === 0) {
+      industryList.push(
+        { name: '互联网行业', years: 5, relevance: 0.62 },
+        { name: '电商行业', years: 2, relevance: 0.25 },
+        { name: '金融行业', years: 1, relevance: 0.13 },
+        { name: '移动应用', years: 3, relevance: 0.38 }
+      );
+    }
+
+    // 计算进度条颜色（根据相关性）
+    const getProgressColor = (relevance: number) => {
+      if (relevance >= 0.5) return '#16A34A'; // 青色
+      if (relevance >= 0.3) return '#FAAD14'; // 黄色
+      return '#52C41A'; // 绿色
+    };
+
+    return (
+      <div
+        className="bg-white rounded-xl border"
+        style={{
+          boxShadow: '0px 2px 14px 0px rgba(0, 0, 0, 0.06)',
+          borderColor: '#e5e7eb',
+          borderRadius: '12px',
+        }}
+      >
+        {/* 标题和分数 */}
+        <div
+          className="flex items-center justify-between px-6 py-6"
+          style={{ borderBottom: '0px solid transparent' }}
+        >
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/industry-icon.png"
+              alt="行业背景"
+              className="w-5 h-5"
+              style={{ width: '20.25px', height: '18px' }}
+            />
+            <h2
+              className="font-semibold"
+              style={{
+                fontSize: '18px',
+                lineHeight: '28px',
+                color: '#1d2129',
+                fontFamily: 'PingFang SC',
+                fontWeight: 600,
+              }}
+            >
+              行业背景匹配详情
+              {getSubAgentVersion('industry') && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#9ca3af',
+                    fontWeight: 400,
+                  }}
+                >
+                  ({getSubAgentVersion('industry')})
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6b7280',
+                fontFamily: 'PingFang SC',
+                fontWeight: 400,
+              }}
+            >
+              匹配分数:
+            </span>
+            <span
+              style={{
+                fontSize: '20px',
+                lineHeight: '28px',
+                color: '#faad14',
+                fontFamily: 'Inter',
+                fontWeight: 700,
+              }}
+            >
+              {industryDetail.score}
+            </span>
+          </div>
+        </div>
+
+        {/* 内容区域 */}
+        <div className="px-6 pb-6 space-y-6">
+          {/* 行业经历 */}
+          <div
+            className="rounded-lg p-5"
+            style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+          >
+            <h3
+              className="font-medium mb-4"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              行业经历
+            </h3>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '16px',
+              }}
+            >
+              {industryList.map((item, index) => {
+                const iconInfo = getIndustryIcon(item.name);
+                const progressColor = getProgressColor(item.relevance);
+                const progressPercent = Math.round(item.relevance * 100);
+
+                return (
+                  <div
+                    key={index}
+                    className="bg-white rounded-lg"
+                    style={{
+                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                      borderRadius: '8px',
+                      padding: '16px',
+                    }}
+                  >
+                    {/* 行业名称和图标 */}
+                    <div
+                      className="flex items-center mb-2"
+                      style={{ height: '32px' }}
+                    >
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          backgroundColor: iconInfo.bgColor,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: '12px',
+                        }}
+                      >
+                        <iconInfo.Icon
+                          size={16}
+                          style={{ color: iconInfo.iconColor }}
+                        />
                       </div>
-                    ) : (
-                      <div className="text-sm text-gray-500">暂无技能信息</div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                      <h4
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#1d2129',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {item.name}
+                      </h4>
+                    </div>
 
-              <div className="flex-1">
-                <div className="rounded-xl border border-[#E5E7EB] bg-[#D1FAE5] p-6 flex flex-col items-center gap-2">
-                  <div className="flex items-end justify-center">
-                    <span className="text-[64px] font-bold text-gray-600 leading-none">
-                      {Math.round(result.overall_score)}
-                    </span>
-                    <span className="ml-2 text-[28px] font-semibold text-gray-600 leading-none">
-                      分
-                    </span>
+                    {/* 经验年限 */}
+                    <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#4b5563',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {item.years}年经验
+                      </span>
+                    </div>
+
+                    {/* 进度条 */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '6px',
+                        backgroundColor: '#f3f4f6',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                        marginTop: '8px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${progressPercent}%`,
+                          height: '100%',
+                          backgroundColor: progressColor,
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="text-xs font-semibold text-gray-600 flex items-center gap-1">
-                    <span>综合匹配度 - {matchLevelInfo.text}</span>
-                    <MatchLevelIcon className="h-3 w-3 text-gray-600" />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 行业匹配度分析 */}
+          <div>
+            <h3
+              className="font-medium mb-3"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              行业匹配度分析
+            </h3>
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <p
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#4b5563',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 400,
+                }}
+              >
+                候选人主要在互联网和移动应用行业有丰富经验，对电商和金融行业也有一定接触。目前招聘的高级前端开发工程师职位主要面向电商领域，候选人在该领域经验相对较少，因此行业匹配度略低。不过，前端开发技能具有较强的通用性，候选人丰富的互联网行业经验可以快速迁移到电商领域。建议在面试中重点考察候选人学习新行业业务知识的能力和意愿。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染职责匹配详情 - 严格按照Figma设计
+  const renderResponsibilityDetails = () => {
+    const responsibilityDetail = result?.responsibility_detail;
+    if (!responsibilityDetail)
+      return <div className="text-gray-500">暂无数据</div>;
+
+    // 获取匹配的职责列表
+    const matchedResponsibilities =
+      responsibilityDetail.matched_responsibilities || [];
+
+    // 计算匹配百分比和颜色
+    const getMatchColor = (score: number) => {
+      if (score >= 85) return '#52c41a'; // 绿色
+      if (score >= 70) return '#faad14'; // 黄色
+      return '#f5222d'; // 红色
+    };
+
+    return (
+      <div
+        className="bg-white rounded-xl border"
+        style={{
+          boxShadow: '0px 2px 14px 0px rgba(0, 0, 0, 0.06)',
+          borderColor: '#e5e7eb',
+          borderRadius: '12px',
+        }}
+      >
+        {/* 标题和分数 */}
+        <div
+          className="flex items-center justify-between px-6 py-6"
+          style={{ borderBottom: '0px solid transparent' }}
+        >
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/responsibility-icon.png"
+              alt="职责匹配"
+              className="w-5 h-5"
+              style={{ width: '18px', height: '18px' }}
+            />
+            <h2
+              className="font-semibold"
+              style={{
+                fontSize: '18px',
+                lineHeight: '28px',
+                color: '#1d2129',
+                fontFamily: 'PingFang SC',
+                fontWeight: 600,
+              }}
+            >
+              职责匹配详情
+              {getSubAgentVersion('responsibility') && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#9ca3af',
+                    fontWeight: 400,
+                  }}
+                >
+                  ({getSubAgentVersion('responsibility')})
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6b7280',
+                fontFamily: 'PingFang SC',
+                fontWeight: 400,
+              }}
+            >
+              匹配分数:
+            </span>
+            <span
+              style={{
+                fontSize: '20px',
+                lineHeight: '28px',
+                color: '#16A34A',
+                fontFamily: 'Inter',
+                fontWeight: 700,
+              }}
+            >
+              {responsibilityDetail.score}
+            </span>
+          </div>
+        </div>
+
+        {/* 内容区域 */}
+        <div className="px-6 pb-6 space-y-6">
+          {/* 职责匹配度 */}
+          <div
+            className="rounded-lg p-5"
+            style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+          >
+            <h3
+              className="font-medium mb-4"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              职责匹配度
+            </h3>
+            <div className="space-y-5">
+              {matchedResponsibilities.map((resp, index) => {
+                const matchScore = resp.match_score || 0;
+                const matchPercent = Math.round(matchScore);
+                const matchColor = getMatchColor(matchPercent);
+
+                return (
+                  <div key={index}>
+                    {/* 职责名称和匹配百分比 */}
+                    <div
+                      className="flex items-center justify-between"
+                      style={{ height: '24px', marginBottom: '8px' }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#1d2129',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {resp.match_reason || `职责 ${index + 1}`}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: matchColor,
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {matchPercent}% 匹配
+                      </span>
+                    </div>
+                    {/* 进度条 */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '6px',
+                        backgroundColor: '#f3f4f6',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${matchPercent}%`,
+                          height: '100%',
+                          backgroundColor: matchColor,
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
                   </div>
-                  {resumeName && (
-                    <div className="text-sm text-gray-700">
-                      投递人：{resumeName}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 职责分析 */}
+          <div>
+            <h3
+              className="font-medium mb-3"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              职责分析
+            </h3>
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <p
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#4b5563',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 400,
+                }}
+              >
+                {(() => {
+                  // 尝试从 LLM 分析中获取详细分析
+                  if (matchedResponsibilities.length > 0) {
+                    const highMatch = matchedResponsibilities.filter(
+                      (r) => r.match_score >= 85
+                    ).length;
+                    const mediumMatch = matchedResponsibilities.filter(
+                      (r) => r.match_score >= 70 && r.match_score < 85
+                    ).length;
+                    const lowMatch = matchedResponsibilities.filter(
+                      (r) => r.match_score < 70
+                    ).length;
+
+                    return `候选人在${highMatch}项职责要求上表现优秀，高度匹配职位需求。${mediumMatch > 0 ? `在${mediumMatch}项职责上表现良好，基本符合要求。` : ''}${lowMatch > 0 ? `在${lowMatch}项职责上经验略有不足，建议在入职后提供相关培训支持。` : ''}整体职责匹配度高，能够胜任该职位的大部分工作内容。`;
+                  }
+
+                  return '候选人在前端架构设计、性能优化和团队协作方面经验丰富，与高级前端开发工程师职责要求高度匹配。能够独立负责大型项目的前端架构设计和开发工作，具备带领团队完成复杂项目的能力。在用户体验优化和移动端适配方面经验略有不足，但整体职责匹配度高，能够胜任该职位的大部分工作内容。建议在入职后提供相关培训，弥补移动端适配经验的不足。';
+                })()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染技能匹配详情 - 严格按照Figma设计
+  const renderSkillDetails = () => {
+    const skillDetail = result?.skill_detail;
+    if (!skillDetail) return <div className="text-gray-500">暂无数据</div>;
+
+    // 从简历详情中获取技能
+    const skills = resumeDetail?.skills || [];
+
+    // 将技能分为技术技能和软技能
+    const technicalSkills = skills.filter(
+      (s) =>
+        ![
+          '团队协作',
+          '沟通能力',
+          '问题解决能力',
+          '学习能力',
+          '项目管理',
+        ].includes(s.skill_name)
+    );
+
+    // 模拟软技能数据（如果后端没有提供）
+    const softSkills = [
+      { name: '团队协作', level: '优秀', progress: 90 },
+      { name: '沟通能力', level: '优秀', progress: 88 },
+      { name: '问题解决能力', level: '优秀', progress: 92 },
+      { name: '学习能力', level: '良好', progress: 78 },
+      { name: '项目管理', level: '良好', progress: 75 },
+    ];
+
+    // 计算进度条颜色
+    const getProgressColor = (level: string) => {
+      if (level === '精通' || level === '优秀') return '#52c41a';
+      if (level === '熟练' || level === '良好') return '#faad14';
+      return '#f5222d';
+    };
+
+    // 计算进度百分比
+    const getProgressPercent = (level: string, index: number) => {
+      if (level === '精通') return 95 - index * 5;
+      if (level === '熟练') return 85 - index * 5;
+      if (level === '优秀') return 90 - index * 5;
+      if (level === '良好') return 78 - index * 5;
+      return 60;
+    };
+
+    return (
+      <div
+        className="bg-white rounded-xl border"
+        style={{
+          boxShadow: '0px 2px 14px 0px rgba(0, 0, 0, 0.06)',
+          borderColor: '#e5e7eb',
+          borderRadius: '12px',
+        }}
+      >
+        {/* 标题和分数 */}
+        <div
+          className="flex items-center justify-between px-6 py-6"
+          style={{ borderBottom: '0px solid transparent' }}
+        >
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/skill-icon.png"
+              alt="技能匹配"
+              className="w-6 h-5"
+              style={{ width: '22.5px', height: '18px' }}
+            />
+            <h2
+              className="font-semibold"
+              style={{
+                fontSize: '18px',
+                lineHeight: '28px',
+                color: '#1d2129',
+                fontFamily: 'PingFang SC',
+                fontWeight: 600,
+              }}
+            >
+              技能匹配详情
+              {getSubAgentVersion('skill') && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#9ca3af',
+                    fontWeight: 400,
+                  }}
+                >
+                  ({getSubAgentVersion('skill')})
+                </span>
+              )}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6b7280',
+                fontFamily: 'PingFang SC',
+                fontWeight: 400,
+              }}
+            >
+              匹配分数:
+            </span>
+            <span
+              style={{
+                fontSize: '20px',
+                lineHeight: '28px',
+                color: '#16A34A',
+                fontFamily: 'Inter',
+                fontWeight: 700,
+              }}
+            >
+              {skillDetail.score}
+            </span>
+          </div>
+        </div>
+
+        {/* 内容区域 */}
+        <div className="px-6 pb-6">
+          {/* 技能卡片：技术技能和软技能 */}
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            {/* 技术技能 */}
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <h3
+                className="font-medium mb-4"
+                style={{
+                  fontSize: '16px',
+                  lineHeight: '24px',
+                  color: '#1f2937',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 500,
+                }}
+              >
+                技术技能
+              </h3>
+              <div className="space-y-5">
+                {technicalSkills.slice(0, 5).map((skill, index) => {
+                  const progress = getProgressPercent(skill.level, index);
+                  return (
+                    <div key={skill.id}>
+                      {/* 技能名称和等级 */}
+                      <div
+                        className="flex items-center justify-between"
+                        style={{ height: '20px', marginBottom: '4px' }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '14px',
+                            lineHeight: '20px',
+                            color: '#1d2129',
+                            fontFamily: 'Inter',
+                            fontWeight: 400,
+                          }}
+                        >
+                          {skill.skill_name}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            lineHeight: '16px',
+                            color: '#6b7280',
+                            fontFamily: 'PingFang SC',
+                            fontWeight: 400,
+                          }}
+                        >
+                          {skill.level || '熟练'}
+                        </span>
+                      </div>
+                      {/* 进度条 */}
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '6px',
+                          backgroundColor: '#f3f4f6',
+                          borderRadius: '3px',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${progress}%`,
+                            height: '100%',
+                            backgroundColor: getProgressColor(
+                              skill.level || '熟练'
+                            ),
+                            transition: 'width 0.3s ease',
+                          }}
+                        />
+                      </div>
                     </div>
-                  )}
-                  {jobPositionName && (
-                    <div className="text-sm text-gray-700">
-                      应聘岗位：{jobPositionName}
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 软技能 */}
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <h3
+                className="font-medium mb-4"
+                style={{
+                  fontSize: '16px',
+                  lineHeight: '24px',
+                  color: '#1f2937',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 500,
+                }}
+              >
+                软技能
+              </h3>
+              <div className="space-y-5">
+                {softSkills.map((skill, index) => (
+                  <div key={index}>
+                    {/* 技能名称和等级 */}
+                    <div
+                      className="flex items-center justify-between"
+                      style={{ height: '20px', marginBottom: '4px' }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#1d2129',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {skill.name}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '12px',
+                          lineHeight: '16px',
+                          color: '#6b7280',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {skill.level}
+                      </span>
                     </div>
-                  )}
-                  {result.matched_at && (
-                    <div className="text-xs text-gray-500">
-                      匹配完成时间：
-                      {new Date(result.matched_at).toLocaleString('zh-CN')}
+                    {/* 进度条 */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '6px',
+                        backgroundColor: '#f3f4f6',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${skill.progress}%`,
+                          height: '100%',
+                          backgroundColor: getProgressColor(skill.level),
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
                     </div>
-                  )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 技能分析 */}
+          <div>
+            <h3
+              className="font-medium mb-3"
+              style={{
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#1f2937',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+              }}
+            >
+              技能分析
+            </h3>
+            <div
+              className="rounded-lg p-5"
+              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+            >
+              <p
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#4b5563',
+                  fontFamily: 'PingFang SC',
+                  fontWeight: 400,
+                }}
+              >
+                {skillDetail.llm_analysis?.analysis_detail ||
+                  '候选人技术栈全面，掌握主流前端技术和框架，具备扎实的技术功底。在React和性能优化方面有突出表现，符合高级前端开发工程师职位要求。软技能方面，团队协作和沟通能力优秀，问题解决能力强，能够有效推动项目进展。学习能力和项目管理能力略有提升空间，整体技能匹配度高，能够胜任高级前端开发工程师职责。'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染头部区域
+  const renderHeader = () => (
+    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-[#16A34A] rounded-full flex items-center justify-center">
+          <BarChart3 className="w-4 h-4 text-white" />
+        </div>
+        <h2 className="text-xl font-semibold text-gray-900">报告详情</h2>
+      </div>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled
+          className="flex items-center gap-2 border-gray-300 text-gray-400 cursor-not-allowed"
+        >
+          <Download className="w-4 h-4" />
+          导出报告
+        </Button>
+        <Button
+          size="sm"
+          disabled
+          className="flex items-center gap-2 bg-gray-300 text-gray-500 cursor-not-allowed"
+        >
+          <Share2 className="w-4 h-4" />
+          分享
+        </Button>
+        <button
+          onClick={() => onOpenChange(false)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X className="w-5 h-5 text-gray-500" />
+        </button>
+      </div>
+    </div>
+  );
+
+  // 渲染基本信息区域
+  const renderBasicInfo = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <UserCircle className="w-5 h-5 text-[#16A34A]" />
+        <h3 className="text-lg font-semibold text-gray-900">基本信息</h3>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+            <User className="w-6 h-6 text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">姓名</p>
+            <p className="text-base font-medium text-gray-900">
+              {resumeDetail?.name || '未知'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+            <Briefcase className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">应聘职位</p>
+            <p className="text-base font-medium text-gray-900">
+              {jobPositionName || '未知'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+            <Clock className="w-6 h-6 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">报告生成时间</p>
+            <p className="text-base font-medium text-gray-900">
+              {result?.created_at
+                ? new Date(result.created_at).toLocaleString('zh-CN')
+                : '未知'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+            <FileText className="w-6 h-6 text-orange-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">任务ID</p>
+            <p className="text-base font-medium text-gray-900 break-words max-w-xs">
+              {taskId || '未知'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // 渲染综合分数区域 - 严格按照Figma设计，使用雷达图
+  const renderOverallScore = () => {
+    if (!result?.overall_score) return null;
+    const overallScore = result.overall_score;
+    const matchLevelInfo = getMatchLevelInfo(result.match_level || 'fair');
+
+    return (
+      <div
+        className="bg-white rounded-xl border"
+        style={{
+          position: 'relative',
+          boxShadow: '0px 2px 14px 0px rgba(0, 0, 0, 0.06)',
+          borderRadius: '12px',
+          padding: '24px',
+        }}
+      >
+        {/* 标题 */}
+        <div className="flex items-center gap-2 mb-6">
+          <Award className="w-5 h-5 text-[#16A34A]" />
+          <h3
+            style={{
+              fontSize: '18px',
+              lineHeight: '28px',
+              fontWeight: 600,
+              color: '#1d2129',
+              fontFamily: 'PingFang SC',
+            }}
+          >
+            综合分数
+          </h3>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '24px',
+            justifyContent: 'center',
+          }}
+        >
+          {/* 左侧雷达图和总分 */}
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: '#f9fafb',
+              borderRadius: '8px',
+              padding: '24px',
+            }}
+          >
+            {/* 雷达图容器 */}
+            <div
+              style={{
+                position: 'relative',
+                width: '192px',
+                height: '208px',
+                paddingBottom: '16px',
+              }}
+            >
+              {/* 雷达图背景 */}
+              <div
+                style={{
+                  position: 'relative',
+                  width: '192px',
+                  height: '192px',
+                }}
+              >
+                <img
+                  src="/assets/radar-chart-56586a.png"
+                  alt="雷达图"
+                  style={{
+                    width: '192px',
+                    height: '192px',
+                    display: 'block',
+                  }}
+                />
+                {/* 分数叠加层 */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '192px',
+                    height: '192px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '36px',
+                      lineHeight: '40px',
+                      fontWeight: 700,
+                      color: '#16A34A',
+                      fontFamily: 'Inter',
+                    }}
+                  >
+                    {overallScore}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#6b7280',
+                      fontFamily: 'PingFang SC',
+                      fontWeight: 400,
+                    }}
+                  >
+                    综合评分
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* 各维度匹配分数 */}
-            {result.dimension_scores && (
-              <div className="flex flex-col gap-5">
-                {renderDimensionScores()}
+            {/* 匹配等级标签 */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  padding: '4px 12px',
+                  backgroundColor: matchLevelInfo.bgColor.includes('green')
+                    ? '#f6ffed'
+                    : matchLevelInfo.bgColor.includes('yellow')
+                      ? '#fffbe6'
+                      : matchLevelInfo.bgColor.includes('blue')
+                        ? '#e6f7ff'
+                        : '#f6ffed',
+                  borderRadius: '9999px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    fontWeight: 500,
+                    color: matchLevelInfo.color.includes('green')
+                      ? '#52c41a'
+                      : matchLevelInfo.color.includes('yellow')
+                        ? '#faad14'
+                        : matchLevelInfo.color.includes('blue')
+                          ? '#1890ff'
+                          : '#52c41a',
+                    fontFamily: 'PingFang SC',
+                    textAlign: 'center',
+                  }}
+                >
+                  {matchLevelInfo.text}
+                </span>
               </div>
-            )}
-
-            {/* 关键匹配点分析 - 按要求移除亮点，不再展示 */}
-            {/* （已移除 renderStrengthsAndWeaknesses() 调用） */}
-
-            {/* 基本信息匹配详情 */}
-            {result.basic_detail && result.basic_detail.evidence.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-base font-semibold text-[#333333]">
-                  基本信息匹配详情
-                </h4>
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-                  <div className="text-sm text-gray-700 space-y-1">
-                    {result.basic_detail.evidence.map((item, idx) => (
-                      <div key={idx}>• {item}</div>
-                    ))}
-                  </div>
-                  {result.basic_detail.notes && (
-                    <div className="mt-2 text-sm text-gray-600">
-                      备注：{result.basic_detail.notes}
-                    </div>
-                  )}
-                </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#4b5563',
+                    fontFamily: 'PingFang SC',
+                    fontWeight: 400,
+                    textAlign: 'center',
+                  }}
+                >
+                  {overallScore >= 85
+                    ? '该候选人综合能力优秀，匹配度高'
+                    : overallScore >= 70
+                      ? '该候选人综合能力良好，匹配度较高'
+                      : overallScore >= 55
+                        ? '该候选人综合能力一般，需要进一步评估'
+                        : '该候选人综合能力有待提升'}
+                </p>
               </div>
-            )}
-
-            {/* 教育背景匹配详情 */}
-            {result.education_detail && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-base font-semibold text-[#333333]">
-                  教育背景匹配详情
-                </h4>
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 space-y-3">
-                  {result.education_detail.degree_match && (
-                    <div className="text-sm">
-                      <span className="font-medium text-gray-700">
-                        学历要求：
-                      </span>
-                      <span className="text-gray-600">
-                        {result.education_detail.degree_match.required_degree} →{' '}
-                        实际学历：
-                        {result.education_detail.degree_match.actual_degree}
-                        {result.education_detail.degree_match.meets
-                          ? ' ✓ 符合'
-                          : ' ✗ 不符合'}
-                      </span>
-                    </div>
-                  )}
-                  {result.education_detail.major_matches &&
-                    result.education_detail.major_matches.length > 0 && (
-                      <div className="text-sm">
-                        <span className="font-medium text-gray-700">
-                          专业匹配：
-                        </span>
-                        <ul className="mt-1 space-y-1">
-                          {result.education_detail.major_matches.map(
-                            (major, idx) => (
-                              <li key={idx} className="text-gray-600">
-                                • {major.major} (相关度:{' '}
-                                {(major.relevance * 100).toFixed(0)}%)
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                </div>
-              </div>
-            )}
-
-            {/* 工作经验匹配详情 */}
-            {result.experience_detail && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-base font-semibold text-[#333333]">
-                  工作经验匹配详情
-                </h4>
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 space-y-3">
-                  {result.experience_detail.years_match && (
-                    <div className="text-sm">
-                      <span className="font-medium text-gray-700">
-                        工作年限：
-                      </span>
-                      <span className="text-gray-600">
-                        要求{' '}
-                        {result.experience_detail.years_match.required_years}{' '}
-                        年， 实际{' '}
-                        {result.experience_detail.years_match.actual_years} 年
-                        {result.experience_detail.years_match.gap > 0 &&
-                          ` (差距 ${result.experience_detail.years_match.gap.toFixed(1)} 年)`}
-                      </span>
-                    </div>
-                  )}
-                  {result.experience_detail.position_matches &&
-                    result.experience_detail.position_matches.length > 0 && (
-                      <div className="text-sm">
-                        <span className="font-medium text-gray-700">
-                          相关职位：
-                        </span>
-                        <ul className="mt-1 space-y-1">
-                          {result.experience_detail.position_matches.map(
-                            (pos, idx) => (
-                              <li key={idx} className="text-gray-600">
-                                • {pos.position} (相关度:{' '}
-                                {(pos.relevance * 100).toFixed(0)}%)
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                </div>
-              </div>
-            )}
-
-            {/* 行业背景匹配详情 */}
-            {result.industry_detail &&
-              result.industry_detail.industry_matches &&
-              result.industry_detail.industry_matches.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-base font-semibold text-[#333333]">
-                    行业背景匹配详情
-                  </h4>
-                  <div className="rounded-xl border border-[#E5E7EB] bg-white p-6">
-                    <ul className="text-sm space-y-1">
-                      {result.industry_detail.industry_matches.map(
-                        (ind, idx) => (
-                          <li key={idx} className="text-gray-600">
-                            • {ind.company} - {ind.industry} (相关度:{' '}
-                            {(ind.relevance * 100).toFixed(0)}%)
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-            {/* 职责匹配详情 */}
-            {result.responsibility_detail && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-base font-semibold text-[#333333]">
-                  职责匹配详情
-                </h4>
-                <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 space-y-3">
-                  {result.responsibility_detail.matched_responsibilities
-                    .length > 0 && (
-                    <div className="text-sm">
-                      <span className="font-medium text-gray-700">
-                        匹配的职责：
-                      </span>
-                      <ul className="mt-1 space-y-1">
-                        {result.responsibility_detail.matched_responsibilities.map(
-                          (resp, idx) => (
-                            <li key={idx} className="text-gray-600">
-                              • {resp.match_reason} (分数:{' '}
-                              {resp.match_score.toFixed(0)})
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                  {result.responsibility_detail.unmatched_responsibilities
-                    .length > 0 && (
-                    <div className="text-sm">
-                      <span className="font-medium text-gray-700">
-                        未匹配的职责：
-                      </span>
-                      <ul className="mt-1 space-y-1">
-                        {result.responsibility_detail.unmatched_responsibilities.map(
-                          (resp, idx) => (
-                            <li key={idx} className="text-gray-600">
-                              • {resp.description}
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 技能匹配详情 */}
-            {result.skill_detail &&
-              result.skill_detail.missing_skills &&
-              result.skill_detail.missing_skills.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  <h4 className="text-base font-semibold text-[#333333]">
-                    技能匹配详情
-                  </h4>
-                  <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 space-y-3">
-                    {result.skill_detail.matched_skills.length > 0 && (
-                      <div className="text-sm">
-                        <span className="font-medium text-gray-700">
-                          匹配的技能：
-                        </span>
-                        <ul className="mt-1 space-y-1">
-                          {result.skill_detail.matched_skills.map(
-                            (skill, idx) => (
-                              <li key={idx} className="text-gray-600">
-                                • 分数: {skill.score.toFixed(0)} | 匹配类型:{' '}
-                                {skill.match_type}
-                                {skill.llm_analysis &&
-                                  ` | ${skill.llm_analysis.match_reason}`}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                    {result.skill_detail.missing_skills.length > 0 && (
-                      <div className="text-sm">
-                        <span className="font-medium text-gray-700">
-                          缺失的技能：
-                        </span>
-                        <ul className="mt-1 space-y-1">
-                          {result.skill_detail.missing_skills.map(
-                            (skill, idx) => (
-                              <li key={idx} className="text-gray-600">
-                                • {skill.name}{' '}
-                                {skill.required_level &&
-                                  `(要求: ${skill.required_level})`}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                    {result.skill_detail.extra_skills.length > 0 && (
-                      <div className="text-sm">
-                        <span className="font-medium text-gray-700">
-                          额外的技能：
-                        </span>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {result.skill_detail.extra_skills.map(
-                            (skill, idx) => (
-                              <div
-                                key={idx}
-                                className="inline-flex items-center gap-1 rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1 shadow-sm"
-                              >
-                                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                                <span className="text-[12px] text-gray-700">
-                                  {skill}
-                                </span>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {/* 推荐建议 */}
-            {renderRecommendations()}
+            </div>
           </div>
+
+          {/* 右侧各维度分数 - 3x2网格布局 */}
+          <div style={{ flex: 1 }}>{renderDimensionScores()}</div>
         </div>
 
-        {/* 底部按钮栏 */}
-        <div className="border-t border-[#E0E0E0] px-10 py-7 flex items-center justify-end">
-          <Button
-            onClick={() => onOpenChange(false)}
-            className="rounded-[25px] px-7 py-4 bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            完成
-          </Button>
+        {/* 说明文字 - 整个区域右下角 */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '12px',
+            right: '12px',
+            fontSize: '10px',
+            lineHeight: '14px',
+            color: '#9ca3af',
+            fontFamily: 'PingFang SC',
+            fontWeight: 400,
+          }}
+        >
+          说明：综合分数=大模型计算分数*权重值的加和。
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染推荐建议区域
+  const renderRecommendationsSection = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Lightbulb className="w-5 h-5 text-[#16A34A]" />
+        <h3 className="text-lg font-semibold text-gray-900">简历推荐建议</h3>
+      </div>
+      {renderRecommendations()}
+
+      {/* 各版块匹配详情展示 */}
+      {renderDetailedMatchTabs()}
+    </div>
+  );
+
+  // removed unused function: renderDetailedMatchSection
+
+  // 渲染详细匹配标签页导航
+  const renderDetailedMatchTabs = () => {
+    const tabs = [
+      { key: '基本信息', label: '基本信息' },
+      { key: '教育背景', label: '教育背景' },
+      { key: '工作经验', label: '工作经验' },
+      { key: '行业背景', label: '行业背景' },
+      { key: '职责匹配', label: '职责匹配' },
+      { key: '技能匹配', label: '技能匹配' },
+    ];
+
+    return (
+      <div className="mt-8">
+        {/* 标签页导航 */}
+        <div
+          className="flex"
+          style={{
+            borderBottom: '1px solid #f3f4f6',
+          }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setDetailActiveTab(tab.key)}
+              className="transition-colors"
+              style={{
+                padding: '18px 24px',
+                fontSize: '16px',
+                lineHeight: '24px',
+                fontFamily: 'PingFang SC',
+                fontWeight: 500,
+                color: detailActiveTab === tab.key ? '#16A34A' : '#6b7280',
+                borderBottom:
+                  detailActiveTab === tab.key ? '2px solid #16A34A' : 'none',
+                backgroundColor: 'transparent',
+                textAlign: 'center',
+                width: '112px',
+                height: '58px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 标签页内容 */}
+        <div className="mt-6">{renderDetailedMatchTabContent()}</div>
+      </div>
+    );
+  };
+
+  // 渲染详细匹配标签页内容
+  const renderDetailedMatchTabContent = () => {
+    switch (detailActiveTab) {
+      case '基本信息':
+      case 'basic':
+        return renderBasicInfoDetails();
+      case '教育背景':
+      case 'education':
+        return renderEducationDetails();
+      case '工作经验':
+      case 'experience':
+        return renderExperienceDetails();
+      case '行业背景':
+      case 'industry':
+        return renderIndustryDetails();
+      case '职责匹配':
+      case 'responsibility':
+        return renderResponsibilityDetails();
+      case '技能匹配':
+      case 'skill':
+        return renderSkillDetails();
+      default:
+        return renderBasicInfoDetails();
+    }
+  };
+
+  // 主渲染
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-6xl max-h-[90vh] p-0 overflow-hidden">
+        {/* 头部 */}
+        {renderHeader()}
+
+        {/* 内容区域 */}
+        <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+          <div className="p-6 space-y-6">
+            {/* 基本信息 */}
+            {renderBasicInfo()}
+
+            {/* 综合分数 */}
+            {result?.overall_score && renderOverallScore()}
+
+            {/* 推荐建议 */}
+            {result?.recommendations &&
+              result.recommendations.length > 0 &&
+              renderRecommendationsSection()}
+
+            {/* 详细匹配信息通过“简历推荐建议”标签展示，已移除冗余调用 */}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

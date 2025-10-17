@@ -119,29 +119,33 @@ func (r *AuditRepo) Create(ctx context.Context, log *domain.AuditLog) error {
 func (r *AuditRepo) List(ctx context.Context, req *domain.ListAuditLogReq) ([]*domain.AuditLog, *db.PageInfo, error) {
 	query := r.db.AuditLog.Query().Where(auditlog.DeletedAtIsNil())
 
-	// 应用过滤条件
-	if req.OperatorType != nil {
-		query = query.Where(auditlog.OperatorTypeEQ(*req.OperatorType))
+	//应用过滤条件
+	if req.OperatorType != "" {
+		query = query.Where(auditlog.OperatorTypeEQ(req.OperatorType))
 	}
 
-	if req.OperationType != nil {
-		query = query.Where(auditlog.OperationTypeEQ(*req.OperationType))
+	if req.OperationType != "" {
+		query = query.Where(auditlog.OperationTypeEQ(req.OperationType))
 	}
 
-	if req.ResourceType != nil {
-		query = query.Where(auditlog.ResourceTypeEQ(*req.ResourceType))
+	if req.ResourceType != "" {
+		query = query.Where(auditlog.ResourceTypeEQ(req.ResourceType))
 	}
 
-	if req.Status != nil {
-		query = query.Where(auditlog.StatusEQ(*req.Status))
+	if req.Status != "" {
+		query = query.Where(auditlog.StatusEQ(req.Status))
 	}
 
-	if req.IP != nil {
-		query = query.Where(auditlog.IPEQ(*req.IP))
+	if req.ResourceID != "" {
+		query = query.Where(auditlog.ResourceIDEQ(req.ResourceID))
 	}
 
-	if req.OperatorID != nil {
-		operatorID, err := uuid.Parse(*req.OperatorID)
+	if req.IP != "" {
+		query = query.Where(auditlog.IPEQ(req.IP))
+	}
+
+	if req.OperatorID != "" {
+		operatorID, err := uuid.Parse(req.OperatorID)
 		if err == nil {
 			query = query.Where(auditlog.OperatorIDEQ(operatorID))
 		}
@@ -155,8 +159,8 @@ func (r *AuditRepo) List(ctx context.Context, req *domain.ListAuditLogReq) ([]*d
 		query = query.Where(auditlog.CreatedAtLTE(*req.EndTime))
 	}
 
-	if req.Search != nil && *req.Search != "" {
-		searchTerm := *req.Search
+	if req.Search != "" {
+		searchTerm := req.Search
 		query = query.Where(
 			auditlog.Or(
 				auditlog.OperatorNameContains(searchTerm),
@@ -252,14 +256,93 @@ func (r *AuditRepo) GetStats(ctx context.Context, req *domain.AuditStatsReq) (*d
 		return nil, err
 	}
 
-	// 按小时统计（简化实现）
-	hourlyStats := make([]domain.HourlyAuditStat, 0)
+	// 按操作者类型统计
+	operatorTypeStats := make(map[consts.OperatorType]int64)
+	for _, operatorType := range []consts.OperatorType{consts.OperatorTypeUser, consts.OperatorTypeAdmin} {
+		count, err := query.Where(auditlog.OperatorTypeEQ(operatorType)).Count(ctx)
+		if err != nil {
+			r.logger.With("error", err).With("operator_type", operatorType).Error("failed to count by operator type")
+			return nil, err
+		}
+		operatorTypeStats[operatorType] = int64(count)
+	}
+
+	// 按操作类型统计
+	operationStats := make(map[consts.OperationType]int64)
+	for _, operationType := range []consts.OperationType{
+		consts.OperationTypeCreate, consts.OperationTypeUpdate, consts.OperationTypeDelete,
+		consts.OperationTypeView, consts.OperationTypeLogin, consts.OperationTypeLogout,
+	} {
+		count, err := query.Where(auditlog.OperationTypeEQ(operationType)).Count(ctx)
+		if err != nil {
+			r.logger.With("error", err).With("operation_type", operationType).Error("failed to count by operation type")
+			return nil, err
+		}
+		operationStats[operationType] = int64(count)
+	}
+
+	// 按资源类型统计
+	resourceStats := make(map[consts.ResourceType]int64)
+	for _, resourceType := range []consts.ResourceType{
+		consts.ResourceTypeUser, consts.ResourceTypeAdmin, consts.ResourceTypeRole,
+		consts.ResourceTypeDepartment, consts.ResourceTypeJobPosition, consts.ResourceTypeResume,
+		consts.ResourceTypeScreening, consts.ResourceTypeSetting, consts.ResourceTypeAttachment,
+		consts.ResourceTypeConversation, consts.ResourceTypeMessage,
+	} {
+		count, err := query.Where(auditlog.ResourceTypeEQ(resourceType)).Count(ctx)
+		if err != nil {
+			r.logger.With("error", err).With("resource_type", resourceType).Error("failed to count by resource type")
+			return nil, err
+		}
+		resourceStats[resourceType] = int64(count)
+	}
+
+	// 按小时统计（过去24小时）
+	hourlyStats := make([]domain.HourlyAuditStat, 0, 24)
+	now := time.Now()
+	for i := 23; i >= 0; i-- {
+		hourStart := now.Add(-time.Duration(i) * time.Hour).Truncate(time.Hour)
+		hourEnd := hourStart.Add(time.Hour)
+
+		hourQuery := query.Where(
+			auditlog.CreatedAtGTE(hourStart),
+			auditlog.CreatedAtLT(hourEnd),
+		)
+
+		totalCount, err := hourQuery.Count(ctx)
+		if err != nil {
+			r.logger.With("error", err).With("hour", hourStart.Hour()).Error("failed to count hourly stats")
+			return nil, err
+		}
+
+		successCount, err := hourQuery.Where(auditlog.StatusEQ(consts.AuditLogStatusSuccess)).Count(ctx)
+		if err != nil {
+			r.logger.With("error", err).With("hour", hourStart.Hour()).Error("failed to count hourly success stats")
+			return nil, err
+		}
+
+		failedCount, err := hourQuery.Where(auditlog.StatusEQ(consts.AuditLogStatusFailed)).Count(ctx)
+		if err != nil {
+			r.logger.With("error", err).With("hour", hourStart.Hour()).Error("failed to count hourly failed stats")
+			return nil, err
+		}
+
+		hourlyStats = append(hourlyStats, domain.HourlyAuditStat{
+			Hour:         hourStart.Hour(),
+			Count:        int64(totalCount),
+			SuccessCount: int64(successCount),
+			FailedCount:  int64(failedCount),
+		})
+	}
 
 	return &domain.AuditStatsResp{
-		TotalCount:   int64(total),
-		SuccessCount: int64(successCount),
-		FailedCount:  int64(failedCount),
-		HourlyStats:  hourlyStats,
+		TotalCount:        int64(total),
+		SuccessCount:      int64(successCount),
+		FailedCount:       int64(failedCount),
+		OperatorTypeStats: operatorTypeStats,
+		OperationStats:    operationStats,
+		ResourceStats:     resourceStats,
+		HourlyStats:       hourlyStats,
 	}, nil
 }
 

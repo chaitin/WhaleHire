@@ -31,19 +31,32 @@ type ScreeningNodeRunRepo interface {
 }
 
 // ScreeningNodeRun 筛选节点运行信息
+// @Description 筛选节点运行记录，包含节点执行的详细信息和状态
 type ScreeningNodeRun struct {
-	ID            uuid.UUID                     `json:"id"`
-	TaskID        uuid.UUID                     `json:"task_id"`
-	TaskResumeID  uuid.UUID                     `json:"task_resume_id"`
-	NodeKey       string                        `json:"node_key"`
-	Status        consts.ScreeningNodeRunStatus `json:"status"`
-	AttemptNo     int                           `json:"attempt_no"`
-	TraceID       *string                       `json:"trace_id,omitempty"`
-	AgentVersion  *string                       `json:"agent_version,omitempty"`
-	ModelName     *string                       `json:"model_name,omitempty"`
-	ModelProvider *string                       `json:"model_provider,omitempty"`
-	LLMParams     map[string]interface{}        `json:"llm_params,omitempty"`
-	InputPayload  map[string]interface{}        `json:"input_payload,omitempty"`
+	// ID 节点运行记录唯一标识符
+	ID uuid.UUID `json:"id"`
+	// TaskID 关联的筛选任务ID
+	TaskID uuid.UUID `json:"task_id"`
+	// TaskResumeID 关联的任务简历ID
+	TaskResumeID uuid.UUID `json:"task_resume_id"`
+	// NodeKey 节点类型标识，支持的类型包括：TaskMetaDataNode、DispatcherNode、BasicInfoAgent、SkillAgent、ResponsibilityAgent、ExperienceAgent、EducationAgent、IndustryAgent、AggregatorAgent
+	NodeKey string `json:"node_key"`
+	// Status 节点运行状态：pending(待处理)、running(运行中)、completed(已完成)、failed(失败)
+	Status consts.ScreeningNodeRunStatus `json:"status"`
+	// AttemptNo 尝试次数，从1开始
+	AttemptNo int `json:"attempt_no"`
+	// TraceID 链路追踪ID，用于调试和监控
+	TraceID *string `json:"trace_id,omitempty"`
+	// AgentVersion Agent版本号
+	AgentVersion *string `json:"agent_version,omitempty"`
+	// ModelName 使用的模型名称
+	ModelName *string `json:"model_name,omitempty"`
+	// ModelProvider 模型提供商
+	ModelProvider *string `json:"model_provider,omitempty"`
+	// LLMParams LLM调用参数快照
+	LLMParams map[string]interface{} `json:"llm_params,omitempty" swaggertype:"object"`
+	// InputPayload 节点输入数据快照
+	InputPayload map[string]interface{} `json:"input_payload,omitempty" swaggertype:"object"`
 	// OutputPayload 节点运行输出数据，根据不同节点类型包含不同的数据结构
 	// 各节点输出数据结构映射关系：
 	// - TaskMetaDataNode: TaskMetaData 任务元数据，包含任务ID、简历ID、匹配任务ID和维度权重
@@ -56,15 +69,24 @@ type ScreeningNodeRun struct {
 	// - SkillAgent: SkillMatchDetail 技能匹配详情，包含技能匹配、缺失技能和LLM分析结果
 	// - AggregatorAgent: JobResumeMatch 综合匹配结果，包含各维度匹配详情和最终综合评分
 	OutputPayload map[string]interface{} `json:"output_payload,omitempty" swaggertype:"object"`
-	ErrorMessage  *string                `json:"error_message,omitempty"`
-	TokensInput   *int64                 `json:"tokens_input,omitempty"`
-	TokensOutput  *int64                 `json:"tokens_output,omitempty"`
-	TotalCost     *float64               `json:"total_cost,omitempty"`
-	StartedAt     *time.Time             `json:"started_at,omitempty"`
-	FinishedAt    *time.Time             `json:"finished_at,omitempty"`
-	DurationMs    *int                   `json:"duration_ms,omitempty"`
-	CreatedAt     time.Time              `json:"created_at"`
-	UpdatedAt     time.Time              `json:"updated_at"`
+	// ErrorMessage 错误信息，当Status为failed时包含具体错误描述
+	ErrorMessage *string `json:"error_message,omitempty"`
+	// TokensInput 输入token数量
+	TokensInput *int64 `json:"tokens_input,omitempty"`
+	// TokensOutput 输出token数量
+	TokensOutput *int64 `json:"tokens_output,omitempty"`
+	// TotalCost 调用总成本
+	TotalCost *float64 `json:"total_cost,omitempty"`
+	// StartedAt 开始执行时间
+	StartedAt *time.Time `json:"started_at,omitempty"`
+	// FinishedAt 完成执行时间
+	FinishedAt *time.Time `json:"finished_at,omitempty"`
+	// DurationMs 执行耗时(毫秒)
+	DurationMs *int `json:"duration_ms,omitempty"`
+	// CreatedAt 创建时间
+	CreatedAt time.Time `json:"created_at"`
+	// UpdatedAt 更新时间
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // CreateNodeRunReq 创建节点运行请求

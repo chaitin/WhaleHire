@@ -1,6 +1,7 @@
 package internal
 
 import (
+	auditV1 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
 	departmentV1 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
 	fileV1 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
 	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
@@ -21,4 +22,5 @@ type APIHandlers struct {
 	FileHandler           *fileV1.FileHandler
 	DepartmentHandler     *departmentV1.DepartmentHandler
 	ScreeningHandler      *screeningV1.ScreeningHandler
+	AuditHandler          *auditV1.AuditHandler
 }

@@ -1503,7 +1503,7 @@ export function JobProfilePage() {
                     className={cn(
                       'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                       page === currentPage &&
-                        'border-[#10B981] bg-[#10B981] text-white'
+                        'border-[#36CFC9] bg-[#36CFC9] text-white'
                     )}
                   >
                     {page}
@@ -1555,7 +1555,7 @@ export function JobProfilePage() {
             {/* 选择编辑模式 */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#22C55E] rounded-sm flex items-center justify-center">
+                <div className="w-4 h-4 bg-[#36CFC9] rounded-sm flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-sm"></div>
                 </div>
                 <h3 className="text-[16px] font-medium text-[#1F2937]">
@@ -1568,7 +1568,7 @@ export function JobProfilePage() {
                   className={cn(
                     'flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors',
                     editMode === 'manual'
-                      ? 'border-[#22C55E] bg-[#F0FDF4]'
+                      ? 'border-[#36CFC9] bg-[#F0FDF4]'
                       : 'border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]'
                   )}
                   onClick={() => setEditMode('manual')}
@@ -1578,12 +1578,12 @@ export function JobProfilePage() {
                       className={cn(
                         'w-4 h-4 rounded-full border-2 flex items-center justify-center',
                         editMode === 'manual'
-                          ? 'border-[#22C55E]'
+                          ? 'border-[#36CFC9]'
                           : 'border-[#D1D5DB]'
                       )}
                     >
                       {editMode === 'manual' && (
-                        <div className="w-2 h-2 bg-[#22C55E] rounded-full"></div>
+                        <div className="w-2 h-2 bg-[#36CFC9] rounded-full"></div>
                       )}
                     </div>
                   </div>
@@ -1699,7 +1699,7 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={handleNavigateToPlatformConfig}
-                        className="h-8 px-3 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                        className="h-8 px-3 text-[12px] text-[#36CFC9] border-[#36CFC9] hover:bg-[#F0FDF4] hover:text-[#36CFC9] hover:border-[#36CFC9]"
                       >
                         + 新增所属部门
                       </Button>
@@ -1925,7 +1925,7 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={addIndustryRequirement}
-                        className="h-10 w-10 p-0 border-[#22C55E] text-[#22C55E] hover:bg-[#F0FDF4] hover:border-[#16A34A] hover:text-[#16A34A]"
+                        className="h-10 w-10 p-0 border-[#36CFC9] text-[#36CFC9] hover:bg-[#F0FDF4] hover:border-[#36CFC9] hover:text-[#36CFC9]"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -1958,7 +1958,7 @@ export function JobProfilePage() {
                       variant="outline"
                       size="sm"
                       onClick={handleNavigateToSkillConfig}
-                      className="h-6 px-2 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                      className="h-6 px-2 text-[12px] text-[#36CFC9] border-[#36CFC9] hover:bg-[#F0FDF4] hover:text-[#36CFC9] hover:border-[#36CFC9]"
                     >
                       <Plus className="h-3 w-3 mr-1" />
                       增加
@@ -2043,7 +2043,7 @@ export function JobProfilePage() {
                     variant="outline"
                     size="sm"
                     onClick={addResponsibility}
-                    className="h-8 px-3 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                    className="h-8 px-3 text-[12px] text-[#36CFC9] border-[#36CFC9] hover:bg-[#F0FDF4] hover:text-[#36CFC9] hover:border-[#36CFC9]"
                   >
                     <Plus className="h-3 w-3 mr-1" />
                     添加职责
@@ -2099,7 +2099,7 @@ export function JobProfilePage() {
             <Button
               onClick={handleSaveAndPublish}
               disabled={loading}
-              className="h-10 px-6 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="h-10 px-6 bg-[#36CFC9] hover:bg-[#36CFC9] text-white"
             >
               {loading ? '发布中...' : '保存并发布'}
             </Button>
@@ -2156,7 +2156,7 @@ export function JobProfilePage() {
             {/* 基本信息 */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#22C55E] rounded-sm flex items-center justify-center">
+                <div className="w-4 h-4 bg-[#36CFC9] rounded-sm flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-sm"></div>
                 </div>
                 <h3 className="text-[16px] font-medium text-[#1F2937]">
@@ -2234,7 +2234,7 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={handleNavigateToPlatformConfig}
-                        className="h-8 px-3 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                        className="h-8 px-3 text-[12px] text-[#36CFC9] border-[#36CFC9] hover:bg-[#F0FDF4] hover:text-[#36CFC9] hover:border-[#36CFC9]"
                       >
                         + 新增所属部门
                       </Button>
@@ -2443,7 +2443,7 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={addIndustryRequirement}
-                        className="h-10 w-10 p-0 border-[#22C55E] text-[#22C55E] hover:bg-[#F0FDF4] hover:border-[#16A34A] hover:text-[#16A34A]"
+                        className="h-10 w-10 p-0 border-[#36CFC9] text-[#36CFC9] hover:bg-[#F0FDF4] hover:border-[#36CFC9] hover:text-[#36CFC9]"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -2468,7 +2468,7 @@ export function JobProfilePage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-[#22C55E] rounded-sm flex items-center justify-center">
+                    <div className="w-4 h-4 bg-[#36CFC9] rounded-sm flex items-center justify-center">
                       <div className="w-2 h-2 bg-white rounded-sm"></div>
                     </div>
                     <h3 className="text-[16px] font-medium text-[#1F2937]">
@@ -2479,7 +2479,7 @@ export function JobProfilePage() {
                       variant="outline"
                       size="sm"
                       onClick={handleNavigateToSkillConfig}
-                      className="h-6 px-2 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                      className="h-6 px-2 text-[12px] text-[#36CFC9] border-[#36CFC9] hover:bg-[#F0FDF4] hover:text-[#36CFC9] hover:border-[#36CFC9]"
                     >
                       <Plus className="h-3 w-3 mr-1" />
                       增加
@@ -2564,7 +2564,7 @@ export function JobProfilePage() {
                     variant="outline"
                     size="sm"
                     onClick={addResponsibility}
-                    className="h-8 px-3 text-[12px] text-[#22C55E] border-[#22C55E] hover:bg-[#F0FDF4] hover:text-[#16A34A] hover:border-[#16A34A]"
+                    className="h-8 px-3 text-[12px] text-[#36CFC9] border-[#36CFC9] hover:bg-[#F0FDF4] hover:text-[#36CFC9] hover:border-[#36CFC9]"
                   >
                     <Plus className="h-3 w-3 mr-1" />
                     添加职责
@@ -2612,7 +2612,7 @@ export function JobProfilePage() {
             <Button
               onClick={handleUpdateJob}
               disabled={loading}
-              className="h-10 px-6 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+              className="h-10 px-6 bg-[#36CFC9] hover:bg-[#36CFC9] text-white"
             >
               {loading ? '更新中...' : '保存更新'}
             </Button>

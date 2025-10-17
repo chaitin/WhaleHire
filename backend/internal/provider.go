@@ -3,7 +3,9 @@ package internal
 import (
 	"github.com/google/wire"
 
+	auditV1 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
 	auditrepo "github.com/chaitin/WhaleHire/backend/internal/audit/repo"
+	auditusecase "github.com/chaitin/WhaleHire/backend/internal/audit/usecase"
 	departmentV1 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
 	departmentrepo "github.com/chaitin/WhaleHire/backend/internal/department/repo"
 	departmentusecase "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
@@ -42,6 +44,7 @@ func NewAPIHandlers(
 	fileV1 *fileV1.FileHandler,
 	departmentV1 *departmentV1.DepartmentHandler,
 	screeningV1 *screeningV1.ScreeningHandler,
+	auditV1 *auditV1.AuditHandler,
 ) *APIHandlers {
 	return &APIHandlers{
 		UserHandler:           userV1,
@@ -52,6 +55,7 @@ func NewAPIHandlers(
 		FileHandler:           fileV1,
 		DepartmentHandler:     departmentV1,
 		ScreeningHandler:      screeningV1,
+		AuditHandler:          auditV1,
 	}
 }
 
@@ -61,6 +65,8 @@ var Provider = wire.NewSet(
 	middleware.NewReadOnlyMiddleware,
 	middleware.NewAuditMiddleware,
 	auditrepo.NewAuditRepo,
+	auditusecase.NewAuditUsecase,
+	auditV1.NewAuditHandler,
 	userV1.NewUserHandler,
 	userrepo.NewUserRepo,
 	userusecase.NewUserUsecase,

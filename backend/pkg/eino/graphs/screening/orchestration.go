@@ -88,6 +88,49 @@ func (r *ScreeningChatGraph) GetSubAgentVersions() map[string]string {
 	return versions
 }
 
+// GetAgentVersion 根据节点键返回对应Agent的版本
+func (r *ScreeningChatGraph) GetAgentVersion(nodeKey string) string {
+	switch nodeKey {
+	case domain.BasicInfoAgent:
+		if r.basicInfoAgent != nil {
+			return r.basicInfoAgent.GetVersion()
+		}
+	case domain.EducationAgent:
+		if r.educationAgent != nil {
+			return r.educationAgent.GetVersion()
+		}
+	case domain.ExperienceAgent:
+		if r.experienceAgent != nil {
+			return r.experienceAgent.GetVersion()
+		}
+	case domain.IndustryAgent:
+		if r.industryAgent != nil {
+			return r.industryAgent.GetVersion()
+		}
+	case domain.ResponsibilityAgent:
+		if r.responsibilityAgent != nil {
+			return r.responsibilityAgent.GetVersion()
+		}
+	case domain.SkillAgent:
+		if r.skillAgent != nil {
+			return r.skillAgent.GetVersion()
+		}
+	case domain.AggregatorAgent:
+		if r.aggregatorAgent != nil {
+			return r.aggregatorAgent.GetVersion()
+		}
+	case domain.TaskMetaDataNode:
+		if r.taskMetaProcessor != nil {
+			return r.taskMetaProcessor.GetVersion()
+		}
+	case domain.DispatcherNode:
+		if r.dispatcher != nil {
+			return r.dispatcher.GetVersion()
+		}
+	}
+	return ""
+}
+
 // NewScreeningChatGraph 使用配置创建智能简历匹配图
 func NewScreeningChatGraph(ctx context.Context, chatModel model.ToolCallingChatModel, cfg *config.Config) (*ScreeningChatGraph, error) {
 

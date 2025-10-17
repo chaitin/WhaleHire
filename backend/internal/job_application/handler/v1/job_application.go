@@ -53,11 +53,11 @@ func NewJobApplicationHandler(
 //	@Router			/api/v1/job-applications [post]
 func (h *JobApplicationHandler) Create(c *web.Context, req domain.CreateJobApplicationsReq) error {
 	if req.ResumeID == "" {
-		return errcode.ErrInvalidParam
+		return errcode.ErrInvalidParam.WithData("message", "简历ID不能为空")
 	}
 
 	if len(req.JobPositionIDs) == 0 {
-		return errcode.ErrInvalidParam
+		return errcode.ErrInvalidParam.WithData("message", "岗位ID列表不能为空")
 	}
 
 	applications, err := h.usecase.CreateJobApplications(c.Request().Context(), &req)
@@ -82,11 +82,11 @@ func (h *JobApplicationHandler) Create(c *web.Context, req domain.CreateJobAppli
 //	@Router			/api/v1/job-applications [put]
 func (h *JobApplicationHandler) Update(c *web.Context, req domain.UpdateJobApplicationsReq) error {
 	if req.ResumeID == "" {
-		return errcode.ErrInvalidParam
+		return errcode.ErrInvalidParam.WithData("message", "简历ID不能为空")
 	}
 
 	if len(req.JobPositionIDs) == 0 {
-		return errcode.ErrInvalidParam
+		return errcode.ErrInvalidParam.WithData("message", "岗位ID列表不能为空")
 	}
 
 	applications, err := h.usecase.UpdateJobApplications(c.Request().Context(), &req)
@@ -112,7 +112,7 @@ func (h *JobApplicationHandler) Update(c *web.Context, req domain.UpdateJobAppli
 func (h *JobApplicationHandler) GetByResumeID(c *web.Context) error {
 	resumeID := c.Param("resume_id")
 	if resumeID == "" {
-		return errcode.ErrInvalidParam
+		return errcode.ErrInvalidParam.WithData("message", "简历ID不能为空")
 	}
 
 	applications, err := h.usecase.GetJobPositionsByResumeID(c.Request().Context(), resumeID)
@@ -142,7 +142,7 @@ func (h *JobApplicationHandler) GetByResumeID(c *web.Context) error {
 func (h *JobApplicationHandler) GetByJobPositionID(c *web.Context, req domain.GetResumesByJobPositionIDReq) error {
 	jobPositionID := c.Param("job_position_id")
 	if jobPositionID == "" {
-		return errcode.ErrInvalidParam
+		return errcode.ErrInvalidParam.WithData("message", "岗位ID不能为空")
 	}
 
 	// 设置岗位ID

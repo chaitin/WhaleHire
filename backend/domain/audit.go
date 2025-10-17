@@ -19,10 +19,13 @@ type AuditUsecase interface {
 	Delete(ctx context.Context, id string) error
 	BatchDelete(ctx context.Context, ids []string) error
 	CleanupOldLogs(ctx context.Context, days int) error
+	GetOperationSummary(ctx context.Context, operatorID string, days int) (*OperationSummary, error)
+	GetSecurityAlerts(ctx context.Context, hours int) ([]*SecurityAlert, error)
 }
 
 // AuditRepo 审计日志仓储接口
 type AuditRepo interface {
+	Create(ctx context.Context, log *AuditLog) error
 	List(ctx context.Context, req *ListAuditLogReq) ([]*AuditLog, *db.PageInfo, error)
 	GetByID(ctx context.Context, id string) (*AuditLog, error)
 	GetStats(ctx context.Context, req *AuditStatsReq) (*AuditStatsResp, error)
@@ -36,16 +39,21 @@ type ListAuditLogReq struct {
 	web.Pagination
 
 	// 筛选条件
-	OperatorType  *consts.OperatorType   `json:"operator_type" query:"operator_type"`   // 操作者类型
-	OperatorID    *string                `json:"operator_id" query:"operator_id"`       // 操作者ID
-	OperationType *consts.OperationType  `json:"operation_type" query:"operation_type"` // 操作类型
-	ResourceType  *consts.ResourceType   `json:"resource_type" query:"resource_type"`   // 资源类型
-	ResourceID    *string                `json:"resource_id" query:"resource_id"`       // 资源ID
-	Status        *consts.AuditLogStatus `json:"status" query:"status"`                 // 状态
-	IP            *string                `json:"ip" query:"ip"`                         // IP地址
-	StartTime     *time.Time             `json:"start_time" query:"start_time"`         // 开始时间
-	EndTime       *time.Time             `json:"end_time" query:"end_time"`             // 结束时间
-	Search        *string                `json:"search" query:"search"`                 // 搜索关键词
+	OperatorType  consts.OperatorType   `json:"operator_type" query:"operator_type"`     // 操作者类型
+	OperatorID    string                `json:"operator_id" query:"operator_id"`         // 操作者ID
+	OperationType consts.OperationType  `json:"operation_type" query:"operation_type"`   // 操作类型
+	ResourceType  consts.ResourceType   `json:"resource_type" query:"resource_type"`     // 资源类型
+	ResourceID    string                `json:"resource_id" query:"resource_id"`         // 资源ID
+	Status        consts.AuditLogStatus `json:"status" query:"status"`                   // 状态
+	IP            string                `json:"ip" query:"ip"`                           // IP地址
+	StartTime     *time.Time            `json:"start_time,omitempty" query:"start_time"` // 任务创建时间范围起始时间，可选
+	EndTime       *time.Time            `json:"end_time,omitempty" query:"end_time"`     // 任务创建时间范围结束时间，可选
+	Search        string                `json:"search" query:"search"`                   // 搜索关键词
+}
+
+// NormalizeEmptyPointers 规范化空指针字段，将指向空字符串的指针设置为nil
+func (req *ListAuditLogReq) NormalizeEmptyPointers() {
+	// 字符串字段已改为非指针类型，不需要处理
 }
 
 // ListAuditLogResp 审计日志列表响应
@@ -56,8 +64,8 @@ type ListAuditLogResp struct {
 
 // AuditStatsReq 审计日志统计请求
 type AuditStatsReq struct {
-	StartTime *time.Time `json:"start_time" query:"start_time"` // 开始时间
-	EndTime   *time.Time `json:"end_time" query:"end_time"`     // 结束时间
+	StartTime *time.Time `json:"start_time" query:"start_time, omitempty"` // 开始时间
+	EndTime   *time.Time `json:"end_time" query:"end_time, omitempty"`     // 结束时间
 }
 
 // AuditStatsResp 审计日志统计响应
@@ -182,4 +190,46 @@ func (a *AuditLog) From(e *db.AuditLog) *AuditLog {
 	a.UpdatedAt = e.UpdatedAt.Unix()
 
 	return a
+}
+
+// OperationSummary 操作摘要统计
+type OperationSummary struct {
+	OperatorID    string                         `json:"operator_id"`    // 操作者ID
+	Days          int                            `json:"days"`           // 统计天数
+	TotalCount    int64                          `json:"total_count"`    // 总操作数
+	SuccessCount  int64                          `json:"success_count"`  // 成功数
+	FailedCount   int64                          `json:"failed_count"`   // 失败数
+	OperationMap  map[consts.OperationType]int64 `json:"operation_map"`  // 操作类型统计
+	ResourceMap   map[consts.ResourceType]int64  `json:"resource_map"`   // 资源类型统计
+	DailyActivity []DailyActivity                `json:"daily_activity"` // 每日活动统计
+}
+
+// DailyActivity 每日活动统计
+type DailyActivity struct {
+	Date         string `json:"date"`          // 日期 (YYYY-MM-DD)
+	Count        int64  `json:"count"`         // 操作数量
+	SuccessCount int64  `json:"success_count"` // 成功数量
+	FailedCount  int64  `json:"failed_count"`  // 失败数量
+}
+
+// SecurityAlert 安全告警
+type SecurityAlert struct {
+	Type        string  `json:"type"`                  // 告警类型
+	Level       string  `json:"level"`                 // 告警级别 (high, medium, low)
+	Title       string  `json:"title"`                 // 告警标题
+	Description string  `json:"description"`           // 告警描述
+	IP          string  `json:"ip,omitempty"`          // 相关IP地址
+	OperatorID  *string `json:"operator_id,omitempty"` // 相关操作者ID
+	Count       int64   `json:"count"`                 // 相关计数
+	CreatedAt   int64   `json:"created_at"`            // 创建时间
+}
+
+// BatchDeleteAuditLogReq 批量删除审计日志请求
+type BatchDeleteAuditLogReq struct {
+	IDs []string `json:"ids" validate:"required,min=1,max=100"` // 要删除的日志ID列表
+}
+
+// CleanupOldLogsReq 清理旧日志请求
+type CleanupOldLogsReq struct {
+	Days int `json:"days" validate:"required,min=1,max=365"` // 保留天数
 }
