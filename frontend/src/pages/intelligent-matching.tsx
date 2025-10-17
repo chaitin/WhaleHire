@@ -690,11 +690,8 @@ export function IntelligentMatchingPage() {
                           1 +
                           (pagination.current - 1) * pagination.pageSize}
                       </td>
-                      <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
-                        <div
-                          className="inline-block max-w-[5em] truncate cursor-help"
-                          title={task.jobPositions.join(', ')}
-                        >
+                      <td className="px-8 py-5 text-sm text-gray-500">
+                        <div className="max-w-xs break-words">
                           {task.jobPositions.join(', ')}
                         </div>
                       </td>
