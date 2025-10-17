@@ -929,7 +929,7 @@ export default function PlatformConfig() {
                           className={cn(
                             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                             page === currentPage &&
-                              'border-[#10B981] bg-[#10B981] text-white'
+                              'border-[#36CFC9] bg-[#36CFC9] text-white'
                           )}
                         >
                           {page}
@@ -1308,7 +1308,7 @@ export default function PlatformConfig() {
                           className={cn(
                             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                             page === skillCurrentPage &&
-                              'border-[#10B981] bg-[#10B981] text-white'
+                              'border-[#36CFC9] bg-[#36CFC9] text-white'
                           )}
                         >
                           {page}

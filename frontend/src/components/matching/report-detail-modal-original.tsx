@@ -311,7 +311,7 @@ export function ReportDetailModal({
                 <span
                   className={`inline-flex items-center rounded-full px-3 py-1 text-xs ${
                     progress.status === 'completed'
-                      ? 'bg-[#D1FAE5] text-[#10B981]'
+                      ? 'bg-[#D1FAE5] text-[#36CFC9]'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
