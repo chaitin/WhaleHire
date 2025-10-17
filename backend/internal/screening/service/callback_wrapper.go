@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
 
 	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	screening "github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening"
 	"github.com/cloudwego/eino/callbacks"
@@ -29,6 +31,7 @@ type CallbackCollectorWrapper struct {
 
 // NewCallbackCollectorWrapper 创建带数据库存储功能的CallbackCollector包装器
 func NewCallbackCollectorWrapper(
+	collector *screening.AgentCallbackCollector,
 	nodeRunRepo domain.ScreeningNodeRunRepo,
 	screeningRepo domain.ScreeningRepo,
 	screeningGraph *screening.ScreeningChatGraph,
@@ -36,8 +39,11 @@ func NewCallbackCollectorWrapper(
 	traceID string,
 	logger *slog.Logger,
 ) *CallbackCollectorWrapper {
+	if collector == nil {
+		collector = screening.NewAgentCallbackCollector()
+	}
 	return &CallbackCollectorWrapper{
-		AgentCallbackCollector: screening.NewAgentCallbackCollector(),
+		AgentCallbackCollector: collector,
 		nodeRunRepo:            nodeRunRepo,
 		screeningRepo:          screeningRepo,
 		screeningGraph:         screeningGraph,
@@ -50,26 +56,31 @@ func NewCallbackCollectorWrapper(
 
 // ComposeOptions 返回包含数据库存储功能的compose选项
 func (w *CallbackCollectorWrapper) ComposeOptions() []compose.Option {
-	// 获取原始的compose选项
-	originalOptions := w.AgentCallbackCollector.ComposeOptions()
+	// 获取原始采集器的回调选项，确保令牌用量等统计逻辑正常注册
+	collectorOptions := w.AgentCallbackCollector.ComposeOptions()
 
 	// 添加数据库存储的回调处理器
-	dbOptions := []compose.Option{
-		compose.WithCallbacks(
-			w.newDatabaseCallbackHandler(domain.TaskMetaDataNode),
-			w.newDatabaseCallbackHandler(domain.DispatcherNode),
-			w.newDatabaseCallbackHandler(domain.BasicInfoAgent),
-			w.newDatabaseCallbackHandler(domain.EducationAgent),
-			w.newDatabaseCallbackHandler(domain.ExperienceAgent),
-			w.newDatabaseCallbackHandler(domain.IndustryAgent),
-			w.newDatabaseCallbackHandler(domain.ResponsibilityAgent),
-			w.newDatabaseCallbackHandler(domain.SkillAgent),
-			w.newDatabaseCallbackHandler(domain.AggregatorAgent),
-		),
+	nodeKeys := []string{
+		domain.TaskMetaDataNode,
+		domain.DispatcherNode,
+		domain.BasicInfoAgent,
+		domain.EducationAgent,
+		domain.ExperienceAgent,
+		domain.IndustryAgent,
+		domain.ResponsibilityAgent,
+		domain.SkillAgent,
+		domain.AggregatorAgent,
+	}
+
+	dbOptions := make([]compose.Option, 0, len(nodeKeys))
+	for _, nodeKey := range nodeKeys {
+		dbOptions = append(dbOptions,
+			compose.WithCallbacks(w.newDatabaseCallbackHandler(nodeKey)).DesignateNode(nodeKey),
+		)
 	}
 
 	// 合并选项
-	return append(originalOptions, dbOptions...)
+	return append(collectorOptions, dbOptions...)
 }
 
 // newDatabaseCallbackHandler 创建数据库存储的回调处理器
@@ -117,7 +128,6 @@ func (w *CallbackCollectorWrapper) newDatabaseCallbackHandler(nodeKey string) ca
 						inputData = data
 					}
 				}
-
 				// 只有当输入数据类型正确时才保存到数据库
 				if inputData != nil {
 					w.saveNodeRunToDB(ctx, nodeKey, inputData, nil, nil, nil, consts.ScreeningNodeRunStatusRunning)
@@ -127,106 +137,115 @@ func (w *CallbackCollectorWrapper) newDatabaseCallbackHandler(nodeKey string) ca
 		}).
 		OnEndFn(func(ctx context.Context, info *callbacks.RunInfo, output callbacks.CallbackOutput) context.Context {
 			if info.Name == nodeKey {
-				// 获取对应的输出数据和token使用情况
 				var outputData any
 				var tokenUsage *model.TokenUsage
 
 				switch nodeKey {
 				case domain.TaskMetaDataNode:
-					// TaskMetaDataNode: 任务元数据处理节点
-					// 输出: domain.TaskMetaData 结构，包含任务ID、简历ID、匹配任务ID和维度权重配置
-					// 用途: 为后续Agent节点提供任务上下文信息和权重配置
-					if result, ok := w.TaskMetaOutput(); ok {
+					if result, ok := output.(*domain.TaskMetaData); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("TaskMetaDataNode输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					// TaskMetaDataNode 通常不消耗token，因为它是数据处理节点
 				case domain.DispatcherNode:
-					// DispatcherNode: 数据分发节点
-					// 输出: map[string]any 分发数据，将输入数据按Agent类型分发到对应的处理节点
-					// 用途: 为各个专业Agent提供结构化的输入数据
-					if result, ok := w.DispatcherOutput(); ok {
+					if result, ok := output.(map[string]any); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("DispatcherNode输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
 				case domain.BasicInfoAgent:
-					// BasicInfoAgent: 基本信息匹配Agent
-					// 输出: domain.BasicMatchDetail 基本信息匹配详情
-					// 包含: 地点匹配、薪资匹配、部门匹配等基础信息的匹配分析结果
-					// 权重: 3% (DefaultDimensionWeights.Basic)
-					if result, ok := w.BasicInfoOutput(); ok {
+					if result, ok := output.(*domain.BasicMatchDetail); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("BasicInfoAgent输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					if usage, ok := w.BasicInfoTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.BasicInfoTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.EducationAgent:
-					// EducationAgent: 教育背景匹配Agent
-					// 输出: domain.EducationMatchDetail 教育背景匹配详情
-					// 包含: 学历匹配、专业匹配、学校匹配等教育背景的匹配分析结果
-					// 权重: 15% (DefaultDimensionWeights.Education)
-					if result, ok := w.EducationOutput(); ok {
+					if result, ok := output.(*domain.EducationMatchDetail); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("EducationAgent输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					if usage, ok := w.EducationTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.EducationTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.ExperienceAgent:
-					// ExperienceAgent: 工作经验匹配Agent
-					// 输出: domain.ExperienceMatchDetail 工作经验匹配详情
-					// 包含: 工作年限匹配、职位匹配、行业经验匹配等工作经验的匹配分析结果
-					// 权重: 20% (DefaultDimensionWeights.Experience)
-					if result, ok := w.ExperienceOutput(); ok {
+					if result, ok := output.(*domain.ExperienceMatchDetail); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("ExperienceAgent输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					if usage, ok := w.ExperienceTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.ExperienceTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.IndustryAgent:
-					// IndustryAgent: 行业背景匹配Agent
-					// 输出: domain.IndustryMatchDetail 行业背景匹配详情
-					// 包含: 行业匹配、公司匹配等行业背景的匹配分析结果
-					// 权重: 7% (DefaultDimensionWeights.Industry)
-					if result, ok := w.IndustryOutput(); ok {
+					if result, ok := output.(*domain.IndustryMatchDetail); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("IndustryAgent输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					if usage, ok := w.IndustryTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.IndustryTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.ResponsibilityAgent:
-					// ResponsibilityAgent: 职责匹配Agent
-					// 输出: domain.ResponsibilityMatchDetail 职责匹配详情
-					// 包含: 岗位职责与工作经历的匹配分析、相关经验识别等
-					// 权重: 20% (DefaultDimensionWeights.Responsibility)
-					if result, ok := w.ResponsibilityOutput(); ok {
+					if result, ok := output.(*domain.ResponsibilityMatchDetail); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("ResponsibilityAgent输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					if usage, ok := w.ResponsibilityTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.ResponsibilityTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.SkillAgent:
-					// SkillAgent: 技能匹配Agent
-					// 输出: domain.SkillMatchDetail 技能匹配详情
-					// 包含: 匹配技能列表、缺失技能列表、额外技能、LLM分析结果等
-					// 权重: 35% (DefaultDimensionWeights.Skill) - 权重最高的匹配维度
-					if result, ok := w.SkillOutput(); ok {
+					if result, ok := output.(*domain.SkillMatchDetail); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("SkillAgent输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					if usage, ok := w.SkillTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.SkillTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.AggregatorAgent:
-					// AggregatorAgent: 结果聚合Agent
-					// 输出: domain.JobResumeMatch 综合匹配结果
-					// 包含: 各维度匹配详情、综合评分、匹配建议等最终匹配结果
-					// 用途: 将各个专业Agent的输出结果进行加权聚合，生成最终的匹配报告
-					if result, ok := w.AggregatedMatchOutput(); ok {
+					if result, ok := output.(*domain.JobResumeMatch); ok {
 						outputData = result
+					} else {
+						w.logger.Warn("AggregatorAgent输出类型断言失败",
+							slog.String("nodeKey", nodeKey),
+							slog.String("actualType", fmt.Sprintf("%T", output)),
+						)
 					}
-					if usage, ok := w.AggregatorTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.AggregatorTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				}
 
-				w.saveNodeRunToDB(ctx, nodeKey, nil, outputData, nil, tokenUsage, consts.ScreeningNodeRunStatusCompleted)
+				w.updateNodeRunInDB(ctx, nodeKey, outputData, nil, tokenUsage, consts.ScreeningNodeRunStatusCompleted)
 			}
 			return ctx
 		}).
@@ -237,40 +256,145 @@ func (w *CallbackCollectorWrapper) newDatabaseCallbackHandler(nodeKey string) ca
 
 				switch nodeKey {
 				case domain.BasicInfoAgent:
-					if usage, ok := w.BasicInfoTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.BasicInfoTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.EducationAgent:
-					if usage, ok := w.EducationTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.EducationTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.ExperienceAgent:
-					if usage, ok := w.ExperienceTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.ExperienceTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.IndustryAgent:
-					if usage, ok := w.IndustryTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.IndustryTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.ResponsibilityAgent:
-					if usage, ok := w.ResponsibilityTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.ResponsibilityTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.SkillAgent:
-					if usage, ok := w.SkillTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.SkillTokenUsage(); ok {
 						tokenUsage = usage
 					}
 				case domain.AggregatorAgent:
-					if usage, ok := w.AggregatorTokenUsage(); ok {
+					if usage, ok := w.AgentCallbackCollector.AggregatorTokenUsage(); ok {
 						tokenUsage = usage
 					}
 					// TaskMetaDataNode 和 DispatcherNode 通常不消耗token，无需处理
 				}
 
-				w.saveNodeRunToDB(ctx, nodeKey, nil, nil, err, tokenUsage, consts.ScreeningNodeRunStatusFailed)
+				go w.updateNodeRunInDB(ctx, nodeKey, nil, err, tokenUsage, consts.ScreeningNodeRunStatusFailed)
 			}
 			return ctx
 		}).Build()
+}
+
+// updateNodeRunInDB 更新现有的节点运行记录
+func (w *CallbackCollectorWrapper) updateNodeRunInDB(
+	ctx context.Context,
+	nodeKey string,
+	output any,
+	err error,
+	tokenUsage *model.TokenUsage,
+	status consts.ScreeningNodeRunStatus,
+) {
+	taskResumeID, getErr := w.getTaskResumeID(ctx)
+	if getErr != nil {
+		w.logger.Error("获取任务简历ID失败",
+			slog.String("nodeKey", nodeKey),
+			slog.String("traceID", w.traceID),
+			slog.Any("error", getErr),
+		)
+		return
+	}
+
+	// 查找现有记录
+	existingRecord, findErr := w.nodeRunRepo.GetByTaskResumeAndNode(ctx, taskResumeID, nodeKey, 1)
+	if findErr != nil {
+		w.logger.Error("查找现有节点运行记录失败",
+			slog.String("nodeKey", nodeKey),
+			slog.String("taskResumeID", taskResumeID.String()),
+			slog.String("traceID", w.traceID),
+			slog.Any("error", findErr),
+		)
+		return
+	}
+
+	// 准备更新数据
+	var outputPayload map[string]interface{}
+	if output != nil {
+		outputBytes, marshalErr := json.Marshal(output)
+		if marshalErr != nil {
+			w.logger.Warn("序列化输出数据失败",
+				slog.String("nodeKey", nodeKey),
+				slog.String("traceID", w.traceID),
+				slog.Any("error", marshalErr),
+			)
+		} else {
+			if unmarshalErr := json.Unmarshal(outputBytes, &outputPayload); unmarshalErr != nil {
+				w.logger.Warn("反序列化输出数据失败",
+					slog.String("nodeKey", nodeKey),
+					slog.String("traceID", w.traceID),
+					slog.Any("error", unmarshalErr),
+				)
+			}
+		}
+	}
+
+	var errorMessage *string
+	if err != nil {
+		errMsg := err.Error()
+		errorMessage = &errMsg
+	}
+
+	// 获取 Agent 版本信息
+	var agentVersion *string
+	if w.screeningGraph != nil {
+		version := w.screeningGraph.GetAgentVersion(nodeKey)
+		if version != "" {
+			agentVersion = &version
+		}
+	}
+
+	// 使用 nodeRunRepo 的 Update 方法更新记录
+	_, updateErr := w.nodeRunRepo.Update(ctx, existingRecord.ID, func(tx *db.Tx, current *db.ScreeningNodeRun, updater *db.ScreeningNodeRunUpdateOne) error {
+		updater.SetStatus(string(status))
+
+		if outputPayload != nil {
+			updater.SetOutputPayload(outputPayload)
+		}
+
+		if errorMessage != nil {
+			updater.SetErrorMessage(*errorMessage)
+		}
+
+		if agentVersion != nil {
+			updater.SetAgentVersion(*agentVersion)
+		}
+
+		if tokenUsage != nil {
+			if tokenUsage.PromptTokens > 0 {
+				updater.SetTokensInput(int64(tokenUsage.PromptTokens))
+			}
+			if tokenUsage.CompletionTokens > 0 {
+				updater.SetTokensOutput(int64(tokenUsage.CompletionTokens))
+			}
+		}
+
+		return nil
+	})
+
+	if updateErr != nil {
+		w.logger.Error("更新节点运行数据失败",
+			slog.String("nodeKey", nodeKey),
+			slog.String("taskResumeID", taskResumeID.String()),
+			slog.String("traceID", w.traceID),
+			slog.Any("error", updateErr),
+		)
+	}
 }
 
 // saveNodeRunToDB 保存节点运行数据到数据库
@@ -289,16 +413,38 @@ func (w *CallbackCollectorWrapper) saveNodeRunToDB(
 	// 序列化输入和输出数据
 	var inputPayload, outputPayload map[string]interface{}
 	if input != nil {
-		if data, jsonErr := json.Marshal(input); jsonErr == nil {
+		data, jsonErr := json.Marshal(input)
+		if jsonErr != nil {
+			w.logger.Debug("序列化输入数据失败",
+				slog.String("nodeKey", nodeKey),
+				slog.String("traceID", w.traceID),
+				slog.Any("error", jsonErr),
+			)
+		} else {
 			if unmarshalErr := json.Unmarshal(data, &inputPayload); unmarshalErr != nil {
-				w.logger.Warn("Failed to unmarshal input payload", "error", unmarshalErr)
+				w.logger.Debug("反序列化输入数据失败",
+					slog.String("nodeKey", nodeKey),
+					slog.String("traceID", w.traceID),
+					slog.Any("error", unmarshalErr),
+				)
 			}
 		}
 	}
 	if output != nil {
-		if data, jsonErr := json.Marshal(output); jsonErr == nil {
+		data, jsonErr := json.Marshal(output)
+		if jsonErr != nil {
+			w.logger.Debug("序列化输出数据失败",
+				slog.String("nodeKey", nodeKey),
+				slog.String("traceID", w.traceID),
+				slog.Any("error", jsonErr),
+			)
+		} else {
 			if unmarshalErr := json.Unmarshal(data, &outputPayload); unmarshalErr != nil {
-				w.logger.Warn("Failed to unmarshal output payload", "error", unmarshalErr)
+				w.logger.Debug("反序列化输出数据失败",
+					slog.String("nodeKey", nodeKey),
+					slog.String("traceID", w.traceID),
+					slog.Any("error", unmarshalErr),
+				)
 			}
 		}
 	}
@@ -317,8 +463,7 @@ func (w *CallbackCollectorWrapper) saveNodeRunToDB(
 	if getTaskErr != nil {
 		w.logger.Error("获取TaskResumeID失败",
 			slog.String("nodeKey", nodeKey),
-			slog.String("taskID", w.taskID.String()),
-			slog.String("resumeID", w.resumeID.String()),
+			slog.String("traceID", w.traceID),
 			slog.Any("error", getTaskErr),
 		)
 		return
@@ -342,29 +487,21 @@ func (w *CallbackCollectorWrapper) saveNodeRunToDB(
 		req.OutputPayload = outputPayload
 	}
 
-	// 异步保存到数据库
-	go func() {
-		if _, saveErr := w.nodeRunRepo.Create(context.Background(), req); saveErr != nil {
-			w.logger.Error("保存节点运行数据失败",
-				slog.String("nodeKey", nodeKey),
-				slog.String("taskID", w.taskID.String()),
-				slog.String("resumeID", w.resumeID.String()),
-				slog.String("taskResumeID", taskResumeID.String()),
-				slog.String("traceID", w.traceID),
-				slog.Any("agentVersion", agentVersion),
-				slog.Any("error", saveErr),
-			)
-		} else {
-			w.logger.Debug("节点运行数据保存成功",
-				slog.String("nodeKey", nodeKey),
-				slog.String("status", string(status)),
-				slog.String("taskID", w.taskID.String()),
-				slog.String("resumeID", w.resumeID.String()),
-				slog.String("taskResumeID", taskResumeID.String()),
-				slog.Any("agentVersion", agentVersion),
-			)
-		}
-	}()
+	// 同步保存到数据库
+	if _, saveErr := w.nodeRunRepo.Create(ctx, req); saveErr != nil {
+		w.logger.Error("保存节点运行数据失败",
+			slog.String("nodeKey", nodeKey),
+			slog.String("taskResumeID", taskResumeID.String()),
+			slog.String("traceID", w.traceID),
+			slog.Any("error", saveErr),
+		)
+	} else {
+		w.logger.Debug("节点运行数据保存成功",
+			slog.String("nodeKey", nodeKey),
+			slog.String("status", string(status)),
+			slog.String("taskResumeID", taskResumeID.String()),
+		)
+	}
 }
 
 // getTaskResumeID 根据TaskID和ResumeID获取TaskResumeID

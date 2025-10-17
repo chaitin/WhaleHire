@@ -77,6 +77,7 @@ func main() {
 	}
 
 	outputCollector := screening.NewAgentCallbackCollector()
+	outputCollector.EnableDetailedCallbacks() // 开启详细回调便于单独示例调试
 
 	// 准备测试数据
 	matchInput := createTestMatchInput()

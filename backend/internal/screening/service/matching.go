@@ -120,14 +120,12 @@ func (s *matchingService) Match(ctx context.Context, req *MatchRequest) (*MatchR
 		MatchTaskID:      fmt.Sprintf("%s:%s", req.TaskID.String(), req.ResumeID.String()),
 	}
 
-	// 创建带数据库存储功能的CallbackCollectorWrapper
-	wrapper := NewCallbackCollectorWrapper(s.nodeRunRepo, s.screeningRepo, s.currentGraph, req.TaskID, req.ResumeID, req.TaskID.String(), s.logger)
+	// 创建回调收集器并传入包装器，复用同一份回调状态
 	collector := screening.NewAgentCallbackCollector()
+	wrapper := NewCallbackCollectorWrapper(collector, s.nodeRunRepo, s.screeningRepo, s.currentGraph, req.TaskID, req.ResumeID, req.TaskID.String(), s.logger)
 
-	// 合并包装器的选项和collector的选项
-	wrapperOptions := wrapper.ComposeOptions()
-	collectorOptions := collector.ComposeOptions()
-	allOptions := append(wrapperOptions, collectorOptions...)
+	// 包装器内部已包含收集器和数据库回调
+	allOptions := wrapper.ComposeOptions()
 
 	start := time.Now()
 	match, err := compiledGraph.Invoke(ctx, matchInput, allOptions...)

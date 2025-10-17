@@ -48,7 +48,6 @@ func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*do
 	if msg == nil || msg.Content == "" {
 		return nil, fmt.Errorf("empty model output")
 	}
-	fmt.Printf("basicinfo msg=%v\n", msg.Content)
 
 	var output domain.BasicMatchDetail
 	if err := json.Unmarshal([]byte(msg.Content), &output); err != nil {

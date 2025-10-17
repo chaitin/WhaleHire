@@ -25,6 +25,7 @@ type MatchInput struct {
 }
 
 // JobResumeMatch 工作简历匹配结果
+// @Description 候选人简历与岗位要求的综合匹配分析结果，包含各维度匹配详情和最终综合评分
 type JobResumeMatch struct {
 	TaskMetaData        *TaskMetaData              `json:"task_meta_data"`
 	OverallScore        float64                    `json:"overall_score"`        // 综合匹配度 (0-100)
@@ -39,18 +40,20 @@ type JobResumeMatch struct {
 }
 
 // BasicMatchDetail 基本信息匹配详情
+// @Description 候选人基本信息与岗位要求的匹配分析结果，包含地点、薪资、部门等基础信息匹配
 type BasicMatchDetail struct {
 	// Score 基本信息匹配总分 (0-100)
 	Score float64 `json:"score" example:"85.5"`
 	// SubScores 各子项匹配分数，如地点、薪资等
 	SubScores map[string]float64 `json:"sub_scores"`
 	// Evidence 匹配证据列表
-	Evidence []string `json:"evidence" `
+	Evidence []string `json:"evidence" example:"[\"工作地点匹配\",\"薪资期望符合\"]"`
 	// Notes 匹配备注说明
 	Notes string `json:"notes" example:"候选人基本信息与岗位要求高度匹配"`
 }
 
 // SkillMatchDetail 技能匹配详情
+// @Description 候选人技能与岗位技能要求的匹配分析结果，包含匹配技能、缺失技能和LLM分析
 type SkillMatchDetail struct {
 	// Score 技能匹配总分 (0-100)
 	Score float64 `json:"score" example:"78.5"`
@@ -117,6 +120,7 @@ type SkillItemAnalysis struct {
 }
 
 // ResponsibilityMatchDetail 职责匹配详情
+// @Description 候选人工作经历与岗位职责要求的匹配分析结果，包含匹配职责和相关经验
 type ResponsibilityMatchDetail struct {
 	// Score 职责匹配总分 (0-100)
 	Score float64 `json:"score" example:"82.0"`
@@ -159,6 +163,7 @@ type LLMMatchAnalysis struct {
 }
 
 // ExperienceMatchDetail 经验匹配详情
+// @Description 候选人工作经验与岗位经验要求的匹配分析结果，包含年限、职位和行业匹配
 type ExperienceMatchDetail struct {
 	// Score 经验匹配总分 (0-100)
 	Score float64 `json:"score" example:"78.5"`
@@ -209,6 +214,7 @@ type IndustryMatchInfo struct {
 }
 
 // EducationMatchDetail 教育匹配详情
+// @Description 候选人教育背景与岗位教育要求的匹配分析结果，包含学历、专业和学校匹配
 type EducationMatchDetail struct {
 	// Score 教育匹配总分 (0-100)
 	Score float64 `json:"score" example:"88.0"`
@@ -257,6 +263,7 @@ type SchoolMatchInfo struct {
 }
 
 // IndustryMatchDetail 行业匹配详情
+// @Description 候选人行业背景与岗位行业要求的匹配分析结果，包含行业和公司匹配
 type IndustryMatchDetail struct {
 	// Score 行业匹配总分 (0-100)
 	Score float64 `json:"score" example:"85.0"`
@@ -281,13 +288,20 @@ type CompanyMatchInfo struct {
 }
 
 // DimensionWeights 维度权重
+// @Description 各个匹配维度的权重配置，用于计算综合匹配度
 type DimensionWeights struct {
-	Skill          float64 `json:"skill"`          // 技能匹配权重 35%
-	Responsibility float64 `json:"responsibility"` // 职责匹配权重 20%
-	Experience     float64 `json:"experience"`     // 工作经验权重 20%
-	Education      float64 `json:"education"`      // 教育背景权重 15%
-	Industry       float64 `json:"industry"`       // 行业背景权重 7%
-	Basic          float64 `json:"basic"`          // 基本信息权重 3%
+	// Skill 技能匹配权重，默认35%
+	Skill float64 `json:"skill"`
+	// Responsibility 职责匹配权重，默认20%
+	Responsibility float64 `json:"responsibility" `
+	// Experience 工作经验权重，默认20%
+	Experience float64 `json:"experience"`
+	// Education 教育背景权重，默认15%
+	Education float64 `json:"education" `
+	// Industry 行业背景权重，默认7%
+	Industry float64 `json:"industry"`
+	// Basic 基本信息权重，默认3%
+	Basic float64 `json:"basic" `
 }
 
 // DefaultDimensionWeights 默认维度权重
@@ -341,10 +355,15 @@ type IndustryData struct {
 	ResumeExperiences       []*ResumeExperience       `json:"resume_experiences"`
 }
 
-// 任务数据
+// TaskMetaData 任务元数据
+// @Description 筛选任务的元数据信息，包含任务ID、简历ID、匹配任务ID和维度权重
 type TaskMetaData struct {
-	JobID            string            `json:"job_id"`
-	ResumeID         string            `json:"resume_id"`
-	MatchTaskID      string            `json:"match_task_id"`
-	DimensionWeights *DimensionWeights `json:"dimension_weights"`
+	// JobID 岗位ID
+	JobID string `json:"job_id" `
+	// ResumeID 简历ID
+	ResumeID string `json:"resume_id"`
+	// MatchTaskID 匹配任务ID
+	MatchTaskID string `json:"match_task_id" `
+	// DimensionWeights 维度权重配置
+	DimensionWeights *DimensionWeights `json:"dimension_weights" `
 }

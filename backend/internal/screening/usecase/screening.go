@@ -207,10 +207,46 @@ func (u *ScreeningUsecase) StartScreeningTask(ctx context.Context, req *domain.S
 		return nil, fmt.Errorf("获取任务信息失败: %w", err)
 	}
 	if task.Status == string(consts.ScreeningTaskStatusRunning) {
-		return &domain.StartScreeningTaskResp{TaskID: req.TaskID}, nil
+		// 获取任务关联的简历ID列表
+		resumeFilter := &domain.ScreeningTaskResumeFilter{
+			TaskID: &task.ID,
+		}
+		taskResumes, _, err := u.repo.ListScreeningTaskResumes(ctx, resumeFilter)
+		if err != nil {
+			return nil, fmt.Errorf("获取任务简历列表失败: %w", err)
+		}
+
+		resumeIDs := make([]uuid.UUID, len(taskResumes))
+		for i, taskResume := range taskResumes {
+			resumeIDs[i] = taskResume.ResumeID
+		}
+
+		return &domain.StartScreeningTaskResp{
+			TaskID:        req.TaskID,
+			JobPositionID: task.JobPositionID,
+			ResumeIDs:     resumeIDs,
+		}, nil
 	}
 	if task.Status == string(consts.ScreeningTaskStatusCompleted) {
-		return &domain.StartScreeningTaskResp{TaskID: req.TaskID}, nil
+		// 获取任务关联的简历ID列表
+		resumeFilter := &domain.ScreeningTaskResumeFilter{
+			TaskID: &task.ID,
+		}
+		taskResumes, _, err := u.repo.ListScreeningTaskResumes(ctx, resumeFilter)
+		if err != nil {
+			return nil, fmt.Errorf("获取任务简历列表失败: %w", err)
+		}
+
+		resumeIDs := make([]uuid.UUID, len(taskResumes))
+		for i, taskResume := range taskResumes {
+			resumeIDs[i] = taskResume.ResumeID
+		}
+
+		return &domain.StartScreeningTaskResp{
+			TaskID:        req.TaskID,
+			JobPositionID: task.JobPositionID,
+			ResumeIDs:     resumeIDs,
+		}, nil
 	}
 
 	now := time.Now()
@@ -246,7 +282,17 @@ func (u *ScreeningUsecase) StartScreeningTask(ctx context.Context, req *domain.S
 	// 启动后台异步处理简历
 	go u.processScreeningTaskAsync(task, taskResumes, jobDetail)
 
-	return &domain.StartScreeningTaskResp{TaskID: task.ID}, nil
+	// 提取简历ID列表
+	resumeIDs := make([]uuid.UUID, len(taskResumes))
+	for i, taskResume := range taskResumes {
+		resumeIDs[i] = taskResume.ResumeID
+	}
+
+	return &domain.StartScreeningTaskResp{
+		TaskID:        task.ID,
+		JobPositionID: task.JobPositionID,
+		ResumeIDs:     resumeIDs,
+	}, nil
 }
 
 // CancelScreeningTask 取消任务

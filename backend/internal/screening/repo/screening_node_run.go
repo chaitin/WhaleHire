@@ -10,6 +10,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/pkg/entx"
 )
 
 // ScreeningNodeRunRepo 智能筛选节点运行记录仓储实现
@@ -67,12 +68,38 @@ func (r *ScreeningNodeRunRepo) Create(ctx context.Context, req *domain.CreateNod
 
 // Update 更新节点运行记录
 func (r *ScreeningNodeRunRepo) Update(ctx context.Context, id uuid.UUID, fn func(tx *db.Tx, current *db.ScreeningNodeRun, updater *db.ScreeningNodeRunUpdateOne) error) (*db.ScreeningNodeRun, error) {
-	// 简化实现，实际应该在事务中执行fn函数
-	entity, err := r.db.ScreeningNodeRun.UpdateOneID(id).Save(ctx)
+	// 在事务中执行更新操作
+	var result *db.ScreeningNodeRun
+	err := entx.WithTx(ctx, r.db, func(tx *db.Tx) error {
+		// 获取当前记录
+		current, err := tx.ScreeningNodeRun.Get(ctx, id)
+		if err != nil {
+			return fmt.Errorf("get current record failed: %w", err)
+		}
+
+		// 创建更新器
+		updater := tx.ScreeningNodeRun.UpdateOneID(id)
+
+		// 执行传入的更新函数
+		if err := fn(tx, current, updater); err != nil {
+			return fmt.Errorf("update function failed: %w", err)
+		}
+
+		// 保存更新
+		updated, err := updater.Save(ctx)
+		if err != nil {
+			return fmt.Errorf("save update failed: %w", err)
+		}
+
+		result = updated
+		return nil
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("update screening node run failed: %w", err)
 	}
-	return entity, nil
+
+	return result, nil
 }
 
 // GetByTaskResumeAndNode 根据任务简历ID和节点键查询节点运行记录

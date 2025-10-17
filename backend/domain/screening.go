@@ -97,6 +97,10 @@ type StartScreeningTaskReq struct {
 type StartScreeningTaskResp struct {
 	// TaskID 已启动的筛选任务ID
 	TaskID uuid.UUID `json:"task_id"`
+	// JobPositionID 岗位ID，用于岗位-画像匹配
+	JobPositionID uuid.UUID `json:"job_position_id"`
+	// ResumeIDs 简历ID数组，用于岗位-画像匹配
+	ResumeIDs []uuid.UUID `json:"resume_ids"`
 }
 
 // CancelScreeningTaskReq 取消筛选任务请求
@@ -277,7 +281,17 @@ type GetNodeRunsReq struct {
 
 // GetNodeRunsResp 获取节点运行记录响应
 type GetNodeRunsResp struct {
-	// AgentStatus Agent状态映射，Key为Agent名称，Value为对应的节点运行记录
+	// AgentStatus Agent状态映射，Key为Agent名称，Value(ScreeningNodeRun)为对应的节点运行记录
+	// 支持的Agent类型包括：
+	// - TaskMetaDataNode: 任务元数据节点，负责初始化任务基础信息
+	// - DispatcherNode: 分发节点，负责将任务分发给各个Agent
+	// - BasicInfoAgent: 基本信息匹配Agent，负责地点、薪资、部门等基础信息匹配
+	// - SkillAgent: 技能匹配Agent，负责技术栈和技能要求匹配分析
+	// - ResponsibilityAgent: 职责匹配Agent，负责工作职责和项目经验匹配
+	// - ExperienceAgent: 经验匹配Agent，负责工作经验年限和相关性分析
+	// - EducationAgent: 教育背景匹配Agent，负责学历、专业、学校匹配分析
+	// - IndustryAgent: 行业匹配Agent，负责行业背景和领域经验匹配
+	// - AggregatorAgent: 聚合节点，负责汇总各Agent结果并计算最终评分
 	AgentStatus map[string]*ScreeningNodeRun `json:"agent_status"`
 }
 

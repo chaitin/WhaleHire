@@ -141,7 +141,7 @@ func (m *AuditMiddleware) recordAuditLog(ctx context.Context, c echo.Context, re
 	requestID := m.getRequestID(c)
 	sessionID := m.getSessionID(c)
 	operatorType, operatorID, operatorName := m.getOperatorInfo(c)
-	operationType := m.parseOperationType(c.Request().Method)
+	operationType := m.parseOperationType(c.Request().Method, c.Request().URL.Path)
 	resourceType, resourceID, resourceName := m.parseResourceInfo(c)
 
 	// 获取IP地理位置信息
@@ -233,17 +233,12 @@ func (m *AuditMiddleware) getRequestID(c echo.Context) string {
 
 // getSessionID 获取会话ID
 func (m *AuditMiddleware) getSessionID(c echo.Context) string {
-	if sessionID := c.Get("session_id"); sessionID != nil {
-		if id, ok := sessionID.(string); ok {
-			return id
-		}
-	}
 
 	// 尝试从 cookie 中获取会话ID
-	if cookie, err := c.Cookie("session"); err == nil {
+	if cookie, err := c.Cookie(consts.SessionName); err == nil {
 		return cookie.Value
 	}
-	if cookie, err := c.Cookie("user_session"); err == nil {
+	if cookie, err := c.Cookie(consts.UserSessionName); err == nil {
 		return cookie.Value
 	}
 
@@ -287,15 +282,24 @@ func (m *AuditMiddleware) getOperatorInfo(c echo.Context) (consts.OperatorType, 
 }
 
 // parseOperationType 解析操作类型
-func (m *AuditMiddleware) parseOperationType(method string) consts.OperationType {
+func (m *AuditMiddleware) parseOperationType(method, path string) consts.OperationType {
+	if method == http.MethodPost {
+		switch {
+		case strings.HasSuffix(path, "/login"):
+			return consts.OperationTypeLogin
+		case strings.HasSuffix(path, "/logout"):
+			return consts.OperationTypeLogout
+		}
+	}
+
 	switch method {
-	case "GET":
+	case http.MethodGet:
 		return consts.OperationTypeView
-	case "POST":
+	case http.MethodPost:
 		return consts.OperationTypeCreate
-	case "PUT", "PATCH":
+	case http.MethodPut, http.MethodPatch:
 		return consts.OperationTypeUpdate
-	case "DELETE":
+	case http.MethodDelete:
 		return consts.OperationTypeDelete
 	default:
 		return consts.OperationTypeView
@@ -306,34 +310,77 @@ func (m *AuditMiddleware) parseOperationType(method string) consts.OperationType
 func (m *AuditMiddleware) parseResourceInfo(c echo.Context) (consts.ResourceType, *string, *string) {
 	path := c.Request().URL.Path
 
-	// 根据路径解析资源类型
-	if strings.HasPrefix(path, "/api/v1/users") {
-		return m.parseUserResource(c, path)
-	} else if strings.HasPrefix(path, "/api/v1/admin") {
+	switch {
+	case strings.HasPrefix(path, "/api/v1/admin/setting"):
+		return consts.ResourceTypeSetting, nil, nil
+	case strings.HasPrefix(path, "/api/v1/admin/role"):
+		return consts.ResourceTypeRole, m.extractIDFromPath(path, "role"), nil
+	case strings.HasPrefix(path, "/api/v1/admin"):
 		return m.parseAdminResource(c, path)
-	} else if strings.HasPrefix(path, "/api/v1/resumes") {
+	case strings.HasPrefix(path, "/api/v1/user"):
+		return m.parseUserResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/users"):
+		return m.parseUserResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/resume"):
 		return m.parseResumeResource(c, path)
-	} else if strings.HasPrefix(path, "/api/v1/departments") {
+	case strings.HasPrefix(path, "/api/v1/resumes"):
+		return m.parseResumeResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/departments"):
 		return m.parseDepartmentResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/job-profiles") || strings.HasPrefix(path, "/api/v1/job-skills"):
+		return m.parseJobProfileResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/job-applications"):
+		return m.parseJobApplicationResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/file"):
+		return m.parseFileResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/screening"):
+		return m.parseScreeningResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/general-agent/conversations"):
+		return m.parseGeneralAgentConversationResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/general-agent"):
+		return m.parseGeneralAgentResource(c, path)
+	default:
+		return consts.ResourceTypeUser, nil, nil
 	}
-
-	// 默认资源类型
-	return consts.ResourceTypeUser, nil, nil
 }
 
 // parseUserResource 解析用户资源
 func (m *AuditMiddleware) parseUserResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
-	return consts.ResourceTypeUser, m.extractIDFromPath(path, "users"), nil
+	if userID := c.Param("id"); userID != "" {
+		id := userID
+		return consts.ResourceTypeUser, &id, nil
+	}
+	if userID := c.QueryParam("id"); userID != "" {
+		id := userID
+		return consts.ResourceTypeUser, &id, nil
+	}
+	return consts.ResourceTypeUser, nil, nil
 }
 
 // parseAdminResource 解析管理员资源
 func (m *AuditMiddleware) parseAdminResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if adminID := c.Param("id"); adminID != "" {
+		id := adminID
+		return consts.ResourceTypeAdmin, &id, nil
+	}
+	if adminID := c.QueryParam("id"); adminID != "" {
+		id := adminID
+		return consts.ResourceTypeAdmin, &id, nil
+	}
 	return consts.ResourceTypeAdmin, m.extractIDFromPath(path, "admin"), nil
 }
 
 // parseResumeResource 解析简历资源
 func (m *AuditMiddleware) parseResumeResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
-	return consts.ResourceTypeResume, m.extractIDFromPath(path, "resumes"), nil
+	if resumeID := c.Param("id"); resumeID != "" {
+		id := resumeID
+		return consts.ResourceTypeResume, &id, nil
+	}
+	if resumeID := c.Param("resume_id"); resumeID != "" {
+		id := resumeID
+		return consts.ResourceTypeResume, &id, nil
+	}
+	return consts.ResourceTypeResume, m.extractIDFromPath(path, "resume", "resumes"), nil
 }
 
 // parseDepartmentResource 解析部门资源
@@ -341,14 +388,92 @@ func (m *AuditMiddleware) parseDepartmentResource(c echo.Context, path string) (
 	return consts.ResourceTypeDepartment, m.extractIDFromPath(path, "departments"), nil
 }
 
+// parseJobProfileResource 解析职位配置资源
+func (m *AuditMiddleware) parseJobProfileResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if id := c.Param("id"); id != "" {
+		idCopy := id
+		return consts.ResourceTypeJobPosition, &idCopy, nil
+	}
+	return consts.ResourceTypeJobPosition, m.extractIDFromPath(path, "job-profiles", "meta"), nil
+}
+
+// parseJobApplicationResource 解析岗位申请资源
+func (m *AuditMiddleware) parseJobApplicationResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if resumeID := c.Param("resume_id"); resumeID != "" {
+		idCopy := resumeID
+		return consts.ResourceTypeResume, &idCopy, nil
+	}
+	if jobPositionID := c.Param("job_position_id"); jobPositionID != "" {
+		idCopy := jobPositionID
+		return consts.ResourceTypeJobPosition, &idCopy, nil
+	}
+	return consts.ResourceTypeJobPosition, nil, nil
+}
+
+// parseFileResource 解析附件资源
+func (m *AuditMiddleware) parseFileResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if key := c.Param("key"); key != "" {
+		keyCopy := key
+		return consts.ResourceTypeAttachment, &keyCopy, nil
+	}
+	return consts.ResourceTypeAttachment, m.extractIDFromPath(path, "stream"), nil
+}
+
+// parseScreeningResource 解析筛选任务资源
+func (m *AuditMiddleware) parseScreeningResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if id := c.Param("id"); id != "" {
+		idCopy := id
+		return consts.ResourceTypeScreening, &idCopy, nil
+	}
+	if taskID := c.Param("task_id"); taskID != "" {
+		idCopy := taskID
+		return consts.ResourceTypeScreening, &idCopy, nil
+	}
+	return consts.ResourceTypeScreening, m.extractIDFromPath(path, "tasks"), nil
+}
+
+// parseGeneralAgentConversationResource 解析通用智能体对话资源
+func (m *AuditMiddleware) parseGeneralAgentConversationResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if strings.HasSuffix(path, "/addmessage") {
+		if id := c.Param("id"); id != "" {
+			idCopy := id
+			return consts.ResourceTypeMessage, &idCopy, nil
+		}
+		return consts.ResourceTypeMessage, nil, nil
+	}
+
+	if id := c.Param("id"); id != "" {
+		idCopy := id
+		return consts.ResourceTypeConversation, &idCopy, nil
+	}
+	if id := c.QueryParam("id"); id != "" {
+		idCopy := id
+		return consts.ResourceTypeConversation, &idCopy, nil
+	}
+	return consts.ResourceTypeConversation, nil, nil
+}
+
+// parseGeneralAgentResource 解析通用智能体消息资源
+func (m *AuditMiddleware) parseGeneralAgentResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	return consts.ResourceTypeMessage, nil, nil
+}
+
 // extractIDFromPath 从路径中提取ID
-func (m *AuditMiddleware) extractIDFromPath(path, resource string) *string {
+func (m *AuditMiddleware) extractIDFromPath(path string, resources ...string) *string {
+	if len(resources) == 0 {
+		return nil
+	}
 	parts := strings.Split(path, "/")
-	for i, part := range parts {
-		if part == resource && i+1 < len(parts) {
-			id := parts[i+1]
-			if id != "" && id != resource {
-				return &id
+	for i := 0; i < len(parts); i++ {
+		part := parts[i]
+		for _, resource := range resources {
+			if part == resource && i+1 < len(parts) {
+				id := parts[i+1]
+				if id == "" || id == resource {
+					continue
+				}
+				idCopy := id
+				return &idCopy
 			}
 		}
 	}

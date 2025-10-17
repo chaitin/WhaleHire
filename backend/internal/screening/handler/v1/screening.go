@@ -86,12 +86,12 @@ func (h *ScreeningHandler) CreateTask(c *web.Context, req domain.CreateScreening
 //
 //	@Tags			Screening
 //	@Summary		启动筛选任务
-//	@Description	启动指定的筛选任务，开始执行智能筛选流程
+//	@Description	启动指定的筛选任务，开始执行智能筛选流程，返回任务ID、岗位ID和简历ID数组用于后续调试和请求
 //	@ID				start-screening-task
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"任务ID"
-//	@Success		200	{object}	web.Resp{data=map[string]interface{}}
+//	@Success		200	{object}	web.Resp{data=domain.StartScreeningTaskResp}
 //	@Router			/api/v1/screening/tasks/{id}/start [post]
 func (h *ScreeningHandler) StartTask(c *web.Context) error {
 	taskID, err := parseUUIDParam(c.Param("id"))

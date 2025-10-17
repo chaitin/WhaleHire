@@ -2,6 +2,7 @@ package screening
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -54,6 +55,8 @@ type AgentCallbackCollector struct {
 	rawInputs   map[string]any               // 输入汇总
 	rawErrors   map[string]error             // 错误汇总
 	tokenUsages map[string]*model.TokenUsage // 令牌使用汇总
+	// enableDetailedCallbacks 标记是否注入详细的节点回调，默认关闭避免干扰主流程
+	enableDetailedCallbacks bool
 }
 
 // NewAgentCallbackCollector 创建 Agent 输出收集器
@@ -110,19 +113,39 @@ func (c *AgentCallbackCollector) Reset() {
 	c.tokenUsages = make(map[string]*model.TokenUsage)
 }
 
+// EnableDetailedCallbacks 启用详细回调，仅在示例调试中使用
+func (c *AgentCallbackCollector) EnableDetailedCallbacks() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.enableDetailedCallbacks = true
+}
+
+// detailedCallbacksEnabled 返回当前是否开启详细回调
+func (c *AgentCallbackCollector) detailedCallbacksEnabled() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.enableDetailedCallbacks
+}
+
 // ComposeOptions 构建注入到 Compose 图中的回调选项
 func (c *AgentCallbackCollector) ComposeOptions() []compose.Option {
-	return []compose.Option{
-		compose.WithCallbacks(c.newBasicInfoHandler()).DesignateNode(domain.BasicInfoAgent),
-		compose.WithCallbacks(c.newEducationHandler()).DesignateNode(domain.EducationAgent),
-		compose.WithCallbacks(c.newExperienceHandler()).DesignateNode(domain.ExperienceAgent),
-		compose.WithCallbacks(c.newIndustryHandler()).DesignateNode(domain.IndustryAgent),
-		compose.WithCallbacks(c.newResponsibilityHandler()).DesignateNode(domain.ResponsibilityAgent),
-		compose.WithCallbacks(c.newSkillHandler()).DesignateNode(domain.SkillAgent),
-		compose.WithCallbacks(c.newTaskMetaHandler()).DesignateNode(domain.TaskMetaDataNode),
-		compose.WithCallbacks(c.newDispatcherHandler()).DesignateNode(domain.DispatcherNode),
-		compose.WithCallbacks(c.newAggregatorHandler()).DesignateNode(domain.AggregatorAgent),
+	options := make([]compose.Option, 0, 16)
 
+	if c.detailedCallbacksEnabled() {
+		options = append(options,
+			compose.WithCallbacks(c.newBasicInfoHandler()).DesignateNode(domain.BasicInfoAgent),
+			compose.WithCallbacks(c.newEducationHandler()).DesignateNode(domain.EducationAgent),
+			compose.WithCallbacks(c.newExperienceHandler()).DesignateNode(domain.ExperienceAgent),
+			compose.WithCallbacks(c.newIndustryHandler()).DesignateNode(domain.IndustryAgent),
+			compose.WithCallbacks(c.newResponsibilityHandler()).DesignateNode(domain.ResponsibilityAgent),
+			compose.WithCallbacks(c.newSkillHandler()).DesignateNode(domain.SkillAgent),
+			compose.WithCallbacks(c.newTaskMetaHandler()).DesignateNode(domain.TaskMetaDataNode),
+			compose.WithCallbacks(c.newDispatcherHandler()).DesignateNode(domain.DispatcherNode),
+			compose.WithCallbacks(c.newAggregatorHandler()).DesignateNode(domain.AggregatorAgent),
+		)
+	}
+
+	options = append(options,
 		// Model usage handlers
 		compose.WithCallbacks(c.newModelUsageHandler(domain.BasicInfoAgent)).
 			DesignateNodeWithPath(compose.NewNodePath(domain.BasicInfoAgent, "chat_model")),
@@ -138,7 +161,9 @@ func (c *AgentCallbackCollector) ComposeOptions() []compose.Option {
 			DesignateNodeWithPath(compose.NewNodePath(domain.SkillAgent, "chat_model")),
 		compose.WithCallbacks(c.newModelUsageHandler(domain.AggregatorAgent)).
 			DesignateNodeWithPath(compose.NewNodePath(domain.AggregatorAgent, "chat_model")),
-	}
+	)
+
+	return options
 }
 
 // BasicInfoOutput 返回基础信息匹配结果
@@ -581,7 +606,7 @@ func (c *AgentCallbackCollector) newBasicInfoHandler() callbacks.Handler {
 			}
 			if detail, ok := output.(*domain.BasicMatchDetail); ok {
 				c.record(domain.BasicInfoAgent, detail, func() { c.basicInfo = detail })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, detail)
+				printCallbackOutput(info.Name, detail)
 			}
 			return ctx
 		}).
@@ -607,7 +632,7 @@ func (c *AgentCallbackCollector) newEducationHandler() callbacks.Handler {
 			}
 			if detail, ok := output.(*domain.EducationMatchDetail); ok {
 				c.record(domain.EducationAgent, detail, func() { c.education = detail })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, detail)
+				printCallbackOutput(info.Name, detail)
 			}
 			return ctx
 		}).
@@ -633,7 +658,7 @@ func (c *AgentCallbackCollector) newExperienceHandler() callbacks.Handler {
 			}
 			if detail, ok := output.(*domain.ExperienceMatchDetail); ok {
 				c.record(domain.ExperienceAgent, detail, func() { c.experience = detail })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, detail)
+				printCallbackOutput(info.Name, detail)
 			}
 			return ctx
 		}).
@@ -659,7 +684,7 @@ func (c *AgentCallbackCollector) newIndustryHandler() callbacks.Handler {
 			}
 			if detail, ok := output.(*domain.IndustryMatchDetail); ok {
 				c.record(domain.IndustryAgent, detail, func() { c.industry = detail })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, detail)
+				printCallbackOutput(info.Name, detail)
 			}
 			return ctx
 		}).
@@ -685,7 +710,7 @@ func (c *AgentCallbackCollector) newResponsibilityHandler() callbacks.Handler {
 			}
 			if detail, ok := output.(*domain.ResponsibilityMatchDetail); ok {
 				c.record(domain.ResponsibilityAgent, detail, func() { c.responsibility = detail })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, detail)
+				printCallbackOutput(info.Name, detail)
 			}
 			return ctx
 		}).
@@ -711,7 +736,7 @@ func (c *AgentCallbackCollector) newSkillHandler() callbacks.Handler {
 			}
 			if detail, ok := output.(*domain.SkillMatchDetail); ok {
 				c.record(domain.SkillAgent, detail, func() { c.skill = detail })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, detail)
+				printCallbackOutput(info.Name, detail)
 			}
 			return ctx
 		}).
@@ -738,7 +763,7 @@ func (c *AgentCallbackCollector) newAggregatorHandler() callbacks.Handler {
 			}
 			if detail, ok := output.(*domain.JobResumeMatch); ok {
 				c.record(domain.AggregatorAgent, detail, func() { c.aggregatedMatch = detail })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, detail)
+				printCallbackOutput(info.Name, detail)
 			}
 			return ctx
 		}).
@@ -789,7 +814,7 @@ func (c *AgentCallbackCollector) newDispatcherHandler() callbacks.Handler {
 			}
 			if data, ok := output.(map[string]any); ok {
 				c.record(domain.DispatcherNode, data, func() { c.dispatcherOutput = data })
-				fmt.Printf("[回调] 节点 %s 输出: %+v\n", info.Name, data)
+				printCallbackOutput(info.Name, data)
 			}
 			return ctx
 		}).
@@ -878,4 +903,13 @@ func cloneTokenUsage(src *model.TokenUsage) *model.TokenUsage {
 	}
 	clone := *src
 	return &clone
+}
+
+func printCallbackOutput(node string, value any) {
+	data, err := json.MarshalIndent(value, "", "  ")
+	if err != nil {
+		fmt.Printf("[回调] 节点 %s 输出序列化失败，使用默认格式: %+v\n", node, value)
+		return
+	}
+	fmt.Printf("[回调] 节点 %s 输出:\n%s\n", node, string(data))
 }
