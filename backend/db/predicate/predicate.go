@@ -18,6 +18,9 @@ type AdminRole func(*sql.Selector)
 // Attachment is the predicate function for attachment builders.
 type Attachment func(*sql.Selector)
 
+// AuditLog is the predicate function for auditlog builders.
+type AuditLog func(*sql.Selector)
+
 // Conversation is the predicate function for conversation builders.
 type Conversation func(*sql.Selector)
 
@@ -74,6 +77,9 @@ type ResumeSkill func(*sql.Selector)
 
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
+
+// ScreeningNodeRun is the predicate function for screeningnoderun builders.
+type ScreeningNodeRun func(*sql.Selector)
 
 // ScreeningResult is the predicate function for screeningresult builders.
 type ScreeningResult func(*sql.Selector)

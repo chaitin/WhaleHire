@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
 	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
@@ -35,6 +36,7 @@ type ScreeningTaskQuery struct {
 	withTaskResumes *ScreeningTaskResumeQuery
 	withResults     *ScreeningResultQuery
 	withRunMetrics  *ScreeningRunMetricQuery
+	withNodeRuns    *ScreeningNodeRunQuery
 	modifiers       []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -175,6 +177,28 @@ func (stq *ScreeningTaskQuery) QueryRunMetrics() *ScreeningRunMetricQuery {
 			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, selector),
 			sqlgraph.To(screeningrunmetric.Table, screeningrunmetric.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, screeningtask.RunMetricsTable, screeningtask.RunMetricsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(stq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryNodeRuns chains the current query on the "node_runs" edge.
+func (stq *ScreeningTaskQuery) QueryNodeRuns() *ScreeningNodeRunQuery {
+	query := (&ScreeningNodeRunClient{config: stq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := stq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := stq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(screeningtask.Table, screeningtask.FieldID, selector),
+			sqlgraph.To(screeningnoderun.Table, screeningnoderun.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, screeningtask.NodeRunsTable, screeningtask.NodeRunsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(stq.driver.Dialect(), step)
 		return fromU, nil
@@ -379,6 +403,7 @@ func (stq *ScreeningTaskQuery) Clone() *ScreeningTaskQuery {
 		withTaskResumes: stq.withTaskResumes.Clone(),
 		withResults:     stq.withResults.Clone(),
 		withRunMetrics:  stq.withRunMetrics.Clone(),
+		withNodeRuns:    stq.withNodeRuns.Clone(),
 		// clone intermediate query.
 		sql:       stq.sql.Clone(),
 		path:      stq.path,
@@ -438,6 +463,17 @@ func (stq *ScreeningTaskQuery) WithRunMetrics(opts ...func(*ScreeningRunMetricQu
 		opt(query)
 	}
 	stq.withRunMetrics = query
+	return stq
+}
+
+// WithNodeRuns tells the query-builder to eager-load the nodes that are connected to
+// the "node_runs" edge. The optional arguments are used to configure the query builder of the edge.
+func (stq *ScreeningTaskQuery) WithNodeRuns(opts ...func(*ScreeningNodeRunQuery)) *ScreeningTaskQuery {
+	query := (&ScreeningNodeRunClient{config: stq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	stq.withNodeRuns = query
 	return stq
 }
 
@@ -519,12 +555,13 @@ func (stq *ScreeningTaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*ScreeningTask{}
 		_spec       = stq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			stq.withJobPosition != nil,
 			stq.withCreator != nil,
 			stq.withTaskResumes != nil,
 			stq.withResults != nil,
 			stq.withRunMetrics != nil,
+			stq.withNodeRuns != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -578,6 +615,13 @@ func (stq *ScreeningTaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		if err := stq.loadRunMetrics(ctx, query, nodes,
 			func(n *ScreeningTask) { n.Edges.RunMetrics = []*ScreeningRunMetric{} },
 			func(n *ScreeningTask, e *ScreeningRunMetric) { n.Edges.RunMetrics = append(n.Edges.RunMetrics, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := stq.withNodeRuns; query != nil {
+		if err := stq.loadNodeRuns(ctx, query, nodes,
+			func(n *ScreeningTask) { n.Edges.NodeRuns = []*ScreeningNodeRun{} },
+			func(n *ScreeningTask, e *ScreeningNodeRun) { n.Edges.NodeRuns = append(n.Edges.NodeRuns, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -717,6 +761,36 @@ func (stq *ScreeningTaskQuery) loadRunMetrics(ctx context.Context, query *Screen
 	}
 	query.Where(predicate.ScreeningRunMetric(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(screeningtask.RunMetricsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TaskID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "task_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (stq *ScreeningTaskQuery) loadNodeRuns(ctx context.Context, query *ScreeningNodeRunQuery, nodes []*ScreeningTask, init func(*ScreeningTask), assign func(*ScreeningTask, *ScreeningNodeRun)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*ScreeningTask)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(screeningnoderun.FieldTaskID)
+	}
+	query.Where(predicate.ScreeningNodeRun(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(screeningtask.NodeRunsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -3,6 +3,7 @@ package internal
 import (
 	"github.com/google/wire"
 
+	auditrepo "github.com/chaitin/WhaleHire/backend/internal/audit/repo"
 	departmentV1 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
 	departmentrepo "github.com/chaitin/WhaleHire/backend/internal/department/repo"
 	departmentusecase "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
@@ -58,6 +59,8 @@ var Provider = wire.NewSet(
 	middleware.NewAuthMiddleware,
 	middleware.NewActiveMiddleware,
 	middleware.NewReadOnlyMiddleware,
+	middleware.NewAuditMiddleware,
+	auditrepo.NewAuditRepo,
 	userV1.NewUserHandler,
 	userrepo.NewUserRepo,
 	userusecase.NewUserUsecase,
@@ -82,6 +85,7 @@ var Provider = wire.NewSet(
 	fileusecase.NewFileUsecase,
 	fileV1.NewFileHandler,
 	screeningrepo.NewScreeningRepo,
+	screeningrepo.NewScreeningNodeRunRepo,
 	screeningservice.NewMatchingService,
 	screeningusecase.NewScreeningUsecase,
 	screeningV1.NewScreeningHandler,

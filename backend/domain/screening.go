@@ -14,6 +14,7 @@ import (
 type ScreeningUsecase interface {
 	CreateScreeningTask(ctx context.Context, req *CreateScreeningTaskReq) (*CreateScreeningTaskResp, error)
 	StartScreeningTask(ctx context.Context, req *StartScreeningTaskReq) (*StartScreeningTaskResp, error)
+	CancelScreeningTask(ctx context.Context, req *CancelScreeningTaskReq) (*CancelScreeningTaskResp, error)
 	DeleteScreeningTask(ctx context.Context, req *DeleteScreeningTaskReq) (*DeleteScreeningTaskResp, error)
 	GetScreeningTask(ctx context.Context, req *GetScreeningTaskReq) (*GetScreeningTaskResp, error)
 	ListScreeningTasks(ctx context.Context, req *ListScreeningTasksReq) (*ListScreeningTasksResp, error)
@@ -22,6 +23,7 @@ type ScreeningUsecase interface {
 	GetScreeningMetrics(ctx context.Context, req *GetScreeningMetricsReq) (*GetScreeningMetricsResp, error)
 	GetTaskProgress(ctx context.Context, req *GetTaskProgressReq) (*GetTaskProgressResp, error)
 	GetResumeProgress(ctx context.Context, req *GetResumeProgressReq) (*GetResumeProgressResp, error)
+	GetNodeRuns(ctx context.Context, req *GetNodeRunsReq) (*GetNodeRunsResp, error)
 }
 
 // ScreeningRepo 筛选数据访问接口
@@ -44,6 +46,9 @@ type ScreeningRepo interface {
 
 	CreateScreeningRunMetric(ctx context.Context, metric *db.ScreeningRunMetric) (*db.ScreeningRunMetric, error)
 	GetScreeningRunMetric(ctx context.Context, taskID uuid.UUID) (*db.ScreeningRunMetric, error)
+
+	// BatchUpdateScreeningTaskResumeRankings 批量更新筛选任务简历排名
+	BatchUpdateScreeningTaskResumeRankings(ctx context.Context, taskID uuid.UUID, rankings map[uuid.UUID]int) error
 }
 
 // =========================
@@ -92,6 +97,20 @@ type StartScreeningTaskReq struct {
 type StartScreeningTaskResp struct {
 	// TaskID 已启动的筛选任务ID
 	TaskID uuid.UUID `json:"task_id"`
+}
+
+// CancelScreeningTaskReq 取消筛选任务请求
+type CancelScreeningTaskReq struct {
+	// TaskID 要取消的筛选任务ID
+	TaskID uuid.UUID `json:"task_id" validate:"required"`
+}
+
+// CancelScreeningTaskResp 取消筛选任务响应
+type CancelScreeningTaskResp struct {
+	// TaskID 已取消的筛选任务ID
+	TaskID uuid.UUID `json:"task_id"`
+	// Message 取消操作的结果消息
+	Message string `json:"message"`
 }
 
 // DeleteScreeningTaskReq 删除筛选任务请求
@@ -248,6 +267,20 @@ type GetResumeProgressResp struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// GetNodeRunsReq 获取节点运行记录请求
+type GetNodeRunsReq struct {
+	// TaskID 筛选任务ID
+	TaskID uuid.UUID `json:"task_id" validate:"required"`
+	// ResumeID 简历ID
+	ResumeID uuid.UUID `json:"resume_id" validate:"required"`
+}
+
+// GetNodeRunsResp 获取节点运行记录响应
+type GetNodeRunsResp struct {
+	// AgentStatus Agent状态映射，Key为Agent名称，Value为对应的节点运行记录
+	AgentStatus map[string]*ScreeningNodeRun `json:"agent_status"`
+}
+
 // =========================
 // API 展示模型
 // =========================
@@ -399,21 +432,21 @@ type ScreeningResult struct {
 	ResumeID uuid.UUID `json:"resume_id"`
 	// OverallScore 总体匹配分数 (0-100)
 	OverallScore float64 `json:"overall_score"`
-	// MatchLevel 匹配等级 (高度匹配/中度匹配/低度匹配等)
+	// MatchLevel 匹配等级 (非常匹配85-100分/高匹配70-84分/一般匹配55-69分/低匹配40-54分/不匹配0-39分)
 	MatchLevel consts.MatchLevel `json:"match_level"`
 	// DimensionScores 各维度匹配分数，可选
 	DimensionScores map[string]float64 `json:"dimension_scores,omitempty"`
-	// BasicDetail 基本信息匹配详情，可选
+	// BasicDetail 基本信息匹配详情，包含地点、薪资等基础信息的匹配分析，可选
 	BasicDetail *BasicMatchDetail `json:"basic_detail,omitempty"`
-	// EducationDetail 教育背景匹配详情，可选
+	// EducationDetail 教育背景匹配详情，包含学历、专业、院校等教育信息的匹配分析，可选
 	EducationDetail *EducationMatchDetail `json:"education_detail,omitempty"`
-	// ExperienceDetail 工作经验匹配详情，可选
+	// ExperienceDetail 工作经验匹配详情，包含工作年限、职位、行业等经验信息的匹配分析，可选
 	ExperienceDetail *ExperienceMatchDetail `json:"experience_detail,omitempty"`
-	// IndustryDetail 行业背景匹配详情，可选
+	// IndustryDetail 行业背景匹配详情，包含行业经验、公司背景等行业信息的匹配分析，可选
 	IndustryDetail *IndustryMatchDetail `json:"industry_detail,omitempty"`
-	// Responsibility 职责匹配详情，可选
+	// Responsibility 职责匹配详情，包含工作职责、项目经验等职责信息的匹配分析，可选
 	Responsibility *ResponsibilityMatchDetail `json:"responsibility_detail,omitempty"`
-	// SkillDetail 技能匹配详情，可选
+	// SkillDetail 技能匹配详情，包含技术技能、工具使用等技能信息的匹配分析，可选
 	SkillDetail *SkillMatchDetail `json:"skill_detail,omitempty"`
 	// Recommendations 推荐建议列表，可选
 	Recommendations []string `json:"recommendations,omitempty"`
@@ -453,8 +486,13 @@ func (sr *ScreeningResult) From(dbResult *db.ScreeningResult) *ScreeningResult {
 		}
 	}
 
-	// 注意：详细匹配信息需要根据实际业务需求进行转换
-	// 这里暂时跳过复杂的结构体转换，保持简洁
+	// 转换各个详细匹配信息
+	sr.BasicDetail = convertToBasicMatchDetail(dbResult.BasicDetail)
+	sr.SkillDetail = convertToSkillMatchDetail(dbResult.SkillDetail)
+	sr.Responsibility = convertToResponsibilityMatchDetail(dbResult.ResponsibilityDetail)
+	sr.ExperienceDetail = convertToExperienceMatchDetail(dbResult.ExperienceDetail)
+	sr.EducationDetail = convertToEducationMatchDetail(dbResult.EducationDetail)
+	sr.IndustryDetail = convertToIndustryMatchDetail(dbResult.IndustryDetail)
 
 	sr.Recommendations = dbResult.Recommendations
 	sr.TraceID = dbResult.TraceID

@@ -40,6 +40,8 @@ const (
 	EdgeTask = "task"
 	// EdgeResume holds the string denoting the resume edge name in mutations.
 	EdgeResume = "resume"
+	// EdgeNodeRuns holds the string denoting the node_runs edge name in mutations.
+	EdgeNodeRuns = "node_runs"
 	// Table holds the table name of the screeningtaskresume in the database.
 	Table = "screening_task_resumes"
 	// TaskTable is the table that holds the task relation/edge.
@@ -56,6 +58,13 @@ const (
 	ResumeInverseTable = "resumes"
 	// ResumeColumn is the table column denoting the resume relation/edge.
 	ResumeColumn = "resume_id"
+	// NodeRunsTable is the table that holds the node_runs relation/edge.
+	NodeRunsTable = "screening_node_runs"
+	// NodeRunsInverseTable is the table name for the ScreeningNodeRun entity.
+	// It exists in this package in order to avoid circular dependency with the "screeningnoderun" package.
+	NodeRunsInverseTable = "screening_node_runs"
+	// NodeRunsColumn is the table column denoting the node_runs relation/edge.
+	NodeRunsColumn = "task_resume_id"
 )
 
 // Columns holds all SQL columns for screeningtaskresume fields.
@@ -174,6 +183,20 @@ func ByResumeField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newResumeStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByNodeRunsCount orders the results by node_runs count.
+func ByNodeRunsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNodeRunsStep(), opts...)
+	}
+}
+
+// ByNodeRuns orders the results by node_runs terms.
+func ByNodeRuns(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNodeRunsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTaskStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -186,5 +209,12 @@ func newResumeStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ResumeInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ResumeTable, ResumeColumn),
+	)
+}
+func newNodeRunsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NodeRunsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, NodeRunsTable, NodeRunsColumn),
 	)
 }

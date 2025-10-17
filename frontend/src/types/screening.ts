@@ -99,6 +99,7 @@ export interface ScreeningTaskItem {
   status: ScreeningTaskStatus;
   resume_count: number;
   created_by: string;
+  creator_name?: string;
   created_at: number;
 }
 
@@ -125,4 +126,218 @@ export interface DeleteScreeningTaskResp {
 // 获取筛选任务指标响应
 export interface GetScreeningMetricsResp {
   metrics: ScreeningRunMetric;
+}
+
+// 匹配等级
+export type MatchLevel = 'excellent' | 'good' | 'fair' | 'poor';
+
+// 基本信息匹配详情
+export interface BasicMatchDetail {
+  score: number;
+  sub_scores: Record<string, number>;
+  evidence: string[];
+  notes: string;
+}
+
+// 技能匹配详情
+export interface SkillMatchDetail {
+  score: number;
+  matched_skills: MatchedSkill[];
+  missing_skills: JobSkill[];
+  extra_skills: string[];
+  llm_analysis?: SkillLLMAnalysis;
+}
+
+// 匹配的技能
+export interface MatchedSkill {
+  job_skill_id: string;
+  resume_skill_id?: string;
+  match_type: string;
+  llm_score: number;
+  proficiency_gap: number;
+  score: number;
+  llm_analysis?: SkillItemAnalysis;
+}
+
+// 职位技能
+export interface JobSkill {
+  id: string;
+  name: string;
+  required_level?: string;
+  priority?: string;
+}
+
+// 技能大模型分析
+export interface SkillLLMAnalysis {
+  overall_match: number;
+  technical_fit: number;
+  learning_curve: string;
+  strength_areas: string[];
+  gap_areas: string[];
+  recommendations: string[];
+  analysis_detail: string;
+}
+
+// 技能项分析
+export interface SkillItemAnalysis {
+  match_level: string;
+  match_percentage: number;
+  proficiency_gap: string;
+  transferability: string;
+  learning_effort: string;
+  match_reason: string;
+}
+
+// 职责匹配详情
+export interface ResponsibilityMatchDetail {
+  score: number;
+  matched_responsibilities: MatchedResponsibility[];
+  unmatched_responsibilities: JobResponsibility[];
+  relevant_experiences: string[];
+}
+
+// 匹配的职责
+export interface MatchedResponsibility {
+  job_responsibility_id: string;
+  resume_experience_id?: string;
+  llm_analysis?: LLMMatchAnalysis;
+  match_score: number;
+  match_reason: string;
+}
+
+// 职位职责
+export interface JobResponsibility {
+  id: string;
+  description: string;
+  priority?: string;
+}
+
+// 大模型匹配分析
+export interface LLMMatchAnalysis {
+  match_level: string;
+  match_percentage: number;
+  strength_points: string[];
+  weak_points: string[];
+  recommended_actions: string[];
+  analysis_detail: string;
+}
+
+// 工作经验匹配详情
+export interface ExperienceMatchDetail {
+  score: number;
+  years_match?: YearsMatchInfo;
+  position_matches?: PositionMatchInfo[];
+  industry_matches?: IndustryMatchInfo[];
+}
+
+// 年限匹配信息
+export interface YearsMatchInfo {
+  required_years: number;
+  actual_years: number;
+  score: number;
+  gap: number;
+}
+
+// 职位匹配信息
+export interface PositionMatchInfo {
+  resume_experience_id: string;
+  position: string;
+  relevance: number;
+  score: number;
+}
+
+// 行业匹配信息
+export interface IndustryMatchInfo {
+  resume_experience_id: string;
+  company: string;
+  industry: string;
+  relevance: number;
+  score: number;
+}
+
+// 教育背景匹配详情
+export interface EducationMatchDetail {
+  score: number;
+  degree_match?: DegreeMatchInfo;
+  major_matches?: MajorMatchInfo[];
+  school_matches?: SchoolMatchInfo[];
+}
+
+// 学历匹配信息
+export interface DegreeMatchInfo {
+  required_degree: string;
+  actual_degree: string;
+  score: number;
+  meets: boolean;
+}
+
+// 专业匹配信息
+export interface MajorMatchInfo {
+  resume_education_id: string;
+  major: string;
+  relevance: number;
+  score: number;
+}
+
+// 学校匹配信息
+export interface SchoolMatchInfo {
+  resume_education_id: string;
+  school: string;
+  reputation: number;
+  score: number;
+}
+
+// 行业背景匹配详情
+export interface IndustryMatchDetail {
+  score: number;
+  industry_matches?: IndustryMatchInfo[];
+  company_matches?: CompanyMatchInfo[];
+}
+
+// 公司匹配信息
+export interface CompanyMatchInfo {
+  resume_experience_id: string;
+  company: string;
+  target_company: string;
+  score: number;
+  is_exact: boolean;
+}
+
+// 筛选结果详情
+export interface ScreeningResult {
+  task_id: string;
+  job_position_id: string;
+  resume_id: string;
+  overall_score: number;
+  match_level: MatchLevel;
+  dimension_scores?: Record<string, number>;
+  basic_detail?: BasicMatchDetail;
+  education_detail?: EducationMatchDetail;
+  experience_detail?: ExperienceMatchDetail;
+  industry_detail?: IndustryMatchDetail;
+  responsibility_detail?: ResponsibilityMatchDetail;
+  skill_detail?: SkillMatchDetail;
+  recommendations?: string[];
+  trace_id?: string;
+  runtime_metadata?: Record<string, unknown>;
+  sub_agent_versions?: Record<string, unknown>;
+  matched_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 获取筛选结果响应
+export interface GetScreeningResultResp {
+  result: ScreeningResult;
+}
+
+// 获取筛选任务进度响应
+export interface GetResumeProgressResp {
+  task_id: string; // 任务ID
+  resume_id: string; // 简历ID
+  status: ScreeningTaskStatus; // 状态：pending/processing/completed/failed
+  progress_percent?: number; // 完成百分比 (0-100)
+  stage?: string; // 当前阶段描述
+  error_message?: string; // 错误信息
+  updated_at?: string; // 最近更新时间
 }

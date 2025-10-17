@@ -172,12 +172,7 @@ export function ConfigWeightModal({
                           step.active ? 'bg-white' : 'bg-white opacity-60'
                         )}
                       >
-                        <IconComponent
-                          className={cn(
-                            'h-5 w-5',
-                            step.active ? 'text-[#10B981]' : 'text-[#999999]'
-                          )}
-                        />
+                        <IconComponent className={'h-5 w-5 text-[#999999]'} />
                       </div>
                     </div>
 
@@ -492,31 +487,6 @@ export function ConfigWeightModal({
               <p className="text-xs text-[#999999]">
                 候选人所在行业与目标岗位行业的匹配权重
               </p>
-            </div>
-
-            {/* 注意事项 */}
-            <div className="bg-[#FFFBEB] border-l-[3px] border-[#F59E0B] rounded px-3 py-2.5">
-              <p className="text-xs text-[#F59E0B] leading-relaxed">
-                💡
-                注意：所有权重总和必须等于100%，当权重总和不等于100%时无法进入下一步。
-              </p>
-            </div>
-
-            {/* 权重总和显示 */}
-            <div className="bg-white border-2 border-[#E2E8F0] rounded-md px-4 py-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-[#333333]">
-                  基础权重总和（需等于100%）
-                </span>
-                <span
-                  className={cn(
-                    'text-xl font-bold',
-                    isWeightValid ? 'text-primary' : 'text-red-500'
-                  )}
-                >
-                  {totalWeight}%
-                </span>
-              </div>
             </div>
           </div>
         </div>

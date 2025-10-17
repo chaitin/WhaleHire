@@ -32,11 +32,12 @@ var Provider = wire.NewSet(
 	docparser.NewDocumentParserServiceFromConfig,
 )
 
-func NewWeb(cfg *config.Config) *web.Web {
+func NewWeb(cfg *config.Config, auditMiddleware *mid.AuditMiddleware) *web.Web {
 	w := web.New()
 	l := locale.NewLocalizerWithFile(language.Chinese, errcode.LocalFS, []string{"locale.zh.toml"})
 	w.SetLocale(l)
 	w.Use(mid.RequestID())
+	w.Use(auditMiddleware.Audit())
 	if cfg.Debug {
 		w.Use(middleware.Logger())
 	}

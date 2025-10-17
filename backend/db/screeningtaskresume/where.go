@@ -612,6 +612,29 @@ func HasResumeWith(preds ...predicate.Resume) predicate.ScreeningTaskResume {
 	})
 }
 
+// HasNodeRuns applies the HasEdge predicate on the "node_runs" edge.
+func HasNodeRuns() predicate.ScreeningTaskResume {
+	return predicate.ScreeningTaskResume(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, NodeRunsTable, NodeRunsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNodeRunsWith applies the HasEdge predicate on the "node_runs" edge with a given conditions (other predicates).
+func HasNodeRunsWith(preds ...predicate.ScreeningNodeRun) predicate.ScreeningTaskResume {
+	return predicate.ScreeningTaskResume(func(s *sql.Selector) {
+		step := newNodeRunsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.ScreeningTaskResume) predicate.ScreeningTaskResume {
 	return predicate.ScreeningTaskResume(sql.AndPredicates(predicates...))

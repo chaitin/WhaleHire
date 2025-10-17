@@ -63,6 +63,7 @@ func (ScreeningTaskResume) Edges() []ent.Edge {
 			Field("resume_id").
 			Unique().
 			Required(),
+		edge.To("node_runs", ScreeningNodeRun.Type),
 	}
 }
 

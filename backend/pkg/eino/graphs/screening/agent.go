@@ -12,7 +12,7 @@ func InvokeWithCollector(
 	ctx context.Context,
 	runnable compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch],
 	input *domain.MatchInput,
-	collector *AgentOutputCollector,
+	collector *AgentCallbackCollector,
 	extra ...compose.Option,
 ) (*domain.JobResumeMatch, error) {
 	options := make([]compose.Option, 0, len(extra))

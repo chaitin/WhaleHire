@@ -35,39 +35,56 @@ type MatchRequest struct {
 
 // MatchResult 匹配结果
 type MatchResult struct {
-	Match        *domain.JobResumeMatch
-	TokenUsages  map[string]*model.TokenUsage
-	Version      string
-	Duration     time.Duration
-	DimensionMap map[string]float64
+	Match           *domain.JobResumeMatch
+	TokenUsages     map[string]*model.TokenUsage
+	Version         string
+	SubAgentVersion map[string]string
+	Duration        time.Duration
+	DimensionMap    map[string]float64
+	Collector       *screening.AgentCallbackCollector
 }
 
 type matchingService struct {
-	logger   *slog.Logger
-	cfg      *config.Config
-	factory  *models.ModelFactory
-	runnable compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch]
-	version  string
-	initOnce sync.Once
-	initErr  error
+	logger            *slog.Logger
+	cfg               *config.Config
+	factory           *models.ModelFactory
+	version           string
+	sub_agent_version map[string]string
+	nodeRunRepo       domain.ScreeningNodeRunRepo
+	screeningRepo     domain.ScreeningRepo
+
+	// 图编译缓存相关
+	compiledGraph    compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch]
+	currentGraph     *screening.ScreeningChatGraph
+	currentModelType models.ModelType
+	currentModelName string
+	compileMutex     sync.RWMutex
 }
 
 // NewMatchingService 创建匹配服务
-func NewMatchingService(cfg *config.Config, logger *slog.Logger) (MatchingService, error) {
+func NewMatchingService(cfg *config.Config, logger *slog.Logger, nodeRunRepo domain.ScreeningNodeRunRepo, screeningRepo domain.ScreeningRepo) (MatchingService, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config is required")
 	}
 	if logger == nil {
 		logger = slog.Default()
 	}
+	if nodeRunRepo == nil {
+		return nil, fmt.Errorf("nodeRunRepo is required")
+	}
+	if screeningRepo == nil {
+		return nil, fmt.Errorf("screeningRepo is required")
+	}
 
 	factory := models.NewModelFactory()
 
 	return &matchingService{
-		logger:  logger,
-		cfg:     cfg,
-		factory: factory,
-		version: "1.0.0",
+		logger:        logger,
+		cfg:           cfg,
+		factory:       factory,
+		version:       "1.0.0",
+		nodeRunRepo:   nodeRunRepo,
+		screeningRepo: screeningRepo,
 	}, nil
 }
 
@@ -89,8 +106,10 @@ func (s *matchingService) Match(ctx context.Context, req *MatchRequest) (*MatchR
 		return nil, fmt.Errorf("setup model failed: %w", err)
 	}
 
-	if err := s.ensureRunnable(ctx, modelType, modelName); err != nil {
-		return nil, err
+	// 获取编译后的图（支持并发复用）
+	compiledGraph, err := s.ensureCompiledGraph(ctx, modelType, modelName)
+	if err != nil {
+		return nil, fmt.Errorf("ensure compiled graph failed: %w", err)
 	}
 
 	weights := buildDimensionWeights(req.DimensionWeights)
@@ -101,21 +120,32 @@ func (s *matchingService) Match(ctx context.Context, req *MatchRequest) (*MatchR
 		MatchTaskID:      fmt.Sprintf("%s:%s", req.TaskID.String(), req.ResumeID.String()),
 	}
 
-	collector := screening.NewAgentOutputCollector()
+	// 创建带数据库存储功能的CallbackCollectorWrapper
+	wrapper := NewCallbackCollectorWrapper(s.nodeRunRepo, s.screeningRepo, s.currentGraph, req.TaskID, req.ResumeID, req.TaskID.String(), s.logger)
+	collector := screening.NewAgentCallbackCollector()
+
+	// 合并包装器的选项和collector的选项
+	wrapperOptions := wrapper.ComposeOptions()
+	collectorOptions := collector.ComposeOptions()
+	allOptions := append(wrapperOptions, collectorOptions...)
+
 	start := time.Now()
-	match, err := screening.InvokeWithCollector(ctx, s.runnable, matchInput, collector)
+	match, err := compiledGraph.Invoke(ctx, matchInput, allOptions...)
 	duration := time.Since(start)
 	if err != nil {
 		return nil, fmt.Errorf("invoke screening graph failed: %w", err)
 	}
 
 	result := &MatchResult{
-		Match:        match,
-		TokenUsages:  collector.TokenUsages(),
-		Version:      s.version,
-		Duration:     duration,
-		DimensionMap: weightsToMap(weights),
+		Match:           match,
+		TokenUsages:     collector.TokenUsages(),
+		Version:         s.version,
+		SubAgentVersion: s.sub_agent_version,
+		Duration:        duration,
+		DimensionMap:    weightsToMap(weights),
+		Collector:       collector,
 	}
+
 	return result, nil
 }
 
@@ -208,27 +238,72 @@ func (s *matchingService) buildOpenAIConfig(llmConfig map[string]any, modelName 
 	}, nil
 }
 
-func (s *matchingService) ensureRunnable(ctx context.Context, modelType models.ModelType, modelName string) error {
-	s.initOnce.Do(func() {
-		chatModel, err := s.factory.GetModel(ctx, modelType, modelName)
-		if err != nil {
-			s.initErr = fmt.Errorf("获取对话模型失败: %w", err)
-			return
-		}
-		graph, err := screening.NewScreeningChatGraph(ctx, chatModel, s.cfg)
-		if err != nil {
-			s.initErr = fmt.Errorf("构建智能筛选图失败: %w", err)
-			return
-		}
-		runnable, err := graph.Compile(ctx)
-		if err != nil {
-			s.initErr = fmt.Errorf("编译智能筛选图失败: %w", err)
-			return
-		}
-		s.runnable = runnable
-		s.version = graph.GetVersion()
-	})
-	return s.initErr
+// ensureCompiledGraph 确保图已编译并可复用
+func (s *matchingService) ensureCompiledGraph(ctx context.Context, modelType models.ModelType, modelName string) (compose.Runnable[*domain.MatchInput, *domain.JobResumeMatch], error) {
+	// 快速路径：如果已有编译好的图且模型配置未变化，直接返回
+	s.compileMutex.RLock()
+	if s.compiledGraph != nil && s.currentModelType == modelType && s.currentModelName == modelName {
+		graph := s.compiledGraph
+		s.compileMutex.RUnlock()
+		return graph, nil
+	}
+	s.compileMutex.RUnlock()
+
+	// 慢速路径：需要重新编译图
+	s.compileMutex.Lock()
+	defer s.compileMutex.Unlock()
+
+	// 双重检查：可能在等待锁的过程中其他 goroutine 已经完成了编译
+	if s.compiledGraph != nil && s.currentModelType == modelType && s.currentModelName == modelName {
+		return s.compiledGraph, nil
+	}
+
+	// 获取模型
+	chatModel, err := s.factory.GetModel(ctx, modelType, modelName)
+	if err != nil {
+		return nil, fmt.Errorf("获取对话模型失败: %w", err)
+	}
+
+	// 构建图
+	graph, err := screening.NewScreeningChatGraph(ctx, chatModel, s.cfg)
+	if err != nil {
+		return nil, fmt.Errorf("构建智能筛选图失败: %w", err)
+	}
+
+	// 编译图
+	compiledGraph, err := graph.Compile(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("编译智能筛选图失败: %w", err)
+	}
+
+	// 缓存编译结果和模型配置
+	s.compiledGraph = compiledGraph
+	s.currentGraph = graph
+	s.currentModelType = modelType
+	s.currentModelName = modelName
+	s.version = graph.GetVersion()
+	s.sub_agent_version = graph.GetSubAgentVersions()
+
+	return compiledGraph, nil
+}
+
+// InvalidateCompiledGraph 使编译后的图失效，强制下次调用时重新编译
+// 当模型配置或图结构发生变化时调用此方法
+func (s *matchingService) InvalidateCompiledGraph() {
+	s.compileMutex.Lock()
+	defer s.compileMutex.Unlock()
+
+	s.compiledGraph = nil
+	s.currentModelType = ""
+	s.currentModelName = ""
+}
+
+// GetCompiledGraphInfo 获取当前编译图的信息（用于调试和监控）
+func (s *matchingService) GetCompiledGraphInfo() (modelType models.ModelType, modelName string, isCompiled bool) {
+	s.compileMutex.RLock()
+	defer s.compileMutex.RUnlock()
+
+	return s.currentModelType, s.currentModelName, s.compiledGraph != nil
 }
 
 func buildDimensionWeights(overrides map[string]float64) *domain.DimensionWeights {

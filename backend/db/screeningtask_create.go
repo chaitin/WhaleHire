@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/db/jobposition"
+	"github.com/chaitin/WhaleHire/backend/db/screeningnoderun"
 	"github.com/chaitin/WhaleHire/backend/db/screeningresult"
 	"github.com/chaitin/WhaleHire/backend/db/screeningrunmetric"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
@@ -294,6 +295,21 @@ func (stc *ScreeningTaskCreate) AddRunMetrics(s ...*ScreeningRunMetric) *Screeni
 		ids[i] = s[i].ID
 	}
 	return stc.AddRunMetricIDs(ids...)
+}
+
+// AddNodeRunIDs adds the "node_runs" edge to the ScreeningNodeRun entity by IDs.
+func (stc *ScreeningTaskCreate) AddNodeRunIDs(ids ...uuid.UUID) *ScreeningTaskCreate {
+	stc.mutation.AddNodeRunIDs(ids...)
+	return stc
+}
+
+// AddNodeRuns adds the "node_runs" edges to the ScreeningNodeRun entity.
+func (stc *ScreeningTaskCreate) AddNodeRuns(s ...*ScreeningNodeRun) *ScreeningTaskCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return stc.AddNodeRunIDs(ids...)
 }
 
 // Mutation returns the ScreeningTaskMutation object of the builder.
@@ -584,6 +600,22 @@ func (stc *ScreeningTaskCreate) createSpec() (*ScreeningTask, *sqlgraph.CreateSp
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(screeningrunmetric.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := stc.mutation.NodeRunsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   screeningtask.NodeRunsTable,
+			Columns: []string{screeningtask.NodeRunsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(screeningnoderun.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

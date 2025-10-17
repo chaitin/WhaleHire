@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudwego/eino/components/model"
 	"github.com/google/uuid"
 
 	"github.com/chaitin/WhaleHire/backend/consts"
@@ -269,8 +268,30 @@ func buildResultEntity(task *db.ScreeningTask, resumeID uuid.UUID, result *servi
 		return nil, fmt.Errorf("序列化技能匹配失败: %w", err)
 	}
 
+	// 提取各维度分数
+	dimensionScores := make(map[string]interface{})
+	if result.DimensionMap != nil {
+		for dimension, score := range result.DimensionMap {
+			dimensionScores[dimension] = score
+		}
+	}
+
+	// 提取 TraceID
+	traceID := ""
+	if match.TaskMetaData != nil && match.TaskMetaData.MatchTaskID != "" {
+		traceID = match.TaskMetaData.MatchTaskID
+	}
+
 	// 序列化运行时元数据
-	runtimeMetadata := serializeTokenUsage(result.TokenUsages)
+	runtimeMetadata := result.Collector.SerializeTokenUsages()
+
+	// 构建 SubAgentVersions 信息
+	subAgentVersions := make(map[string]interface{})
+	if result.SubAgentVersion != nil {
+		for agent, version := range result.SubAgentVersion {
+			subAgentVersions[agent] = version
+		}
+	}
 
 	return &db.ScreeningResult{
 		TaskID:               task.ID,
@@ -278,7 +299,7 @@ func buildResultEntity(task *db.ScreeningTask, resumeID uuid.UUID, result *servi
 		ResumeID:             resumeID,
 		OverallScore:         match.OverallScore,
 		MatchLevel:           screeningresult.MatchLevel(toMatchLevel(match.OverallScore)),
-		DimensionScores:      map[string]interface{}{}, // TODO: 需要从 match 中提取维度分数
+		DimensionScores:      dimensionScores,
 		BasicDetail:          basicDetail,
 		EducationDetail:      educationDetail,
 		ExperienceDetail:     experienceDetail,
@@ -286,9 +307,9 @@ func buildResultEntity(task *db.ScreeningTask, resumeID uuid.UUID, result *servi
 		ResponsibilityDetail: responsibilityDetail,
 		SkillDetail:          skillDetail,
 		Recommendations:      match.Recommendations,
-		TraceID:              "", // TODO: 需要从 result 中获取 TraceID
+		TraceID:              traceID,
 		RuntimeMetadata:      runtimeMetadata,
-		SubAgentVersions:     map[string]interface{}{}, // TODO: 需要从 result 中获取版本信息
+		SubAgentVersions:     subAgentVersions,
 		MatchedAt:            match.MatchedAt,
 	}, nil
 }
@@ -318,34 +339,24 @@ func safeAvg(sum, count float64) float64 {
 	return sum / count
 }
 
-func serializeTokenUsage(usages map[string]*model.TokenUsage) map[string]any {
-	if usages == nil {
-		return nil
-	}
-
-	result := make(map[string]any)
-	for key, usage := range usages {
-		if usage == nil {
-			continue
-		}
-		result[key] = map[string]any{
-			"prompt_tokens":     usage.PromptTokens,
-			"completion_tokens": usage.CompletionTokens,
-			"total_tokens":      usage.TotalTokens,
-		}
-	}
-
-	return result
-}
-
+// toMatchLevel 根据分数转换为匹配等级
+// 分数范围：
+// - 85-100：优秀匹配 (Excellent)
+// - 70-84：良好匹配 (Good)
+// - 55-69：一般匹配 (Fair)
+// - 40-54：较差匹配 (Poor)
+// - 0-39：不匹配 (No Match)
 func toMatchLevel(score float64) consts.MatchLevel {
-	if score >= 80 {
+	switch {
+	case score >= 85:
 		return consts.MatchLevelExcellent
-	} else if score >= 60 {
+	case score >= 70:
 		return consts.MatchLevelGood
-	} else if score >= 40 {
+	case score >= 55:
 		return consts.MatchLevelFair
-	} else {
+	case score >= 40:
 		return consts.MatchLevelPoor
+	default:
+		return consts.MatchLevelNoMatch
 	}
 }

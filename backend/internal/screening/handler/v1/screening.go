@@ -34,6 +34,7 @@ func NewScreeningHandler(
 	group.Use(auth.UserAuth())
 	group.POST("/tasks", web.BindHandler(handler.CreateTask))
 	group.POST("/tasks/:id/start", web.BaseHandler(handler.StartTask))
+	group.POST("/tasks/:id/cancel", web.BaseHandler(handler.CancelTask))
 	group.DELETE("/tasks/:id", web.BaseHandler(handler.DeleteTask))
 	group.GET("/tasks", web.BindHandler(handler.ListTasks, web.WithPage()))
 	group.GET("/tasks/:id", web.BaseHandler(handler.GetTask))
@@ -41,6 +42,7 @@ func NewScreeningHandler(
 	group.GET("/tasks/:id/metrics", web.BaseHandler(handler.GetMetrics))
 	group.GET("/tasks/:task_id/results/:resume_id", web.BaseHandler(handler.GetResult))
 	group.GET("/tasks/:task_id/resumes/:resume_id/progress", web.BaseHandler(handler.GetResumeProgress))
+	group.GET("/tasks/:task_id/resumes/:resume_id/node-runs", web.BaseHandler(handler.GetNodeRuns))
 	group.GET("/results", web.BindHandler(handler.ListResults, web.WithPage()))
 
 	return handler
@@ -102,6 +104,33 @@ func (h *ScreeningHandler) StartTask(c *web.Context) error {
 	})
 	if err != nil {
 		h.logger.Error("启动筛选任务失败", slog.Any("err", err), slog.Any("task_id", taskID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// CancelTask 取消筛选任务
+//
+//	@Tags			Screening
+//	@Summary		取消筛选任务
+//	@Description	取消正在进行中的筛选任务，停止剩余简历的匹配过程
+//	@ID				cancel-screening-task
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"任务ID"
+//	@Success		200	{object}	web.Resp{data=domain.CancelScreeningTaskResp}
+//	@Router			/api/v1/screening/tasks/{id}/cancel [post]
+func (h *ScreeningHandler) CancelTask(c *web.Context) error {
+	taskID, err := parseUUIDParam(c.Param("id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+	}
+
+	resp, err := h.usecase.CancelScreeningTask(c.Request().Context(), &domain.CancelScreeningTaskReq{
+		TaskID: taskID,
+	})
+	if err != nil {
+		h.logger.Error("取消筛选任务失败", slog.Any("err", err), slog.Any("task_id", taskID))
 		return err
 	}
 	return c.Success(resp)
@@ -170,8 +199,14 @@ func (h *ScreeningHandler) GetTask(c *web.Context) error {
 //	@ID				list-screening-tasks
 //	@Accept			json
 //	@Produce		json
-//	@Param			page	query		web.Pagination	true	"分页参数"
-//	@Success		200		{object}	web.Resp{data=domain.ListScreeningTasksResp}
+//	@Param			page			query		int							false	"页码，默认为1"
+//	@Param			size			query		int							false	"每页大小，默认为10"
+//	@Param			job_position_id	query		string						false	"职位ID过滤条件"
+//	@Param			status			query		consts.ScreeningTaskStatus	false	"任务状态过滤条件"
+//	@Param			created_by		query		string						false	"创建者用户ID过滤条件"
+//	@Param			start_time		query		string						false	"任务创建时间范围起始时间，格式：2006-01-02T15:04:05Z07:00"
+//	@Param			end_time		query		string						false	"任务创建时间范围结束时间，格式：2006-01-02T15:04:05Z07:00"
+//	@Success		200				{object}	web.Resp{data=domain.ListScreeningTasksResp}
 //	@Router			/api/v1/screening/tasks [get]
 func (h *ScreeningHandler) ListTasks(c *web.Context, req domain.ListScreeningTasksReq) error {
 	if req.Page <= 0 {
@@ -196,8 +231,13 @@ func (h *ScreeningHandler) ListTasks(c *web.Context, req domain.ListScreeningTas
 //	@ID				list-screening-results
 //	@Accept			json
 //	@Produce		json
-//	@Param			page	query		web.Pagination	true	"分页参数"
-//	@Success		200		{object}	web.Resp{data=domain.ListScreeningResultsResp}
+//	@Param			page		query		int		false	"页码，默认为1"
+//	@Param			size		query		int		false	"每页大小，默认为10"
+//	@Param			task_id		query		string	false	"筛选任务ID过滤条件"
+//	@Param			resume_id	query		string	false	"简历ID过滤条件"
+//	@Param			min_score	query		number	false	"最小匹配分数过滤条件"
+//	@Param			max_score	query		number	false	"最大匹配分数过滤条件"
+//	@Success		200			{object}	web.Resp{data=domain.ListScreeningResultsResp}
 //	@Router			/api/v1/screening/results [get]
 func (h *ScreeningHandler) ListResults(c *web.Context, req domain.ListScreeningResultsReq) error {
 	if req.Page <= 0 {
@@ -330,6 +370,39 @@ func (h *ScreeningHandler) GetMetrics(c *web.Context) error {
 	})
 	if err != nil {
 		h.logger.Error("获取筛选任务指标失败", slog.Any("err", err), slog.Any("task_id", taskID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// GetNodeRuns 查询节点运行记录
+//
+//	@Tags			Screening
+//	@Summary		查询节点运行记录
+//	@Description	根据任务ID和简历ID查询匹配过程中的节点运行记录
+//	@ID				get-screening-node-runs
+//	@Accept			json
+//	@Produce		json
+//	@Param			task_id		path		string	true	"任务ID"
+//	@Param			resume_id	path		string	true	"简历ID"
+//	@Success		200			{object}	web.Resp{data=domain.GetNodeRunsResp}
+//	@Router			/api/v1/screening/tasks/{task_id}/resumes/{resume_id}/node-runs [get]
+func (h *ScreeningHandler) GetNodeRuns(c *web.Context) error {
+	taskID, err := parseUUIDParam(c.Param("task_id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("任务ID格式不正确"))
+	}
+	resumeID, err := parseUUIDParam(c.Param("resume_id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("简历ID格式不正确"))
+	}
+
+	resp, err := h.usecase.GetNodeRuns(c.Request().Context(), &domain.GetNodeRunsReq{
+		TaskID:   taskID,
+		ResumeID: resumeID,
+	})
+	if err != nil {
+		h.logger.Error("获取节点运行记录失败", slog.Any("err", err), slog.Any("task_id", taskID), slog.Any("resume_id", resumeID))
 		return err
 	}
 	return c.Success(resp)

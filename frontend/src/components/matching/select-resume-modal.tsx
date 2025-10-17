@@ -21,6 +21,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Resume, ResumeStatus } from '@/types/resume';
 import { getResumeList } from '@/services/resume';
@@ -63,18 +69,15 @@ export function SelectResumeModal({
   // 加载筛选条件选项
   const loadFilterOptions = async () => {
     try {
-      // 加载所有简历以提取筛选选项
+      // 工作经验范围选项（与筛选逻辑保持一致的值）
+      setExperienceOptions(['0-1', '1-3', '3-5', '5-10', '10+']);
+
+      // 学历选项：从接口第一页数据中提取（避免一次性加载过多数据）
       const response = await getResumeList({
         page: 1,
-        size: 1000,
+        size: 50,
         status: ResumeStatus.COMPLETED,
       });
-
-      // 设置工作经验范围选项
-      const expRanges = ['1年以下', '1-3年', '3-5年', '5-10年', '10年以上'];
-      setExperienceOptions(expRanges);
-
-      // 提取学历选项（去重）
       const educations = Array.from(
         new Set(
           (response.resumes || [])
@@ -88,7 +91,7 @@ export function SelectResumeModal({
     }
   };
 
-  // 加载简历数据
+  // 加载简历数据（服务端分页）
   const loadResumes = useCallback(async () => {
     setLoading(true);
     try {
@@ -99,12 +102,12 @@ export function SelectResumeModal({
         status: ResumeStatus.COMPLETED, // 只显示已完成解析的简历
       });
 
-      // 根据筛选条件过滤简历
-      let filteredResumes = response.resumes || [];
+      // 当前页数据基础上应用前端附加筛选（仅影响当前页显示，不影响总数与分页）
+      let pageResumes = response.resumes || [];
 
-      // 工作经验筛选
+      // 工作经验筛选（与选项值保持一致）
       if (experienceFilter && experienceFilter !== 'all') {
-        filteredResumes = filteredResumes.filter((resume) => {
+        pageResumes = pageResumes.filter((resume) => {
           const exp = resume.years_experience || 0;
           switch (experienceFilter) {
             case '0-1':
@@ -123,15 +126,15 @@ export function SelectResumeModal({
         });
       }
 
-      // 学历筛选
+      // 学历筛选（仅影响当前页显示）
       if (educationFilter && educationFilter !== 'all') {
-        filteredResumes = filteredResumes.filter(
+        pageResumes = pageResumes.filter(
           (resume) => resume.highest_education === educationFilter
         );
       }
 
-      setResumes(filteredResumes);
-      const totalCount = filteredResumes.length;
+      setResumes(pageResumes);
+      const totalCount = response.total_count || 0;
       setTotalResults(totalCount);
       setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (error) {
@@ -312,6 +315,51 @@ export function SelectResumeModal({
     return `${years}年`;
   };
 
+  const renderJobPositionsCell = (resume: Resume) => {
+    const jobPositions = resume.job_positions || [];
+
+    if (jobPositions.length === 0) {
+      return <span className="text-[#999999]">-</span>;
+    }
+
+    if (jobPositions.length === 1) {
+      return (
+        <span className="text-sm text-[#333333]">
+          {jobPositions[0].job_title}
+        </span>
+      );
+    }
+
+    const firstJobTitle = jobPositions[0].job_title;
+    const remainingCount = jobPositions.length - 1;
+
+    return (
+      <div className="text-sm text-[#333333]">
+        {firstJobTitle}等
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-primary cursor-pointer underline decoration-dotted">
+                {remainingCount}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <div className="text-sm">
+                <div className="font-medium mb-1">所有岗位：</div>
+                <div className="flex flex-col gap-1">
+                  {jobPositions.map((jp, index) => (
+                    <div key={index}>{jp.job_title}</div>
+                  ))}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        个岗位
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl">
@@ -416,7 +464,11 @@ export function SelectResumeModal({
                     <SelectItem value="all">全部经验</SelectItem>
                     {experienceOptions.map((exp) => (
                       <SelectItem key={exp} value={exp}>
-                        {exp}
+                        {exp === '0-1' && '1年以下'}
+                        {exp === '1-3' && '1-3年'}
+                        {exp === '3-5' && '3-5年'}
+                        {exp === '5-10' && '5-10年'}
+                        {exp === '10+' && '10年以上'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -540,7 +592,9 @@ export function SelectResumeModal({
                         <td className="px-3 py-4 text-sm font-medium text-[#333333]">
                           {resume.name}
                         </td>
-                        <td className="px-3 py-4 text-sm text-[#333333]">-</td>
+                        <td className="px-3 py-4 text-sm text-[#333333]">
+                          {renderJobPositionsCell(resume)}
+                        </td>
                         <td className="px-3 py-4 text-sm text-[#333333]">
                           {formatExperience(resume.years_experience)}
                         </td>

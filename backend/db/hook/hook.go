@@ -57,6 +57,18 @@ func (f AttachmentFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.AttachmentMutation", m)
 }
 
+// The AuditLogFunc type is an adapter to allow the use of ordinary
+// function as AuditLog mutator.
+type AuditLogFunc func(context.Context, *db.AuditLogMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AuditLogFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.AuditLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.AuditLogMutation", m)
+}
+
 // The ConversationFunc type is an adapter to allow the use of ordinary
 // function as Conversation mutator.
 type ConversationFunc func(context.Context, *db.ConversationMutation) (db.Value, error)
@@ -283,6 +295,18 @@ func (f RoleFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.RoleMutation", m)
+}
+
+// The ScreeningNodeRunFunc type is an adapter to allow the use of ordinary
+// function as ScreeningNodeRun mutator.
+type ScreeningNodeRunFunc func(context.Context, *db.ScreeningNodeRunMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ScreeningNodeRunFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ScreeningNodeRunMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ScreeningNodeRunMutation", m)
 }
 
 // The ScreeningResultFunc type is an adapter to allow the use of ordinary

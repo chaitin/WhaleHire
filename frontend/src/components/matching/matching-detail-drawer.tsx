@@ -5,12 +5,16 @@ import {
   ChevronRight,
   FileText,
   Download,
+  Award,
 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MatchingTaskDetail } from '@/types/matching';
-import { getMockMatchingTaskDetail } from '@/data/mockMatchingData';
+import { ReportDetailModal } from './report-detail-modal';
+import { getScreeningTask } from '@/services/screening';
+import { getResumeDetail } from '@/services/resume';
+import { getJobProfile } from '@/services/job-profile';
 
 interface MatchingDetailDrawerProps {
   open: boolean;
@@ -25,13 +29,106 @@ export function MatchingDetailDrawer({
 }: MatchingDetailDrawerProps) {
   const [taskDetail, setTaskDetail] = useState<MatchingTaskDetail | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [selectedResumeName, setSelectedResumeName] = useState<string>('');
 
-  // 加载任务详情
+  // 加载任务详情（真实接口）
   useEffect(() => {
-    if (taskId && open) {
-      const detail = getMockMatchingTaskDetail(taskId, currentPage, 3);
-      setTaskDetail(detail);
-    }
+    if (!taskId || !open) return;
+
+    const fetchDetail = async () => {
+      try {
+        const resp = await getScreeningTask(taskId);
+
+        // 计算分页信息
+        const total = resp.resumes.length;
+        const pageSize = 3;
+        const totalPages = Math.ceil(total / pageSize);
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        // 构造任务头信息
+        const jobProfileName = await (async () => {
+          try {
+            const profile = await getJobProfile(resp.task.job_position_id);
+            return profile?.name || resp.task.job_position_name;
+          } catch (e) {
+            console.error('获取岗位画像失败:', e);
+            return resp.task.job_position_name;
+          }
+        })();
+
+        const header: MatchingTaskDetail = {
+          id: resp.task.id,
+          taskId: resp.task.task_id,
+          jobPositions: [jobProfileName],
+          resumeCount: total,
+          status:
+            resp.task.status === 'completed'
+              ? 'completed'
+              : resp.task.status === 'failed'
+                ? 'failed'
+                : 'in_progress',
+          creator: resp.task.created_by,
+          createdAt: resp.task.created_at,
+          results: [],
+          resultsPagination: {
+            current: currentPage,
+            pageSize,
+            total,
+            totalPages,
+          },
+        };
+
+        // 当前页结果映射
+        const pageResumes = resp.resumes.slice(start, end);
+        const results = await Promise.all(
+          pageResumes.map(async (r) => {
+            // 获取简历详情以补充信息（兼容后端字段）
+            let resumeName = r.resume_name;
+            let highestEducation = '';
+            let yearsExperience = 0;
+            try {
+              const detail = await getResumeDetail(r.resume_id);
+              resumeName = detail.name || resumeName;
+              highestEducation = detail.highest_education || '';
+              yearsExperience = detail.years_experience || 0;
+            } catch (e) {
+              console.warn('获取简历详情失败，使用任务返回的名称作为回退:', e);
+            }
+
+            return {
+              id: r.resume_id,
+              resume: {
+                id: r.resume_id,
+                name: resumeName,
+                age: 0,
+                education: highestEducation || '—',
+                experience: yearsExperience ? `${yearsExperience}年` : '—',
+              },
+              job: {
+                id: resp.task.job_position_id,
+                title: resp.task.job_position_name,
+                department: '—',
+                jobId: resp.task.job_position_id,
+              },
+              matchScore: r.score || 0,
+            };
+          })
+        );
+
+        setTaskDetail({
+          ...header,
+          results,
+        });
+      } catch (err) {
+        console.error('加载任务详情失败:', err);
+        setTaskDetail(null);
+      }
+    };
+
+    fetchDetail();
   }, [taskId, open, currentPage]);
 
   // 重置页码当打开新任务时
@@ -123,7 +220,7 @@ export function MatchingDetailDrawer({
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="text-lg font-medium text-[#1D2129]">
-                  高级前端工程师匹配任务 #{taskDetail.taskId}
+                  {taskDetail.jobPositions[0]}匹配任务 #{taskDetail.taskId}
                 </h3>
                 <span
                   className={cn(
@@ -171,23 +268,7 @@ export function MatchingDetailDrawer({
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-[#4E5969]">
                     <div className="flex items-center gap-1">
                       <span>匹配分数</span>
-                      <svg
-                        width="13"
-                        height="16"
-                        viewBox="0 0 13 16"
-                        fill="none"
-                        className="text-[#4E5969]"
-                      >
-                        <path
-                          d="M6.5 0L12.1292 8H0.870835L6.5 0Z"
-                          fill="currentColor"
-                          opacity="0.3"
-                        />
-                        <path
-                          d="M6.5 16L0.870835 8H12.1292L6.5 16Z"
-                          fill="currentColor"
-                        />
-                      </svg>
+                      <Award className="h-4 w-4 text-[#4E5969]" />
                     </div>
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider text-[#4E5969]">
@@ -226,7 +307,7 @@ export function MatchingDetailDrawer({
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-[#10B981]" />
+                        <Award className="h-4 w-4 text-[#10B981]" />
                         <span className="text-sm font-medium text-[#1D2129]">
                           {result.matchScore}分
                         </span>
@@ -238,7 +319,11 @@ export function MatchingDetailDrawer({
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
-                          onClick={() => console.log('查看报告', result.id)}
+                          onClick={() => {
+                            setSelectedResumeId(result.id);
+                            setSelectedResumeName(result.resume.name);
+                            setIsReportModalOpen(true);
+                          }}
                           title="查看报告"
                         >
                           <FileText className="h-4 w-4" />
@@ -246,7 +331,7 @@ export function MatchingDetailDrawer({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-[#4E5969] hover:text-[#4E5969]/80 hover:bg-gray-100"
+                          className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
                           onClick={() => console.log('下载', result.id)}
                           title="下载"
                         >
@@ -302,8 +387,8 @@ export function MatchingDetailDrawer({
                   currentPage >= taskDetail.resultsPagination.totalPages
                 }
                 className={cn(
-                  'h-[30px] w-[34px] rounded-md border border-[#C9CDD4] bg-white p-0 hover:border-[#10B981] hover:text-[#10B981]',
-                  currentPage >= taskDetail.resultsPagination.totalPages &&
+                  'h-[30px] w-[34px] rounded-md border border-[#C9CDD4] bg-white p-0 hover:border-primary hover:text-primary',
+                  currentPage === taskDetail.resultsPagination.totalPages &&
                     'opacity-50 cursor-not-allowed'
                 )}
               >
@@ -313,6 +398,15 @@ export function MatchingDetailDrawer({
           </div>
         </div>
       </SheetContent>
+
+      {/* 报告详情模态框 */}
+      <ReportDetailModal
+        open={isReportModalOpen}
+        onOpenChange={setIsReportModalOpen}
+        taskId={taskId}
+        resumeId={selectedResumeId}
+        resumeName={selectedResumeName}
+      />
     </Sheet>
   );
 }

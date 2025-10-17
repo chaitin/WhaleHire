@@ -5,7 +5,6 @@ import {
   FileText,
   TrendingUp,
   Award,
-  Target,
   Briefcase,
   User,
   Scale,
@@ -24,7 +23,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getScreeningTask } from '@/services/screening';
-import { GetScreeningTaskResp } from '@/types/screening';
+import { GetScreeningTaskResp, MatchLevel } from '@/types/screening';
+import { ReportDetailModal } from '@/components/matching/report-detail-modal';
+// 新增：按ID获取简历与岗位画像
+import { getResumeDetail } from '@/services/resume';
+import { getJobProfile } from '@/services/job-profile';
 
 interface MatchingResultModalProps {
   open: boolean;
@@ -52,6 +55,15 @@ export function MatchingResultModal({
   const [pageSize, setPageSize] = useState(20);
   const [taskData, setTaskData] = useState<GetScreeningTaskResp | null>(null);
   const [loading, setLoading] = useState(false);
+  // const [selectedLevel, setSelectedLevel] = useState<'all' | MatchLevel>('all');
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [selectedResumeName, setSelectedResumeName] = useState<string>('');
+  // 新增：姓名与岗位名映射缓存
+  const [resumeNameMap, setResumeNameMap] = useState<Record<string, string>>(
+    {}
+  );
+  const [jobPositionName, setJobPositionName] = useState<string>('');
 
   // 获取任务详情
   useEffect(() => {
@@ -73,41 +85,94 @@ export function MatchingResultModal({
     fetchTaskData();
   }, [open, taskId]);
 
-  // 计算匹配结果数据
+  // 新增：根据 job_position_id 获取岗位名称（回退用任务里的名称）
+  useEffect(() => {
+    const id = taskData?.task?.job_position_id;
+    const fallbackName = taskData?.task?.job_position_name || '';
+    if (!id) {
+      setJobPositionName(fallbackName);
+      return;
+    }
+    (async () => {
+      try {
+        const profile = await getJobProfile(id);
+        setJobPositionName(profile?.name || fallbackName);
+      } catch (e) {
+        console.error('获取岗位画像失败:', e);
+        setJobPositionName(fallbackName);
+      }
+    })();
+  }, [taskData?.task?.job_position_id, taskData?.task?.job_position_name]);
+
+  // 计算匹配等级（基于分数阈值）
+  const calcMatchLevel = (score: number): MatchLevel => {
+    if (score >= 85) return 'excellent';
+    if (score >= 70) return 'good';
+    if (score >= 50) return 'fair';
+    return 'poor';
+  };
+
+  // 计算匹配结果数据（按总分倒序排序并赋排名）
   const matchingResults =
     taskData?.resumes
-      .map((resume, index) => ({
+      .map((resume) => ({
         id: resume.resume_id,
-        rank: index + 1,
         candidateName: resume.resume_name,
-        position: taskData.task.job_position_name,
+        position: jobPositionName || taskData!.task.job_position_name,
         totalScore: resume.score || 0,
-        matchLevel:
-          (resume.score || 0) >= 80
-            ? ('高' as const)
-            : (resume.score || 0) >= 60
-              ? ('中' as const)
-              : ('低' as const),
-        highlights: resume.match_reason ? [resume.match_reason] : [],
+        matchLevel: calcMatchLevel(resume.score || 0),
         status: resume.status,
       }))
-      .sort((a, b) => b.totalScore - a.totalScore) || [];
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .map((r, idx) => ({ ...r, rank: idx + 1 })) || [];
 
   const totalMatches = matchingResults.length;
-  const highMatchCount = matchingResults.filter(
-    (r) => r.matchLevel === '高'
-  ).length;
-  const mediumMatchCount = matchingResults.filter(
-    (r) => r.matchLevel === '中'
-  ).length;
-  const lowMatchCount = matchingResults.filter(
-    (r) => r.matchLevel === '低'
-  ).length;
+  const levelCounts = {
+    excellent: matchingResults.filter((r) => r.matchLevel === 'excellent')
+      .length,
+    good: matchingResults.filter((r) => r.matchLevel === 'good').length,
+    fair: matchingResults.filter((r) => r.matchLevel === 'fair').length,
+    poor: matchingResults.filter((r) => r.matchLevel === 'poor').length,
+  };
 
+  // 分页
   const totalPages = Math.ceil(matchingResults.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const currentResults = matchingResults.slice(startIndex, endIndex);
+
+  // 新增：当前页简历姓名懒加载缓存
+  useEffect(() => {
+    if (!open) return;
+    const missingIds = currentResults
+      .map((r) => r.id)
+      .filter((id) => !resumeNameMap[id]);
+    if (missingIds.length === 0) return;
+
+    (async () => {
+      const updates: Record<string, string> = {};
+      for (const id of missingIds) {
+        try {
+          const detail = await getResumeDetail(id);
+          updates[id] = detail.name || '';
+        } catch (e) {
+          console.error('获取简历详情失败:', e);
+          const fallback =
+            currentResults.find((r) => r.id === id)?.candidateName || '';
+          updates[id] = fallback;
+        }
+      }
+      setResumeNameMap((prev) => ({ ...prev, ...updates }));
+    })();
+  }, [
+    open,
+    startIndex,
+    endIndex,
+    pageSize,
+    taskData?.resumes,
+    currentResults,
+    resumeNameMap,
+  ]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -117,7 +182,7 @@ export function MatchingResultModal({
 
   // 渲染分页按钮
   const renderPaginationButtons = () => {
-    const pages = [];
+    const pages = [] as JSX.Element[];
     const maxVisiblePages = 5;
 
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
@@ -148,20 +213,35 @@ export function MatchingResultModal({
     return pages;
   };
 
-  const getMatchLevelColor = (level: '高' | '中' | '低') => {
+  const getMatchLevelColor = (level: MatchLevel) => {
     switch (level) {
-      case '高':
-        return 'bg-[#E6F7ED] text-[#10B981]';
-      case '中':
+      case 'excellent':
+        return 'bg-primary/10 text-primary';
+      case 'good':
+        return 'bg-[#E6F0FF] text-[#2563EB]';
+      case 'fair':
         return 'bg-[#FFF3E6] text-[#F59E0B]';
-      case '低':
+      case 'poor':
         return 'bg-[#F3F4F6] text-[#6B7280]';
+    }
+  };
+
+  const getLevelLabel = (level: MatchLevel) => {
+    switch (level) {
+      case 'excellent':
+        return '非常匹配';
+      case 'good':
+        return '高匹配';
+      case 'fair':
+        return '一般匹配';
+      case 'poor':
+        return '低匹配';
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl">
+      <DialogContent className="max-w-[920px] p-0 gap-0 bg白 rounded-xl">
         <DialogTitle className="sr-only">创建新匹配任务 - 匹配结果</DialogTitle>
         {/* 头部 */}
         <div className="flex items-center justify-between border-b border-[#E8E8E8] px-6 py-5">
@@ -241,7 +321,6 @@ export function MatchingResultModal({
                         >
                           {step.name}
                         </span>
-
                         {/* 描述 */}
                         <span className="text-xs text-center text-[#999999] mt-0.5">
                           {index === 0 && '选择需要匹配的岗位'}
@@ -261,10 +340,10 @@ export function MatchingResultModal({
                 <h3 className="mb-4 text-base font-semibold text-[#333333]">
                   整体数据概览
                 </h3>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-5 gap-4">
                   {/* 匹配总数 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#667EEA] to-[#764BA2]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                       <FileText className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -278,59 +357,88 @@ export function MatchingResultModal({
                     </div>
                   </div>
 
-                  {/* 高匹配度 */}
+                  {/* 非常匹配 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F0FF]">
-                      <Target className="h-5 w-5 text-[#3B82F6]" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                      <TrendingUp className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">
-                        {highMatchCount}
+                        {levelCounts.excellent}
                       </div>
-                      <div className="text-xs text-[#666666]">高匹配度</div>
-                      <div className="text-[11px] font-medium text-[#999999]">
-                        {((highMatchCount / totalMatches) * 100).toFixed(1)}%
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 中匹配度 */}
-                  <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF3E6]">
-                      <Award className="h-5 w-5 text-[#F59E0B]" />
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <div className="text-2xl font-bold leading-tight text-[#333333]">
-                        {mediumMatchCount}
-                      </div>
-                      <div className="text-xs text-[#666666]">中匹配度</div>
+                      <div className="text-xs text-[#666666]">非常匹配</div>
                       <div className="text-[11px] font-medium text-[#999999]">
                         {totalMatches > 0
-                          ? ((mediumMatchCount / totalMatches) * 100).toFixed(1)
+                          ? (
+                              (levelCounts.excellent / totalMatches) *
+                              100
+                            ).toFixed(1)
                           : 0}
                         %
                       </div>
                     </div>
                   </div>
 
-                  {/* 低匹配度 */}
+                  {/* 高匹配 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F7ED]">
-                      <TrendingUp className="h-5 w-5 text-[#10B981]" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F0FF]">
+                      <BarChart3 className="h-5 w-5 text-[#3B82F6]" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">
-                        {lowMatchCount}
+                        {levelCounts.good}
                       </div>
-                      <div className="text-xs text-[#666666]">低匹配度</div>
+                      <div className="text-xs text-[#666666]">高匹配</div>
                       <div className="text-[11px] font-medium text-[#999999]">
-                        {((lowMatchCount / totalMatches) * 100).toFixed(1)}%
+                        {totalMatches > 0
+                          ? ((levelCounts.good / totalMatches) * 100).toFixed(1)
+                          : 0}
+                        %
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 一般匹配 */}
+                  <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF3E6]">
+                      <Award className="h-5 w-5 text-[#F59E0B]" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="text-2xl font-bold leading-tight text-[#333333]">
+                        {levelCounts.fair}
+                      </div>
+                      <div className="text-xs text-[#666666]">一般匹配</div>
+                      <div className="text-[11px] font-medium text-[#999999]">
+                        {totalMatches > 0
+                          ? ((levelCounts.fair / totalMatches) * 100).toFixed(1)
+                          : 0}
+                        %
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 低匹配 */}
+                  <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F3F4F6]">
+                      <BarChart3 className="h-5 w-5 text-[#6B7280]" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="text-2xl font-bold leading-tight text-[#333333]">
+                        {levelCounts.poor}
+                      </div>
+                      <div className="text-xs text-[#666666]">低匹配</div>
+                      <div className="text-[11px] font-medium text-[#999999]">
+                        {totalMatches > 0
+                          ? ((levelCounts.poor / totalMatches) * 100).toFixed(1)
+                          : 0}
+                        %
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* 等级筛选页签 - 已按需求删除 */}
               {/* 匹配结果详情 */}
               <div className="bg-[#FAFAFA] rounded-lg p-5 mb-4">
                 <h3 className="text-base font-semibold text-[#333333] mb-4">
@@ -358,9 +466,6 @@ export function MatchingResultModal({
                           匹配度等级
                         </th>
                         <th className="px-3 py-3.5 text-left text-[13px] font-medium text-[#666666]">
-                          匹配亮点
-                        </th>
-                        <th className="px-3 py-3.5 text-left text-[13px] font-medium text-[#666666]">
                           操作
                         </th>
                       </tr>
@@ -375,13 +480,24 @@ export function MatchingResultModal({
                             {result.rank}
                           </td>
                           <td className="px-3 py-4 text-sm font-medium text-[#333333]">
-                            {result.candidateName}
+                            {resumeNameMap[result.id] || result.candidateName}
                           </td>
                           <td className="px-3 py-4 text-sm text-[#333333]">
-                            {result.position}
+                            <div className="flex flex-col gap-1">
+                              <span>
+                                {jobPositionName ||
+                                  result.position ||
+                                  '未知岗位'}
+                              </span>
+                              {taskData?.task?.job_position_id && (
+                                <span className="text-xs text-gray-500">
+                                  ID: {taskData.task.job_position_id}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-3 py-4">
-                            <span className="text-lg font-bold text-[#10B981]">
+                            <span className="text-lg font-bold text-primary">
                               {result.totalScore}
                             </span>
                           </td>
@@ -392,30 +508,25 @@ export function MatchingResultModal({
                                 getMatchLevelColor(result.matchLevel)
                               )}
                             >
-                              {result.matchLevel}匹配
+                              {getLevelLabel(result.matchLevel)}
                             </span>
                           </td>
                           <td className="px-3 py-4">
-                            <div className="flex flex-wrap gap-1">
-                              {result.highlights
-                                .slice(0, 2)
-                                .map((highlight, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="rounded bg-[#E6F0FF] px-2 py-0.5 text-xs text-[#2563EB]"
-                                  >
-                                    {highlight}
-                                  </span>
-                                ))}
-                            </div>
-                          </td>
-                          <td className="px-3 py-4">
                             <Button
-                              variant="link"
+                              variant="ghost"
                               size="sm"
-                              className="h-auto p-0 text-sm text-primary hover:text-primary/90"
+                              className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
+                              onClick={() => {
+                                setSelectedResumeId(result.id);
+                                setSelectedResumeName(
+                                  resumeNameMap[result.id] ||
+                                    result.candidateName
+                                );
+                                setIsReportOpen(true);
+                              }}
+                              title="查看报告详情"
                             >
-                              查看详情
+                              <FileText className="h-4 w-4" />
                             </Button>
                           </td>
                         </tr>
@@ -477,6 +588,15 @@ export function MatchingResultModal({
                   </div>
                 </div>
               </div>
+
+              {/* 报告详情弹窗 */}
+              <ReportDetailModal
+                open={isReportOpen}
+                onOpenChange={setIsReportOpen}
+                taskId={taskId}
+                resumeId={selectedResumeId}
+                resumeName={selectedResumeName}
+              />
             </>
           )}
         </div>

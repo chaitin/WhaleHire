@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,19 @@ export function MatchingProcessModal({
   );
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [previousStatus, setPreviousStatus] = useState<string | null>(null);
+  const [displayProgress, setDisplayProgress] = useState<number>(0);
+  const taskStartAtRef = useRef<number | null>(null);
+
+  // 新增：判定任务是否已完成（兼容部分失败但总体完成）
+  const isFinished = (data: GetTaskProgressResp | null) => {
+    if (!data) return false;
+    const completed = data.status === 'completed';
+    const percentDone = (data.progress_percent ?? 0) >= 100;
+    const total = data.resume_total ?? 0;
+    const processed = data.resume_processed ?? 0;
+    const allProcessed = total > 0 && processed >= total;
+    return completed || percentDone || allProcessed;
+  };
 
   // 获取任务进度
   useEffect(() => {
@@ -56,9 +69,8 @@ export function MatchingProcessModal({
         const data = await getTaskProgress(taskId);
         setProgressData(data);
 
-        // 检查状态变化，当状态变为 completed 时自动跳转
-        if (data.status === 'completed') {
-          // 如果之前不是 completed 状态，现在变成了 completed，延迟1秒后跳转
+        // 当任务判定已完成时自动跳转到结果
+        if (isFinished(data)) {
           if (previousStatus !== 'completed') {
             setTimeout(() => {
               onComplete?.();
@@ -75,11 +87,96 @@ export function MatchingProcessModal({
 
     fetchProgress();
 
-    // 每2秒轮询一次进度
-    const interval = setInterval(fetchProgress, 2000);
+    // 每10秒轮询一次进度
+    const interval = setInterval(fetchProgress, 10000);
 
     return () => clearInterval(interval);
   }, [open, taskId, onComplete, previousStatus]);
+
+  // 进度条缓慢增长动画：在轮询获取到新的progress_percent后，逐步逼近目标值
+  useEffect(() => {
+    if (!open) return;
+
+    const status = progressData?.status;
+
+    // 初始化任务开始时间（用于估算进度），优先使用后端提供的 started_at
+    if (
+      (status === 'in_progress' || String(status) === 'running') &&
+      !taskStartAtRef.current
+    ) {
+      const startedAt = progressData?.started_at
+        ? new Date(progressData.started_at).getTime()
+        : Date.now();
+      taskStartAtRef.current = startedAt;
+    }
+
+    // 完成后重置开始时间
+    if (isFinished(progressData)) {
+      taskStartAtRef.current = null;
+    }
+  }, [open, progressData, progressData?.status, progressData?.started_at]);
+
+  // 进度条缓慢增长动画：在轮询获取到新的progress_percent后，逐步逼近目标值
+  useEffect(() => {
+    if (!open) return;
+
+    const status = progressData?.status;
+    const realProgress = Math.min(100, progressData?.progress_percent ?? 0);
+
+    // 完成状态直接显示为100%
+    if (isFinished(progressData)) {
+      setDisplayProgress(100);
+      return;
+    }
+
+    // 基于简历总数和开始时间估算目标进度（前端动画，不依赖后端）
+    const totalResumes = Math.max(
+      1,
+      progressData?.resume_total || selectedResumeCount || 1
+    );
+    const basePerResumeMs =
+      totalResumes <= 10 ? 6000 : totalResumes <= 50 ? 12000 : 16000; // 简历越多，速率越慢（进一步调慢）
+    const expectedTotalMs = Math.max(40000, totalResumes * basePerResumeMs); // 保底至少40秒（进一步调慢）
+    const startedAt = taskStartAtRef.current;
+    const elapsedMs = startedAt ? Date.now() - startedAt : 0;
+
+    const isActive = status === 'in_progress' || String(status) === 'running';
+    const estimatedPercent = isActive
+      ? Math.min(80, Math.max(0, (elapsedMs / expectedTotalMs) * 100)) // 上限降至80%
+      : 0;
+
+    const step = () => {
+      setDisplayProgress((prev) => {
+        // 在任务开始或运行中，即使后端进度为0，也缓慢增长到一个估算/基线值
+        const baseline = isActive
+          ? Math.min(80, Math.max(prev, 1, estimatedPercent)) // 基线下限降至1%，上限80%
+          : prev;
+
+        // 目标不回退：不小于当前可视进度，避免突然下降
+        const target = Math.max(realProgress, baseline);
+
+        const delta = target - prev;
+        if (Math.abs(delta) <= 0.05) return target; // 接近目标则停止
+        const inc = Math.max(0.02, delta / 60); // 每步增量继续调小，减速
+        return Math.min(prev + inc, target);
+      });
+    };
+
+    // 立即执行一次，然后每900ms缓慢增长（进一步降低频率）
+    step();
+    const intervalId = setInterval(step, 900);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [
+    open,
+    progressData,
+    progressData?.progress_percent,
+    progressData?.status,
+    progressData?.resume_total,
+    selectedResumeCount,
+  ]);
 
   const handlePrevious = () => {
     setShowConfirmDialog(true);
@@ -107,11 +204,16 @@ export function MatchingProcessModal({
     }
   };
 
-  // 获取状态标签 - 按照用户要求的中文显示
-  const getStatusLabel = (status: string) => {
+  // 获取状态标签 - 按照用户要求的中文显示（优先使用完成判定）
+  const getStatusLabel = (
+    status: string,
+    data?: GetTaskProgressResp | null
+  ) => {
+    if (data && isFinished(data)) return '匹配完成';
     switch (status) {
       case 'pending':
         return '创建完成';
+      case 'in_progress':
       case 'running':
         return '匹配中';
       case 'completed':
@@ -120,6 +222,23 @@ export function MatchingProcessModal({
         return '匹配失败';
       default:
         return '未知';
+    }
+  };
+
+  // 格式化时间（通用）
+  const formatTime = (iso?: string) => {
+    if (!iso) return '计算中...';
+    try {
+      const date = new Date(iso);
+      return date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    } catch {
+      return '计算中...';
     }
   };
 
@@ -222,14 +341,14 @@ export function MatchingProcessModal({
                         匹配进度
                       </span>
                       <span className="text-xl font-bold text-green-600">
-                        {(progressData?.progress_percent || 0).toFixed(1)}%
+                        {displayProgress.toFixed(1)}%
                       </span>
                     </div>
                     <div className="h-2.5 w-full rounded-full bg-gray-200">
                       <div
                         className="h-2.5 rounded-full bg-gradient-to-r from-orange-500 via-blue-500 to-green-500 transition-all duration-300"
                         style={{
-                          width: `${progressData?.progress_percent || 0}%`,
+                          width: `${Math.min(100, displayProgress)}%`,
                         }}
                       />
                     </div>
@@ -241,6 +360,21 @@ export function MatchingProcessModal({
                       任务详情
                     </h4>
                     <div className="grid grid-cols-2 gap-6">
+                      {/* 任务开始时间 */}
+                      <div className="flex items-start gap-3">
+                        <div className="rounded-lg bg-indigo-50 p-2">
+                          <Clock className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">
+                            任务开始时间
+                          </p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {formatTime(progressData?.started_at)}
+                          </p>
+                        </div>
+                      </div>
+
                       {/* 预计完成时间 */}
                       <div className="flex items-start gap-3">
                         <div className="rounded-lg bg-blue-50 p-2">
@@ -258,30 +392,17 @@ export function MatchingProcessModal({
                         </div>
                       </div>
 
-                      {/* 已处理简历数量 */}
+                      {/* 已处理 / 简历总数 */}
                       <div className="flex items-start gap-3">
                         <div className="rounded-lg bg-green-50 p-2">
                           <FileCheck className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 mb-1">
-                            已处理简历
+                            已处理 / 简历总数
                           </p>
                           <p className="text-sm font-semibold text-gray-900">
                             {progressData?.resume_processed || 0} /{' '}
-                            {progressData?.resume_total || selectedResumeCount}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* 简历总数 */}
-                      <div className="flex items-start gap-3">
-                        <div className="rounded-lg bg-purple-50 p-2">
-                          <FileCheck className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">简历总数</p>
-                          <p className="text-sm font-semibold text-gray-900">
                             {progressData?.resume_total || selectedResumeCount}
                           </p>
                         </div>
@@ -295,7 +416,10 @@ export function MatchingProcessModal({
                         <div>
                           <p className="text-xs text-gray-500 mb-1">任务状态</p>
                           <p className="text-sm font-semibold text-gray-900">
-                            {getStatusLabel(progressData?.status || 'pending')}
+                            {getStatusLabel(
+                              progressData?.status || 'pending',
+                              progressData
+                            )}
                           </p>
                         </div>
                       </div>
