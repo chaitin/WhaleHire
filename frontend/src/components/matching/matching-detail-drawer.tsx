@@ -6,6 +6,10 @@ import {
   FileText,
   Download,
   Award,
+  TrendingUp,
+  BarChart3,
+  Clock,
+  CheckCircle2,
 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -22,6 +26,14 @@ interface MatchingDetailDrawerProps {
   taskId: string | null;
 }
 
+// 计算匹配等级（与匹配结果页卡一致）
+const calcMatchLevel = (score: number) => {
+  if (score >= 85) return 'excellent';
+  if (score >= 70) return 'good';
+  if (score >= 50) return 'fair';
+  return 'poor';
+};
+
 export function MatchingDetailDrawer({
   open,
   onOpenChange,
@@ -32,6 +44,13 @@ export function MatchingDetailDrawer({
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [selectedResumeName, setSelectedResumeName] = useState<string>('');
+  const [overview, setOverview] = useState({
+    total: 0,
+    excellent: 0,
+    good: 0,
+    fair: 0,
+    poor: 0,
+  });
 
   // 加载任务详情（真实接口）
   useEffect(() => {
@@ -48,7 +67,7 @@ export function MatchingDetailDrawer({
         const start = (currentPage - 1) * pageSize;
         const end = start + pageSize;
 
-        // 构造任务头信息
+        // 构造任务头信息（根据 job_position_id 获取岗位名称）
         const jobProfileName = await (async () => {
           try {
             const profile = await getJobProfile(resp.task.job_position_id);
@@ -109,7 +128,7 @@ export function MatchingDetailDrawer({
               },
               job: {
                 id: resp.task.job_position_id,
-                title: resp.task.job_position_name,
+                title: jobProfileName,
                 department: '—',
                 jobId: resp.task.job_position_id,
               },
@@ -117,6 +136,31 @@ export function MatchingDetailDrawer({
             };
           })
         );
+
+        // 概览统计数据（与匹配结果页卡一致）
+        const allResumes = resp.resumes || [];
+        const totalMatches = allResumes.length;
+        const levelCounts = {
+          excellent: allResumes.filter(
+            (r) => calcMatchLevel(r.score || 0) === 'excellent'
+          ).length,
+          good: allResumes.filter(
+            (r) => calcMatchLevel(r.score || 0) === 'good'
+          ).length,
+          fair: allResumes.filter(
+            (r) => calcMatchLevel(r.score || 0) === 'fair'
+          ).length,
+          poor: allResumes.filter(
+            (r) => calcMatchLevel(r.score || 0) === 'poor'
+          ).length,
+        };
+        setOverview({
+          total: totalMatches,
+          excellent: levelCounts.excellent,
+          good: levelCounts.good,
+          fair: levelCounts.fair,
+          poor: levelCounts.poor,
+        });
 
         setTaskDetail({
           ...header,
@@ -140,37 +184,38 @@ export function MatchingDetailDrawer({
 
   if (!taskDetail) return null;
 
-  // 获取状态样式
+  // 获取状态样式与图标
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'completed':
         return {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          label: '已完成',
+          text: 'text-green-600',
+          icon: CheckCircle2,
+          label: '匹配完成',
         };
       case 'in_progress':
         return {
-          bg: 'bg-orange-50',
-          text: 'text-orange-700',
-          label: '进行中',
+          text: 'text-orange-600',
+          icon: Clock,
+          label: '匹配中',
         };
       case 'failed':
         return {
-          bg: 'bg-red-50',
-          text: 'text-red-700',
-          label: '失败',
+          text: 'text-red-600',
+          icon: CheckCircle2,
+          label: '匹配失败',
         };
       default:
         return {
-          bg: 'bg-gray-50',
-          text: 'text-gray-700',
+          text: 'text-gray-600',
+          icon: CheckCircle2,
           label: '未知',
         };
     }
   };
 
   const statusStyle = getStatusStyle(taskDetail.status);
+  const StatusIcon = statusStyle.icon;
 
   // 处理分页
   const handlePageChange = (page: number) => {
@@ -198,9 +243,9 @@ export function MatchingDetailDrawer({
           size="sm"
           onClick={() => handlePageChange(i)}
           className={cn(
-            'h-[30px] w-[33px] rounded-md border border-[#C9CDD4] bg-white p-0 text-sm text-[#374151] hover:border-[#10B981] hover:text-[#10B981]',
+            'h-[30px] w-[33px] rounded-md border border-[#C9CDD4] bg-white p-0 text-sm text-[#374151] hover:border-[#6B7280] hover:text-[#111827]',
             i === currentPage &&
-              'border-[#10B981] bg-[#10B981] text-white hover:bg-[#10B981] hover:text-white'
+              'border-[#6B7280] bg-[#6B7280] text-white hover:bg-[#6B7280] hover:text-white'
           )}
         >
           {i}
@@ -219,21 +264,13 @@ export function MatchingDetailDrawer({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-medium text-[#1D2129]">
-                  {taskDetail.jobPositions[0]}匹配任务 #{taskDetail.taskId}
+                <h3 className="text-lg font-medium text-[#1D2129] flex items-center gap-2">
+                  匹配任务 #{taskDetail.taskId} · {taskDetail.jobPositions[0]}
+                  <StatusIcon className={cn('h-5 w-5', statusStyle.text)} />
                 </h3>
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium',
-                    statusStyle.bg,
-                    statusStyle.text
-                  )}
-                >
-                  {statusStyle.label}
-                </span>
               </div>
               <p className="text-sm text-[#4E5969]">
-                创建时间:{' '}
+                创建人：{taskDetail.creator || '—'} · 创建时间：
                 {new Date(taskDetail.createdAt * 1000)
                   .toLocaleString('zh-CN', {
                     year: 'numeric',
@@ -246,6 +283,81 @@ export function MatchingDetailDrawer({
                   })
                   .replace(/\//g, '-')}
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 整体数据概览 */}
+        <div className="px-6 py-6 border-b border-[#E5E6EB]">
+          <div className="bg-[#FAFAFA] rounded-lg p-5">
+            <h3 className="mb-4 text-base font-semibold text-[#333333]">
+              整体数据概览
+            </h3>
+            <div className="grid grid-cols-5 gap-4">
+              {/* 匹配总数 */}
+              <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6B7280]">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-2xl font-bold leading-tight text-[#333333]">
+                    {overview.total}
+                  </div>
+                  <div className="text-xs text-[#666666]">匹配总数</div>
+                </div>
+              </div>
+
+              {/* 非常匹配 */}
+              <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6B7280]">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-2xl font-bold leading-tight text-[#333333]">
+                    {overview.excellent}
+                  </div>
+                  <div className="text-xs text-[#666666]">非常匹配</div>
+                </div>
+              </div>
+
+              {/* 高匹配 */}
+              <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F0FF]">
+                  <BarChart3 className="h-5 w-5 text-[#3B82F6]" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-2xl font-bold leading-tight text-[#333333]">
+                    {overview.good}
+                  </div>
+                  <div className="text-xs text-[#666666]">高匹配</div>
+                </div>
+              </div>
+
+              {/* 一般匹配 */}
+              <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF3E6]">
+                  <Award className="h-5 w-5 text-[#F59E0B]" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-2xl font-bold leading-tight text-[#333333]">
+                    {overview.fair}
+                  </div>
+                  <div className="text-xs text-[#666666]">一般匹配</div>
+                </div>
+              </div>
+
+              {/* 低匹配 */}
+              <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F3F4F6]">
+                  <BarChart3 className="h-5 w-5 text-[#6B7280]" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-2xl font-bold leading-tight text-[#333333]">
+                    {overview.poor}
+                  </div>
+                  <div className="text-xs text-[#666666]">低匹配</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -281,15 +393,15 @@ export function MatchingDetailDrawer({
                   <tr key={result.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#D1FAE5]">
-                          <User className="h-5 w-5 text-[#10B981]" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E8E8E8]">
+                          <User className="h-5 w-5 text-[#666666]" />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-[#1D2129]">
                             {result.resume.name}
                           </div>
                           <div className="text-sm text-[#4E5969]">
-                            {result.resume.age}岁 · {result.resume.education} ·{' '}
+                            {result.resume.education} ·{' '}
                             {result.resume.experience}
                           </div>
                         </div>
@@ -299,9 +411,6 @@ export function MatchingDetailDrawer({
                       <div>
                         <div className="text-sm font-medium text-[#1D2129] mb-1">
                           {result.job.title}
-                        </div>
-                        <div className="text-sm text-[#4E5969]">
-                          {result.job.department} · ID: {result.job.jobId}
                         </div>
                       </div>
                     </td>
@@ -318,7 +427,7 @@ export function MatchingDetailDrawer({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
                           onClick={() => {
                             setSelectedResumeId(result.id);
                             setSelectedResumeName(result.resume.name);
@@ -331,7 +440,7 @@ export function MatchingDetailDrawer({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-[#10B981] hover:text-[#10B981]/80 hover:bg-[#D1FAE5]/50"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
                           onClick={() => console.log('下载', result.id)}
                           title="下载"
                         >
@@ -367,12 +476,12 @@ export function MatchingDetailDrawer({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 className={cn(
-                  'h-[30px] w-[34px] rounded-md border border-[#C9CDD4] bg-white p-0 hover:border-[#10B981] hover:text-[#10B981]',
-                  currentPage === 1 && 'opacity-50 cursor-not-allowed'
+                  'h-[30px] w-[33px] rounded-md border border-[#C9CDD4] bg-white p-0',
+                  currentPage === 1 && 'opacity-50'
                 )}
+                disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4 text-[#6B7280]" />
               </Button>
@@ -382,31 +491,38 @@ export function MatchingDetailDrawer({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
+                onClick={() =>
+                  handlePageChange(
+                    Math.min(
+                      taskDetail.resultsPagination.totalPages,
+                      currentPage + 1
+                    )
+                  )
+                }
+                className={cn(
+                  'h-[30px] w-[33px] rounded-md border border-[#C9CDD4] bg-white p-0',
+                  currentPage >= taskDetail.resultsPagination.totalPages &&
+                    'opacity-50'
+                )}
                 disabled={
                   currentPage >= taskDetail.resultsPagination.totalPages
                 }
-                className={cn(
-                  'h-[30px] w-[34px] rounded-md border border-[#C9CDD4] bg-white p-0 hover:border-primary hover:text-primary',
-                  currentPage === taskDetail.resultsPagination.totalPages &&
-                    'opacity-50 cursor-not-allowed'
-                )}
               >
                 <ChevronRight className="h-4 w-4 text-[#6B7280]" />
               </Button>
             </div>
           </div>
         </div>
-      </SheetContent>
 
-      {/* 报告详情模态框 */}
-      <ReportDetailModal
-        open={isReportModalOpen}
-        onOpenChange={setIsReportModalOpen}
-        taskId={taskId}
-        resumeId={selectedResumeId}
-        resumeName={selectedResumeName}
-      />
+        {/* 报告详情模态框 */}
+        <ReportDetailModal
+          open={isReportModalOpen}
+          onOpenChange={setIsReportModalOpen}
+          resumeId={selectedResumeId}
+          resumeName={selectedResumeName}
+          taskId={taskId}
+        />
+      </SheetContent>
     </Sheet>
   );
 }

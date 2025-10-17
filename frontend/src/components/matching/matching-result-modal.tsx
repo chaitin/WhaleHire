@@ -241,7 +241,7 @@ export function MatchingResultModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[920px] p-0 gap-0 bg白 rounded-xl">
+      <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl">
         <DialogTitle className="sr-only">创建新匹配任务 - 匹配结果</DialogTitle>
         {/* 头部 */}
         <div className="flex items-center justify-between border-b border-[#E8E8E8] px-6 py-5">
