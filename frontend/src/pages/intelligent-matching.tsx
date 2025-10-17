@@ -224,12 +224,14 @@ export function IntelligentMatchingPage() {
       const pageSize = pagination.pageSize;
       const totalVal = filteredTasks.length; // 使用筛选后的数量
       const totalPages = Math.ceil((totalVal || 0) / pageSize);
-      setPagination({
-        current: pagination.current,
-        pageSize: pageSize,
+
+      // 使用函数式更新避免依赖整个 pagination 对象
+      setPagination((prev) => ({
+        current: prev.current,
+        pageSize: prev.pageSize,
         total: totalVal || 0,
         totalPages: totalPages || 0,
-      });
+      }));
 
       const statsData = {
         total:
@@ -250,9 +252,13 @@ export function IntelligentMatchingPage() {
       console.error('加载任务列表失败:', error);
       setTasks([]);
       setStats({ total: 0, inProgress: 0, completed: 0 });
-      setPagination({ ...pagination, total: 0, totalPages: 0 });
+      // 使用函数式更新
+      setPagination((prev) => ({ ...prev, total: 0, totalPages: 0 }));
     }
-  }, [pagination, filters, jobProfileMap]);
+    // 注意：这里只依赖 pagination.current 和 pagination.pageSize，避免无限循环
+    // 因为 setPagination 会更新 pagination 对象，如果依赖整个 pagination 会导致无限循环
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.current, pagination.pageSize, filters, jobProfileMap]);
 
   // 首次加载岗位名称映射（仅执行一次）
   useEffect(() => {
