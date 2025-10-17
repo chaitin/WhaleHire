@@ -1,14 +1,17 @@
 package middleware
 
 import (
+	"bufio"
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -16,6 +19,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/pkg/ipdb"
+	"github.com/chaitin/WhaleHire/backend/pkg/session"
 )
 
 // AuditMiddleware 审计中间件
@@ -23,18 +27,28 @@ type AuditMiddleware struct {
 	auditRepo domain.AuditRepo
 	ipdb      *ipdb.IPDB
 	logger    *slog.Logger
+	session   *session.Session
 }
+
+const (
+	// maxAuditBodyBytes 限制审计记录保存的请求和响应体大小，避免大对象导致内存和延迟问题
+	maxAuditBodyBytes = 4 * 1024
+	// auditLogWriteTimeout 限制审计写库超时时间，防止后台协程长时间阻塞
+	auditLogWriteTimeout = 5 * time.Second
+)
 
 // NewAuditMiddleware 创建审计中间件
 func NewAuditMiddleware(
 	auditRepo domain.AuditRepo,
 	ipdb *ipdb.IPDB,
 	logger *slog.Logger,
+	session *session.Session,
 ) *AuditMiddleware {
 	return &AuditMiddleware{
 		auditRepo: auditRepo,
 		ipdb:      ipdb,
 		logger:    logger.With("middleware", "audit"),
+		session:   session,
 	}
 }
 
@@ -42,17 +56,87 @@ func NewAuditMiddleware(
 type responseWriter struct {
 	http.ResponseWriter
 	body       *bytes.Buffer
+	maxBytes   int
 	statusCode int
+	truncated  bool
+	flusher    http.Flusher
+	hijacker   http.Hijacker
+	pusher     http.Pusher
+}
+
+func newResponseWriter(w http.ResponseWriter, maxBytes int, captureBody bool) *responseWriter {
+	var bodyBuf *bytes.Buffer
+	if captureBody {
+		bodyBuf = &bytes.Buffer{}
+	}
+
+	rw := &responseWriter{
+		ResponseWriter: w,
+		body:           bodyBuf,
+		maxBytes:       maxBytes,
+		statusCode:     http.StatusOK,
+	}
+
+	if f, ok := w.(http.Flusher); ok {
+		rw.flusher = f
+	}
+	if h, ok := w.(http.Hijacker); ok {
+		rw.hijacker = h
+	}
+	if p, ok := w.(http.Pusher); ok {
+		rw.pusher = p
+	}
+
+	return rw
 }
 
 func (w *responseWriter) Write(b []byte) (int, error) {
-	w.body.Write(b)
+	if w.body != nil && w.maxBytes > 0 && !w.truncated {
+		remaining := w.maxBytes - w.body.Len()
+		if remaining > 0 {
+			if len(b) > remaining {
+				w.body.Write(b[:remaining])
+				w.truncated = true
+			} else {
+				w.body.Write(b)
+			}
+		} else {
+			w.truncated = true
+		}
+	}
 	return w.ResponseWriter.Write(b)
 }
 
 func (w *responseWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *responseWriter) Flush() {
+	if w.flusher != nil {
+		w.flusher.Flush()
+	}
+}
+
+func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if w.hijacker == nil {
+		return nil, nil, errors.New("底层响应写入器不支持 Hijack")
+	}
+	return w.hijacker.Hijack()
+}
+
+func (w *responseWriter) Push(target string, opts *http.PushOptions) error {
+	if w.pusher == nil {
+		return http.ErrNotSupported
+	}
+	return w.pusher.Push(target, opts)
+}
+
+func (w *responseWriter) capturedBody() ([]byte, bool) {
+	if w.body == nil {
+		return nil, false
+	}
+	return w.body.Bytes(), w.truncated
 }
 
 // Audit 审计中间件函数
@@ -69,20 +153,25 @@ func (m *AuditMiddleware) Audit() echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// 读取请求体
-			var requestBody []byte
-			if c.Request().Body != nil {
-				requestBody, _ = io.ReadAll(c.Request().Body)
-				c.Request().Body = io.NopCloser(bytes.NewBuffer(requestBody))
+			// 采集请求体（限制长度，避免破坏流式处理）
+			var (
+				requestBody          []byte
+				requestBodyTruncated bool
+			)
+			requestID := m.getRequestID(c)
+			sessionID := m.getSessionID(c)
+			operatorType, operatorID, operatorName := m.getOperatorInfo(c)
+
+			if req := c.Request(); req.Body != nil && m.shouldCaptureRequestBody(req) {
+				var err error
+				requestBody, requestBodyTruncated, err = m.captureRequestBody(req)
+				if err != nil {
+					m.logger.Warn("读取请求体用于审计失败", "path", req.URL.Path, "error", err)
+				}
 			}
 
 			// 包装响应写入器
-			responseBody := &bytes.Buffer{}
-			wrapper := &responseWriter{
-				ResponseWriter: c.Response().Writer,
-				body:           responseBody,
-				statusCode:     200,
-			}
+			wrapper := newResponseWriter(c.Response().Writer, maxAuditBodyBytes, m.shouldCaptureResponseBody(c))
 			c.Response().Writer = wrapper
 
 			// 记录开始时间
@@ -98,11 +187,19 @@ func (m *AuditMiddleware) Audit() echo.MiddlewareFunc {
 			duration := time.Since(startTime)
 
 			// 记录审计日志
+			responseBody, responseTruncated := wrapper.capturedBody()
 			m.recordAuditLog(
 				c.Request().Context(),
 				c,
+				requestID,
+				sessionID,
+				operatorType,
+				operatorID,
+				operatorName,
 				requestBody,
-				responseBody.Bytes(),
+				requestBodyTruncated,
+				responseBody,
+				responseTruncated,
 				wrapper.statusCode,
 				duration,
 				handlerErr,
@@ -135,27 +232,116 @@ func (m *AuditMiddleware) shouldSkip(path string) bool {
 	return false
 }
 
+// shouldCaptureRequestBody 判断是否需要采集请求体
+func (m *AuditMiddleware) shouldCaptureRequestBody(req *http.Request) bool {
+	contentType := req.Header.Get("Content-Type")
+	if strings.HasPrefix(contentType, "multipart/form-data") ||
+		strings.HasPrefix(contentType, "application/octet-stream") {
+		return false
+	}
+	// 允许业务显式跳过审计（例如大文件上传）
+	if strings.EqualFold(req.Header.Get("X-Audit-Skip-Body"), "true") {
+		return false
+	}
+	return true
+}
+
+// shouldCaptureResponseBody 判断是否需要采集响应体
+func (m *AuditMiddleware) shouldCaptureResponseBody(c echo.Context) bool {
+	req := c.Request()
+	if req == nil {
+		return true
+	}
+	if strings.Contains(req.Header.Get("Accept"), "text/event-stream") {
+		return false
+	}
+	path := req.URL.Path
+	if strings.HasPrefix(path, "/api/v1/file") || strings.HasPrefix(path, "/api/v1/download") {
+		return false
+	}
+	return true
+}
+
+type replayReadCloser struct {
+	reader io.Reader
+	closer io.Closer
+}
+
+func (r *replayReadCloser) Read(p []byte) (int, error) {
+	return r.reader.Read(p)
+}
+
+func (r *replayReadCloser) Close() error {
+	if r.closer != nil {
+		return r.closer.Close()
+	}
+	return nil
+}
+
+// captureRequestBody 截断采集请求体，同时保障业务仍可读取完整内容
+func (m *AuditMiddleware) captureRequestBody(req *http.Request) ([]byte, bool, error) {
+	original := req.Body
+	if original == nil {
+		return nil, false, nil
+	}
+
+	limitedReader := io.LimitReader(original, maxAuditBodyBytes+1)
+	captured, err := io.ReadAll(limitedReader)
+	if err != nil {
+		return nil, false, err
+	}
+
+	truncated := len(captured) > maxAuditBodyBytes
+	logged := captured
+	if truncated {
+		logged = captured[:maxAuditBodyBytes]
+	}
+
+	req.Body = &replayReadCloser{
+		reader: io.MultiReader(bytes.NewReader(captured), original),
+		closer: original,
+	}
+
+	return logged, truncated, nil
+}
+
 // recordAuditLog 记录审计日志
-func (m *AuditMiddleware) recordAuditLog(ctx context.Context, c echo.Context, requestBody, responseBody []byte, statusCode int, duration time.Duration, handlerErr error) {
-	// 获取基本信息
-	requestID := m.getRequestID(c)
-	sessionID := m.getSessionID(c)
-	operatorType, operatorID, operatorName := m.getOperatorInfo(c)
+func (m *AuditMiddleware) recordAuditLog(
+	ctx context.Context,
+	c echo.Context,
+	requestID string,
+	sessionID string,
+	operatorType consts.OperatorType,
+	operatorID *string,
+	operatorName *string,
+	requestBody []byte,
+	requestTruncated bool,
+	responseBody []byte,
+	responseTruncated bool,
+	statusCode int,
+	duration time.Duration,
+	handlerErr error,
+) {
 	operationType := m.parseOperationType(c.Request().Method, c.Request().URL.Path)
 	resourceType, resourceID, resourceName := m.parseResourceInfo(c)
 
-	// 获取IP地理位置信息
+	// 获取客户端IP
 	clientIP := m.getClientIP(c.Request())
-	country, province, city := m.getLocationInfo(clientIP)
 
 	// 处理请求体和响应体
 	var requestBodyStr, responseBodyStr *string
 	if len(requestBody) > 0 {
 		sanitized := m.sanitizeData(string(requestBody))
+		if requestTruncated {
+			sanitized += "（内容已截断）"
+		}
 		requestBodyStr = &sanitized
 	}
 	if len(responseBody) > 0 {
 		sanitized := m.sanitizeData(string(responseBody))
+		if responseTruncated {
+			sanitized += "（内容已截断）"
+		}
 		responseBodyStr = &sanitized
 	}
 
@@ -200,9 +386,6 @@ func (m *AuditMiddleware) recordAuditLog(ctx context.Context, c echo.Context, re
 		Duration:       int64(duration.Milliseconds()),
 		IP:             clientIP,
 		UserAgent:      userAgentPtr,
-		Country:        country,
-		Province:       province,
-		City:           city,
 		Status:         status,
 		ErrorMessage:   m.getErrorMessage(handlerErr),
 		BusinessData:   make(map[string]interface{}),
@@ -210,17 +393,28 @@ func (m *AuditMiddleware) recordAuditLog(ctx context.Context, c echo.Context, re
 	}
 
 	// 异步记录审计日志
-	go func() {
-		// 这里需要调用具体的仓库实现，暂时跳过
-		m.logger.Info("审计日志记录",
-			"request_id", requestID,
-			"operator_type", operatorType,
-			"operation_type", operationType,
-			"resource_type", resourceType,
-			"status", status,
-			"audit_log", auditLog,
-		)
-	}()
+	go func(parent context.Context, log *domain.AuditLog, ip string) {
+		ctxDB := context.WithoutCancel(parent)
+		ctxDB, cancel := context.WithTimeout(ctxDB, auditLogWriteTimeout)
+		defer cancel()
+
+		if country, province, city := m.getLocationInfo(ip); country != nil || province != nil || city != nil {
+			log.Country = country
+			log.Province = province
+			log.City = city
+		}
+
+		if err := m.auditRepo.Create(ctxDB, log); err != nil {
+			m.logger.Error("审计日志记录失败",
+				"request_id", requestID,
+				"operator_type", operatorType,
+				"operation_type", operationType,
+				"resource_type", resourceType,
+				"status", status,
+				"error", err,
+			)
+		}
+	}(ctx, auditLog, clientIP)
 }
 
 // getRequestID 获取请求ID
@@ -248,33 +442,14 @@ func (m *AuditMiddleware) getSessionID(c echo.Context) string {
 
 // getOperatorInfo 获取操作者信息
 func (m *AuditMiddleware) getOperatorInfo(c echo.Context) (consts.OperatorType, *string, *string) {
-	// 从上下文中获取用户信息
-	if user := c.Get("user"); user != nil {
-		// 假设用户对象有ID和Name字段
-		if userMap, ok := user.(map[string]interface{}); ok {
-			if id, exists := userMap["id"]; exists {
-				idStr := fmt.Sprintf("%v", id)
-				name := ""
-				if n, exists := userMap["name"]; exists {
-					name = fmt.Sprintf("%v", n)
-				}
-				return consts.OperatorTypeUser, &idStr, &name
-			}
-		}
+	// 首先尝试获取管理员信息
+	if admin, err := session.Get[domain.AdminUser](m.session, c, consts.SessionName); err == nil {
+		return consts.OperatorTypeAdmin, &admin.ID, &admin.Username
 	}
 
-	// 检查是否是管理员
-	if admin := c.Get("admin"); admin != nil {
-		if adminMap, ok := admin.(map[string]interface{}); ok {
-			if id, exists := adminMap["id"]; exists {
-				idStr := fmt.Sprintf("%v", id)
-				name := ""
-				if n, exists := adminMap["name"]; exists {
-					name = fmt.Sprintf("%v", n)
-				}
-				return consts.OperatorTypeAdmin, &idStr, &name
-			}
-		}
+	// 然后尝试获取普通用户信息
+	if user, err := session.Get[domain.User](m.session, c, consts.UserSessionName); err == nil {
+		return consts.OperatorTypeUser, &user.ID, &user.Username
 	}
 
 	// 默认为用户类型，无ID和名称
@@ -522,19 +697,37 @@ func (m *AuditMiddleware) getLocationInfo(ip string) (*string, *string, *string)
 func (m *AuditMiddleware) sanitizeData(data string) string {
 	// 简单的敏感数据清理
 	sensitiveFields := []string{"password", "token", "secret", "key"}
+	lower := strings.ToLower(data)
 
 	for _, field := range sensitiveFields {
-		if strings.Contains(strings.ToLower(data), field) {
+		if strings.Contains(lower, field) {
 			return "[SENSITIVE_DATA_REMOVED]"
 		}
 	}
 
-	// 限制数据长度
+	// 限制数据长度，确保UTF-8安全
 	if len(data) > 1000 {
-		return data[:1000] + "..."
+		return m.truncateUTF8Safe(data, 1000) + "..."
 	}
 
 	return data
+}
+
+// truncateUTF8Safe 安全地截断UTF-8字符串，避免破坏多字节字符
+func (m *AuditMiddleware) truncateUTF8Safe(s string, maxBytes int) string {
+	if len(s) <= maxBytes {
+		return s
+	}
+
+	// 从maxBytes位置向前查找有效的UTF-8字符边界
+	for i := maxBytes; i >= 0; i-- {
+		if utf8.ValidString(s[:i]) {
+			return s[:i]
+		}
+	}
+
+	// 如果找不到有效边界，返回空字符串
+	return ""
 }
 
 // getErrorMessage 获取错误信息

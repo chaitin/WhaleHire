@@ -50,7 +50,7 @@ other = "缺少岗位画像ID"
 other = " 缺少技能ID"
 
 [err-invalid-param]
-other = "无效参数请检查"
+other = "无效参数请检查: {{.message}}"
 
 [err-jobprofile-has-resumes]
 other = "岗位画像已关联简历"

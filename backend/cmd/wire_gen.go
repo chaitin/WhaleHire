@@ -7,16 +7,16 @@
 package main
 
 import (
-	"log/slog"
-
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
+	v1_8 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/audit/repo"
+	usecase8 "github.com/chaitin/WhaleHire/backend/internal/audit/usecase"
 	v1_5 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
 	repo7 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
 	usecase6 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
-	v1_8 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
-	usecase8 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
+	v1_9 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
+	usecase9 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	v1_3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
 	repo6 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	usecase4 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
@@ -35,7 +35,7 @@ import (
 	repo8 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	service2 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
 	usecase7 "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
-	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	"github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
@@ -46,6 +46,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/store/s3"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 	"github.com/chaitin/WhaleHire/backend/pkg/web"
+	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -66,11 +67,11 @@ func newServer() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	auditMiddleware := middleware.NewAuditMiddleware(auditRepo, ipdbIPDB, slogLogger)
+	sessionSession := session.NewSession(configConfig)
+	auditMiddleware := middleware.NewAuditMiddleware(auditRepo, ipdbIPDB, slogLogger, sessionSession)
 	web := pkg.NewWeb(configConfig, auditMiddleware)
 	redisClient := store.NewRedisCli(configConfig)
 	userRepo := repo2.NewUserRepo(client, ipdbIPDB, redisClient, configConfig)
-	sessionSession := session.NewSession(configConfig)
 	userUsecase := usecase.NewUserUsecase(configConfig, redisClient, userRepo, slogLogger, sessionSession)
 	authMiddleware := middleware.NewAuthMiddleware(userUsecase, sessionSession, slogLogger)
 	activeMiddleware := middleware.NewActiveMiddleware(redisClient, slogLogger)
@@ -106,8 +107,10 @@ func newServer() (*Server, error) {
 	}
 	screeningUsecase := usecase7.NewScreeningUsecase(screeningRepo, screeningNodeRunRepo, jobProfileUsecase, resumeUsecase, matchingService, slogLogger)
 	screeningHandler := v1_7.NewScreeningHandler(web, screeningUsecase, authMiddleware, slogLogger)
-	fileUsecase := usecase8.NewFileUsecase(slogLogger, minioClient, configConfig)
-	fileHandler := v1_8.NewFileHandler(web, fileUsecase, authMiddleware)
+	auditUsecase := usecase8.NewAuditUsecase(auditRepo, slogLogger)
+	auditHandler := v1_8.NewAuditHandler(web, auditUsecase, authMiddleware, slogLogger)
+	fileUsecase := usecase9.NewFileUsecase(slogLogger, minioClient, configConfig)
+	fileHandler := v1_9.NewFileHandler(web, fileUsecase, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
 		config:           configConfig,
@@ -121,6 +124,7 @@ func newServer() (*Server, error) {
 		departmentV1:     departmentHandler,
 		jobapplicationV1: jobApplicationHandler,
 		screeningV1:      screeningHandler,
+		auditV1:          auditHandler,
 		fileV1:           fileHandler,
 		version:          versionInfo,
 	}
@@ -141,6 +145,7 @@ type Server struct {
 	departmentV1     *v1_5.DepartmentHandler
 	jobapplicationV1 *v1_6.JobApplicationHandler
 	screeningV1      *v1_7.ScreeningHandler
-	fileV1           *v1_8.FileHandler
+	auditV1          *v1_8.AuditHandler
+	fileV1           *v1_9.FileHandler
 	version          *version.VersionInfo
 }
