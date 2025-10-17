@@ -101,7 +101,10 @@ export function MatchingDetailDrawer({
         };
 
         // 当前页结果映射
-        const pageResumes = resp.resumes.slice(start, end);
+        const sortedResumes = [...resp.resumes].sort(
+          (a, b) => (b.score || 0) - (a.score || 0)
+        );
+        const pageResumes = sortedResumes.slice(start, end);
         const results = await Promise.all(
           pageResumes.map(async (r) => {
             // 获取简历详情以补充信息（兼容后端字段）
@@ -189,25 +192,29 @@ export function MatchingDetailDrawer({
     switch (status) {
       case 'completed':
         return {
-          text: 'text-green-600',
+          text: 'text-green-700',
+          bg: 'bg-green-100',
           icon: CheckCircle2,
           label: '匹配完成',
         };
       case 'in_progress':
         return {
-          text: 'text-orange-600',
+          text: 'text-orange-700',
+          bg: 'bg-orange-100',
           icon: Clock,
           label: '匹配中',
         };
       case 'failed':
         return {
-          text: 'text-red-600',
+          text: 'text-red-700',
+          bg: 'bg-red-100',
           icon: CheckCircle2,
           label: '匹配失败',
         };
       default:
         return {
-          text: 'text-gray-600',
+          text: 'text-gray-700',
+          bg: 'bg-gray-100',
           icon: CheckCircle2,
           label: '未知',
         };
@@ -264,9 +271,20 @@ export function MatchingDetailDrawer({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-medium text-[#1D2129] flex items-center gap-2">
-                  匹配任务 #{taskDetail.taskId} · {taskDetail.jobPositions[0]}
-                  <StatusIcon className={cn('h-5 w-5', statusStyle.text)} />
+                <h3 className="text-lg font-medium text-[#1D2129] flex items-center gap-3">
+                  <span>
+                    匹配任务 #{taskDetail.taskId} · {taskDetail.jobPositions[0]}
+                  </span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs',
+                      statusStyle.bg,
+                      statusStyle.text
+                    )}
+                  >
+                    <StatusIcon className="h-4 w-4" />
+                    {statusStyle.label}
+                  </span>
                 </h3>
               </div>
               <p className="text-sm text-[#4E5969]">
@@ -294,10 +312,10 @@ export function MatchingDetailDrawer({
               整体数据概览
             </h3>
             <div className="grid grid-cols-5 gap-4">
-              {/* 匹配总数 */}
+              {/* 匹配总数：蓝色 */}
               <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6B7280]">
-                  <FileText className="h-5 w-5 text-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F0FF]">
+                  <FileText className="h-5 w-5 text-[#3B82F6]" />
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -307,10 +325,10 @@ export function MatchingDetailDrawer({
                 </div>
               </div>
 
-              {/* 非常匹配 */}
+              {/* 非常匹配：浅红色 */}
               <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6B7280]">
-                  <TrendingUp className="h-5 w-5 text-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FDE7E9]">
+                  <TrendingUp className="h-5 w-5 text-[#EF4444]" />
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -320,10 +338,10 @@ export function MatchingDetailDrawer({
                 </div>
               </div>
 
-              {/* 高匹配 */}
+              {/* 高匹配：浅橙色 */}
               <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E6F0FF]">
-                  <BarChart3 className="h-5 w-5 text-[#3B82F6]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF3E6]">
+                  <BarChart3 className="h-5 w-5 text-[#F59E0B]" />
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -333,10 +351,10 @@ export function MatchingDetailDrawer({
                 </div>
               </div>
 
-              {/* 一般匹配 */}
+              {/* 一般匹配：浅绿色 */}
               <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF3E6]">
-                  <Award className="h-5 w-5 text-[#F59E0B]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D1FAE5]">
+                  <Award className="h-5 w-5 text-[#10B981]" />
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -346,7 +364,7 @@ export function MatchingDetailDrawer({
                 </div>
               </div>
 
-              {/* 低匹配 */}
+              {/* 低匹配：浅灰色 */}
               <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F3F4F6]">
                   <BarChart3 className="h-5 w-5 text-[#6B7280]" />

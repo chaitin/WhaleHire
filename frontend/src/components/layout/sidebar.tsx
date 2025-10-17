@@ -76,7 +76,7 @@ const menuGroups: NavigationGroup[] = [
     items: [
       {
         id: 'platform-config',
-        label: '基础功能配置',
+        label: '基础配置',
         icon: FileStack,
         path: '/platform-config',
         disabled: false,
