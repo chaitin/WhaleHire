@@ -40,6 +40,7 @@ func NewAuditHandler(
 	group.GET("/security-alerts", web.BaseHandler(handler.GetSecurityAlerts))
 
 	// 审计日志管理接口（需要管理员权限）
+	group.Use(auth.Auth())
 	group.DELETE("/logs/:id", web.BaseHandler(handler.DeleteLog))
 	group.DELETE("/logs/batch", web.BindHandler(handler.BatchDeleteLogs))
 	group.DELETE("/logs/cleanup", web.BindHandler(handler.CleanupOldLogs))

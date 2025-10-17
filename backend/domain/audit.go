@@ -64,8 +64,8 @@ type ListAuditLogResp struct {
 
 // AuditStatsReq 审计日志统计请求
 type AuditStatsReq struct {
-	StartTime *time.Time `json:"start_time" query:"start_time"` // 开始时间
-	EndTime   *time.Time `json:"end_time" query:"end_time"`     // 结束时间
+	StartTime *time.Time `json:"start_time" query:"start_time, omitempty"` // 开始时间
+	EndTime   *time.Time `json:"end_time" query:"end_time, omitempty"`     // 结束时间
 }
 
 // AuditStatsResp 审计日志统计响应
