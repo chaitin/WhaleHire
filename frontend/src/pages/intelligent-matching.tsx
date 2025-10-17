@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Users,
   Clock,
@@ -47,9 +47,38 @@ import {
   listScreeningTasks,
   deleteScreeningTask,
 } from '@/services/screening';
-import { DimensionWeights, ScreeningTaskStatus } from '@/types/screening';
-import { getJobProfile } from '@/services/job-profile';
+import {
+  DimensionWeights,
+  ScreeningTaskStatus,
+  ScreeningTaskItem,
+} from '@/types/screening';
+import { listJobProfiles } from '@/services/job-profile';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+
+// 状态映射函数 - 将后端状态转换为中文显示
+const getStatusLabel = (status: string): string => {
+  switch (status) {
+    case 'pending':
+      return '创建完成';
+    case 'in_progress':
+      return '匹配中';
+    case 'completed':
+      return '匹配完成';
+    case 'failed':
+      return '匹配失败';
+    default:
+      return '未知状态';
+  }
+};
+
+// 获取状态筛选选项
+const getStatusFilterOptions = (): { value: string; label: string }[] => {
+  return [
+    { value: 'all', label: '全部状态' },
+    { value: 'completed', label: '匹配完成' },
+    { value: 'failed', label: '匹配失败' },
+  ];
+};
 
 export function IntelligentMatchingPage() {
   const [stats, setStats] = useState<MatchingStats>({
@@ -88,20 +117,31 @@ export function IntelligentMatchingPage() {
     taskId: string;
   } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [jobPositions, setJobPositions] = useState<
+    { id: string; name: string }[]
+  >([]); // 岗位列表（仅任务中出现的岗位）
+  const [jobProfileMap, setJobProfileMap] = useState<Record<string, string>>(
+    {}
+  ); // 岗位ID到名称映射
 
-  // 加载数据
-  useEffect(() => {
-    loadTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    pagination.current,
-    pagination.pageSize,
-    filters.status,
-    filters.keywords,
-  ]);
+  // 加载岗位列表（用于名称映射）
+  const loadJobPositions = useCallback(async () => {
+    try {
+      const response = await listJobProfiles({ page: 1, page_size: 100 });
+      if (response?.items) {
+        const map: Record<string, string> = {};
+        response.items.forEach((item: { id: string; name: string }) => {
+          map[item.id] = item.name;
+        });
+        setJobProfileMap(map);
+      }
+    } catch (error) {
+      console.error('加载岗位列表失败:', error);
+    }
+  }, []);
 
   // 加载任务列表
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       const response = await listScreeningTasks({
         page: pagination.current,
@@ -112,8 +152,9 @@ export function IntelligentMatchingPage() {
             : undefined,
       });
 
-      // 更稳健地提取后端任务数组
-      const backendTasks = Array.isArray(response?.tasks) ? response.tasks : [];
+      const backendTasks: ScreeningTaskItem[] = Array.isArray(response?.tasks)
+        ? response.tasks
+        : [];
       if (!Array.isArray(response?.tasks)) {
         console.warn(
           'listScreeningTasks 返回 tasks 非数组，使用空数组回退',
@@ -121,18 +162,26 @@ export function IntelligentMatchingPage() {
         );
       }
 
-      // 转换API响应到前端格式，并获取岗位名称
-      const tasksWithJobNames = await Promise.all(
-        backendTasks.map(async (task) => {
-          let jobPositionName = '未知岗位';
-          try {
-            const jobProfile = await getJobProfile(task.job_position_id);
-            jobPositionName = jobProfile.name || '未知岗位';
-          } catch (error) {
-            console.error('获取岗位名称失败:', error);
-          }
+      // 从任务数据收集岗位ID集合，用于构建岗位筛选下拉
+      const jobIdSet = new Set<string>(
+        backendTasks
+          .map((t: ScreeningTaskItem) => t.job_position_id)
+          .filter(Boolean)
+      );
+      const positionsFromTasks: { id: string; name: string }[] = Array.from(
+        jobIdSet
+      ).map((id) => ({
+        id,
+        name: jobProfileMap[id] || '未知岗位',
+      }));
+      setJobPositions(positionsFromTasks);
 
-          // 状态映射：将后端状态映射到前端状态
+      // 转换API响应到前端格式，并使用岗位映射获取岗位名称
+      const tasksWithJobNames: MatchingTask[] = backendTasks.map(
+        (task: ScreeningTaskItem) => {
+          const jobPositionName =
+            jobProfileMap[task.job_position_id] || '未知岗位';
+
           let frontendStatus: MatchingTaskStatus;
           if (task.status === 'pending' || task.status === 'in_progress') {
             frontendStatus = 'in_progress';
@@ -150,21 +199,30 @@ export function IntelligentMatchingPage() {
             status: frontendStatus,
             creator: task.creator_name || '',
             createdAt: task.created_at,
-          };
-        })
+          } as MatchingTask;
+        }
       );
 
-      // 新增：确保最新任务显示在首行（按创建时间倒序）
-      tasksWithJobNames.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      // 应用前端筛选：岗位与创建人
+      const posId = filters.position || 'all';
+      const keyword = (filters.keywords || '').trim();
+      const filteredTasks = tasksWithJobNames.filter((t) => {
+        const matchesPosition =
+          posId === 'all'
+            ? true
+            : t.jobPositions.includes(jobProfileMap[posId] || '');
+        const matchesCreator =
+          keyword === '' || (t.creator || '').includes(keyword);
+        return matchesPosition && matchesCreator;
+      });
 
-      setTasks(tasksWithJobNames);
+      // 按创建时间倒序
+      filteredTasks.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-      // 更新分页信息（使用 total 的健壮回退）
+      setTasks(filteredTasks);
+
       const pageSize = pagination.pageSize;
-      const totalVal =
-        typeof response?.total === 'number'
-          ? response.total
-          : backendTasks.length;
+      const totalVal = filteredTasks.length; // 使用筛选后的数量
       const totalPages = Math.ceil((totalVal || 0) / pageSize);
       setPagination({
         current: pagination.current,
@@ -173,24 +231,38 @@ export function IntelligentMatchingPage() {
         totalPages: totalPages || 0,
       });
 
-      // 统计数据：匹配任务总数、匹配简历总数（所有任务的简历数加和）、匹配已完成
       const statsData = {
-        total: totalVal || 0,
+        total:
+          typeof response?.total === 'number'
+            ? response.total
+            : backendTasks.length,
         inProgress: backendTasks.reduce(
-          (sum, task) => sum + (task.resume_count || 0),
+          (sum: number, task: ScreeningTaskItem) =>
+            sum + (task.resume_count || 0),
           0
         ),
-        completed: backendTasks.filter((t) => t.status === 'completed').length,
+        completed: backendTasks.filter(
+          (t: ScreeningTaskItem) => t.status === 'completed'
+        ).length,
       };
       setStats(statsData);
     } catch (error) {
       console.error('加载任务列表失败:', error);
-      // 展示空列表并重置统计与分页
       setTasks([]);
       setStats({ total: 0, inProgress: 0, completed: 0 });
       setPagination({ ...pagination, total: 0, totalPages: 0 });
     }
-  };
+  }, [pagination, filters, jobProfileMap]);
+
+  // 首次加载岗位名称映射（仅执行一次）
+  useEffect(() => {
+    loadJobPositions();
+  }, [loadJobPositions]);
+
+  // 加载任务数据与应用筛选（随分页与筛选条件、岗位映射变化刷新）
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   // 处理搜索
   const handleSearch = () => {
@@ -199,6 +271,13 @@ export function IntelligentMatchingPage() {
       keywords: searchInput,
     });
     setPagination({ ...pagination, current: 1 });
+  };
+
+  // 处理回车搜索
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   // 处理分页
@@ -317,6 +396,7 @@ export function IntelligentMatchingPage() {
           icon: CheckCircle2,
         };
       case 'running':
+      case 'in_progress':
         return {
           bg: 'bg-orange-50',
           text: 'text-orange-700',
@@ -478,11 +558,11 @@ export function IntelligentMatchingPage() {
                 <SelectValue placeholder="全部状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="pending">创建完成</SelectItem>
-                <SelectItem value="running">匹配中</SelectItem>
-                <SelectItem value="completed">匹配完成</SelectItem>
-                <SelectItem value="failed">匹配失败</SelectItem>
+                {getStatusFilterOptions().map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -494,17 +574,15 @@ export function IntelligentMatchingPage() {
               }
             >
               <SelectTrigger className="w-32">
-                <SelectValue placeholder="匹配岗位" />
+                <SelectValue placeholder="全部岗位" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">匹配岗位</SelectItem>
-                <SelectItem value="前端">前端工程师</SelectItem>
-                <SelectItem value="后端">后端工程师</SelectItem>
-                <SelectItem value="产品">产品经理</SelectItem>
-                <SelectItem value="设计">设计师</SelectItem>
-                <SelectItem value="测试">测试工程师</SelectItem>
-                <SelectItem value="运维">运维工程师</SelectItem>
-                <SelectItem value="数据">数据分析师</SelectItem>
+                <SelectItem value="all">全部岗位</SelectItem>
+                {jobPositions.map((position) => (
+                  <SelectItem key={position.id} value={position.id}>
+                    {position.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -514,11 +592,11 @@ export function IntelligentMatchingPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="搜索任务ID或创建人"
+                placeholder="可根据创建人搜索"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10 w-64"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyPress={handleSearchKeyPress}
               />
             </div>
             <Button onClick={handleSearch} className="gap-2">
@@ -543,8 +621,8 @@ export function IntelligentMatchingPage() {
           <table className="w-full table-auto min-w-max">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-8 py-4 text-center text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
-                  序号/任务ID
+                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                  任务序号
                 </th>
                 <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
                   匹配岗位
@@ -601,16 +679,10 @@ export function IntelligentMatchingPage() {
 
                   return (
                     <tr key={task.id} className="hover:bg-gray-50">
-                      <td className="px-8 py-5 text-sm font-medium text-gray-500 whitespace-nowrap text-left">
-                        <div className="text-sm text-gray-500">{index + 1}</div>
-                        <div
-                          className="text-sm text-gray-500 cursor-help truncate max-w-[120px]"
-                          title={task.taskId}
-                        >
-                          {task.taskId.length > 8
-                            ? `${task.taskId.substring(0, 8)}...`
-                            : task.taskId}
-                        </div>
+                      <td className="px-8 py-5 text-sm font-medium text-gray-500 whitespace-nowrap">
+                        {index +
+                          1 +
+                          (pagination.current - 1) * pagination.pageSize}
                       </td>
                       <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
                         <div
@@ -632,7 +704,7 @@ export function IntelligentMatchingPage() {
                             statusStyle.border
                           )}
                         >
-                          {statusStyle.label}
+                          {getStatusLabel(task.status)}
                         </span>
                       </td>
                       <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
