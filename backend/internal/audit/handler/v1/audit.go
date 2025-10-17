@@ -71,8 +71,10 @@ func NewAuditHandler(
 //	@Router			/api/v1/audit/logs [get]
 func (h *AuditHandler) ListLogs(c *web.Context, req domain.ListAuditLogReq) error {
 	// 设置分页参数
-	req.Pagination = *c.Page()
+	req.Page = c.Page().Page
+	req.Size = c.Page().Size
 
+	// 解析时间参数
 	resp, err := h.usecase.List(c.Request().Context(), &req)
 	if err != nil {
 		h.logger.With("error", err).Error("failed to list audit logs")

@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,44 +10,6 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/pkg/web"
 )
-
-// OptionalTime 可选时间类型，支持空字符串
-type OptionalTime struct {
-	*time.Time
-}
-
-// UnmarshalParam 实现 echo.BindUnmarshaler 接口，用于查询参数绑定
-func (ot *OptionalTime) UnmarshalParam(param string) error {
-	if param == "" || strings.TrimSpace(param) == "" {
-		ot.Time = nil
-		return nil
-	}
-
-	// 尝试多种时间格式
-	formats := []string{
-		time.RFC3339,
-		"2006-01-02T15:04:05Z07:00",
-		"2006-01-02T15:04:05Z",
-		"2006-01-02T15:04:05",
-		"2006-01-02 15:04:05",
-		"2006-01-02",
-	}
-
-	for _, format := range formats {
-		if t, err := time.Parse(format, param); err == nil {
-			ot.Time = &t
-			return nil
-		}
-	}
-
-	// 如果所有格式都失败，返回原始错误
-	t, err := time.Parse(time.RFC3339, param)
-	if err != nil {
-		return err
-	}
-	ot.Time = &t
-	return nil
-}
 
 // AuditUsecase 审计日志用例接口
 type AuditUsecase interface {
@@ -78,16 +39,21 @@ type ListAuditLogReq struct {
 	web.Pagination
 
 	// 筛选条件
-	OperatorType  *consts.OperatorType   `json:"operator_type" query:"operator_type"`   // 操作者类型
-	OperatorID    *string                `json:"operator_id" query:"operator_id"`       // 操作者ID
-	OperationType *consts.OperationType  `json:"operation_type" query:"operation_type"` // 操作类型
-	ResourceType  *consts.ResourceType   `json:"resource_type" query:"resource_type"`   // 资源类型
-	ResourceID    *string                `json:"resource_id" query:"resource_id"`       // 资源ID
-	Status        *consts.AuditLogStatus `json:"status" query:"status"`                 // 状态
-	IP            *string                `json:"ip" query:"ip"`                         // IP地址
-	StartTime     *OptionalTime          `json:"start_time" query:"start_time"`         // 开始时间
-	EndTime       *OptionalTime          `json:"end_time" query:"end_time"`             // 结束时间
-	Search        *string                `json:"search" query:"search"`                 // 搜索关键词
+	OperatorType  consts.OperatorType   `json:"operator_type" query:"operator_type"`     // 操作者类型
+	OperatorID    string                `json:"operator_id" query:"operator_id"`         // 操作者ID
+	OperationType consts.OperationType  `json:"operation_type" query:"operation_type"`   // 操作类型
+	ResourceType  consts.ResourceType   `json:"resource_type" query:"resource_type"`     // 资源类型
+	ResourceID    string                `json:"resource_id" query:"resource_id"`         // 资源ID
+	Status        consts.AuditLogStatus `json:"status" query:"status"`                   // 状态
+	IP            string                `json:"ip" query:"ip"`                           // IP地址
+	StartTime     *time.Time            `json:"start_time,omitempty" query:"start_time"` // 任务创建时间范围起始时间，可选
+	EndTime       *time.Time            `json:"end_time,omitempty" query:"end_time"`     // 任务创建时间范围结束时间，可选
+	Search        string                `json:"search" query:"search"`                   // 搜索关键词
+}
+
+// NormalizeEmptyPointers 规范化空指针字段，将指向空字符串的指针设置为nil
+func (req *ListAuditLogReq) NormalizeEmptyPointers() {
+	// 字符串字段已改为非指针类型，不需要处理
 }
 
 // ListAuditLogResp 审计日志列表响应

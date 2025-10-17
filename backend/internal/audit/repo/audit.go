@@ -119,44 +119,48 @@ func (r *AuditRepo) Create(ctx context.Context, log *domain.AuditLog) error {
 func (r *AuditRepo) List(ctx context.Context, req *domain.ListAuditLogReq) ([]*domain.AuditLog, *db.PageInfo, error) {
 	query := r.db.AuditLog.Query().Where(auditlog.DeletedAtIsNil())
 
-	// 应用过滤条件
-	if req.OperatorType != nil {
-		query = query.Where(auditlog.OperatorTypeEQ(*req.OperatorType))
+	//应用过滤条件
+	if req.OperatorType != "" {
+		query = query.Where(auditlog.OperatorTypeEQ(req.OperatorType))
 	}
 
-	if req.OperationType != nil {
-		query = query.Where(auditlog.OperationTypeEQ(*req.OperationType))
+	if req.OperationType != "" {
+		query = query.Where(auditlog.OperationTypeEQ(req.OperationType))
 	}
 
-	if req.ResourceType != nil {
-		query = query.Where(auditlog.ResourceTypeEQ(*req.ResourceType))
+	if req.ResourceType != "" {
+		query = query.Where(auditlog.ResourceTypeEQ(req.ResourceType))
 	}
 
-	if req.Status != nil {
-		query = query.Where(auditlog.StatusEQ(*req.Status))
+	if req.Status != "" {
+		query = query.Where(auditlog.StatusEQ(req.Status))
 	}
 
-	if req.IP != nil {
-		query = query.Where(auditlog.IPEQ(*req.IP))
+	if req.ResourceID != "" {
+		query = query.Where(auditlog.ResourceIDEQ(req.ResourceID))
 	}
 
-	if req.OperatorID != nil {
-		operatorID, err := uuid.Parse(*req.OperatorID)
+	if req.IP != "" {
+		query = query.Where(auditlog.IPEQ(req.IP))
+	}
+
+	if req.OperatorID != "" {
+		operatorID, err := uuid.Parse(req.OperatorID)
 		if err == nil {
 			query = query.Where(auditlog.OperatorIDEQ(operatorID))
 		}
 	}
 
-	if req.StartTime != nil && req.StartTime.Time != nil {
-		query = query.Where(auditlog.CreatedAtGTE(*req.StartTime.Time))
+	if req.StartTime != nil {
+		query = query.Where(auditlog.CreatedAtGTE(*req.StartTime))
 	}
 
-	if req.EndTime != nil && req.EndTime.Time != nil {
-		query = query.Where(auditlog.CreatedAtLTE(*req.EndTime.Time))
+	if req.EndTime != nil {
+		query = query.Where(auditlog.CreatedAtLTE(*req.EndTime))
 	}
 
-	if req.Search != nil && *req.Search != "" {
-		searchTerm := *req.Search
+	if req.Search != "" {
+		searchTerm := req.Search
 		query = query.Where(
 			auditlog.Or(
 				auditlog.OperatorNameContains(searchTerm),

@@ -27,18 +27,10 @@ func NewAuditUsecase(repo domain.AuditRepo, logger *slog.Logger) domain.AuditUse
 
 // List 获取审计日志列表
 func (u *AuditUsecase) List(ctx context.Context, req *domain.ListAuditLogReq) (*domain.ListAuditLogResp, error) {
-	// 参数验证
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.Size <= 0 || req.Size > 100 {
-		req.Size = 20
-	}
 
 	// 时间范围验证
-	if req.StartTime != nil && req.StartTime.Time != nil &&
-		req.EndTime != nil && req.EndTime.Time != nil &&
-		req.StartTime.Time.After(*req.EndTime.Time) {
+	if req.StartTime != nil && req.EndTime != nil &&
+		req.StartTime.After(*req.EndTime) {
 		return nil, errcode.ErrInvalidParam.WithData("message", "开始时间不能晚于结束时间")
 	}
 
@@ -179,9 +171,9 @@ func (u *AuditUsecase) GetOperationSummary(ctx context.Context, operatorID strin
 
 	// 构建查询请求
 	req := &domain.ListAuditLogReq{
-		OperatorID: &operatorID,
-		StartTime:  &domain.OptionalTime{Time: &startTime},
-		EndTime:    &domain.OptionalTime{Time: &endTime},
+		OperatorID: operatorID,
+		StartTime:  &startTime,
+		EndTime:    &endTime,
 	}
 	req.Page = 1
 	req.Size = 1000 // 获取足够多的数据用于统计
@@ -265,8 +257,8 @@ func (u *AuditUsecase) GetSecurityAlerts(ctx context.Context, hours int) ([]*dom
 
 	// 获取最近的审计日志
 	req := &domain.ListAuditLogReq{
-		StartTime: &domain.OptionalTime{Time: &startTime},
-		EndTime:   &domain.OptionalTime{Time: &endTime},
+		StartTime: &startTime,
+		EndTime:   &endTime,
 	}
 	req.Page = 1
 	req.Size = 1000
