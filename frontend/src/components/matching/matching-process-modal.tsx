@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, Clock, FileCheck, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getTaskProgress } from '@/services/screening';
+import { getTaskProgress, cancelScreeningTask } from '@/services/screening';
 import { GetTaskProgressResp } from '@/types/screening';
 
 interface MatchingProcessModalProps {
@@ -182,8 +182,20 @@ export function MatchingProcessModal({
     setShowConfirmDialog(true);
   };
 
-  const handleConfirmPrevious = () => {
+  const handleConfirmPrevious = async () => {
     setShowConfirmDialog(false);
+
+    // 如果任务ID存在，调用取消任务接口
+    if (taskId) {
+      try {
+        await cancelScreeningTask(taskId);
+        console.log('任务已取消:', taskId);
+      } catch (error) {
+        console.error('取消任务失败:', error);
+        // 即使取消失败，也继续返回上一步
+      }
+    }
+
     onPrevious?.();
   };
 
@@ -245,7 +257,10 @@ export function MatchingProcessModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[880px] max-h-[90vh] p-0">
+        <DialogContent
+          className="max-w-[880px] max-h-[90vh] p-0"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           {/* 头部 */}
           <DialogHeader className="border-b border-gray-200 px-6 py-5">
             <div className="flex items-center justify-between">
@@ -448,15 +463,15 @@ export function MatchingProcessModal({
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认操作</AlertDialogTitle>
+            <AlertDialogTitle>确认返回上一步</AlertDialogTitle>
             <AlertDialogDescription>
-              确认要进行此操作吗？操作后将不可撤回
+              返回上一步将取消当前正在进行的匹配任务，已处理的数据将不会保存。确定要继续吗？
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmPrevious}>
-              确认
+              确定
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

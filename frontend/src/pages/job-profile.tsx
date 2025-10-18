@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -58,7 +57,6 @@ import { AddSkillModal } from '@/components/modals/add-skill-modal';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export function JobProfilePage() {
-  const navigate = useNavigate();
   const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -447,14 +445,14 @@ export function JobProfilePage() {
     await fetchDepartments();
   };
 
-  // 处理跳转到平台配置页面
+  // 处理跳转到平台配置页面（新标签页打开）
   const handleNavigateToPlatformConfig = () => {
-    navigate('/platform-config?openModal=true');
+    window.open('/platform-config?openModal=true', '_blank');
   };
 
-  // 处理跳转到平台配置页面的技能配置弹窗
+  // 处理跳转到平台配置页面的技能配置弹窗（新标签页打开）
   const handleNavigateToSkillConfig = () => {
-    navigate('/platform-config?openSkillModal=true');
+    window.open('/platform-config?openSkillModal=true', '_blank');
   };
 
   // 打开新建岗位弹窗
@@ -1135,9 +1133,9 @@ export function JobProfilePage() {
   };
 
   return (
-    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6">
+    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6 page-content">
       {/* 页面标题和操作区域 */}
-      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm">
+      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm transition-all duration-200 hover:shadow-md">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">岗位画像</h1>
           <p className="text-sm text-muted-foreground">
@@ -1145,7 +1143,7 @@ export function JobProfilePage() {
           </p>
         </div>
         <Button
-          className="gap-2 rounded-lg px-4 py-2 shadow-sm"
+          className="gap-2 rounded-lg px-4 py-2 shadow-sm btn-primary"
           onClick={handleOpenCreateJobModal}
           disabled={loading}
         >
@@ -1174,7 +1172,7 @@ export function JobProfilePage() {
       {/* 统计卡片区域 */}
       <div className="grid grid-cols-3 gap-6">
         {/* 总岗位数 */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm card-hover">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">总岗位数</p>
@@ -1182,14 +1180,14 @@ export function JobProfilePage() {
                 {totalJobs}
               </p>
             </div>
-            <div className="rounded-lg bg-blue-50 p-3">
+            <div className="rounded-lg bg-blue-50 p-3 transition-transform duration-200 hover:scale-110">
               <BarChart3 className="h-5 w-5 text-blue-600" />
             </div>
           </div>
         </div>
 
         {/* 已发布 */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm card-hover">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">已发布</p>
@@ -1197,14 +1195,14 @@ export function JobProfilePage() {
                 {publishedJobs}
               </p>
             </div>
-            <div className="rounded-lg bg-green-50 p-3">
+            <div className="rounded-lg bg-green-50 p-3 transition-transform duration-200 hover:scale-110">
               <Users className="h-5 w-5 text-green-600" />
             </div>
           </div>
         </div>
 
         {/* 草稿状态 */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm card-hover">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">草稿</p>
@@ -1212,7 +1210,7 @@ export function JobProfilePage() {
                 {draftJobs}
               </p>
             </div>
-            <div className="rounded-lg bg-yellow-50 p-3">
+            <div className="rounded-lg bg-yellow-50 p-3 transition-transform duration-200 hover:scale-110">
               <FileText className="h-5 w-5 text-yellow-600" />
             </div>
           </div>
@@ -1533,7 +1531,10 @@ export function JobProfilePage() {
         open={isCreateJobModalOpen}
         onOpenChange={setIsCreateJobModalOpen}
       >
-        <DialogContent className="max-w-[800px] max-h-[90vh] overflow-y-auto p-0 gap-0">
+        <DialogContent
+          className="max-w-[800px] max-h-[90vh] overflow-y-auto p-0 gap-0"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           {/* 弹窗标题和关闭按钮 */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
             <DialogHeader className="space-y-0">
@@ -1925,9 +1926,9 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={addIndustryRequirement}
-                        className="h-10 w-10 p-0 border-[#36CFC9] text-[#36CFC9] hover:bg-[#F0FDF4] hover:border-[#36CFC9] hover:text-[#36CFC9]"
+                        className="h-8 w-8 p-0 border-[#36CFC9] text-[#36CFC9] hover:bg-[#F0FDF4] hover:border-[#36CFC9] hover:text-[#36CFC9]"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     {/* 删除按钮 - 从第二行开始显示 */}
@@ -1937,9 +1938,9 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => removeIndustryRequirement(index)}
-                        className="h-10 w-10 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
+                        className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3.5 w-3.5" />
                       </Button>
                     )}
                   </div>
@@ -2066,10 +2067,10 @@ export function JobProfilePage() {
                           variant="outline"
                           size="sm"
                           onClick={() => removeResponsibility(index)}
-                          className="h-10 w-10 p-0 border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] hover:text-[#DC2626] hover:border-[#DC2626] mt-0"
+                          className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444] mt-0"
                           title="删除此项职责"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <X className="h-3.5 w-3.5" />
                         </Button>
                       )}
                     </div>
@@ -2109,7 +2110,10 @@ export function JobProfilePage() {
 
       {/* 编辑岗位弹窗 */}
       <Dialog open={isEditJobModalOpen} onOpenChange={setIsEditJobModalOpen}>
-        <DialogContent className="max-w-[800px] max-h-[90vh] overflow-y-auto p-0 gap-0">
+        <DialogContent
+          className="max-w-[800px] max-h-[90vh] overflow-y-auto p-0 gap-0"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           {/* 弹窗标题和关闭按钮 */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
             <DialogHeader className="space-y-0">
@@ -2443,9 +2447,9 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={addIndustryRequirement}
-                        className="h-10 w-10 p-0 border-[#36CFC9] text-[#36CFC9] hover:bg-[#F0FDF4] hover:border-[#36CFC9] hover:text-[#36CFC9]"
+                        className="h-8 w-8 p-0 border-[#36CFC9] text-[#36CFC9] hover:bg-[#F0FDF4] hover:border-[#36CFC9] hover:text-[#36CFC9]"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     {/* 删除按钮 - 从第二行开始显示 */}
@@ -2455,9 +2459,9 @@ export function JobProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => removeIndustryRequirement(index)}
-                        className="h-10 w-10 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
+                        className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3.5 w-3.5" />
                       </Button>
                     )}
                   </div>
@@ -2587,10 +2591,10 @@ export function JobProfilePage() {
                           variant="outline"
                           size="sm"
                           onClick={() => removeResponsibility(index)}
-                          className="h-10 w-10 p-0 border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] hover:text-[#DC2626] hover:border-[#DC2626] mt-0"
+                          className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444] mt-0"
                           title="删除此项职责"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <X className="h-3.5 w-3.5" />
                         </Button>
                       )}
                     </div>

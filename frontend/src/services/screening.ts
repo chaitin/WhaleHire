@@ -28,6 +28,11 @@ export const startScreeningTask = async (taskId: string): Promise<void> => {
   return apiPost<void>(`/v1/screening/tasks/${taskId}/start`, {});
 };
 
+// 取消筛选任务
+export const cancelScreeningTask = async (taskId: string): Promise<void> => {
+  return apiPost<void>(`/v1/screening/tasks/${taskId}/cancel`, {});
+};
+
 // 获取任务进度
 export const getTaskProgress = async (
   taskId: string

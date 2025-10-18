@@ -2,15 +2,13 @@ import { useState, useEffect } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
-  FileText,
-  TrendingUp,
-  Award,
   Briefcase,
   User,
   Scale,
   Settings,
   BarChart3,
   X,
+  FileText,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -241,7 +239,10 @@ export function MatchingResultModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl">
+      <DialogContent
+        className="max-w-[920px] p-0 gap-0 bg-white rounded-xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogTitle className="sr-only">创建新匹配任务 - 匹配结果</DialogTitle>
         {/* 头部 */}
         <div className="flex items-center justify-between border-b border-[#E8E8E8] px-6 py-5">
@@ -343,8 +344,8 @@ export function MatchingResultModal({
                 <div className="grid grid-cols-5 gap-4">
                   {/* 匹配总数 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      <FileText className="h-5 w-5 text-white" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E0E7FF]">
+                      <BarChart3 className="h-5 w-5 text-[#6366F1]" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -359,8 +360,8 @@ export function MatchingResultModal({
 
                   {/* 非常匹配 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      <TrendingUp className="h-5 w-5 text-white" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D1FAE5]">
+                      <BarChart3 className="h-5 w-5 text-[#10B981]" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">
@@ -401,7 +402,7 @@ export function MatchingResultModal({
                   {/* 一般匹配 */}
                   <div className="flex items-center gap-3 rounded-lg border border-[#E8E8E8] bg-white p-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF3E6]">
-                      <Award className="h-5 w-5 text-[#F59E0B]" />
+                      <BarChart3 className="h-5 w-5 text-[#F59E0B]" />
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <div className="text-2xl font-bold leading-tight text-[#333333]">

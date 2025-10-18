@@ -13,11 +13,13 @@ import {
   AlertCircle,
   Wrench,
   FileText,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
 import { ResumeCollectionModal } from '@/components/resume-collection/ResumeCollectionModal';
+import { NotificationConfigModal } from '@/components/notification/notification-config-modal';
 import {
   Department,
   listDepartments,
@@ -52,6 +54,10 @@ export default function PlatformConfig() {
 
   // 简历收集配置弹窗状态管理
   const [isResumeCollectionModalOpen, setIsResumeCollectionModalOpen] =
+    useState(false);
+
+  // 通知配置弹窗状态管理
+  const [isNotificationConfigModalOpen, setIsNotificationConfigModalOpen] =
     useState(false);
 
   // 删除确认弹窗状态
@@ -578,14 +584,14 @@ export default function PlatformConfig() {
   }, [searchParams, handleOpenSkillModal]);
 
   return (
-    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6">
+    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6 page-content">
       {/* 页面标题 */}
-      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm">
+      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm transition-all duration-200 hover:shadow-md">
         <h1 className="text-2xl font-semibold text-gray-900">基础功能配置</h1>
       </div>
 
       {/* 所属部门配置卡片 */}
-      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden card-hover">
         {/* 卡片头部 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-4">
@@ -691,7 +697,7 @@ export default function PlatformConfig() {
       </div>
 
       {/* 简历收集配置卡片 */}
-      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden card-hover">
         {/* 卡片头部 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-4">
@@ -727,6 +733,41 @@ export default function PlatformConfig() {
         </div>
       </div>
 
+      {/* 通知配置卡片 */}
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden card-hover">
+        {/* 卡片头部 */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-4">
+            {/* 图标容器 */}
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-orange-50">
+              <Bell className="w-4 h-4 text-orange-500" />
+            </div>
+
+            {/* 标题和描述 */}
+            <div className="flex flex-col">
+              <h3 className="text-sm font-medium text-gray-900">通知配置</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                管理系统通知和告警配置
+              </p>
+            </div>
+          </div>
+
+          {/* 配置按钮 */}
+          <Button
+            className="gap-2 rounded-lg px-5 py-2 shadow-sm"
+            onClick={() => setIsNotificationConfigModalOpen(true)}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            配置
+          </Button>
+        </div>
+
+        {/* 卡片底部状态信息 */}
+        <div className="px-6 py-5">
+          {/* 此卡片目前无加载/错误状态，预留占位以统一布局 */}
+        </div>
+      </div>
+
       {/* 所属部门创建弹窗 - 严格按照Figma设计图实现 */}
       {isModalOpen && (
         <div
@@ -734,7 +775,7 @@ export default function PlatformConfig() {
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-[800px] h-auto max-h-[800px] overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-[800px] max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 弹窗头部 */}
@@ -767,14 +808,13 @@ export default function PlatformConfig() {
               )}
 
               {/* 添加部门按钮 */}
-              <div className="mb-6 flex justify-end">
+              <div className="mb-6">
                 <Button
-                  size="sm"
-                  className="gap-1.5 rounded-lg px-3 py-1.5 shadow-sm"
+                  className="gap-2"
                   onClick={handleOpenAddDeptModal}
                   disabled={loading}
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   添加部门
                 </Button>
               </div>
@@ -1131,7 +1171,7 @@ export default function PlatformConfig() {
           onClick={handleCloseSkillModal}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-[600px] max-h-[90vh] overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-[800px] max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 弹窗头部 */}
@@ -1459,6 +1499,12 @@ export default function PlatformConfig() {
       <ResumeCollectionModal
         isOpen={isResumeCollectionModalOpen}
         onClose={handleCloseResumeCollectionModal}
+      />
+
+      {/* 通知配置弹窗 */}
+      <NotificationConfigModal
+        open={isNotificationConfigModalOpen}
+        onClose={() => setIsNotificationConfigModalOpen(false)}
       />
     </div>
   );

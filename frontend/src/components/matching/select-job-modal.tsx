@@ -1,15 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  X,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Briefcase,
-  User,
-  Scale,
-  Settings,
-  BarChart3,
-} from 'lucide-react';
+import { X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,11 +24,110 @@ interface SelectJobModalProps {
 
 // 流程步骤配置
 const STEPS = [
-  { id: 1, name: '选择岗位', icon: Briefcase, active: true },
-  { id: 2, name: '选择简历', icon: User, active: false },
-  { id: 3, name: '权重配置', icon: Scale, active: false },
-  { id: 4, name: '匹配处理', icon: Settings, active: false },
-  { id: 5, name: '匹配结果', icon: BarChart3, active: false },
+  {
+    id: 1,
+    name: '选择岗位',
+    icon: () => (
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20 7h-9" />
+        <path d="M14 17H5" />
+        <circle cx="17" cy="17" r="3" />
+        <circle cx="7" cy="7" r="3" />
+      </svg>
+    ),
+    active: true,
+  },
+  {
+    id: 2,
+    name: '选择简历',
+    icon: () => (
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+    active: false,
+  },
+  {
+    id: 3,
+    name: '权重配置',
+    icon: () => (
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 3v18" />
+        <path d="m8 15-4-4 4-4" />
+        <path d="M16 9l4 4-4 4" />
+      </svg>
+    ),
+    active: false,
+  },
+  {
+    id: 4,
+    name: '匹配处理',
+    icon: () => (
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    active: false,
+  },
+  {
+    id: 5,
+    name: '匹配结果',
+    icon: () => (
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <line x1="12" x2="12" y1="20" y2="10" />
+        <line x1="18" x2="18" y1="20" y2="4" />
+        <line x1="6" x2="6" y1="20" y2="16" />
+      </svg>
+    ),
+    active: false,
+  },
 ];
 
 export function SelectJobModal({
@@ -177,7 +266,10 @@ export function SelectJobModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[920px] p-0 gap-0 bg-white rounded-xl">
+      <DialogContent
+        className="max-w-[920px] p-0 gap-0 bg-white rounded-xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogTitle className="sr-only">创建新匹配任务 - 选择岗位</DialogTitle>
         {/* 头部 */}
         <div className="flex items-center justify-between border-b border-[#E8E8E8] px-6 py-5">
@@ -211,7 +303,6 @@ export function SelectJobModal({
 
               {/* 步骤项 */}
               {STEPS.map((step, index) => {
-                const IconComponent = step.icon;
                 return (
                   <div
                     key={step.id}
@@ -229,11 +320,11 @@ export function SelectJobModal({
                     >
                       <div
                         className={cn(
-                          'w-8 h-8 rounded-2xl flex items-center justify-center',
+                          'w-8 h-8 rounded-2xl flex items-center justify-center text-[#999999]',
                           step.active ? 'bg-white' : 'bg-white opacity-60'
                         )}
                       >
-                        <IconComponent className="h-5 w-5 text-[#999999]" />
+                        {step.icon()}
                       </div>
                     </div>
 

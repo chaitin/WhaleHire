@@ -379,10 +379,10 @@ export function ResumeManagementPage() {
   };
 
   return (
-    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6">
+    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6 page-content">
       {/* 成功提示 */}
       {successMessage && (
-        <Alert className="border-green-200 bg-green-50">
+        <Alert className="border-green-200 bg-green-50 notification-enter">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800 flex items-center justify-between">
             <span>{successMessage}</span>
@@ -390,7 +390,7 @@ export function ResumeManagementPage() {
               variant="ghost"
               size="sm"
               onClick={clearSuccessMessage}
-              className="text-green-600 hover:text-green-700"
+              className="text-green-600 hover:text-green-700 transition-all duration-200"
             >
               关闭
             </Button>
@@ -400,7 +400,7 @@ export function ResumeManagementPage() {
 
       {/* 错误提示 */}
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="notification-enter">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>{error}</span>
@@ -408,7 +408,7 @@ export function ResumeManagementPage() {
               variant="ghost"
               size="sm"
               onClick={clearError}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-600 hover:text-red-700 transition-all duration-200"
             >
               关闭
             </Button>
@@ -417,7 +417,7 @@ export function ResumeManagementPage() {
       )}
 
       {/* 页面标题卡片 */}
-      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm">
+      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm transition-all duration-200 hover:shadow-md">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">简历管理</h1>
           <div className="flex items-center gap-3">
@@ -439,7 +439,7 @@ export function ResumeManagementPage() {
           </div>
         </div>
         <Button
-          className="gap-2 rounded-lg px-5 py-2 shadow-sm"
+          className="gap-2 rounded-lg px-5 py-2 shadow-sm btn-primary"
           onClick={() => setIsUploadModalOpen(true)}
           disabled={isLoading}
         >
