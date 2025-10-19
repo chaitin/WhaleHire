@@ -2,13 +2,17 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/chaitin/WhaleHire/backend/config"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/domain"
 )
@@ -19,6 +23,7 @@ type ResumeUsecase struct {
 	parserService         domain.ParserService
 	storageService        domain.StorageService
 	jobApplicationUsecase domain.JobApplicationUsecase
+	redis                 *redis.Client
 	logger                *slog.Logger
 }
 
@@ -29,6 +34,7 @@ func NewResumeUsecase(
 	parserService domain.ParserService,
 	storageService domain.StorageService,
 	jobApplicationUsecase domain.JobApplicationUsecase,
+	redis *redis.Client,
 	logger *slog.Logger,
 ) domain.ResumeUsecase {
 	return &ResumeUsecase{
@@ -37,6 +43,7 @@ func NewResumeUsecase(
 		parserService:         parserService,
 		storageService:        storageService,
 		jobApplicationUsecase: jobApplicationUsecase,
+		redis:                 redis,
 		logger:                logger,
 	}
 }
@@ -1002,4 +1009,372 @@ func (u *ResumeUsecase) updateProjects(ctx context.Context, tx *db.Tx, resumeID 
 	}
 
 	return nil
+}
+
+// BatchUpload 批量上传简历
+func (u *ResumeUsecase) BatchUpload(ctx context.Context, req *domain.BatchUploadResumeReq) (*domain.BatchUploadTask, error) {
+	// 生成任务ID
+	taskID := uuid.New().String()
+
+	// 创建批量上传任务
+	task := &domain.BatchUploadTask{
+		TaskID:         taskID,
+		UploaderID:     req.UploaderID,
+		Status:         domain.BatchUploadStatusPending,
+		TotalCount:     len(req.Files),
+		CompletedCount: 0,
+		SuccessCount:   0,
+		FailedCount:    0,
+		JobPositionIDs: req.JobPositionIDs,
+		Source:         req.Source,
+		Notes:          req.Notes,
+		Items:          make([]*domain.BatchUploadItem, 0, len(req.Files)),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+
+	// 为每个文件创建任务项
+	for _, fileInfo := range req.Files {
+		itemID := uuid.New().String()
+		item := &domain.BatchUploadItem{
+			ItemID:    itemID,
+			Filename:  fileInfo.Filename,
+			Status:    domain.BatchUploadStatusPending,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		task.Items = append(task.Items, item)
+	}
+
+	// 将任务保存到Redis
+	err := u.saveBatchUploadTaskToRedis(ctx, task)
+	if err != nil {
+		u.logger.Error("failed to save batch upload task to redis", "task_id", taskID, "error", err)
+		return nil, fmt.Errorf("failed to save task: %w", err)
+	}
+
+	// 异步处理批量上传
+	go u.processBatchUploadAsync(context.Background(), taskID, req)
+
+	u.logger.Info("batch upload task created", "task_id", taskID, "total_files", len(req.Files))
+	return task, nil
+}
+
+// GetBatchUploadStatus 获取批量上传任务状态
+func (u *ResumeUsecase) GetBatchUploadStatus(ctx context.Context, taskID string) (*domain.BatchUploadTask, error) {
+	// 获取基础任务信息
+	task, err := u.getBatchUploadTaskFromRedis(ctx, taskID)
+	if err != nil {
+		u.logger.Error("failed to get batch upload task from redis", "task_id", taskID, "error", err)
+		return nil, fmt.Errorf("failed to get task: %w", err)
+	}
+
+	if task == nil {
+		return nil, fmt.Errorf("task not found")
+	}
+
+	// 汇总各个简历项目的状态
+	for i := range task.Items {
+		itemKey := fmt.Sprintf("batch_upload_item:%s:%d", taskID, i)
+		itemData, err := u.redis.Get(ctx, itemKey).Result()
+		if err != nil {
+			if err == redis.Nil {
+				// 项目状态不存在，保持原有状态（pending）
+				continue
+			}
+			u.logger.Error("failed to get item status", "task_id", taskID, "item_index", i, "error", err)
+			continue
+		}
+
+		// 解析项目状态
+		var itemStatus map[string]interface{}
+		if err := json.Unmarshal([]byte(itemData), &itemStatus); err != nil {
+			u.logger.Error("failed to unmarshal item status", "task_id", taskID, "item_index", i, "error", err)
+			continue
+		}
+
+		// 更新项目状态
+		if status, ok := itemStatus["status"].(string); ok {
+			task.Items[i].Status = domain.BatchUploadStatus(status)
+		}
+		if errorMsg, ok := itemStatus["error_message"].(string); ok {
+			task.Items[i].ErrorMessage = &errorMsg
+		}
+		if resumeID, ok := itemStatus["resume_id"].(string); ok {
+			task.Items[i].ResumeID = &resumeID
+		}
+		if completedAtStr, ok := itemStatus["completed_at"].(string); ok {
+			if completedAt, err := time.Parse(time.RFC3339, completedAtStr); err == nil {
+				task.Items[i].CompletedAt = &completedAt
+			}
+		}
+		if updatedAtStr, ok := itemStatus["updated_at"].(string); ok {
+			if updatedAt, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
+				task.Items[i].UpdatedAt = updatedAt
+			}
+		}
+	}
+
+	// 重新计算任务统计信息
+	task.CompletedCount = 0
+	task.SuccessCount = 0
+	task.FailedCount = 0
+
+	for _, item := range task.Items {
+		switch item.Status {
+		case domain.BatchUploadStatusCompleted:
+			task.CompletedCount++
+			task.SuccessCount++
+		case domain.BatchUploadStatusFailed:
+			task.CompletedCount++
+			task.FailedCount++
+		}
+	}
+
+	// 更新任务状态
+	if task.Status != domain.BatchUploadStatusCancelled {
+		if task.CompletedCount == task.TotalCount {
+			if task.FailedCount == 0 {
+				task.Status = domain.BatchUploadStatusCompleted
+			} else if task.SuccessCount == 0 {
+				task.Status = domain.BatchUploadStatusFailed
+			} else {
+				// 部分成功，部分失败的情况，仍然标记为完成
+				task.Status = domain.BatchUploadStatusCompleted
+			}
+		} else if task.CompletedCount > 0 {
+			task.Status = domain.BatchUploadStatusProcessing
+		}
+	}
+
+	return task, nil
+}
+
+// CancelBatchUpload 取消批量上传任务
+func (u *ResumeUsecase) CancelBatchUpload(ctx context.Context, taskID string) error {
+	// 从Redis获取任务
+	task, err := u.getBatchUploadTaskFromRedis(ctx, taskID)
+	if err != nil {
+		u.logger.Error("failed to get batch upload task from redis", "task_id", taskID, "error", err)
+		return fmt.Errorf("failed to get task: %w", err)
+	}
+
+	if task == nil {
+		return fmt.Errorf("task not found")
+	}
+
+	// 检查任务状态
+	if task.Status == domain.BatchUploadStatusCompleted || task.Status == domain.BatchUploadStatusCancelled {
+		return fmt.Errorf("task already completed or cancelled")
+	}
+
+	// 更新任务状态为已取消
+	task.Status = domain.BatchUploadStatusCancelled
+	task.UpdatedAt = time.Now()
+	now := time.Now()
+	task.CompletedAt = &now
+
+	// 更新所有未完成的任务项状态
+	for _, item := range task.Items {
+		if item.Status == domain.BatchUploadStatusPending || item.Status == domain.BatchUploadStatusProcessing {
+			item.Status = domain.BatchUploadStatusCancelled
+			item.UpdatedAt = time.Now()
+			item.CompletedAt = &now
+		}
+	}
+
+	// 保存到Redis
+	err = u.saveBatchUploadTaskToRedis(ctx, task)
+	if err != nil {
+		u.logger.Error("failed to save cancelled task to redis", "task_id", taskID, "error", err)
+		return fmt.Errorf("failed to save cancelled task: %w", err)
+	}
+
+	u.logger.Info("batch upload task cancelled", "task_id", taskID)
+	return nil
+}
+
+// processBatchUploadAsync 异步处理批量上传
+func (u *ResumeUsecase) processBatchUploadAsync(ctx context.Context, taskID string, req *domain.BatchUploadResumeReq) {
+	// 获取任务
+	task, err := u.getBatchUploadTaskFromRedis(ctx, taskID)
+	if err != nil {
+		u.logger.Error("failed to get batch upload task", "task_id", taskID, "error", err)
+		return
+	}
+
+	// 更新任务状态为处理中
+	task.Status = domain.BatchUploadStatusProcessing
+	task.UpdatedAt = time.Now()
+	u.saveBatchUploadTaskToRedis(ctx, task)
+
+	// 使用goroutine并发处理文件，但限制并发数
+	const maxConcurrency = 3
+	semaphore := make(chan struct{}, maxConcurrency)
+	var wg sync.WaitGroup
+
+	for i, fileInfo := range req.Files {
+		// 检查任务是否被取消
+		currentTask, _ := u.getBatchUploadTaskFromRedis(ctx, taskID)
+		if currentTask != nil && currentTask.Status == domain.BatchUploadStatusCancelled {
+			u.logger.Info("batch upload task cancelled, stopping processing", "task_id", taskID)
+			break
+		}
+
+		wg.Add(1)
+		go func(index int, file *domain.BatchUploadFileInfo) {
+			defer wg.Done()
+
+			// 获取信号量
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			u.processSingleFileInBatch(ctx, taskID, index, file, req)
+		}(i, fileInfo)
+	}
+
+	// 等待所有文件处理完成
+	wg.Wait()
+
+	// 更新最终任务状态
+	u.updateFinalBatchUploadStatus(ctx, taskID)
+}
+
+// processSingleFileInBatch 处理批量上传中的单个文件
+func (u *ResumeUsecase) processSingleFileInBatch(ctx context.Context, taskID string, itemIndex int, fileInfo *domain.BatchUploadFileInfo, req *domain.BatchUploadResumeReq) {
+	// 更新任务项状态为处理中
+	u.updateBatchUploadItemStatus(ctx, taskID, itemIndex, domain.BatchUploadStatusProcessing, nil, nil, nil)
+
+	// 构建单个文件上传请求
+	uploadReq := &domain.UploadResumeReq{
+		UploaderID:     req.UploaderID,
+		File:           fileInfo.File,
+		Filename:       fileInfo.Filename,
+		JobPositionIDs: req.JobPositionIDs,
+		Source:         req.Source,
+		Notes:          req.Notes,
+	}
+
+	// 调用单个文件上传逻辑
+	resume, err := u.Upload(ctx, uploadReq)
+	now := time.Now()
+
+	if err != nil {
+		// 上传失败
+		errorMsg := err.Error()
+		u.updateBatchUploadItemStatus(ctx, taskID, itemIndex, domain.BatchUploadStatusFailed, &errorMsg, nil, &now)
+		u.logger.Error("failed to upload file in batch", "task_id", taskID, "filename", fileInfo.Filename, "error", err)
+	} else {
+		// 上传成功
+		u.updateBatchUploadItemStatus(ctx, taskID, itemIndex, domain.BatchUploadStatusCompleted, nil, &resume.ID, &now)
+		u.logger.Info("successfully uploaded file in batch", "task_id", taskID, "filename", fileInfo.Filename, "resume_id", resume.ID)
+	}
+}
+
+// updateFinalBatchUploadStatus 更新批量上传任务的最终状态
+func (u *ResumeUsecase) updateFinalBatchUploadStatus(ctx context.Context, taskID string) {
+	task, err := u.getBatchUploadTaskFromRedis(ctx, taskID)
+	if err != nil {
+		u.logger.Error("failed to get task for final status update", "task_id", taskID, "error", err)
+		return
+	}
+
+	if task == nil {
+		return
+	}
+
+	// 如果任务已被取消，不需要更新状态
+	if task.Status == domain.BatchUploadStatusCancelled {
+		return
+	}
+
+	// 更新最终状态
+	if task.FailedCount > 0 && task.SuccessCount == 0 {
+		task.Status = domain.BatchUploadStatusFailed
+	} else {
+		task.Status = domain.BatchUploadStatusCompleted
+	}
+
+	now := time.Now()
+	task.UpdatedAt = now
+	task.CompletedAt = &now
+
+	u.saveBatchUploadTaskToRedis(ctx, task)
+	u.logger.Info("batch upload task completed", "task_id", taskID, "success_count", task.SuccessCount, "failed_count", task.FailedCount)
+}
+
+// saveBatchUploadTaskToRedis 将批量上传任务保存到Redis
+func (u *ResumeUsecase) saveBatchUploadTaskToRedis(ctx context.Context, task *domain.BatchUploadTask) error {
+	taskKey := fmt.Sprintf(consts.BatchUploadTaskKeyFmt, task.TaskID)
+
+	taskData, err := json.Marshal(task)
+	if err != nil {
+		return fmt.Errorf("failed to marshal task: %w", err)
+	}
+
+	// 设置过期时间为24小时
+	expiration := 24 * time.Hour
+	err = u.redis.Set(ctx, taskKey, taskData, expiration).Err()
+	if err != nil {
+		return fmt.Errorf("failed to save task to redis: %w", err)
+	}
+
+	return nil
+}
+
+// updateBatchUploadItemStatus 更新批量上传任务中单个项目的状态
+func (u *ResumeUsecase) updateBatchUploadItemStatus(ctx context.Context, taskID string, itemIndex int, status domain.BatchUploadStatus, errorMsg *string, resumeID *string, completedAt *time.Time) {
+	// 为每个简历项目创建独立的Redis键
+	itemKey := fmt.Sprintf("batch_upload_item:%s:%d", taskID, itemIndex)
+
+	// 创建项目状态数据
+	itemData := map[string]interface{}{
+		"status":     status,
+		"updated_at": time.Now(),
+	}
+
+	if errorMsg != nil {
+		itemData["error_message"] = *errorMsg
+	}
+	if resumeID != nil {
+		itemData["resume_id"] = *resumeID
+	}
+	if completedAt != nil {
+		itemData["completed_at"] = *completedAt
+	}
+
+	// 序列化数据
+	itemJSON, err := json.Marshal(itemData)
+	if err != nil {
+		u.logger.Error("failed to marshal item data", "task_id", taskID, "item_index", itemIndex, "error", err)
+		return
+	}
+
+	// 存储到Redis，设置24小时过期时间
+	err = u.redis.Set(ctx, itemKey, itemJSON, 24*time.Hour).Err()
+	if err != nil {
+		u.logger.Error("failed to save item status to redis", "task_id", taskID, "item_index", itemIndex, "error", err)
+		return
+	}
+}
+
+// getBatchUploadTaskFromRedis 从Redis获取批量上传任务
+func (u *ResumeUsecase) getBatchUploadTaskFromRedis(ctx context.Context, taskID string) (*domain.BatchUploadTask, error) {
+	taskKey := fmt.Sprintf(consts.BatchUploadTaskKeyFmt, taskID)
+
+	taskData, err := u.redis.Get(ctx, taskKey).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil // 任务不存在
+		}
+		return nil, fmt.Errorf("failed to get task from redis: %w", err)
+	}
+
+	var task domain.BatchUploadTask
+	err = json.Unmarshal([]byte(taskData), &task)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal task: %w", err)
+	}
+
+	return &task, nil
 }

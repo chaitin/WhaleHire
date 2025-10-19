@@ -10,11 +10,13 @@ import (
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/errcode"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
+	"github.com/redis/go-redis/v9"
 )
 
 type ResumeHandler struct {
 	usecase               domain.ResumeUsecase
 	jobApplicationUsecase domain.JobApplicationUsecase
+	redis                 *redis.Client
 	logger                *slog.Logger
 }
 
@@ -22,12 +24,14 @@ func NewResumeHandler(
 	w *web.Web,
 	usecase domain.ResumeUsecase,
 	jobApplicationUsecase domain.JobApplicationUsecase,
+	redis *redis.Client,
 	auth *middleware.AuthMiddleware,
 	logger *slog.Logger,
 ) *ResumeHandler {
 	h := &ResumeHandler{
 		usecase:               usecase,
 		jobApplicationUsecase: jobApplicationUsecase,
+		redis:                 redis,
 		logger:                logger,
 	}
 
@@ -37,6 +41,9 @@ func NewResumeHandler(
 	// 需要用户认证的路由
 	g.Use(auth.UserAuth())
 	g.POST("/upload", web.BaseHandler(h.Upload))
+	g.POST("/batch-upload", web.BaseHandler(h.BatchUpload))
+	g.GET("/batch-upload/:task_id/status", web.BaseHandler(h.GetBatchUploadStatus))
+	g.POST("/batch-upload/:task_id/cancel", web.BaseHandler(h.CancelBatchUpload))
 	g.GET("/:id", web.BaseHandler(h.GetByID))
 	g.GET("/list", web.BindHandler(h.List, web.WithPage()))
 	g.GET("/search", web.BindHandler(h.Search, web.WithPage()))
@@ -350,4 +357,146 @@ func (h *ResumeHandler) GetParseProgress(c *web.Context) error {
 
 	h.logger.Info("resume parse progress retrieved", "resume_id", id, "user_id", user.ID, "status", progress.Status)
 	return c.Success(progress)
+}
+
+// BatchUpload 批量上传简历
+//
+//	@Tags			Resume
+//	@Summary		批量上传简历
+//	@Description	批量上传简历文件并进行解析，支持选择多个岗位
+//	@ID				batch-upload-resume
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			files				formData	file	true	"简历文件列表"
+//	@Param			job_position_ids	formData	string	false	"岗位ID列表，多个ID用逗号分隔"
+//	@Param			source				formData	string	false	"申请来源"
+//	@Param			notes				formData	string	false	"备注信息"
+//	@Success		200					{object}	web.Resp{data=domain.BatchUploadTask}
+//	@Router			/api/v1/resume/batch-upload [post]
+func (h *ResumeHandler) BatchUpload(c *web.Context) error {
+	// 获取当前用户
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission.Wrap(fmt.Errorf("user not found"))
+	}
+
+	// 解析multipart form
+	err := c.Request().ParseMultipartForm(32 << 20) // 32MB
+	if err != nil {
+		h.logger.Error("failed to parse multipart form", "error", err)
+		return errcode.ErrInvalidParam.Wrap(err)
+	}
+
+	// 获取上传的文件列表
+	files := c.Request().MultipartForm.File["files"]
+	if len(files) == 0 {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("no files provided"))
+	}
+
+	// 获取岗位ID列表
+	var jobPositionIDs []string
+	if jobPositionIDsStr := c.Request().FormValue("job_position_ids"); jobPositionIDsStr != "" {
+		jobPositionIDs = strings.Split(strings.TrimSpace(jobPositionIDsStr), ",")
+		// 清理空字符串
+		var cleanIDs []string
+		for _, id := range jobPositionIDs {
+			if trimmedID := strings.TrimSpace(id); trimmedID != "" {
+				cleanIDs = append(cleanIDs, trimmedID)
+			}
+		}
+		jobPositionIDs = cleanIDs
+	}
+
+	// 获取其他可选参数
+	var source, notes *string
+	if sourceStr := c.Request().FormValue("source"); sourceStr != "" {
+		source = &sourceStr
+	}
+	if notesStr := c.Request().FormValue("notes"); notesStr != "" {
+		notes = &notesStr
+	}
+
+	// 构建批量上传请求
+	var fileInfos []*domain.BatchUploadFileInfo
+	for _, fileHeader := range files {
+		file, openErr := fileHeader.Open()
+		if openErr != nil {
+			h.logger.Error("failed to open file", "filename", fileHeader.Filename, "error", openErr)
+			continue
+		}
+		defer file.Close()
+		fileInfos = append(fileInfos, &domain.BatchUploadFileInfo{
+			File:     file,
+			Filename: fileHeader.Filename,
+		})
+	}
+
+	req := &domain.BatchUploadResumeReq{
+		UploaderID:     user.ID,
+		Files:          fileInfos,
+		JobPositionIDs: jobPositionIDs,
+		Source:         source,
+		Notes:          notes,
+	}
+
+	// 调用业务逻辑
+	task, err := h.usecase.BatchUpload(c.Request().Context(), req)
+	if err != nil {
+		h.logger.Error("failed to batch upload resumes", "error", err)
+		return err
+	}
+
+	return c.Success(task)
+}
+
+// GetBatchUploadStatus 获取批量上传任务状态
+//
+//	@Tags			Resume
+//	@Summary		获取批量上传任务状态
+//	@Description	获取批量上传任务的进度和状态信息
+//	@ID				get-batch-upload-status
+//	@Produce		json
+//	@Param			task_id	path		string	true	"任务ID"
+//	@Success		200		{object}	web.Resp{data=domain.BatchUploadTask}
+//	@Router			/api/v1/resume/batch-upload/{task_id}/status [get]
+func (h *ResumeHandler) GetBatchUploadStatus(c *web.Context) error {
+	taskID := c.Param("task_id")
+	if taskID == "" {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("task_id is required"))
+	}
+
+	// 调用业务逻辑
+	task, err := h.usecase.GetBatchUploadStatus(c.Request().Context(), taskID)
+	if err != nil {
+		h.logger.Error("failed to get batch upload status", "task_id", taskID, "error", err)
+		return err
+	}
+
+	return c.Success(task)
+}
+
+// CancelBatchUpload 取消批量上传任务
+//
+//	@Tags			Resume
+//	@Summary		取消批量上传任务
+//	@Description	取消正在进行的批量上传任务
+//	@ID				cancel-batch-upload
+//	@Produce		json
+//	@Param			task_id	path		string	true	"任务ID"
+//	@Success		200		{object}	web.Resp{data=string}
+//	@Router			/api/v1/resume/batch-upload/{task_id}/cancel [post]
+func (h *ResumeHandler) CancelBatchUpload(c *web.Context) error {
+	taskID := c.Param("task_id")
+	if taskID == "" {
+		return errcode.ErrInvalidParam.Wrap(fmt.Errorf("task_id is required"))
+	}
+
+	// 调用业务逻辑
+	err := h.usecase.CancelBatchUpload(c.Request().Context(), taskID)
+	if err != nil {
+		h.logger.Error("failed to cancel batch upload", "task_id", taskID, "error", err)
+		return err
+	}
+
+	return c.Success("Task cancelled successfully")
 }
