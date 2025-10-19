@@ -207,7 +207,7 @@ export default function AuditLogPage() {
                 setOperationType(e.target.value as OperationType | '');
                 setCurrentPage(1);
               }}
-              className="h-11 w-full sm:w-40 rounded-lg border border-[#D1D5DB] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#36CFC9] focus:border-transparent"
+              className="h-11 w-full sm:w-40 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               <option value="">全部类型</option>
               {Object.entries(OperationTypeLabels).map(([key, label]) => (
@@ -232,12 +232,12 @@ export default function AuditLogPage() {
                   }
                 }}
                 placeholder="搜索操作人..."
-                className="h-11 w-full rounded-lg border border-[#D1D5DB] pl-11 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#36CFC9] focus:border-transparent"
+                className="h-11 w-full rounded-lg border border-[#D1D5DB] bg-white pl-11 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
             <Button
               type="button"
-              className="h-11 rounded-lg px-6 bg-[#36CFC9] hover:bg-[#36CFC9]/90 text-white"
+              className="h-11 rounded-lg px-6"
               onClick={handleSearch}
               disabled={loading}
             >
@@ -298,7 +298,7 @@ export default function AuditLogPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     操作时间
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     操作
                   </th>
                 </tr>
@@ -334,7 +334,7 @@ export default function AuditLogPage() {
                   logs.map((log, index) => (
                     <tr key={log.id} className="hover:bg-gray-50">
                       {/* 序号 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {(currentPage - 1) * pageSize + index + 1}
                       </td>
 
@@ -348,7 +348,7 @@ export default function AuditLogPage() {
                       {/* 操作类型 */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs"
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
                           style={{
                             backgroundColor:
                               OperationTypeColors[log.operation_type].bg,
@@ -361,7 +361,7 @@ export default function AuditLogPage() {
 
                       {/* 操作内容 */}
                       <td className="px-6 py-4 max-w-md">
-                        <div className="text-sm text-gray-900 truncate">
+                        <div className="text-sm text-gray-500 truncate">
                           {getOperationContent(log)}
                         </div>
                       </td>
@@ -372,10 +372,10 @@ export default function AuditLogPage() {
                       </td>
 
                       {/* 操作 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           disabled
-                          className="inline-flex items-center gap-1.5 text-sm text-gray-300 font-medium cursor-not-allowed"
+                          className="inline-flex items-center gap-1.5 text-gray-300 cursor-not-allowed"
                           title="暂不可用"
                         >
                           <Eye className="w-4 h-4" />

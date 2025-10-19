@@ -627,25 +627,25 @@ export function IntelligentMatchingPage() {
           <table className="w-full table-auto min-w-max">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   任务序号
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   匹配岗位
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   简历数
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   状态
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   创建人
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   创建时间
                 </th>
-                <th className="px-8 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   操作
                 </th>
               </tr>
@@ -684,21 +684,21 @@ export function IntelligentMatchingPage() {
                   const statusStyle = getStatusStyle(task.status);
 
                   return (
-                    <tr key={task.id} className="table-row-hover">
-                      <td className="px-8 py-5 text-sm font-medium text-gray-500 whitespace-nowrap">
+                    <tr key={task.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                         {index +
                           1 +
                           (pagination.current - 1) * pagination.pageSize}
                       </td>
-                      <td className="px-8 py-5 text-sm text-gray-500">
+                      <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="max-w-xs break-words">
                           {task.jobPositions.join(', ')}
                         </div>
                       </td>
-                      <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
+                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                         {task.resumeCount}
                       </td>
-                      <td className="px-8 py-5 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={cn(
                             'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border transition-all duration-200 hover:scale-105',
@@ -710,15 +710,15 @@ export function IntelligentMatchingPage() {
                           {getStatusLabel(task.status)}
                         </span>
                       </td>
-                      <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
+                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                         {task.creator}
                       </td>
-                      <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
+                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                         {new Date(task.createdAt * 1000).toLocaleDateString(
                           'zh-CN'
                         )}
                       </td>
-                      <td className="px-8 py-5 text-sm font-medium whitespace-nowrap">
+                      <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
