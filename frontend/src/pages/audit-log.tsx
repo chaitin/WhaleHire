@@ -6,7 +6,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Search,
-  Eye,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -298,15 +297,12 @@ export default function AuditLogPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     操作时间
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {logs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16">
+                    <td colSpan={5} className="px-6 py-16">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <svg
                           className="h-16 w-16 text-gray-300"
@@ -374,18 +370,6 @@ export default function AuditLogPage() {
                       {/* 操作时间 */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatTime(log.created_at)}
-                      </td>
-
-                      {/* 操作 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          disabled
-                          className="inline-flex items-center gap-1.5 text-gray-300 cursor-not-allowed"
-                          title="暂不可用"
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>查看详情</span>
-                        </button>
                       </td>
                     </tr>
                   ))

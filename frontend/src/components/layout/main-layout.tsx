@@ -50,7 +50,7 @@ export function MainLayout() {
           <Header onToggleSidebar={handleToggleSidebar} />
 
           {/* 页面内容 */}
-          <main className="flex-1 overflow-auto bg-[#F9FAFB] min-h-0">
+          <main className="flex-1 overflow-auto bg-gradient-to-br from-[#E8EEF3] via-[#EDF2F7] to-[#F0F4F8] min-h-0">
             <div className="min-h-full page-enter">
               <Outlet />
             </div>
