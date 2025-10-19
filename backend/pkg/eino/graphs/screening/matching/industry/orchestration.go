@@ -154,6 +154,19 @@ func (a *IndustryAgent) validateOutput(output *domain.IndustryMatchDetail) error
 		if compMatch.Score < 0 || compMatch.Score > 100 {
 			return fmt.Errorf("company match score must be between 0 and 100, got %f", compMatch.Score)
 		}
+		if compMatch.Reputation < 0 || compMatch.Reputation > 100 {
+			return fmt.Errorf("company reputation must be between 0 and 100, got %f", compMatch.Reputation)
+		}
+	}
+
+	// 验证行业深度
+	if output.IndustryDepth != nil {
+		if output.IndustryDepth.Score < 0 || output.IndustryDepth.Score > 100 {
+			return fmt.Errorf("industry depth score must be between 0 and 100, got %f", output.IndustryDepth.Score)
+		}
+		if output.IndustryDepth.TotalYears < 0 {
+			return fmt.Errorf("industry depth total_years must be non-negative, got %f", output.IndustryDepth.TotalYears)
+		}
 	}
 
 	return nil

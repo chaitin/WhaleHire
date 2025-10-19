@@ -271,6 +271,21 @@ type IndustryMatchDetail struct {
 	IndustryMatches []*IndustryMatchInfo `json:"industry_matches"`
 	// CompanyMatches 公司匹配列表
 	CompanyMatches []*CompanyMatchInfo `json:"company_matches"`
+	// IndustryDepth 行业深度评估
+	IndustryDepth *IndustryDepthInfo `json:"industry_depth,omitempty"`
+	// OverallAnalysis 整体行业背景匹配度分析总结
+	OverallAnalysis string `json:"overall_analysis,omitempty"`
+}
+
+// IndustryDepthInfo 行业深度信息
+// @Description 候选人在相关行业的工作年限与深度分析
+type IndustryDepthInfo struct {
+	// TotalYears 在相关行业总工作年限
+	TotalYears float64 `json:"total_years" example:"5.0"`
+	// Score 行业深度分数 (0-100)
+	Score float64 `json:"score" example:"90.0"`
+	// Analysis 行业深度分析说明
+	Analysis string `json:"analysis" example:"在互联网行业有超过5年经验，具备深厚的行业积累"`
 }
 
 // CompanyMatchInfo 公司匹配信息
@@ -281,10 +296,16 @@ type CompanyMatchInfo struct {
 	Company string `json:"company" example:"阿里巴巴"`
 	// TargetCompany 目标公司名称
 	TargetCompany string `json:"target_company" example:"腾讯"`
+	// CompanySize 公司规模
+	CompanySize string `json:"company_size,omitempty" example:"大型"`
+	// Reputation 公司声誉分数 (0-100)
+	Reputation float64 `json:"reputation,omitempty" example:"85.0"`
 	// Score 公司匹配得分 (0-100)
 	Score float64 `json:"score" example:"88.0"`
 	// IsExact 是否完全匹配
 	IsExact bool `json:"is_exact" example:"false"`
+	// Analysis 公司匹配分析说明
+	Analysis string `json:"analysis,omitempty" example:"公司规模与目标公司匹配，行业地位相当"`
 }
 
 // DimensionWeights 维度权重
