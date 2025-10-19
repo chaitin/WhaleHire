@@ -236,9 +236,9 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('upload')
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-[#36CFC9] text-white'
                     : isStepActive('upload')
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-[#36CFC9] text-white'
                       : 'bg-gray-200 text-gray-600'
                 }`}
               >
@@ -252,9 +252,9 @@ export function UploadResumeModal({
                 <div
                   className={`text-sm font-medium ${
                     isStepCompleted('upload')
-                      ? 'text-green-600'
+                      ? 'text-[#36CFC9]'
                       : isStepActive('upload')
-                        ? 'text-blue-600'
+                        ? 'text-[#36CFC9]'
                         : 'text-gray-600'
                   }`}
                 >
@@ -266,7 +266,7 @@ export function UploadResumeModal({
             {/* 连接线1 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
               <div
-                className={`h-full bg-green-500 rounded transition-all duration-300 ${
+                className={`h-full bg-[#36CFC9] rounded transition-all duration-300 ${
                   isStepCompleted('upload') ? 'w-full' : 'w-0'
                 }`}
               ></div>
@@ -277,9 +277,9 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('preview')
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-[#36CFC9] text-white'
                     : isStepActive('preview')
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-[#36CFC9] text-white'
                       : 'bg-gray-200 text-gray-600'
                 }`}
               >
@@ -293,9 +293,9 @@ export function UploadResumeModal({
                 <div
                   className={`text-sm font-medium ${
                     isStepCompleted('preview')
-                      ? 'text-green-600'
+                      ? 'text-[#36CFC9]'
                       : isStepActive('preview')
-                        ? 'text-blue-600'
+                        ? 'text-[#36CFC9]'
                         : 'text-gray-600'
                   }`}
                 >
@@ -307,7 +307,7 @@ export function UploadResumeModal({
             {/* 连接线2 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
               <div
-                className={`h-full bg-green-500 rounded transition-all duration-300 ${
+                className={`h-full bg-[#36CFC9] rounded transition-all duration-300 ${
                   isStepCompleted('preview') ? 'w-full' : 'w-0'
                 }`}
               ></div>
@@ -318,9 +318,9 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('complete')
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-[#36CFC9] text-white'
                     : isStepActive('complete')
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-[#36CFC9] text-white'
                       : 'bg-gray-200 text-gray-600'
                 }`}
               >
@@ -334,9 +334,9 @@ export function UploadResumeModal({
                 <div
                   className={`text-sm font-medium ${
                     isStepCompleted('complete')
-                      ? 'text-green-600'
+                      ? 'text-[#36CFC9]'
                       : isStepActive('complete')
-                        ? 'text-blue-600'
+                        ? 'text-[#36CFC9]'
                         : 'text-gray-600'
                   }`}
                 >
@@ -382,14 +382,14 @@ export function UploadResumeModal({
                   <div
                     className={`relative p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
                       uploadMethod === 'local'
-                        ? 'border-green-500 bg-green-50'
+                        ? 'border-[#36CFC9] bg-[#36CFC9]/10'
                         : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                     }`}
                     onClick={() => setUploadMethod('local')}
                   >
                     <div className="text-center">
-                      <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                        <Upload className="h-5 w-5 text-blue-600" />
+                      <div className="mx-auto w-12 h-12 bg-[#36CFC9]/20 rounded-full flex items-center justify-center mb-4">
+                        <Upload className="h-5 w-5 text-[#36CFC9]" />
                       </div>
                       <h4 className="text-base font-medium text-gray-900 mb-2">
                         本地上传
@@ -399,7 +399,7 @@ export function UploadResumeModal({
                       </p>
                     </div>
                     {uploadMethod === 'local' && (
-                      <div className="absolute top-3 right-3 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-[#36CFC9] rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
                     )}
@@ -408,8 +408,8 @@ export function UploadResumeModal({
                   {/* 链接导入 - 置灰不可选 */}
                   <div className="relative p-6 border-2 border-dashed border-gray-200 rounded-xl opacity-50 cursor-not-allowed">
                     <div className="text-center">
-                      <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                        <Link className="h-5 w-5 text-green-600" />
+                      <div className="mx-auto w-12 h-12 bg-[#36CFC9]/20 rounded-full flex items-center justify-center mb-4">
+                        <Link className="h-5 w-5 text-[#36CFC9]" />
                       </div>
                       <h4 className="text-base font-medium text-gray-900 mb-2">
                         链接导入
@@ -445,8 +445,8 @@ export function UploadResumeModal({
               {/* 简历预览内容 */}
               <div className="space-y-6">
                 <div className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <FileText className="h-8 w-8 text-green-600" />
+                  <div className="mx-auto w-16 h-16 bg-[#36CFC9]/20 rounded-full flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-[#36CFC9]" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     简历上传成功！
@@ -533,7 +533,7 @@ export function UploadResumeModal({
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             uploadedResume.status === 'completed'
-                              ? 'bg-green-100 text-green-800'
+                              ? 'bg-[#36CFC9]/20 text-[#36CFC9]'
                               : uploadedResume.status === 'processing'
                                 ? 'bg-yellow-100 text-yellow-800'
                                 : uploadedResume.status === 'pending'
@@ -578,14 +578,14 @@ export function UploadResumeModal({
 
                 {/* 内容提示 */}
                 {showContentTip && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="bg-[#36CFC9]/10 border border-[#36CFC9]/30 rounded-lg p-4">
                     <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">
+                      <CheckCircle className="h-5 w-5 text-[#36CFC9]" />
+                      <span className="text-sm font-medium text-[#36CFC9]">
                         简历上传成功！
                       </span>
                     </div>
-                    <p className="text-sm text-green-700 mt-1">
+                    <p className="text-sm text-[#36CFC9] mt-1">
                       简历正在后台解析中，解析完成后您可以在简历列表中查看详细信息。
                     </p>
                   </div>
@@ -599,8 +599,8 @@ export function UploadResumeModal({
               {/* 完成步骤内容 */}
               <div className="space-y-6">
                 <div className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  <div className="mx-auto w-16 h-16 bg-[#36CFC9]/20 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle className="h-8 w-8 text-[#36CFC9]" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     简历解析完成！
@@ -611,7 +611,7 @@ export function UploadResumeModal({
                 </div>
 
                 {/* 解析完成的简历信息展示 */}
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 space-y-4">
+                <div className="bg-gradient-to-r from-[#36CFC9]/10 to-blue-50 rounded-lg p-6 space-y-4">
                   <div className="text-center mb-4">
                     <h4 className="text-base font-semibold text-gray-900 mb-2">
                       解析结果
@@ -705,7 +705,7 @@ export function UploadResumeModal({
                           <span className="text-sm text-gray-600">
                             解析状态
                           </span>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#36CFC9]/20 text-[#36CFC9]">
                             解析完成
                           </span>
                         </div>
@@ -812,7 +812,7 @@ export function UploadResumeModal({
                     uploading ||
                     selectedJobIds.length === 0
                   }
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
+                  className="bg-[#36CFC9] hover:bg-[#2AB8C1] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
                 >
                   {uploading ? '上传中...' : '上传文件'}
                   <ArrowRight className="h-4 w-4" />

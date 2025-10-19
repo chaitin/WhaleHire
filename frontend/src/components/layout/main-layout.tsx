@@ -28,7 +28,7 @@ export function MainLayout() {
         {/* 移动端遮罩 */}
         {isMobileSidebarOpen && (
           <div
-            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/40 lg:hidden animate-fade-in"
             onClick={handleCloseSidebar}
             aria-hidden="true"
           />
@@ -37,7 +37,7 @@ export function MainLayout() {
         {/* 移动端侧边栏 */}
         <Sidebar
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-64 border-r bg-card shadow-lg transition-transform duration-200 lg:hidden',
+            'fixed inset-y-0 left-0 z-50 w-64 border-r bg-card shadow-lg transition-all duration-300 ease-out lg:hidden',
             isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
           isMobile
@@ -51,7 +51,7 @@ export function MainLayout() {
 
           {/* 页面内容 */}
           <main className="flex-1 overflow-auto bg-[#F9FAFB] min-h-0">
-            <div className="min-h-full">
+            <div className="min-h-full page-enter">
               <Outlet />
             </div>
           </main>

@@ -10,8 +10,8 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
+    --primary: 178 61% 51%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 98%;
     --secondary-foreground: 222.2 84% 4.9%;
     --muted: 210 40% 98%;
@@ -22,7 +22,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142.1 76.2% 36.3%;
+    --ring: 178 61% 51%;
     --radius: 0.5rem;
   }
 
@@ -33,8 +33,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
+    --primary: 178 61% 51%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -45,7 +45,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 142.1 76.2% 36.3%;
+    --ring: 178 61% 51%;
   }
 }
 
@@ -55,6 +55,17 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* 全局平滑滚动 */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* 优化过渡性能 */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -175,4 +186,256 @@
 
 .header-profile-chevron {
   @apply h-4 w-4 text-muted-foreground;
+}
+
+/* ========================================
+   通用动效增强类
+   ======================================== */
+
+/* 页面切换动画 */
+.page-enter {
+  @apply animate-fade-in;
+}
+
+.page-content {
+  @apply animate-slide-in-up;
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.card-hover:hover {
+  @apply shadow-lg -translate-y-1;
+}
+
+/* 按钮动效 */
+.btn-primary {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:scale-105 hover:shadow-md;
+  @apply active:scale-95;
+}
+
+.btn-secondary {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:shadow-sm;
+  @apply active:scale-95;
+}
+
+.btn-secondary:hover {
+  transform: scale(1.02);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* 输入框焦点效果 */
+.input-focus {
+  @apply transition-all duration-200 ease-in-out;
+  @apply focus:ring-2 focus:ring-primary/20 focus:border-primary;
+}
+
+/* 列表项动画 */
+.list-item {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:bg-accent/50 hover:translate-x-1;
+}
+
+/* 表格行悬停 */
+.table-row-hover {
+  @apply transition-colors duration-150 ease-in-out;
+  @apply hover:bg-gray-50;
+}
+
+/* 模态框动画 */
+.modal-enter {
+  @apply animate-scale-in;
+}
+
+.modal-overlay {
+  @apply animate-fade-in;
+}
+
+/* 下拉菜单动画 */
+.dropdown-enter {
+  @apply animate-slide-in-down;
+}
+
+/* 侧边栏导航增强 */
+.sidebar-nav-item {
+  @apply flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium;
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:translate-x-1;
+}
+
+.sidebar-nav-item.active {
+  @apply bg-primary text-primary-foreground shadow-sm;
+}
+
+/* 图标旋转动画 */
+.icon-spin {
+  @apply transition-transform duration-200 ease-in-out;
+}
+
+.icon-spin:hover {
+  @apply rotate-180;
+}
+
+/* 加载骨架屏闪烁效果 */
+.skeleton {
+  @apply animate-pulse bg-gray-200;
+}
+
+.skeleton-shimmer {
+  @apply relative overflow-hidden;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  @apply animate-shimmer;
+}
+
+/* 徽章动画 */
+.badge-pulse {
+  @apply animate-pulse-subtle;
+}
+
+/* 通知提示动画 */
+.notification-enter {
+  @apply animate-slide-in-right;
+}
+
+/* 标签hover效果 */
+.tab-item {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:text-primary;
+  position: relative;
+}
+
+.tab-item.active::after {
+  content: '';
+  @apply absolute bottom-0 left-0 right-0 h-0.5 bg-primary;
+  animation: tab-underline 0.3s ease-out;
+}
+
+@keyframes tab-underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* 搜索框动画 */
+.search-input {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.search-input:focus {
+  @apply w-full;
+}
+
+/* 状态徽章动画 */
+.status-badge {
+  @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold;
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:scale-105 hover:shadow-sm;
+}
+
+/* 链接悬停效果 */
+.link-hover {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:text-primary hover:underline hover:underline-offset-4;
+}
+
+/* 图片加载效果 */
+.img-fade-in {
+  @apply transition-opacity duration-300 ease-in-out;
+}
+
+.img-fade-in[data-loaded='false'] {
+  @apply opacity-0;
+}
+
+.img-fade-in[data-loaded='true'] {
+  @apply opacity-100;
+}
+
+/* 平滑过渡组 */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.transition-quick {
+  @apply transition-all duration-150 ease-in-out;
+}
+
+.transition-slow {
+  @apply transition-all duration-500 ease-in-out;
+}
+
+/* 分页按钮动画 */
+.pagination-btn {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:scale-110 hover:shadow-md;
+  @apply active:scale-90;
+}
+
+/* 操作按钮组 */
+.action-btn {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:scale-110 hover:bg-primary/10;
+  @apply active:scale-95;
+}
+
+/* 展开/折叠动画 */
+.expand-enter {
+  animation: expand 0.3s ease-out;
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* 弹出提示 */
+.tooltip-enter {
+  @apply animate-scale-in;
+}
+
+/* 抽屉动画 */
+.drawer-enter-left {
+  @apply animate-slide-in-left;
+}
+
+.drawer-enter-right {
+  @apply animate-slide-in-right;
+}
+
+/* 进度条动画 */
+.progress-bar {
+  @apply transition-all duration-500 ease-out;
+}
+
+/* 选中效果 */
+.selected-item {
+  @apply ring-2 ring-primary ring-offset-2;
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* 拖拽效果 */
+.draggable {
+  @apply transition-all duration-200 ease-in-out;
+  @apply hover:shadow-lg hover:cursor-move;
+}
+
+.draggable:active {
+  @apply scale-105 shadow-xl cursor-grabbing;
 }

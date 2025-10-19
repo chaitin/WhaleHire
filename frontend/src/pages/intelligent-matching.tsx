@@ -469,7 +469,7 @@ export function IntelligentMatchingPage() {
           size="sm"
           onClick={() => handlePageChange(i)}
           className={cn(
-            'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
+            'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151] pagination-btn',
             i === pagination.current &&
               'border-primary bg-primary text-primary-foreground'
           )}
@@ -483,9 +483,9 @@ export function IntelligentMatchingPage() {
   };
 
   return (
-    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6">
+    <div className="flex h-full flex-col gap-6 px-6 pb-6 pt-6 page-content">
       {/* 页面标题和操作区域 */}
-      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm">
+      <div className="flex items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-6 py-5 shadow-sm transition-all duration-200 hover:shadow-md">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">智能匹配</h1>
           <p className="text-sm text-muted-foreground">
@@ -493,7 +493,7 @@ export function IntelligentMatchingPage() {
           </p>
         </div>
         <Button
-          className="gap-2 rounded-lg px-4 py-2 shadow-sm"
+          className="gap-2 rounded-lg px-4 py-2 shadow-sm btn-primary"
           onClick={() => setIsCreateModalOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -504,7 +504,7 @@ export function IntelligentMatchingPage() {
       {/* 统计卡片 */}
       <div className="grid grid-cols-3 gap-6">
         {/* 匹配总数 */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm card-hover">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">匹配任务总数</p>
@@ -512,14 +512,14 @@ export function IntelligentMatchingPage() {
                 {stats.total}
               </p>
             </div>
-            <div className="rounded-lg bg-blue-50 p-3">
+            <div className="rounded-lg bg-blue-50 p-3 transition-transform duration-200 hover:scale-110">
               <Users className="h-5 w-5 text-blue-600" />
             </div>
           </div>
         </div>
 
         {/* 匹配简历总数 */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm card-hover">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">匹配简历总数</p>
@@ -527,14 +527,14 @@ export function IntelligentMatchingPage() {
                 {stats.inProgress}
               </p>
             </div>
-            <div className="rounded-lg bg-orange-50 p-3">
+            <div className="rounded-lg bg-orange-50 p-3 transition-transform duration-200 hover:scale-110">
               <Clock className="h-5 w-5 text-orange-600" />
             </div>
           </div>
         </div>
 
         {/* 匹配已完成 */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 shadow-sm card-hover">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">匹配已完成</p>
@@ -542,7 +542,7 @@ export function IntelligentMatchingPage() {
                 {stats.completed}
               </p>
             </div>
-            <div className="rounded-lg bg-green-50 p-3">
+            <div className="rounded-lg bg-green-50 p-3 transition-transform duration-200 hover:scale-110">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
             </div>
           </div>
@@ -596,16 +596,16 @@ export function IntelligentMatchingPage() {
           {/* 搜索区域 */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors" />
               <Input
                 placeholder="可根据创建人搜索"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="pl-10 w-64"
+                className="pl-10 w-64 input-focus"
                 onKeyPress={handleSearchKeyPress}
               />
             </div>
-            <Button onClick={handleSearch} className="gap-2">
+            <Button onClick={handleSearch} className="gap-2 btn-secondary">
               <Search className="h-4 w-4" />
               搜索
             </Button>
@@ -684,17 +684,14 @@ export function IntelligentMatchingPage() {
                   const statusStyle = getStatusStyle(task.status);
 
                   return (
-                    <tr key={task.id} className="hover:bg-gray-50">
+                    <tr key={task.id} className="table-row-hover">
                       <td className="px-8 py-5 text-sm font-medium text-gray-500 whitespace-nowrap">
                         {index +
                           1 +
                           (pagination.current - 1) * pagination.pageSize}
                       </td>
-                      <td className="px-8 py-5 text-sm text-gray-500 whitespace-nowrap">
-                        <div
-                          className="inline-block max-w-[5em] truncate cursor-help"
-                          title={task.jobPositions.join(', ')}
-                        >
+                      <td className="px-8 py-5 text-sm text-gray-500">
+                        <div className="max-w-xs break-words">
                           {task.jobPositions.join(', ')}
                         </div>
                       </td>
@@ -704,7 +701,7 @@ export function IntelligentMatchingPage() {
                       <td className="px-8 py-5 whitespace-nowrap">
                         <span
                           className={cn(
-                            'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border',
+                            'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border transition-all duration-200 hover:scale-105',
                             statusStyle.bg,
                             statusStyle.text,
                             statusStyle.border
@@ -726,7 +723,7 @@ export function IntelligentMatchingPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 action-btn"
                             onClick={() => {
                               setSelectedTaskId(task.taskId);
                               setIsDetailDrawerOpen(true);
@@ -738,7 +735,7 @@ export function IntelligentMatchingPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 action-btn"
                             onClick={() => {
                               setTaskToDelete({
                                 id: task.id,
@@ -792,7 +789,7 @@ export function IntelligentMatchingPage() {
                   onClick={() => handlePageChange(pagination.current - 1)}
                   disabled={pagination.current === 1}
                   className={cn(
-                    'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
+                    'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 pagination-btn',
                     pagination.current === 1 && 'opacity-50'
                   )}
                 >
@@ -807,7 +804,7 @@ export function IntelligentMatchingPage() {
                   onClick={() => handlePageChange(pagination.current + 1)}
                   disabled={pagination.current >= pagination.totalPages}
                   className={cn(
-                    'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0',
+                    'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 pagination-btn',
                     pagination.current >= pagination.totalPages && 'opacity-50'
                   )}
                 >
