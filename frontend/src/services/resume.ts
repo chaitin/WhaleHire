@@ -71,7 +71,7 @@ export const deleteResume = async (id: string): Promise<void> => {
   await apiDelete(`/v1/resume/${id}`);
 };
 
-// 上传简历
+// 上传简历（旧接口，保留兼容）
 export const uploadResume = async (
   file: File,
   jobPositionIds?: string[],
@@ -91,6 +91,78 @@ export const uploadResume = async (
   }
 
   return apiPost<Resume>('/v1/resume/upload', formData);
+};
+
+// 批量上传简历响应
+export interface BatchUploadResponse {
+  task_id: string; // 任务ID
+  message: string; // 提示信息
+}
+
+// 批量上传单项详情 - 对应 domain.BatchUploadItem
+export interface BatchUploadItem {
+  item_id: string; // 项目ID
+  filename: string; // 文件名
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'; // 状态
+  resume_id?: string; // 成功时的简历ID
+  error_message?: string; // 错误信息
+  created_at: string; // 创建时间
+  updated_at: string; // 更新时间
+  completed_at?: string; // 完成时间
+}
+
+// 批量上传状态响应 - 对应 domain.BatchUploadTask
+export interface BatchUploadStatus {
+  task_id: string; // 任务ID
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'; // 任务状态
+  total_count: number; // 总文件数
+  success_count: number; // 成功上传数
+  failed_count: number; // 失败上传数
+  completed_count: number; // 已完成数
+  job_position_ids?: string[]; // 关联的岗位ID列表
+  source?: string; // 来源
+  notes?: string; // 备注
+  uploader_id: string; // 上传者ID
+  created_at: string; // 创建时间
+  updated_at: string; // 更新时间
+  completed_at?: string; // 完成时间
+  items: BatchUploadItem[]; // 上传项目列表
+}
+
+// 批量上传简历（新接口）- 支持单个或多个文件
+export const batchUploadResume = async (
+  files: File | File[],
+  jobPositionIds?: string[],
+  position?: string
+): Promise<BatchUploadResponse> => {
+  const formData = new FormData();
+
+  // 处理单个文件或多个文件
+  const fileList = Array.isArray(files) ? files : [files];
+
+  // 统一使用 'files' 字段名，支持单个或多个文件
+  fileList.forEach((file) => {
+    formData.append('files', file);
+  });
+
+  // 如果有岗位ID列表，用逗号分隔发送
+  if (jobPositionIds && jobPositionIds.length > 0) {
+    formData.append('job_position_ids', jobPositionIds.join(','));
+  }
+
+  // 保留旧的position参数以兼容
+  if (position) {
+    formData.append('position', position);
+  }
+
+  return apiPost<BatchUploadResponse>('/v1/resume/batch-upload', formData);
+};
+
+// 查询批量上传状态
+export const getBatchUploadStatus = async (
+  taskId: string
+): Promise<BatchUploadStatus> => {
+  return apiGet<BatchUploadStatus>(`/v1/resume/batch-upload/${taskId}/status`);
 };
 
 // 获取简历解析进度

@@ -12,7 +12,7 @@ interface PollingItem {
 class ResumePollingManager {
   private pollingItems = new Map<string, PollingItem>();
   private pollingTimer: ReturnType<typeof setInterval> | null = null;
-  private pollingInterval = 3000; // 3秒轮询间隔
+  private pollingInterval = 6000; // 6秒轮询间隔
 
   // 添加轮询项
   addPolling(

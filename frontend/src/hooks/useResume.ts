@@ -6,11 +6,13 @@ import {
   updateResume,
   deleteResume,
   batchDeleteResumes,
-  uploadResume,
+  batchUploadResume,
+  getBatchUploadStatus,
   getResumeProgress,
   reparseResume,
   searchResumes,
 } from '@/services/resume';
+import type { BatchUploadStatus } from '@/services/resume';
 import {
   Resume,
   ResumeDetail,
@@ -354,56 +356,161 @@ export const useResumeDetail = (id?: string) => {
   };
 };
 
-// 简历上传 Hook
+// 简历上传 Hook（使用批量上传接口）
 export const useResumeUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<BatchUploadStatus | null>(
+    null
+  );
+  const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // 停止轮询
+  const stopPolling = useCallback(() => {
+    if (pollingTimerRef.current) {
+      clearInterval(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+  }, []);
+
+  // 查询上传状态
+  const fetchUploadStatus = useCallback(
+    async (taskIdToFetch: string, silent = false) => {
+      if (!silent) {
+        setUploading(true);
+      }
+      setError(null);
+
+      try {
+        const status = await getBatchUploadStatus(taskIdToFetch);
+        setUploadStatus(status);
+
+        // 计算进度百分比
+        const progressPercent =
+          status.total_count > 0
+            ? Math.round((status.completed_count / status.total_count) * 100)
+            : 0;
+        setUploadProgress(progressPercent);
+
+        console.log('📤 批量上传状态:', {
+          taskId: status.task_id,
+          status: status.status,
+          progress: progressPercent,
+          completed: status.completed_count,
+          total: status.total_count,
+          success: status.success_count,
+          failed: status.failed_count,
+        });
+
+        // 检查是否完成或失败，停止轮询
+        if (
+          status.status === 'completed' ||
+          status.status === 'failed' ||
+          status.status === 'cancelled'
+        ) {
+          stopPolling();
+          setUploading(false);
+
+          if (status.status === 'failed') {
+            setError('部分文件上传失败');
+          }
+        }
+
+        return status;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : '获取上传状态失败';
+        setError(errorMessage);
+        stopPolling();
+        setUploading(false);
+        throw err;
+      }
+    },
+    [stopPolling]
+  );
+
+  // 开始轮询上传状态
+  const startPolling = useCallback(
+    (taskIdToPoll: string, pollingInterval = 1000) => {
+      stopPolling();
+
+      console.log('🔄 开始轮询上传状态，任务ID:', taskIdToPoll);
+
+      // 立即获取一次状态
+      fetchUploadStatus(taskIdToPoll, true);
+
+      // 开始轮询
+      pollingTimerRef.current = setInterval(() => {
+        fetchUploadStatus(taskIdToPoll, true);
+      }, pollingInterval);
+    },
+    [fetchUploadStatus, stopPolling]
+  );
+
+  // 上传文件（支持单个或多个文件）
   const uploadFile = useCallback(
     async (
-      file: File,
+      files: File | File[],
       jobPositionIds?: string[],
       position?: string
-    ): Promise<Resume> => {
+    ): Promise<{ taskId: string; message: string }> => {
       setUploading(true);
       setError(null);
       setUploadProgress(0);
+      setTaskId(null);
+      setUploadStatus(null);
 
       try {
-        // 模拟上传进度
-        const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => {
-            if (prev >= 90) {
-              clearInterval(progressInterval);
-              return prev;
-            }
-            return prev + 10;
-          });
-        }, 200);
+        const fileList = Array.isArray(files) ? files : [files];
+        const fileNames = fileList.map((f) => f.name).join(', ');
+        console.log(`📤 开始批量上传 ${fileList.length} 个简历:`, fileNames);
 
-        const response = await uploadResume(file, jobPositionIds, position);
+        // 调用批量上传接口
+        const response = await batchUploadResume(
+          files,
+          jobPositionIds,
+          position
+        );
 
-        clearInterval(progressInterval);
-        setUploadProgress(100);
+        console.log('📤 批量上传响应:', response);
 
-        return response;
+        setTaskId(response.task_id);
+
+        // 开始轮询上传状态
+        startPolling(response.task_id);
+
+        return {
+          taskId: response.task_id,
+          message: response.message,
+        };
       } catch (err) {
         setError(err instanceof Error ? err.message : '上传失败');
-        throw err;
-      } finally {
         setUploading(false);
-        setTimeout(() => setUploadProgress(0), 1000);
+        throw err;
       }
     },
-    []
+    [startPolling]
   );
+
+  // 清理轮询
+  useEffect(() => {
+    return () => {
+      stopPolling();
+    };
+  }, [stopPolling]);
 
   return {
     uploading,
     error,
     uploadProgress,
     uploadFile,
+    taskId,
+    uploadStatus,
+    fetchUploadStatus,
+    stopPolling,
+    isPolling: !!pollingTimerRef.current,
   };
 };
 

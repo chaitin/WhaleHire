@@ -524,6 +524,410 @@
                 }
             }
         },
+        "/api/v1/audit/logs": {
+            "get": {
+                "description": "分页获取审计日志列表，支持多种过滤条件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "获取审计日志列表",
+                "operationId": "list-audit-logs",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "操作者类型",
+                        "name": "operator_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "操作者ID",
+                        "name": "operator_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "操作类型",
+                        "name": "operation_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "资源类型",
+                        "name": "resource_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "资源ID",
+                        "name": "resource_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "IP地址",
+                        "name": "ip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "开始时间",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束时间",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListAuditLogResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/logs/batch": {
+            "delete": {
+                "description": "根据ID列表批量删除审计日志",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "批量删除审计日志",
+                "operationId": "batch-delete-audit-logs",
+                "parameters": [
+                    {
+                        "description": "批量删除请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.BatchDeleteAuditLogReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/logs/cleanup": {
+            "delete": {
+                "description": "清理指定天数之前的审计日志",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "清理旧审计日志",
+                "operationId": "cleanup-old-audit-logs",
+                "parameters": [
+                    {
+                        "description": "清理请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CleanupOldLogsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/logs/{id}": {
+            "get": {
+                "description": "根据ID获取单个审计日志的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "获取审计日志详情",
+                "operationId": "get-audit-log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "审计日志ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AuditLog"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "软删除指定的审计日志",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "删除审计日志",
+                "operationId": "delete-audit-log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "审计日志ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/operation-summary": {
+            "get": {
+                "description": "获取指定用户在指定天数内的操作摘要统计",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "获取用户操作摘要",
+                "operationId": "get-operation-summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "操作者ID",
+                        "name": "operator_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "统计天数，默认30天",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.OperationSummary"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/security-alerts": {
+            "get": {
+                "description": "获取最近时间内的安全告警信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "获取安全告警",
+                "operationId": "get-security-alerts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "统计小时数，默认24小时",
+                        "name": "hours",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.SecurityAlert"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/stats": {
+            "get": {
+                "description": "获取审计日志的统计信息，包括总数、成功失败数、各类型统计等",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "获取审计统计信息",
+                "operationId": "get-audit-stats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "开始时间",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束时间",
+                        "name": "end_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AuditStatsResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/departments": {
             "get": {
                 "description": "分页获取部门列表，支持筛选条件",
@@ -1884,6 +2288,153 @@
                 }
             }
         },
+        "/api/v1/resume/batch-upload": {
+            "post": {
+                "description": "批量上传简历文件并进行解析，支持选择多个岗位",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "批量上传简历",
+                "operationId": "batch-upload-resume",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "简历文件列表",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "岗位ID列表，多个ID用逗号分隔",
+                        "name": "job_position_ids",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "申请来源",
+                        "name": "source",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "备注信息",
+                        "name": "notes",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.BatchUploadTask"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/batch-upload/{task_id}/cancel": {
+            "post": {
+                "description": "取消正在进行的批量上传任务",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "取消批量上传任务",
+                "operationId": "cancel-batch-upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume/batch-upload/{task_id}/status": {
+            "get": {
+                "description": "获取批量上传任务的进度和状态信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume"
+                ],
+                "summary": "获取批量上传任务状态",
+                "operationId": "get-batch-upload-status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.BatchUploadTask"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/resume/list": {
             "get": {
                 "description": "获取简历列表，支持分页",
@@ -2296,25 +2847,39 @@
                 "operationId": "list-screening-results",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "下一页标识",
-                        "name": "next_token",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "分页",
+                        "description": "页码，默认为1",
                         "name": "page",
                         "in": "query"
                     },
                     {
-                        "minimum": 1,
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页多少条记录",
+                        "description": "每页大小，默认为10",
                         "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "筛选任务ID过滤条件",
+                        "name": "task_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "简历ID过滤条件",
+                        "name": "resume_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "最小匹配分数过滤条件",
+                        "name": "min_score",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "最大匹配分数过滤条件",
+                        "name": "max_score",
                         "in": "query"
                     }
                 ],
@@ -2356,25 +2921,52 @@
                 "operationId": "list-screening-tasks",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "下一页标识",
-                        "name": "next_token",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "分页",
+                        "description": "页码，默认为1",
                         "name": "page",
                         "in": "query"
                     },
                     {
-                        "minimum": 1,
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页多少条记录",
+                        "description": "每页大小，默认为10",
                         "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "职位ID过滤条件",
+                        "name": "job_position_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pending",
+                            "running",
+                            "completed",
+                            "failed",
+                            "cancelled"
+                        ],
+                        "type": "string",
+                        "description": "任务状态过滤条件",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建者用户ID过滤条件",
+                        "name": "created_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "任务创建时间范围起始时间，格式：2006-01-02T15:04:05Z07:00",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "任务创建时间范围结束时间，格式：2006-01-02T15:04:05Z07:00",
+                        "name": "end_time",
                         "in": "query"
                     }
                 ],
@@ -2533,6 +3125,51 @@
                 }
             }
         },
+        "/api/v1/screening/tasks/{id}/cancel": {
+            "post": {
+                "description": "取消正在进行中的筛选任务，停止剩余简历的匹配过程",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "取消筛选任务",
+                "operationId": "cancel-screening-task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.CancelScreeningTaskResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/screening/tasks/{id}/metrics": {
             "get": {
                 "description": "根据任务ID查询筛选任务的运行指标和统计信息",
@@ -2625,7 +3262,7 @@
         },
         "/api/v1/screening/tasks/{id}/start": {
             "post": {
-                "description": "启动指定的筛选任务，开始执行智能筛选流程",
+                "description": "启动指定的筛选任务，开始执行智能筛选流程，返回任务ID、岗位ID和简历ID数组用于后续调试和请求",
                 "consumes": [
                     "application/json"
                 ],
@@ -2658,8 +3295,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/domain.StartScreeningTaskResp"
                                         }
                                     }
                                 }
@@ -2712,6 +3348,58 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/domain.GetScreeningResultResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/screening/tasks/{task_id}/resumes/{resume_id}/node-runs": {
+            "get": {
+                "description": "根据任务ID和简历ID查询匹配过程中的节点运行记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "查询节点运行记录",
+                "operationId": "get-screening-node-runs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "简历ID",
+                        "name": "resume_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.GetNodeRunsResp"
                                         }
                                     }
                                 }
@@ -3348,6 +4036,21 @@
                 "AdminStatusInactive"
             ]
         },
+        "consts.AuditLogStatus": {
+            "type": "string",
+            "enum": [
+                "success",
+                "failed"
+            ],
+            "x-enum-comments": {
+                "AuditLogStatusFailed": "失败",
+                "AuditLogStatusSuccess": "成功"
+            },
+            "x-enum-varnames": [
+                "AuditLogStatusSuccess",
+                "AuditLogStatusFailed"
+            ]
+        },
         "consts.LoginSource": {
             "type": "string",
             "enum": [
@@ -3365,22 +4068,109 @@
                 "excellent",
                 "good",
                 "fair",
-                "poor"
+                "poor",
+                "no_match"
             ],
             "x-enum-comments": {
                 "MatchLevelExcellent": "优秀",
                 "MatchLevelFair": "一般",
                 "MatchLevelGood": "良好",
+                "MatchLevelNoMatch": "不匹配",
                 "MatchLevelPoor": "较差"
             },
             "x-enum-varnames": [
                 "MatchLevelExcellent",
                 "MatchLevelGood",
                 "MatchLevelFair",
-                "MatchLevelPoor"
+                "MatchLevelPoor",
+                "MatchLevelNoMatch"
             ]
         },
-        "consts.ScreeningTaskResumeStatus": {
+        "consts.OperationType": {
+            "type": "string",
+            "enum": [
+                "create",
+                "update",
+                "delete",
+                "view",
+                "login",
+                "logout"
+            ],
+            "x-enum-comments": {
+                "OperationTypeCreate": "创建",
+                "OperationTypeDelete": "删除",
+                "OperationTypeLogin": "登录",
+                "OperationTypeLogout": "登出",
+                "OperationTypeUpdate": "更新",
+                "OperationTypeView": "查看（敏感数据）"
+            },
+            "x-enum-varnames": [
+                "OperationTypeCreate",
+                "OperationTypeUpdate",
+                "OperationTypeDelete",
+                "OperationTypeView",
+                "OperationTypeLogin",
+                "OperationTypeLogout"
+            ]
+        },
+        "consts.OperatorType": {
+            "type": "string",
+            "enum": [
+                "user",
+                "admin"
+            ],
+            "x-enum-comments": {
+                "OperatorTypeAdmin": "管理员",
+                "OperatorTypeUser": "普通用户"
+            },
+            "x-enum-varnames": [
+                "OperatorTypeUser",
+                "OperatorTypeAdmin"
+            ]
+        },
+        "consts.ResourceType": {
+            "type": "string",
+            "enum": [
+                "user",
+                "admin",
+                "role",
+                "department",
+                "job_position",
+                "resume",
+                "screening",
+                "setting",
+                "attachment",
+                "conversation",
+                "message"
+            ],
+            "x-enum-comments": {
+                "ResourceTypeAdmin": "管理员",
+                "ResourceTypeAttachment": "附件",
+                "ResourceTypeConversation": "对话",
+                "ResourceTypeDepartment": "部门",
+                "ResourceTypeJobPosition": "职位",
+                "ResourceTypeMessage": "消息",
+                "ResourceTypeResume": "简历",
+                "ResourceTypeRole": "角色",
+                "ResourceTypeScreening": "筛选任务",
+                "ResourceTypeSetting": "系统设置",
+                "ResourceTypeUser": "用户"
+            },
+            "x-enum-varnames": [
+                "ResourceTypeUser",
+                "ResourceTypeAdmin",
+                "ResourceTypeRole",
+                "ResourceTypeDepartment",
+                "ResourceTypeJobPosition",
+                "ResourceTypeResume",
+                "ResourceTypeScreening",
+                "ResourceTypeSetting",
+                "ResourceTypeAttachment",
+                "ResourceTypeConversation",
+                "ResourceTypeMessage"
+            ]
+        },
+        "consts.ScreeningNodeRunStatus": {
             "type": "string",
             "enum": [
                 "pending",
@@ -3389,6 +4179,29 @@
                 "failed"
             ],
             "x-enum-comments": {
+                "ScreeningNodeRunStatusCompleted": "已完成",
+                "ScreeningNodeRunStatusFailed": "失败",
+                "ScreeningNodeRunStatusPending": "待处理",
+                "ScreeningNodeRunStatusRunning": "运行中"
+            },
+            "x-enum-varnames": [
+                "ScreeningNodeRunStatusPending",
+                "ScreeningNodeRunStatusRunning",
+                "ScreeningNodeRunStatusCompleted",
+                "ScreeningNodeRunStatusFailed"
+            ]
+        },
+        "consts.ScreeningTaskResumeStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "running",
+                "completed",
+                "failed",
+                "cancelled"
+            ],
+            "x-enum-comments": {
+                "ScreeningTaskResumeStatusCancelled": "已取消",
                 "ScreeningTaskResumeStatusCompleted": "已完成",
                 "ScreeningTaskResumeStatusFailed": "失败",
                 "ScreeningTaskResumeStatusPending": "待处理",
@@ -3398,7 +4211,8 @@
                 "ScreeningTaskResumeStatusPending",
                 "ScreeningTaskResumeStatusRunning",
                 "ScreeningTaskResumeStatusCompleted",
-                "ScreeningTaskResumeStatusFailed"
+                "ScreeningTaskResumeStatusFailed",
+                "ScreeningTaskResumeStatusCancelled"
             ]
         },
         "consts.ScreeningTaskStatus": {
@@ -3407,9 +4221,11 @@
                 "pending",
                 "running",
                 "completed",
-                "failed"
+                "failed",
+                "cancelled"
             ],
             "x-enum-comments": {
+                "ScreeningTaskStatusCancelled": "已取消",
                 "ScreeningTaskStatusCompleted": "已完成",
                 "ScreeningTaskStatusFailed": "失败",
                 "ScreeningTaskStatusPending": "待处理",
@@ -3419,7 +4235,8 @@
                 "ScreeningTaskStatusPending",
                 "ScreeningTaskStatusRunning",
                 "ScreeningTaskStatusCompleted",
-                "ScreeningTaskStatusFailed"
+                "ScreeningTaskStatusFailed",
+                "ScreeningTaskStatusCancelled"
             ]
         },
         "consts.UniversityType": {
@@ -3613,10 +4430,311 @@
                 }
             }
         },
+        "domain.AuditLog": {
+            "type": "object",
+            "properties": {
+                "business_data": {
+                    "description": "业务数据",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "city": {
+                    "description": "城市",
+                    "type": "string"
+                },
+                "country": {
+                    "description": "国家",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "integer"
+                },
+                "duration": {
+                    "description": "请求耗时(毫秒)",
+                    "type": "integer"
+                },
+                "error_message": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "审计日志ID",
+                    "type": "string"
+                },
+                "ip": {
+                    "description": "IP地址",
+                    "type": "string"
+                },
+                "isp": {
+                    "description": "ISP",
+                    "type": "string"
+                },
+                "operation_type": {
+                    "description": "操作类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.OperationType"
+                        }
+                    ]
+                },
+                "operator_id": {
+                    "description": "操作者ID",
+                    "type": "string"
+                },
+                "operator_name": {
+                    "description": "操作者名称",
+                    "type": "string"
+                },
+                "operator_type": {
+                    "description": "操作者类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.OperatorType"
+                        }
+                    ]
+                },
+                "province": {
+                    "description": "省份",
+                    "type": "string"
+                },
+                "request_body": {
+                    "description": "请求体",
+                    "type": "string"
+                },
+                "request_id": {
+                    "description": "请求ID",
+                    "type": "string"
+                },
+                "request_method": {
+                    "description": "请求方法",
+                    "type": "string"
+                },
+                "request_path": {
+                    "description": "请求路径",
+                    "type": "string"
+                },
+                "request_query": {
+                    "description": "请求查询参数",
+                    "type": "string"
+                },
+                "resource_id": {
+                    "description": "资源ID",
+                    "type": "string"
+                },
+                "resource_name": {
+                    "description": "资源名称",
+                    "type": "string"
+                },
+                "resource_type": {
+                    "description": "资源类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.ResourceType"
+                        }
+                    ]
+                },
+                "response_body": {
+                    "description": "响应体",
+                    "type": "string"
+                },
+                "response_status": {
+                    "description": "响应状态码",
+                    "type": "integer"
+                },
+                "session_id": {
+                    "description": "会话ID",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.AuditLogStatus"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "integer"
+                },
+                "user_agent": {
+                    "description": "用户代理",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.AuditStatsResp": {
+            "type": "object",
+            "properties": {
+                "failed_count": {
+                    "description": "失败数",
+                    "type": "integer"
+                },
+                "hourly_stats": {
+                    "description": "按小时统计",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.HourlyAuditStat"
+                    }
+                },
+                "operation_stats": {
+                    "description": "操作类型统计",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "operator_type_stats": {
+                    "description": "操作者类型统计",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "resource_stats": {
+                    "description": "资源类型统计",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "success_count": {
+                    "description": "成功数",
+                    "type": "integer"
+                },
+                "total_count": {
+                    "description": "总数",
+                    "type": "integer"
+                }
+            }
+        },
         "domain.BasicMatchDetail": {
+            "description": "候选人基本信息与岗位要求的匹配分析结果，包含地点、薪资、部门等基础信息匹配",
             "type": "object",
             "properties": {
                 "evidence": {
+                    "description": "Evidence 匹配证据列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"工作地点匹配\"",
+                        "\"薪资期望符合\"]"
+                    ]
+                },
+                "notes": {
+                    "description": "Notes 匹配备注说明",
+                    "type": "string",
+                    "example": "候选人基本信息与岗位要求高度匹配"
+                },
+                "score": {
+                    "description": "Score 基本信息匹配总分 (0-100)",
+                    "type": "number",
+                    "example": 85.5
+                },
+                "sub_scores": {
+                    "description": "SubScores 各子项匹配分数，如地点、薪资等",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "domain.BatchDeleteAuditLogReq": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "description": "要删除的日志ID列表",
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "domain.BatchUploadItem": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "item_id": {
+                    "type": "string"
+                },
+                "resume_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.BatchUploadStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.BatchUploadStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "processing",
+                "completed",
+                "failed",
+                "cancelled"
+            ],
+            "x-enum-comments": {
+                "BatchUploadStatusCancelled": "已取消",
+                "BatchUploadStatusCompleted": "已完成",
+                "BatchUploadStatusFailed": "失败",
+                "BatchUploadStatusPending": "等待处理",
+                "BatchUploadStatusProcessing": "正在处理"
+            },
+            "x-enum-varnames": [
+                "BatchUploadStatusPending",
+                "BatchUploadStatusProcessing",
+                "BatchUploadStatusCompleted",
+                "BatchUploadStatusFailed",
+                "BatchUploadStatusCancelled"
+            ]
+        },
+        "domain.BatchUploadTask": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "completed_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "failed_count": {
+                    "type": "integer"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.BatchUploadItem"
+                    }
+                },
+                "job_position_ids": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3625,34 +4743,98 @@
                 "notes": {
                     "type": "string"
                 },
-                "score": {
-                    "type": "number"
+                "source": {
+                    "type": "string"
                 },
-                "sub_scores": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "number"
-                    }
+                "status": {
+                    "$ref": "#/definitions/domain.BatchUploadStatus"
+                },
+                "success_count": {
+                    "type": "integer"
+                },
+                "task_id": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "uploader_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.CancelScreeningTaskResp": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Message 取消操作的结果消息",
+                    "type": "string"
+                },
+                "task_id": {
+                    "description": "TaskID 已取消的筛选任务ID",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.CleanupOldLogsReq": {
+            "type": "object",
+            "required": [
+                "days"
+            ],
+            "properties": {
+                "days": {
+                    "description": "保留天数",
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 1
                 }
             }
         },
         "domain.CompanyMatchInfo": {
             "type": "object",
             "properties": {
+                "analysis": {
+                    "description": "Analysis 公司匹配分析说明",
+                    "type": "string",
+                    "example": "公司规模与目标公司匹配，行业地位相当"
+                },
                 "company": {
-                    "type": "string"
+                    "description": "Company 简历中的公司名称",
+                    "type": "string",
+                    "example": "阿里巴巴"
+                },
+                "company_size": {
+                    "description": "CompanySize 公司规模",
+                    "type": "string",
+                    "example": "大型"
                 },
                 "is_exact": {
-                    "type": "boolean"
+                    "description": "IsExact 是否完全匹配",
+                    "type": "boolean",
+                    "example": false
+                },
+                "reputation": {
+                    "description": "Reputation 公司声誉分数 (0-100)",
+                    "type": "number",
+                    "example": 85
                 },
                 "resume_experience_id": {
-                    "type": "string"
+                    "description": "ResumeExperienceID 简历工作经历ID",
+                    "type": "string",
+                    "example": "exp_001"
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 公司匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 88
                 },
                 "target_company": {
-                    "type": "string"
+                    "description": "TargetCompany 目标公司名称",
+                    "type": "string",
+                    "example": "腾讯"
                 }
             }
         },
@@ -4054,20 +5236,49 @@
                 }
             }
         },
+        "domain.DailyActivity": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "操作数量",
+                    "type": "integer"
+                },
+                "date": {
+                    "description": "日期 (YYYY-MM-DD)",
+                    "type": "string"
+                },
+                "failed_count": {
+                    "description": "失败数量",
+                    "type": "integer"
+                },
+                "success_count": {
+                    "description": "成功数量",
+                    "type": "integer"
+                }
+            }
+        },
         "domain.DegreeMatchInfo": {
             "type": "object",
             "properties": {
                 "actual_degree": {
-                    "type": "string"
+                    "description": "ActualDegree 实际学历",
+                    "type": "string",
+                    "example": "硕士"
                 },
                 "meets": {
-                    "type": "boolean"
+                    "description": "Meets 是否满足学历要求",
+                    "type": "boolean",
+                    "example": true
                 },
                 "required_degree": {
-                    "type": "string"
+                    "description": "RequiredDegree 要求学历",
+                    "type": "string",
+                    "example": "本科"
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 学历匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 100
                 }
             }
         },
@@ -4142,48 +5353,68 @@
             }
         },
         "domain.EducationMatchDetail": {
+            "description": "候选人教育背景与岗位教育要求的匹配分析结果，包含学历、专业和学校匹配",
             "type": "object",
             "properties": {
                 "degree_match": {
-                    "$ref": "#/definitions/domain.DegreeMatchInfo"
+                    "description": "DegreeMatch 学历匹配信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.DegreeMatchInfo"
+                        }
+                    ]
                 },
                 "major_matches": {
+                    "description": "MajorMatches 专业匹配列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.MajorMatchInfo"
                     }
                 },
                 "school_matches": {
+                    "description": "SchoolMatches 学校匹配列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.SchoolMatchInfo"
                     }
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 教育匹配总分 (0-100)",
+                    "type": "number",
+                    "example": 88
                 }
             }
         },
         "domain.ExperienceMatchDetail": {
+            "description": "候选人工作经验与岗位经验要求的匹配分析结果，包含年限、职位和行业匹配",
             "type": "object",
             "properties": {
                 "industry_matches": {
+                    "description": "IndustryMatches 行业匹配列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.IndustryMatchInfo"
                     }
                 },
                 "position_matches": {
+                    "description": "PositionMatches 职位匹配列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.PositionMatchInfo"
                     }
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 经验匹配总分 (0-100)",
+                    "type": "number",
+                    "example": 78.5
                 },
                 "years_match": {
-                    "$ref": "#/definitions/domain.YearsMatchInfo"
+                    "description": "YearsMatch 工作年限匹配信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.YearsMatchInfo"
+                        }
+                    ]
                 }
             }
         },
@@ -4220,6 +5451,18 @@
             "properties": {
                 "conversation_id": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.GetNodeRunsResp": {
+            "type": "object",
+            "properties": {
+                "agent_status": {
+                    "description": "AgentStatus Agent状态映射，Key为Agent名称，Value(ScreeningNodeRun)为对应的节点运行记录\n支持的Agent类型包括：\n- TaskMetaDataNode: 任务元数据节点，负责初始化任务基础信息\n- DispatcherNode: 分发节点，负责将任务分发给各个Agent\n- BasicInfoAgent: 基本信息匹配Agent，负责地点、薪资、部门等基础信息匹配\n- SkillAgent: 技能匹配Agent，负责技术栈和技能要求匹配分析\n- ResponsibilityAgent: 职责匹配Agent，负责工作职责和项目经验匹配\n- ExperienceAgent: 经验匹配Agent，负责工作经验年限和相关性分析\n- EducationAgent: 教育背景匹配Agent，负责学历、专业、学校匹配分析\n- IndustryAgent: 行业匹配Agent，负责行业背景和领域经验匹配\n- AggregatorAgent: 聚合节点，负责汇总各Agent结果并计算最终评分",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/domain.ScreeningNodeRun"
+                    }
                 }
             }
         },
@@ -4399,23 +5642,82 @@
                 }
             }
         },
+        "domain.HourlyAuditStat": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "数量",
+                    "type": "integer"
+                },
+                "failed_count": {
+                    "description": "失败数量",
+                    "type": "integer"
+                },
+                "hour": {
+                    "description": "小时 (0-23)",
+                    "type": "integer"
+                },
+                "success_count": {
+                    "description": "成功数量",
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.IndustryDepthInfo": {
+            "description": "候选人在相关行业的工作年限与深度分析",
+            "type": "object",
+            "properties": {
+                "analysis": {
+                    "description": "Analysis 行业深度分析说明",
+                    "type": "string",
+                    "example": "在互联网行业有超过5年经验，具备深厚的行业积累"
+                },
+                "score": {
+                    "description": "Score 行业深度分数 (0-100)",
+                    "type": "number",
+                    "example": 90
+                },
+                "total_years": {
+                    "description": "TotalYears 在相关行业总工作年限",
+                    "type": "number",
+                    "example": 5
+                }
+            }
+        },
         "domain.IndustryMatchDetail": {
+            "description": "候选人行业背景与岗位行业要求的匹配分析结果，包含行业和公司匹配",
             "type": "object",
             "properties": {
                 "company_matches": {
+                    "description": "CompanyMatches 公司匹配列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.CompanyMatchInfo"
                     }
                 },
+                "industry_depth": {
+                    "description": "IndustryDepth 行业深度评估",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.IndustryDepthInfo"
+                        }
+                    ]
+                },
                 "industry_matches": {
+                    "description": "IndustryMatches 行业匹配列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.IndustryMatchInfo"
                     }
                 },
+                "overall_analysis": {
+                    "description": "OverallAnalysis 整体行业背景匹配度分析总结",
+                    "type": "string"
+                },
                 "score": {
-                    "type": "number"
+                    "description": "Score 行业匹配总分 (0-100)",
+                    "type": "number",
+                    "example": 85
                 }
             }
         },
@@ -4423,19 +5725,29 @@
             "type": "object",
             "properties": {
                 "company": {
-                    "type": "string"
+                    "description": "Company 公司名称",
+                    "type": "string",
+                    "example": "腾讯科技"
                 },
                 "industry": {
-                    "type": "string"
+                    "description": "Industry 行业名称",
+                    "type": "string",
+                    "example": "互联网"
                 },
                 "relevance": {
-                    "type": "number"
+                    "description": "Relevance 相关度 (0-1)",
+                    "type": "number",
+                    "example": 0.9
                 },
                 "resume_experience_id": {
-                    "type": "string"
+                    "description": "ResumeExperienceID 简历工作经历ID",
+                    "type": "string",
+                    "example": "exp_001"
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 行业匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 90
                 }
             }
         },
@@ -4836,37 +6148,58 @@
             "type": "object",
             "properties": {
                 "analysis_detail": {
-                    "description": "详细分析说明",
-                    "type": "string"
+                    "description": "AnalysisDetail 详细分析说明",
+                    "type": "string",
+                    "example": "候选人在项目管理方面有丰富经验，但需要加强敏捷开发方法论"
                 },
                 "match_level": {
-                    "description": "匹配等级: excellent/good/fair/poor",
-                    "type": "string"
+                    "description": "MatchLevel 匹配等级: excellent(优秀), good(良好), fair(一般), poor(较差)",
+                    "type": "string",
+                    "enum": [
+                        "excellent",
+                        "good",
+                        "fair",
+                        "poor"
+                    ],
+                    "example": "good"
                 },
                 "match_percentage": {
-                    "description": "匹配百分比 (0-100)",
-                    "type": "number"
+                    "description": "MatchPercentage 匹配百分比 (0-100)",
+                    "type": "number",
+                    "example": 85
                 },
                 "recommended_actions": {
-                    "description": "建议改进措施",
+                    "description": "RecommendedActions 建议改进措施",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"参加敏捷开发培训\"",
+                        "\"加强跨部门协作\"]"
+                    ]
                 },
                 "strength_points": {
-                    "description": "匹配优势点",
+                    "description": "StrengthPoints 匹配优势点",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"项目管理经验丰富\"",
+                        "\"团队协作能力强\"]"
+                    ]
                 },
                 "weak_points": {
-                    "description": "不足之处",
+                    "description": "WeakPoints 不足之处",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"缺乏敏捷开发经验\"",
+                        "\"跨部门沟通待提升\"]"
+                    ]
                 }
             }
         },
@@ -4907,6 +6240,26 @@
                     "items": {
                         "$ref": "#/definitions/domain.AdminUser"
                     }
+                }
+            }
+        },
+        "domain.ListAuditLogResp": {
+            "type": "object",
+            "properties": {
+                "audit_logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.AuditLog"
+                    }
+                },
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
                 }
             }
         },
@@ -5136,16 +6489,24 @@
             "type": "object",
             "properties": {
                 "major": {
-                    "type": "string"
+                    "description": "Major 专业名称",
+                    "type": "string",
+                    "example": "计算机科学与技术"
                 },
                 "relevance": {
-                    "type": "number"
+                    "description": "Relevance 相关度 (0-1)",
+                    "type": "number",
+                    "example": 0.95
                 },
                 "resume_education_id": {
-                    "type": "string"
+                    "description": "ResumeEducationID 简历教育经历ID",
+                    "type": "string",
+                    "example": "edu_001"
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 专业匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 95
                 }
             }
         },
@@ -5153,10 +6514,12 @@
             "type": "object",
             "properties": {
                 "job_responsibility_id": {
-                    "type": "string"
+                    "description": "JobResponsibilityID 岗位职责ID",
+                    "type": "string",
+                    "example": "resp_001"
                 },
                 "llm_analysis": {
-                    "description": "大模型分析结果",
+                    "description": "LLMAnalysis 大模型分析结果",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.LLMMatchAnalysis"
@@ -5164,15 +6527,19 @@
                     ]
                 },
                 "match_reason": {
-                    "description": "匹配原因说明",
-                    "type": "string"
+                    "description": "MatchReason 匹配原因说明",
+                    "type": "string",
+                    "example": "具备相关项目管理经验"
                 },
                 "match_score": {
-                    "description": "该职责匹配得分",
-                    "type": "number"
+                    "description": "MatchScore 该职责匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 85.5
                 },
                 "resume_experience_id": {
-                    "type": "string"
+                    "description": "ResumeExperienceID 简历工作经历ID，可选",
+                    "type": "string",
+                    "example": "exp_001"
                 }
             }
         },
@@ -5180,10 +6547,12 @@
             "type": "object",
             "properties": {
                 "job_skill_id": {
-                    "type": "string"
+                    "description": "JobSkillID 岗位技能ID",
+                    "type": "string",
+                    "example": "skill_001"
                 },
                 "llm_analysis": {
-                    "description": "大模型分析详情",
+                    "description": "LLMAnalysis 大模型分析详情",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.SkillItemAnalysis"
@@ -5191,23 +6560,35 @@
                     ]
                 },
                 "llm_score": {
-                    "description": "大模型评分 (0-100)",
-                    "type": "number"
+                    "description": "LLMScore 大模型评分 (0-100)",
+                    "type": "number",
+                    "example": 85
                 },
                 "match_type": {
-                    "description": "exact, semantic, related, none",
-                    "type": "string"
+                    "description": "MatchType 匹配类型: exact(完全匹配), semantic(语义匹配), related(相关匹配), none(无匹配)",
+                    "type": "string",
+                    "enum": [
+                        "exact",
+                        "semantic",
+                        "related",
+                        "none"
+                    ],
+                    "example": "exact"
                 },
                 "proficiency_gap": {
-                    "description": "熟练度差距",
-                    "type": "number"
+                    "description": "ProficiencyGap 熟练度差距",
+                    "type": "number",
+                    "example": 0.2
                 },
                 "resume_skill_id": {
-                    "type": "string"
+                    "description": "ResumeSkillID 简历技能ID，可选",
+                    "type": "string",
+                    "example": "resume_skill_001"
                 },
                 "score": {
-                    "description": "该技能得分",
-                    "type": "number"
+                    "description": "Score 该技能匹配得分",
+                    "type": "number",
+                    "example": 82.5
                 }
             }
         },
@@ -5298,20 +6679,74 @@
                 }
             }
         },
+        "domain.OperationSummary": {
+            "type": "object",
+            "properties": {
+                "daily_activity": {
+                    "description": "每日活动统计",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.DailyActivity"
+                    }
+                },
+                "days": {
+                    "description": "统计天数",
+                    "type": "integer"
+                },
+                "failed_count": {
+                    "description": "失败数",
+                    "type": "integer"
+                },
+                "operation_map": {
+                    "description": "操作类型统计",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "operator_id": {
+                    "description": "操作者ID",
+                    "type": "string"
+                },
+                "resource_map": {
+                    "description": "资源类型统计",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "success_count": {
+                    "description": "成功数",
+                    "type": "integer"
+                },
+                "total_count": {
+                    "description": "总操作数",
+                    "type": "integer"
+                }
+            }
+        },
         "domain.PositionMatchInfo": {
             "type": "object",
             "properties": {
                 "position": {
-                    "type": "string"
+                    "description": "Position 职位名称",
+                    "type": "string",
+                    "example": "高级软件工程师"
                 },
                 "relevance": {
-                    "type": "number"
+                    "description": "Relevance 相关度 (0-1)",
+                    "type": "number",
+                    "example": 0.85
                 },
                 "resume_experience_id": {
-                    "type": "string"
+                    "description": "ResumeExperienceID 简历工作经历ID",
+                    "type": "string",
+                    "example": "exp_001"
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 职位匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 85
                 }
             }
         },
@@ -5359,27 +6794,34 @@
             }
         },
         "domain.ResponsibilityMatchDetail": {
+            "description": "候选人工作经历与岗位职责要求的匹配分析结果，包含匹配职责和相关经验",
             "type": "object",
             "properties": {
                 "matched_responsibilities": {
-                    "description": "匹配的职责",
+                    "description": "MatchedResponsibilities 匹配的职责列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.MatchedResponsibility"
                     }
                 },
                 "relevant_experiences": {
-                    "description": "相关工作经历ID",
+                    "description": "RelevantExperiences 相关工作经历ID列表",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"exp_001\"",
+                        "\"exp_002\"]"
+                    ]
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 职责匹配总分 (0-100)",
+                    "type": "number",
+                    "example": 82
                 },
                 "unmatched_responsibilities": {
-                    "description": "未匹配的职责",
+                    "description": "UnmatchedResponsibilities 未匹配的职责列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.JobResponsibility"
@@ -5785,16 +7227,122 @@
             "type": "object",
             "properties": {
                 "reputation": {
-                    "type": "number"
+                    "description": "Reputation 学校声誉评分 (0-1)",
+                    "type": "number",
+                    "example": 0.98
                 },
                 "resume_education_id": {
-                    "type": "string"
+                    "description": "ResumeEducationID 简历教育经历ID",
+                    "type": "string",
+                    "example": "edu_001"
                 },
                 "school": {
-                    "type": "string"
+                    "description": "School 学校名称",
+                    "type": "string",
+                    "example": "清华大学"
                 },
                 "score": {
+                    "description": "Score 学校匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 98
+                }
+            }
+        },
+        "domain.ScreeningNodeRun": {
+            "description": "筛选节点运行记录，包含节点执行的详细信息和状态",
+            "type": "object",
+            "properties": {
+                "agent_version": {
+                    "description": "AgentVersion Agent版本号",
+                    "type": "string"
+                },
+                "attempt_no": {
+                    "description": "AttemptNo 尝试次数，从1开始",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "CreatedAt 创建时间",
+                    "type": "string"
+                },
+                "duration_ms": {
+                    "description": "DurationMs 执行耗时(毫秒)",
+                    "type": "integer"
+                },
+                "error_message": {
+                    "description": "ErrorMessage 错误信息，当Status为failed时包含具体错误描述",
+                    "type": "string"
+                },
+                "finished_at": {
+                    "description": "FinishedAt 完成执行时间",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID 节点运行记录唯一标识符",
+                    "type": "string"
+                },
+                "input_payload": {
+                    "description": "InputPayload 节点输入数据快照",
+                    "type": "object"
+                },
+                "llm_params": {
+                    "description": "LLMParams LLM调用参数快照",
+                    "type": "object"
+                },
+                "model_name": {
+                    "description": "ModelName 使用的模型名称",
+                    "type": "string"
+                },
+                "model_provider": {
+                    "description": "ModelProvider 模型提供商",
+                    "type": "string"
+                },
+                "node_key": {
+                    "description": "NodeKey 节点类型标识，支持的类型包括：TaskMetaDataNode、DispatcherNode、BasicInfoAgent、SkillAgent、ResponsibilityAgent、ExperienceAgent、EducationAgent、IndustryAgent、AggregatorAgent",
+                    "type": "string"
+                },
+                "output_payload": {
+                    "description": "OutputPayload 节点运行输出数据，根据不同节点类型包含不同的数据结构\n各节点输出数据结构映射关系：\n- TaskMetaDataNode: TaskMetaData 任务元数据，包含任务ID、简历ID、匹配任务ID和维度权重\n- DispatcherNode: map[string]any 分发数据，包含各Agent的输入数据分发结果\n- BasicInfoAgent: BasicMatchDetail 基本信息匹配详情，包含地点、薪资、部门等基础信息匹配结果\n- EducationAgent: EducationMatchDetail 教育背景匹配详情，包含学历、专业、学校匹配分析\n- ExperienceAgent: ExperienceMatchDetail 工作经验匹配详情，包含年限、职位、行业经验匹配\n- IndustryAgent: IndustryMatchDetail 行业背景匹配详情，包含行业和公司匹配分析\n- ResponsibilityAgent: ResponsibilityMatchDetail 职责匹配详情，包含岗位职责与工作经历的匹配分析\n- SkillAgent: SkillMatchDetail 技能匹配详情，包含技能匹配、缺失技能和LLM分析结果\n- AggregatorAgent: JobResumeMatch 综合匹配结果，包含各维度匹配详情和最终综合评分",
+                    "type": "object"
+                },
+                "started_at": {
+                    "description": "StartedAt 开始执行时间",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status 节点运行状态：pending(待处理)、running(运行中)、completed(已完成)、failed(失败)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.ScreeningNodeRunStatus"
+                        }
+                    ]
+                },
+                "task_id": {
+                    "description": "TaskID 关联的筛选任务ID",
+                    "type": "string"
+                },
+                "task_resume_id": {
+                    "description": "TaskResumeID 关联的任务简历ID",
+                    "type": "string"
+                },
+                "tokens_input": {
+                    "description": "TokensInput 输入token数量",
+                    "type": "integer"
+                },
+                "tokens_output": {
+                    "description": "TokensOutput 输出token数量",
+                    "type": "integer"
+                },
+                "total_cost": {
+                    "description": "TotalCost 调用总成本",
                     "type": "number"
+                },
+                "trace_id": {
+                    "description": "TraceID 链路追踪ID，用于调试和监控",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt 更新时间",
+                    "type": "string"
                 }
             }
         },
@@ -5802,7 +7350,7 @@
             "type": "object",
             "properties": {
                 "basic_detail": {
-                    "description": "BasicDetail 基本信息匹配详情，可选",
+                    "description": "BasicDetail 基本信息匹配详情，包含地点、薪资等基础信息的匹配分析，可选",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.BasicMatchDetail"
@@ -5821,7 +7369,7 @@
                     }
                 },
                 "education_detail": {
-                    "description": "EducationDetail 教育背景匹配详情，可选",
+                    "description": "EducationDetail 教育背景匹配详情，包含学历、专业、院校等教育信息的匹配分析，可选",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.EducationMatchDetail"
@@ -5829,7 +7377,7 @@
                     ]
                 },
                 "experience_detail": {
-                    "description": "ExperienceDetail 工作经验匹配详情，可选",
+                    "description": "ExperienceDetail 工作经验匹配详情，包含工作年限、职位、行业等经验信息的匹配分析，可选",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.ExperienceMatchDetail"
@@ -5837,7 +7385,7 @@
                     ]
                 },
                 "industry_detail": {
-                    "description": "IndustryDetail 行业背景匹配详情，可选",
+                    "description": "IndustryDetail 行业背景匹配详情，包含行业经验、公司背景等行业信息的匹配分析，可选",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.IndustryMatchDetail"
@@ -5849,7 +7397,7 @@
                     "type": "string"
                 },
                 "match_level": {
-                    "description": "MatchLevel 匹配等级 (高度匹配/中度匹配/低度匹配等)",
+                    "description": "MatchLevel 匹配等级 (非常匹配85-100分/高匹配70-84分/一般匹配55-69分/低匹配40-54分/不匹配0-39分)",
                     "allOf": [
                         {
                             "$ref": "#/definitions/consts.MatchLevel"
@@ -5872,7 +7420,7 @@
                     }
                 },
                 "responsibility_detail": {
-                    "description": "Responsibility 职责匹配详情，可选",
+                    "description": "Responsibility 职责匹配详情，包含工作职责、项目经验等职责信息的匹配分析，可选",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.ResponsibilityMatchDetail"
@@ -5889,7 +7437,7 @@
                     "additionalProperties": {}
                 },
                 "skill_detail": {
-                    "description": "SkillDetail 技能匹配详情，可选",
+                    "description": "SkillDetail 技能匹配详情，包含技术技能、工具使用等技能信息的匹配分析，可选",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.SkillMatchDetail"
@@ -6115,6 +7663,43 @@
                 }
             }
         },
+        "domain.SecurityAlert": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "相关计数",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "告警描述",
+                    "type": "string"
+                },
+                "ip": {
+                    "description": "相关IP地址",
+                    "type": "string"
+                },
+                "level": {
+                    "description": "告警级别 (high, medium, low)",
+                    "type": "string"
+                },
+                "operator_id": {
+                    "description": "相关操作者ID",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "告警标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "告警类型",
+                    "type": "string"
+                }
+            }
+        },
         "domain.Setting": {
             "type": "object",
             "properties": {
@@ -6168,28 +7753,56 @@
             "type": "object",
             "properties": {
                 "learning_effort": {
-                    "description": "学习难度: minimal/moderate/significant",
-                    "type": "string"
+                    "description": "LearningEffort 学习难度: minimal(最小), moderate(中等), significant(较大)",
+                    "type": "string",
+                    "enum": [
+                        "minimal",
+                        "moderate",
+                        "significant"
+                    ],
+                    "example": "moderate"
                 },
                 "match_level": {
-                    "description": "匹配等级: perfect/good/partial/none",
-                    "type": "string"
+                    "description": "MatchLevel 匹配等级: perfect(完美), good(良好), partial(部分), none(无匹配)",
+                    "type": "string",
+                    "enum": [
+                        "perfect",
+                        "good",
+                        "partial",
+                        "none"
+                    ],
+                    "example": "good"
                 },
                 "match_percentage": {
-                    "description": "匹配百分比 (0-100)",
-                    "type": "number"
+                    "description": "MatchPercentage 匹配百分比 (0-100)",
+                    "type": "number",
+                    "example": 85
                 },
                 "match_reason": {
-                    "description": "匹配原因说明",
-                    "type": "string"
+                    "description": "MatchReason 匹配原因说明",
+                    "type": "string",
+                    "example": "具备相关技术栈经验，可快速上手"
                 },
                 "proficiency_gap": {
-                    "description": "熟练度差距: none/minor/moderate/major",
-                    "type": "string"
+                    "description": "ProficiencyGap 熟练度差距: none(无差距), minor(轻微), moderate(中等), major(较大)",
+                    "type": "string",
+                    "enum": [
+                        "none",
+                        "minor",
+                        "moderate",
+                        "major"
+                    ],
+                    "example": "minor"
                 },
                 "transferability": {
-                    "description": "技能可迁移性: high/medium/low",
-                    "type": "string"
+                    "description": "Transferability 技能可迁移性: high(高), medium(中), low(低)",
+                    "type": "string",
+                    "enum": [
+                        "high",
+                        "medium",
+                        "low"
+                    ],
+                    "example": "high"
                 }
             }
         },
@@ -6197,56 +7810,82 @@
             "type": "object",
             "properties": {
                 "analysis_detail": {
-                    "description": "详细分析说明",
-                    "type": "string"
+                    "description": "AnalysisDetail 详细分析说明",
+                    "type": "string",
+                    "example": "候选人在后端开发方面经验丰富，但前端技能有待提升"
                 },
                 "gap_areas": {
-                    "description": "技能缺口领域",
+                    "description": "GapAreas 技能缺口领域",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"前端框架\"",
+                        "\"云原生技术\"]"
+                    ]
                 },
                 "learning_curve": {
-                    "description": "学习曲线评估 (low/medium/high)",
-                    "type": "string"
+                    "description": "LearningCurve 学习曲线评估: low(低), medium(中), high(高)",
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                    ],
+                    "example": "medium"
                 },
                 "overall_match": {
-                    "description": "整体匹配度 (0-100)",
-                    "type": "number"
+                    "description": "OverallMatch 整体匹配度 (0-100)",
+                    "type": "number",
+                    "example": 78.5
                 },
                 "recommendations": {
-                    "description": "技能提升建议",
+                    "description": "Recommendations 技能提升建议",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"建议学习React框架\"",
+                        "\"加强Docker容器化技能\"]"
+                    ]
                 },
                 "strength_areas": {
-                    "description": "优势技能领域",
+                    "description": "StrengthAreas 优势技能领域",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"后端开发\"",
+                        "\"数据库设计\"]"
+                    ]
                 },
                 "technical_fit": {
-                    "description": "技术契合度",
-                    "type": "number"
+                    "description": "TechnicalFit 技术契合度",
+                    "type": "number",
+                    "example": 85
                 }
             }
         },
         "domain.SkillMatchDetail": {
+            "description": "候选人技能与岗位技能要求的匹配分析结果，包含匹配技能、缺失技能和LLM分析",
             "type": "object",
             "properties": {
                 "extra_skills": {
-                    "description": "额外的技能",
+                    "description": "ExtraSkills 额外的技能列表",
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "[\"Docker\"",
+                        "\"Kubernetes\"]"
+                    ]
                 },
                 "llm_analysis": {
-                    "description": "大模型整体分析",
+                    "description": "LLMAnalysis 大模型整体分析结果",
                     "allOf": [
                         {
                             "$ref": "#/definitions/domain.SkillLLMAnalysis"
@@ -6254,21 +7893,43 @@
                     ]
                 },
                 "matched_skills": {
-                    "description": "匹配的技能",
+                    "description": "MatchedSkills 匹配的技能列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.MatchedSkill"
                     }
                 },
                 "missing_skills": {
-                    "description": "缺失的技能",
+                    "description": "MissingSkills 缺失的技能列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.JobSkill"
                     }
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 技能匹配总分 (0-100)",
+                    "type": "number",
+                    "example": 78.5
+                }
+            }
+        },
+        "domain.StartScreeningTaskResp": {
+            "type": "object",
+            "properties": {
+                "job_position_id": {
+                    "description": "JobPositionID 岗位ID，用于岗位-画像匹配",
+                    "type": "string"
+                },
+                "resume_ids": {
+                    "description": "ResumeIDs 简历ID数组，用于岗位-画像匹配",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "task_id": {
+                    "description": "TaskID 已启动的筛选任务ID",
+                    "type": "string"
                 }
             }
         },
@@ -6778,16 +8439,24 @@
             "type": "object",
             "properties": {
                 "actual_years": {
-                    "type": "number"
+                    "description": "ActualYears 实际工作年限",
+                    "type": "number",
+                    "example": 6.5
                 },
                 "gap": {
-                    "type": "number"
+                    "description": "Gap 年限差距（正数表示超出要求，负数表示不足）",
+                    "type": "number",
+                    "example": 1.5
                 },
                 "required_years": {
-                    "type": "number"
+                    "description": "RequiredYears 要求工作年限",
+                    "type": "number",
+                    "example": 5
                 },
                 "score": {
-                    "type": "number"
+                    "description": "Score 年限匹配得分 (0-100)",
+                    "type": "number",
+                    "example": 95
                 }
             }
         },

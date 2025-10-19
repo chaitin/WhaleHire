@@ -100,7 +100,7 @@ const menuGroups: NavigationGroup[] = [
         label: '操作日志',
         icon: FileText,
         path: '/operation-log',
-        disabled: true,
+        disabled: false,
       },
     ],
   },
@@ -163,8 +163,39 @@ export function Sidebar({
       {/* Logo */}
       <div className="flex h-16 items-center justify-between gap-2 border-b px-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Rocket className="h-4 w-4 text-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#36CFC9]">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 17.5C7 17.5 9.5 14.5 15 14.5C20.5 14.5 23 17.5 23 17.5C23 17.5 20.5 20.5 15 20.5C9.5 20.5 7 17.5 7 17.5Z"
+                fill="white"
+                opacity="0.95"
+              />
+              <path
+                d="M5 16C5 16 5.8 17.5 7 17.5C7 17.5 5.8 19 5 19"
+                stroke="white"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.9"
+              />
+              <circle cx="12" cy="17" r="1.3" fill="#36CFC9" />
+              <circle cx="21" cy="12" r="0.8" fill="white" opacity="0.8" />
+              <circle cx="22.5" cy="11" r="0.6" fill="white" opacity="0.6" />
+              <circle cx="19.8" cy="11.5" r="0.5" fill="white" opacity="0.5" />
+              <path
+                d="M10 23C11.5 22.5 13 22.5 14.5 23"
+                stroke="white"
+                strokeWidth="0.8"
+                strokeLinecap="round"
+                opacity="0.4"
+              />
+            </svg>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold">WhaleHire</span>
@@ -255,9 +286,9 @@ export function Sidebar({
           className="border-t px-4 pt-4 pb-4"
           style={{ marginTop: 'auto', position: 'relative', top: '-120px' }}
         >
-          <div className="rounded-lg bg-gradient-to-r from-green-50 to-green-100 border border-green-200 p-4 opacity-60 cursor-not-allowed">
+          <div className="rounded-lg bg-gradient-to-r from-cyan-50 to-cyan-100 border border-[#36CFC9] p-4 opacity-60 cursor-not-allowed">
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-green-400 to-green-500">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#36CFC9]">
                 <Rocket className="h-3 w-3 text-white" />
               </div>
               <span className="text-sm font-medium text-gray-700">
@@ -269,7 +300,7 @@ export function Sidebar({
             </p>
             <button
               disabled
-              className="w-full rounded-md bg-gradient-to-r from-green-400 to-green-500 px-3 py-2 text-xs font-medium text-white cursor-not-allowed opacity-70"
+              className="w-full rounded-md bg-[#36CFC9] px-3 py-2 text-xs font-medium text-white cursor-not-allowed opacity-70"
             >
               立即升级
             </button>
