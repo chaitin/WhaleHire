@@ -252,6 +252,14 @@ export function UploadResumeModal({
 
       // 只有在解析完成后关闭弹窗时才重置状态
       if (currentStep === 'complete') {
+        // 关闭弹窗时通知父组件刷新列表
+        console.log('📤 关闭弹窗，通知父组件刷新列表');
+        if (uploadedResumes.length > 0) {
+          onSuccess?.(uploadedResumes[0] as Resume);
+        } else {
+          onSuccess?.();
+        }
+
         setPosition('');
         setUploadMethod(null);
         setCurrentStep('upload');
@@ -263,7 +271,14 @@ export function UploadResumeModal({
         setCurrentResumeIndex(0); // 重置简历索引
       }
     }
-  }, [open, stopPolling, stopUploadPolling, currentStep]);
+  }, [
+    open,
+    stopPolling,
+    stopUploadPolling,
+    currentStep,
+    uploadedResumes,
+    onSuccess,
+  ]);
 
   // 监听批量上传状态变化
   useEffect(() => {
@@ -460,14 +475,18 @@ export function UploadResumeModal({
             // 更新简历列表
             setUploadedResumes(resumeDetails);
 
-            // 如果所有简历都解析完成，停止轮询
+            // 如果所有简历都解析完成，停止轮询并通知父组件
             const allCompleted = resumeDetails.every(
               (d) => d.status === 'completed' || d.status === 'failed'
             );
 
             if (allCompleted) {
-              console.log('✅ 所有简历解析完成，停止轮询');
+              console.log('✅ 所有简历解析完成，停止轮询并通知父组件刷新列表');
               cleanup();
+              // 通知父组件刷新列表，传递第一个简历数据
+              if (resumeDetails.length > 0) {
+                onSuccess?.(resumeDetails[0] as Resume);
+              }
             }
           }
         } catch (error) {
@@ -487,7 +506,7 @@ export function UploadResumeModal({
       // 如果不在 complete 步骤，确保清理定时器
       cleanup();
     }
-  }, [currentStep, taskId]);
+  }, [currentStep, taskId, onSuccess]);
 
   // 选择文件
   const handleSelectFiles = () => {

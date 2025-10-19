@@ -351,11 +351,16 @@ export default function AuditLogPage() {
                           className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
                           style={{
                             backgroundColor:
-                              OperationTypeColors[log.operation_type].bg,
-                            color: OperationTypeColors[log.operation_type].text,
+                              OperationTypeColors[log.operation_type]?.bg ||
+                              '#F7F8FA',
+                            color:
+                              OperationTypeColors[log.operation_type]?.text ||
+                              '#6B7280',
                           }}
                         >
-                          {OperationTypeLabels[log.operation_type]}
+                          {OperationTypeLabels[log.operation_type] ||
+                            log.operation_type ||
+                            '未知操作'}
                         </span>
                       </td>
 
