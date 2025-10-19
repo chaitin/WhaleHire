@@ -390,8 +390,8 @@ func (u *ResumeUsecase) parseResumeAsync(ctx context.Context, resumeID string) {
 	}
 
 	// 更新状态为处理中
-	if err := u.repo.UpdateStatus(ctx, resumeID, domain.ResumeStatusProcessing); err != nil {
-		u.logger.Error("Failed to update status to processing", "error", err, "resume_id", resumeID)
+	if errUpdate := u.repo.UpdateStatus(ctx, resumeID, domain.ResumeStatusProcessing); errUpdate != nil {
+		u.logger.Error("Failed to update status to processing", "error", errUpdate, "resume_id", resumeID)
 	}
 
 	// 调用LLM解析服务
@@ -402,7 +402,7 @@ func (u *ResumeUsecase) parseResumeAsync(ctx context.Context, resumeID string) {
 		return
 	}
 
-	u.logger.Info("Parsed resume data", "resume_id", resumeID, "data", parsedData)
+	u.logger.Debug("Parsed resume data", "resume_id", resumeID, "data", parsedData)
 
 	// 更新解析后的数据
 	if err := u.updateParsedData(ctx, resumeID, parsedData); err != nil {
@@ -1206,7 +1206,10 @@ func (u *ResumeUsecase) processBatchUploadAsync(ctx context.Context, taskID stri
 	// 更新任务状态为处理中
 	task.Status = domain.BatchUploadStatusProcessing
 	task.UpdatedAt = time.Now()
-	u.saveBatchUploadTaskToRedis(ctx, task)
+	if err := u.saveBatchUploadTaskToRedis(ctx, task); err != nil {
+		u.logger.Error("failed to save batch upload task to redis", "task_id", taskID, "error", err)
+		// 继续处理，不因为Redis保存失败而中断批量上传
+	}
 
 	// 使用goroutine并发处理文件，但限制并发数
 	const maxConcurrency = 3
@@ -1265,7 +1268,25 @@ func (u *ResumeUsecase) processSingleFileInBatch(ctx context.Context, taskID str
 		u.updateBatchUploadItemStatus(ctx, taskID, itemIndex, domain.BatchUploadStatusFailed, &errorMsg, nil, &now)
 		u.logger.Error("failed to upload file in batch", "task_id", taskID, "filename", fileInfo.Filename, "error", err)
 	} else {
-		// 上传成功
+		// 上传成功，创建岗位关联关系
+		if len(req.JobPositionIDs) > 0 {
+			jobAppReq := &domain.CreateJobApplicationsReq{
+				ResumeID:       resume.ID,
+				JobPositionIDs: req.JobPositionIDs,
+				Source:         req.Source,
+				Notes:          req.Notes,
+			}
+
+			_, jobAppErr := u.jobApplicationUsecase.CreateJobApplications(ctx, jobAppReq)
+			if jobAppErr != nil {
+				u.logger.Error("failed to create job applications in batch", "task_id", taskID, "resume_id", resume.ID, "error", jobAppErr)
+				// 不将此错误视为致命错误，因为简历已经上传成功
+				u.logger.Warn("resume uploaded successfully but job applications creation failed in batch", "task_id", taskID, "resume_id", resume.ID)
+			} else {
+				u.logger.Info("job applications created successfully in batch", "task_id", taskID, "resume_id", resume.ID, "job_position_count", len(req.JobPositionIDs))
+			}
+		}
+
 		u.updateBatchUploadItemStatus(ctx, taskID, itemIndex, domain.BatchUploadStatusCompleted, nil, &resume.ID, &now)
 		u.logger.Info("successfully uploaded file in batch", "task_id", taskID, "filename", fileInfo.Filename, "resume_id", resume.ID)
 	}
@@ -1299,7 +1320,10 @@ func (u *ResumeUsecase) updateFinalBatchUploadStatus(ctx context.Context, taskID
 	task.UpdatedAt = now
 	task.CompletedAt = &now
 
-	u.saveBatchUploadTaskToRedis(ctx, task)
+	if err := u.saveBatchUploadTaskToRedis(ctx, task); err != nil {
+		u.logger.Error("failed to save final batch upload task to redis", "task_id", taskID, "error", err)
+		// 即使Redis保存失败，也记录完成日志
+	}
 	u.logger.Info("batch upload task completed", "task_id", taskID, "success_count", task.SuccessCount, "failed_count", task.FailedCount)
 }
 
