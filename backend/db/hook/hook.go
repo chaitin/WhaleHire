@@ -189,6 +189,30 @@ func (f MessageFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.MessageMutation", m)
 }
 
+// The NotificationEventFunc type is an adapter to allow the use of ordinary
+// function as NotificationEvent mutator.
+type NotificationEventFunc func(context.Context, *db.NotificationEventMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f NotificationEventFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.NotificationEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.NotificationEventMutation", m)
+}
+
+// The NotificationSettingFunc type is an adapter to allow the use of ordinary
+// function as NotificationSetting mutator.
+type NotificationSettingFunc func(context.Context, *db.NotificationSettingMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f NotificationSettingFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.NotificationSettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.NotificationSettingMutation", m)
+}
+
 // The ResumeFunc type is an adapter to allow the use of ordinary
 // function as Resume mutator.
 type ResumeFunc func(context.Context, *db.ResumeMutation) (db.Value, error)

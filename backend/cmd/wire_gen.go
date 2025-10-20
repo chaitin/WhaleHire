@@ -7,37 +7,41 @@
 package main
 
 import (
-	"log/slog"
-
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/internal"
 	v1_8 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/audit/repo"
-	usecase8 "github.com/chaitin/WhaleHire/backend/internal/audit/usecase"
+	usecase9 "github.com/chaitin/WhaleHire/backend/internal/audit/usecase"
 	v1_5 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
-	repo7 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
-	usecase6 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
+	repo8 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
+	usecase7 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
 	v1_9 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
-	usecase9 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
+	usecase10 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	v1_3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
-	repo6 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
-	usecase4 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
+	repo7 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
+	usecase5 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
 	v1_6 "github.com/chaitin/WhaleHire/backend/internal/job_application/handler/v1"
 	repo4 "github.com/chaitin/WhaleHire/backend/internal/job_application/repo"
 	usecase2 "github.com/chaitin/WhaleHire/backend/internal/job_application/usecase"
 	v1_4 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
 	repo5 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
-	usecase5 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
+	usecase6 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
+	"github.com/chaitin/WhaleHire/backend/internal/notification/adapter"
+	v1_10 "github.com/chaitin/WhaleHire/backend/internal/notification/handler/v1"
+	repo6 "github.com/chaitin/WhaleHire/backend/internal/notification/repo"
+	usecase3 "github.com/chaitin/WhaleHire/backend/internal/notification/usecase"
+	"github.com/chaitin/WhaleHire/backend/internal/notification/worker"
 	v1_2 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
 	repo3 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
-	usecase3 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	usecase4 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
 	v1_7 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
-	repo8 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
+	repo9 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	service2 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
-	usecase7 "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
-	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	usecase8 "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
+	"github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
@@ -48,6 +52,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/store/s3"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 	"github.com/chaitin/WhaleHire/backend/pkg/web"
+	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -88,46 +93,57 @@ func newServer() (*Server, error) {
 	jobApplicationRepo := repo4.NewJobApplicationRepo(client)
 	jobProfileRepo := repo5.NewJobProfileRepo(client)
 	jobApplicationUsecase := usecase2.NewJobApplicationUsecase(jobApplicationRepo, jobProfileRepo)
-	resumeUsecase := usecase3.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, jobApplicationUsecase, redisClient, slogLogger)
+	notificationEventRepo := repo6.NewNotificationEventRepo(client)
+	notificationSettingRepo := repo6.NewNotificationSettingRepo(client)
+	notificationSettingUsecase := usecase3.NewNotificationSettingUsecase(notificationSettingRepo, slogLogger)
+	producer := internal.NewQueueProducer(redisClient, configConfig)
+	notificationUsecase := usecase3.NewNotificationUsecase(notificationEventRepo, notificationSettingUsecase, producer, slogLogger)
+	resumeUsecase := usecase4.NewResumeUsecase(configConfig, resumeRepo, parserService, storageService, jobApplicationUsecase, notificationUsecase, redisClient, slogLogger)
 	resumeHandler := v1_2.NewResumeHandler(web, resumeUsecase, jobApplicationUsecase, redisClient, authMiddleware, slogLogger)
-	generalAgentRepo := repo6.NewGeneralAgentRepo(client)
-	generalAgentUsecase := usecase4.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
+	generalAgentRepo := repo7.NewGeneralAgentRepo(client)
+	generalAgentUsecase := usecase5.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
 	generalAgentHandler := v1_3.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
 	jobSkillMetaRepo := repo5.NewJobSkillMetaRepo(client)
-	jobProfileUsecase := usecase5.NewJobProfileUsecase(jobProfileRepo, jobSkillMetaRepo, slogLogger)
+	jobProfileUsecase := usecase6.NewJobProfileUsecase(jobProfileRepo, jobSkillMetaRepo, slogLogger)
 	jobProfileHandler := v1_4.NewJobProfileHandler(web, jobProfileUsecase, authMiddleware, slogLogger)
-	departmentRepo := repo7.NewDepartmentRepo(client)
-	departmentUsecase := usecase6.NewDepartmentUsecase(departmentRepo, slogLogger)
+	departmentRepo := repo8.NewDepartmentRepo(client)
+	departmentUsecase := usecase7.NewDepartmentUsecase(departmentRepo, slogLogger)
 	departmentHandler := v1_5.NewDepartmentHandler(web, departmentUsecase, authMiddleware, slogLogger)
 	jobApplicationHandler := v1_6.NewJobApplicationHandler(web, jobApplicationUsecase, resumeUsecase, authMiddleware, slogLogger)
-	screeningRepo := repo8.NewScreeningRepo(client)
-	screeningNodeRunRepo := repo8.NewScreeningNodeRunRepo(client)
+	screeningRepo := repo9.NewScreeningRepo(client)
+	screeningNodeRunRepo := repo9.NewScreeningNodeRunRepo(client)
 	matchingService, err := service2.NewMatchingService(configConfig, slogLogger, screeningNodeRunRepo, screeningRepo)
 	if err != nil {
 		return nil, err
 	}
-	screeningUsecase := usecase7.NewScreeningUsecase(screeningRepo, screeningNodeRunRepo, jobProfileUsecase, resumeUsecase, matchingService, slogLogger)
+	screeningUsecase := usecase8.NewScreeningUsecase(screeningRepo, screeningNodeRunRepo, jobProfileUsecase, resumeUsecase, userRepo, matchingService, notificationUsecase, configConfig, slogLogger)
 	screeningHandler := v1_7.NewScreeningHandler(web, screeningUsecase, authMiddleware, slogLogger)
-	auditUsecase := usecase8.NewAuditUsecase(auditRepo, slogLogger)
+	auditUsecase := usecase9.NewAuditUsecase(auditRepo, slogLogger)
 	auditHandler := v1_8.NewAuditHandler(web, auditUsecase, authMiddleware, slogLogger)
-	fileUsecase := usecase9.NewFileUsecase(slogLogger, minioClient, configConfig)
+	fileUsecase := usecase10.NewFileUsecase(slogLogger, minioClient, configConfig)
 	fileHandler := v1_9.NewFileHandler(web, fileUsecase, authMiddleware)
+	consumer := internal.NewQueueConsumer(redisClient, configConfig)
+	dingTalkAdapter := adapter.NewDingTalkAdapter(notificationSettingUsecase, slogLogger)
+	notificationWorker := worker.NewNotificationWorker(consumer, notificationEventRepo, dingTalkAdapter, slogLogger)
+	notificationSettingHandler := v1_10.NewNotificationSettingHandler(web, notificationSettingUsecase, slogLogger, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
-		config:           configConfig,
-		web:              web,
-		ent:              client,
-		logger:           slogLogger,
-		userV1:           userHandler,
-		resumeV1:         resumeHandler,
-		generalagentV1:   generalAgentHandler,
-		jobprofileV1:     jobProfileHandler,
-		departmentV1:     departmentHandler,
-		jobapplicationV1: jobApplicationHandler,
-		screeningV1:      screeningHandler,
-		auditV1:          auditHandler,
-		fileV1:           fileHandler,
-		version:          versionInfo,
+		config:             configConfig,
+		web:                web,
+		ent:                client,
+		logger:             slogLogger,
+		userV1:             userHandler,
+		resumeV1:           resumeHandler,
+		generalagentV1:     generalAgentHandler,
+		jobprofileV1:       jobProfileHandler,
+		departmentV1:       departmentHandler,
+		jobapplicationV1:   jobApplicationHandler,
+		screeningV1:        screeningHandler,
+		auditV1:            auditHandler,
+		fileV1:             fileHandler,
+		notificationWorker: notificationWorker,
+		notificationV1:     notificationSettingHandler,
+		version:            versionInfo,
 	}
 	return server, nil
 }
@@ -135,18 +151,20 @@ func newServer() (*Server, error) {
 // wire.go:
 
 type Server struct {
-	config           *config.Config
-	web              *web.Web
-	ent              *db.Client
-	logger           *slog.Logger
-	userV1           *v1.UserHandler
-	resumeV1         *v1_2.ResumeHandler
-	generalagentV1   *v1_3.GeneralAgentHandler
-	jobprofileV1     *v1_4.JobProfileHandler
-	departmentV1     *v1_5.DepartmentHandler
-	jobapplicationV1 *v1_6.JobApplicationHandler
-	screeningV1      *v1_7.ScreeningHandler
-	auditV1          *v1_8.AuditHandler
-	fileV1           *v1_9.FileHandler
-	version          *version.VersionInfo
+	config             *config.Config
+	web                *web.Web
+	ent                *db.Client
+	logger             *slog.Logger
+	userV1             *v1.UserHandler
+	resumeV1           *v1_2.ResumeHandler
+	generalagentV1     *v1_3.GeneralAgentHandler
+	jobprofileV1       *v1_4.JobProfileHandler
+	departmentV1       *v1_5.DepartmentHandler
+	jobapplicationV1   *v1_6.JobApplicationHandler
+	screeningV1        *v1_7.ScreeningHandler
+	auditV1            *v1_8.AuditHandler
+	fileV1             *v1_9.FileHandler
+	notificationWorker *worker.NotificationWorker
+	notificationV1     *v1_10.NotificationSettingHandler
+	version            *version.VersionInfo
 }

@@ -31,6 +31,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/db/notificationevent"
+	"github.com/chaitin/WhaleHire/backend/db/notificationsetting"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
@@ -88,6 +90,10 @@ type Client struct {
 	JobSkillMeta *JobSkillMetaClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// NotificationEvent is the client for interacting with the NotificationEvent builders.
+	NotificationEvent *NotificationEventClient
+	// NotificationSetting is the client for interacting with the NotificationSetting builders.
+	NotificationSetting *NotificationSettingClient
 	// Resume is the client for interacting with the Resume builders.
 	Resume *ResumeClient
 	// ResumeDocumentParse is the client for interacting with the ResumeDocumentParse builders.
@@ -150,6 +156,8 @@ func (c *Client) init() {
 	c.JobSkill = NewJobSkillClient(c.config)
 	c.JobSkillMeta = NewJobSkillMetaClient(c.config)
 	c.Message = NewMessageClient(c.config)
+	c.NotificationEvent = NewNotificationEventClient(c.config)
+	c.NotificationSetting = NewNotificationSettingClient(c.config)
 	c.Resume = NewResumeClient(c.config)
 	c.ResumeDocumentParse = NewResumeDocumentParseClient(c.config)
 	c.ResumeEducation = NewResumeEducationClient(c.config)
@@ -275,6 +283,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		JobSkill:                 NewJobSkillClient(cfg),
 		JobSkillMeta:             NewJobSkillMetaClient(cfg),
 		Message:                  NewMessageClient(cfg),
+		NotificationEvent:        NewNotificationEventClient(cfg),
+		NotificationSetting:      NewNotificationSettingClient(cfg),
 		Resume:                   NewResumeClient(cfg),
 		ResumeDocumentParse:      NewResumeDocumentParseClient(cfg),
 		ResumeEducation:          NewResumeEducationClient(cfg),
@@ -327,6 +337,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		JobSkill:                 NewJobSkillClient(cfg),
 		JobSkillMeta:             NewJobSkillMetaClient(cfg),
 		Message:                  NewMessageClient(cfg),
+		NotificationEvent:        NewNotificationEventClient(cfg),
+		NotificationSetting:      NewNotificationSettingClient(cfg),
 		Resume:                   NewResumeClient(cfg),
 		ResumeDocumentParse:      NewResumeDocumentParseClient(cfg),
 		ResumeEducation:          NewResumeEducationClient(cfg),
@@ -377,11 +389,12 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Admin, c.AdminLoginHistory, c.AdminRole, c.Attachment, c.AuditLog,
 		c.Conversation, c.Department, c.JobEducationRequirement,
 		c.JobExperienceRequirement, c.JobIndustryRequirement, c.JobPosition,
-		c.JobResponsibility, c.JobSkill, c.JobSkillMeta, c.Message, c.Resume,
-		c.ResumeDocumentParse, c.ResumeEducation, c.ResumeExperience,
-		c.ResumeJobApplication, c.ResumeLog, c.ResumeProject, c.ResumeSkill, c.Role,
-		c.ScreeningNodeRun, c.ScreeningResult, c.ScreeningRunMetric, c.ScreeningTask,
-		c.ScreeningTaskResume, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.JobResponsibility, c.JobSkill, c.JobSkillMeta, c.Message,
+		c.NotificationEvent, c.NotificationSetting, c.Resume, c.ResumeDocumentParse,
+		c.ResumeEducation, c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog,
+		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
+		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
+		c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Use(hooks...)
 	}
@@ -394,11 +407,12 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Admin, c.AdminLoginHistory, c.AdminRole, c.Attachment, c.AuditLog,
 		c.Conversation, c.Department, c.JobEducationRequirement,
 		c.JobExperienceRequirement, c.JobIndustryRequirement, c.JobPosition,
-		c.JobResponsibility, c.JobSkill, c.JobSkillMeta, c.Message, c.Resume,
-		c.ResumeDocumentParse, c.ResumeEducation, c.ResumeExperience,
-		c.ResumeJobApplication, c.ResumeLog, c.ResumeProject, c.ResumeSkill, c.Role,
-		c.ScreeningNodeRun, c.ScreeningResult, c.ScreeningRunMetric, c.ScreeningTask,
-		c.ScreeningTaskResume, c.Setting, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.JobResponsibility, c.JobSkill, c.JobSkillMeta, c.Message,
+		c.NotificationEvent, c.NotificationSetting, c.Resume, c.ResumeDocumentParse,
+		c.ResumeEducation, c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog,
+		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
+		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
+		c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -437,6 +451,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.JobSkillMeta.mutate(ctx, m)
 	case *MessageMutation:
 		return c.Message.mutate(ctx, m)
+	case *NotificationEventMutation:
+		return c.NotificationEvent.mutate(ctx, m)
+	case *NotificationSettingMutation:
+		return c.NotificationSetting.mutate(ctx, m)
 	case *ResumeMutation:
 		return c.Resume.mutate(ctx, m)
 	case *ResumeDocumentParseMutation:
@@ -2958,6 +2976,276 @@ func (c *MessageClient) mutate(ctx context.Context, m *MessageMutation) (Value, 
 		return (&MessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("db: unknown Message mutation op: %q", m.Op())
+	}
+}
+
+// NotificationEventClient is a client for the NotificationEvent schema.
+type NotificationEventClient struct {
+	config
+}
+
+// NewNotificationEventClient returns a client for the NotificationEvent from the given config.
+func NewNotificationEventClient(c config) *NotificationEventClient {
+	return &NotificationEventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notificationevent.Hooks(f(g(h())))`.
+func (c *NotificationEventClient) Use(hooks ...Hook) {
+	c.hooks.NotificationEvent = append(c.hooks.NotificationEvent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notificationevent.Intercept(f(g(h())))`.
+func (c *NotificationEventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NotificationEvent = append(c.inters.NotificationEvent, interceptors...)
+}
+
+// Create returns a builder for creating a NotificationEvent entity.
+func (c *NotificationEventClient) Create() *NotificationEventCreate {
+	mutation := newNotificationEventMutation(c.config, OpCreate)
+	return &NotificationEventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of NotificationEvent entities.
+func (c *NotificationEventClient) CreateBulk(builders ...*NotificationEventCreate) *NotificationEventCreateBulk {
+	return &NotificationEventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationEventClient) MapCreateBulk(slice any, setFunc func(*NotificationEventCreate, int)) *NotificationEventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationEventCreateBulk{err: fmt.Errorf("calling to NotificationEventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationEventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationEventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for NotificationEvent.
+func (c *NotificationEventClient) Update() *NotificationEventUpdate {
+	mutation := newNotificationEventMutation(c.config, OpUpdate)
+	return &NotificationEventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationEventClient) UpdateOne(ne *NotificationEvent) *NotificationEventUpdateOne {
+	mutation := newNotificationEventMutation(c.config, OpUpdateOne, withNotificationEvent(ne))
+	return &NotificationEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationEventClient) UpdateOneID(id uuid.UUID) *NotificationEventUpdateOne {
+	mutation := newNotificationEventMutation(c.config, OpUpdateOne, withNotificationEventID(id))
+	return &NotificationEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for NotificationEvent.
+func (c *NotificationEventClient) Delete() *NotificationEventDelete {
+	mutation := newNotificationEventMutation(c.config, OpDelete)
+	return &NotificationEventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationEventClient) DeleteOne(ne *NotificationEvent) *NotificationEventDeleteOne {
+	return c.DeleteOneID(ne.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationEventClient) DeleteOneID(id uuid.UUID) *NotificationEventDeleteOne {
+	builder := c.Delete().Where(notificationevent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationEventDeleteOne{builder}
+}
+
+// Query returns a query builder for NotificationEvent.
+func (c *NotificationEventClient) Query() *NotificationEventQuery {
+	return &NotificationEventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotificationEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a NotificationEvent entity by its id.
+func (c *NotificationEventClient) Get(ctx context.Context, id uuid.UUID) (*NotificationEvent, error) {
+	return c.Query().Where(notificationevent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationEventClient) GetX(ctx context.Context, id uuid.UUID) *NotificationEvent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationEventClient) Hooks() []Hook {
+	hooks := c.hooks.NotificationEvent
+	return append(hooks[:len(hooks):len(hooks)], notificationevent.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationEventClient) Interceptors() []Interceptor {
+	inters := c.inters.NotificationEvent
+	return append(inters[:len(inters):len(inters)], notificationevent.Interceptors[:]...)
+}
+
+func (c *NotificationEventClient) mutate(ctx context.Context, m *NotificationEventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationEventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationEventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationEventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown NotificationEvent mutation op: %q", m.Op())
+	}
+}
+
+// NotificationSettingClient is a client for the NotificationSetting schema.
+type NotificationSettingClient struct {
+	config
+}
+
+// NewNotificationSettingClient returns a client for the NotificationSetting from the given config.
+func NewNotificationSettingClient(c config) *NotificationSettingClient {
+	return &NotificationSettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notificationsetting.Hooks(f(g(h())))`.
+func (c *NotificationSettingClient) Use(hooks ...Hook) {
+	c.hooks.NotificationSetting = append(c.hooks.NotificationSetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notificationsetting.Intercept(f(g(h())))`.
+func (c *NotificationSettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NotificationSetting = append(c.inters.NotificationSetting, interceptors...)
+}
+
+// Create returns a builder for creating a NotificationSetting entity.
+func (c *NotificationSettingClient) Create() *NotificationSettingCreate {
+	mutation := newNotificationSettingMutation(c.config, OpCreate)
+	return &NotificationSettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of NotificationSetting entities.
+func (c *NotificationSettingClient) CreateBulk(builders ...*NotificationSettingCreate) *NotificationSettingCreateBulk {
+	return &NotificationSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationSettingClient) MapCreateBulk(slice any, setFunc func(*NotificationSettingCreate, int)) *NotificationSettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationSettingCreateBulk{err: fmt.Errorf("calling to NotificationSettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationSettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for NotificationSetting.
+func (c *NotificationSettingClient) Update() *NotificationSettingUpdate {
+	mutation := newNotificationSettingMutation(c.config, OpUpdate)
+	return &NotificationSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationSettingClient) UpdateOne(ns *NotificationSetting) *NotificationSettingUpdateOne {
+	mutation := newNotificationSettingMutation(c.config, OpUpdateOne, withNotificationSetting(ns))
+	return &NotificationSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationSettingClient) UpdateOneID(id uuid.UUID) *NotificationSettingUpdateOne {
+	mutation := newNotificationSettingMutation(c.config, OpUpdateOne, withNotificationSettingID(id))
+	return &NotificationSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for NotificationSetting.
+func (c *NotificationSettingClient) Delete() *NotificationSettingDelete {
+	mutation := newNotificationSettingMutation(c.config, OpDelete)
+	return &NotificationSettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationSettingClient) DeleteOne(ns *NotificationSetting) *NotificationSettingDeleteOne {
+	return c.DeleteOneID(ns.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationSettingClient) DeleteOneID(id uuid.UUID) *NotificationSettingDeleteOne {
+	builder := c.Delete().Where(notificationsetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationSettingDeleteOne{builder}
+}
+
+// Query returns a query builder for NotificationSetting.
+func (c *NotificationSettingClient) Query() *NotificationSettingQuery {
+	return &NotificationSettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotificationSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a NotificationSetting entity by its id.
+func (c *NotificationSettingClient) Get(ctx context.Context, id uuid.UUID) (*NotificationSetting, error) {
+	return c.Query().Where(notificationsetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationSettingClient) GetX(ctx context.Context, id uuid.UUID) *NotificationSetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationSettingClient) Hooks() []Hook {
+	hooks := c.hooks.NotificationSetting
+	return append(hooks[:len(hooks):len(hooks)], notificationsetting.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationSettingClient) Interceptors() []Interceptor {
+	inters := c.inters.NotificationSetting
+	return append(inters[:len(inters):len(inters)], notificationsetting.Interceptors[:]...)
+}
+
+func (c *NotificationSettingClient) mutate(ctx context.Context, m *NotificationSettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationSettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationSettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown NotificationSetting mutation op: %q", m.Op())
 	}
 }
 
@@ -6079,20 +6367,21 @@ type (
 		Admin, AdminLoginHistory, AdminRole, Attachment, AuditLog, Conversation,
 		Department, JobEducationRequirement, JobExperienceRequirement,
 		JobIndustryRequirement, JobPosition, JobResponsibility, JobSkill, JobSkillMeta,
-		Message, Resume, ResumeDocumentParse, ResumeEducation, ResumeExperience,
-		ResumeJobApplication, ResumeLog, ResumeProject, ResumeSkill, Role,
-		ScreeningNodeRun, ScreeningResult, ScreeningRunMetric, ScreeningTask,
-		ScreeningTaskResume, Setting, User, UserIdentity, UserLoginHistory []ent.Hook
+		Message, NotificationEvent, NotificationSetting, Resume, ResumeDocumentParse,
+		ResumeEducation, ResumeExperience, ResumeJobApplication, ResumeLog,
+		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
+		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
+		UserIdentity, UserLoginHistory []ent.Hook
 	}
 	inters struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, AuditLog, Conversation,
 		Department, JobEducationRequirement, JobExperienceRequirement,
 		JobIndustryRequirement, JobPosition, JobResponsibility, JobSkill, JobSkillMeta,
-		Message, Resume, ResumeDocumentParse, ResumeEducation, ResumeExperience,
-		ResumeJobApplication, ResumeLog, ResumeProject, ResumeSkill, Role,
-		ScreeningNodeRun, ScreeningResult, ScreeningRunMetric, ScreeningTask,
-		ScreeningTaskResume, Setting, User, UserIdentity,
-		UserLoginHistory []ent.Interceptor
+		Message, NotificationEvent, NotificationSetting, Resume, ResumeDocumentParse,
+		ResumeEducation, ResumeExperience, ResumeJobApplication, ResumeLog,
+		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
+		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
+		UserIdentity, UserLoginHistory []ent.Interceptor
 	}
 )
 

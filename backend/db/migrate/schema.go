@@ -477,6 +477,110 @@ var (
 			},
 		},
 	}
+	// NotificationEventsColumns holds the columns for the "notification_events" table.
+	NotificationEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "channel", Type: field.TypeString, Default: "dingtalk"},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "template_id", Type: field.TypeString},
+		{Name: "target", Type: field.TypeString},
+		{Name: "retry_count", Type: field.TypeInt, Default: 0},
+		{Name: "max_retry", Type: field.TypeInt, Default: 3},
+		{Name: "timeout", Type: field.TypeInt, Default: 300},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "trace_id", Type: field.TypeString, Nullable: true},
+		{Name: "scheduled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "delivered_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// NotificationEventsTable holds the schema information for the "notification_events" table.
+	NotificationEventsTable = &schema.Table{
+		Name:       "notification_events",
+		Columns:    NotificationEventsColumns,
+		PrimaryKey: []*schema.Column{NotificationEventsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "notificationevent_event_type",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[2]},
+			},
+			{
+				Name:    "notificationevent_channel",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[3]},
+			},
+			{
+				Name:    "notificationevent_status",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[4]},
+			},
+			{
+				Name:    "notificationevent_trace_id",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[12]},
+			},
+			{
+				Name:    "notificationevent_scheduled_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[13]},
+			},
+			{
+				Name:    "notificationevent_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[15]},
+			},
+			{
+				Name:    "notificationevent_status_scheduled_at",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[4], NotificationEventsColumns[13]},
+			},
+			{
+				Name:    "notificationevent_event_type_status",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationEventsColumns[2], NotificationEventsColumns[4]},
+			},
+		},
+	}
+	// NotificationSettingsColumns holds the columns for the "notification_settings" table.
+	NotificationSettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "channel", Type: field.TypeString},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "dingtalk_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "max_retry", Type: field.TypeInt, Default: 3},
+		{Name: "timeout", Type: field.TypeInt, Default: 300},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// NotificationSettingsTable holds the schema information for the "notification_settings" table.
+	NotificationSettingsTable = &schema.Table{
+		Name:       "notification_settings",
+		Columns:    NotificationSettingsColumns,
+		PrimaryKey: []*schema.Column{NotificationSettingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "notificationsetting_channel",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationSettingsColumns[2]},
+			},
+			{
+				Name:    "notificationsetting_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationSettingsColumns[3]},
+			},
+			{
+				Name:    "notificationsetting_channel_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{NotificationSettingsColumns[2], NotificationSettingsColumns[3]},
+			},
+		},
+	}
 	// ResumesColumns holds the columns for the "resumes" table.
 	ResumesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1208,6 +1312,8 @@ var (
 		JobSkillTable,
 		JobSkillmetaTable,
 		MessagesTable,
+		NotificationEventsTable,
+		NotificationSettingsTable,
 		ResumesTable,
 		ResumeDocumentParsesTable,
 		ResumeEducationsTable,
@@ -1288,6 +1394,12 @@ func init() {
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MessagesTable.Annotation = &entsql.Annotation{
 		Table: "messages",
+	}
+	NotificationEventsTable.Annotation = &entsql.Annotation{
+		Table: "notification_events",
+	}
+	NotificationSettingsTable.Annotation = &entsql.Annotation{
+		Table: "notification_settings",
 	}
 	ResumesTable.ForeignKeys[0].RefTable = UsersTable
 	ResumesTable.Annotation = &entsql.Annotation{

@@ -95,8 +95,8 @@ type AuditLog struct {
 	OperatorType   consts.OperatorType    `json:"operator_type"`           // 操作者类型
 	OperatorID     *string                `json:"operator_id,omitempty"`   // 操作者ID
 	OperatorName   *string                `json:"operator_name,omitempty"` // 操作者名称
-	OperationType  consts.OperationType   `json:"operation_type"`          // 操作类型
-	ResourceType   consts.ResourceType    `json:"resource_type"`           // 资源类型
+	OperationType  consts.OperationType   `json:"operation_type"`          // 操作类型: create创建、update更新、delete删除、view查看（敏感数据）、login登录、logout登出
+	ResourceType   consts.ResourceType    `json:"resource_type"`           // 资源类型: user用户、admin管理员、role角色、department部门、job_position职位、resume简历、screening筛选任务、setting系统设置、attachment附件、conversation对话、message消息
 	ResourceID     *string                `json:"resource_id,omitempty"`   // 资源ID
 	ResourceName   *string                `json:"resource_name,omitempty"` // 资源名称
 	RequestMethod  string                 `json:"request_method"`          // 请求方法

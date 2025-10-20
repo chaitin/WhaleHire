@@ -21,6 +21,11 @@ import (
 	jobprofilerepo "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
 	jobprofileusecase "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	middleware "github.com/chaitin/WhaleHire/backend/internal/middleware"
+	notificationadapter "github.com/chaitin/WhaleHire/backend/internal/notification/adapter"
+	notificationV1 "github.com/chaitin/WhaleHire/backend/internal/notification/handler/v1"
+	notificationrepo "github.com/chaitin/WhaleHire/backend/internal/notification/repo"
+	notificationusecase "github.com/chaitin/WhaleHire/backend/internal/notification/usecase"
+	notificationworker "github.com/chaitin/WhaleHire/backend/internal/notification/worker"
 	resumeV1 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
 	resumerepo "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	resumeservice "github.com/chaitin/WhaleHire/backend/internal/resume/service"
@@ -95,5 +100,12 @@ var Provider = wire.NewSet(
 	screeningservice.NewMatchingService,
 	screeningusecase.NewScreeningUsecase,
 	screeningV1.NewScreeningHandler,
+	notificationV1.NewNotificationSettingHandler,
+	notificationrepo.NewNotificationEventRepo,
+	notificationrepo.NewNotificationSettingRepo,
+	notificationusecase.NewNotificationUsecase,
+	notificationusecase.NewNotificationSettingUsecase,
+	notificationadapter.NewDingTalkAdapter,
+	notificationworker.NewNotificationWorker,
 	NewAPIHandlers,
 )

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/domain"
@@ -18,12 +19,14 @@ import (
 
 // ScreeningUsecase 筛选业务实现
 type ScreeningUsecase struct {
-	repo          domain.ScreeningRepo
-	nodeRunRepo   domain.ScreeningNodeRunRepo
-	jobUsecase    domain.JobProfileUsecase
-	resumeUsecase domain.ResumeUsecase
-	matcher       service.MatchingService
-	logger        *slog.Logger
+	repo                domain.ScreeningRepo
+	nodeRunRepo         domain.ScreeningNodeRunRepo
+	jobUsecase          domain.JobProfileUsecase
+	resumeUsecase       domain.ResumeUsecase
+	matcher             service.MatchingService
+	notificationUsecase domain.NotificationUsecase
+	config              *config.Config
+	logger              *slog.Logger
 	// 任务上下文管理器
 	taskContexts sync.Map // map[uuid.UUID]context.CancelFunc
 }
@@ -86,6 +89,12 @@ func (u *ScreeningUsecase) processScreeningTaskAsync(task *db.ScreeningTask, tas
 		u.logger.Warn("更新任务完成状态失败", slog.Any("task_id", task.ID), slog.Any("err", err))
 	}
 
+	// 发布任务完成通知
+	if u.notificationUsecase != nil {
+		avgScore := safeAvg(scoreSum, scoreCnt)
+		u.publishScreeningTaskCompletedNotification(processCtx, task, processed, succeeded, avgScore)
+	}
+
 	metric := &db.ScreeningRunMetric{
 		TaskID:       task.ID,
 		AvgScore:     safeAvg(scoreSum, scoreCnt),
@@ -105,19 +114,24 @@ func NewScreeningUsecase(
 	nodeRunRepo domain.ScreeningNodeRunRepo,
 	jobUsecase domain.JobProfileUsecase,
 	resumeUsecase domain.ResumeUsecase,
+	userRepo domain.UserRepo,
 	matcher service.MatchingService,
+	notificationUsecase domain.NotificationUsecase,
+	config *config.Config,
 	logger *slog.Logger,
 ) domain.ScreeningUsecase {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	return &ScreeningUsecase{
-		repo:          repo,
-		nodeRunRepo:   nodeRunRepo,
-		jobUsecase:    jobUsecase,
-		resumeUsecase: resumeUsecase,
-		matcher:       matcher,
-		logger:        logger.With("module", "screening_usecase"),
+		repo:                repo,
+		nodeRunRepo:         nodeRunRepo,
+		jobUsecase:          jobUsecase,
+		resumeUsecase:       resumeUsecase,
+		matcher:             matcher,
+		notificationUsecase: notificationUsecase,
+		config:              config,
+		logger:              logger.With("module", "screening_usecase"),
 	}
 }
 
@@ -763,61 +777,58 @@ func float64ToPtr(f float64) *float64 {
 
 // updateResumeRankings 更新任务内简历的排名
 func (u *ScreeningUsecase) updateResumeRankings(ctx context.Context, taskID uuid.UUID) error {
-	// 获取任务内所有已完成的简历及其分数
-	filter := &domain.ScreeningTaskResumeFilter{
+	// 获取任务的所有成功处理的简历结果，按分数降序排列
+	filter := &domain.ScreeningResultFilter{
 		TaskID: &taskID,
-		Status: (*consts.ScreeningTaskResumeStatus)(&[]consts.ScreeningTaskResumeStatus{consts.ScreeningTaskResumeStatusCompleted}[0]),
 	}
-
-	taskResumes, _, err := u.repo.ListScreeningTaskResumes(ctx, filter)
+	results, _, err := u.repo.ListScreeningResults(ctx, filter)
 	if err != nil {
-		return fmt.Errorf("获取任务简历列表失败: %w", err)
+		return fmt.Errorf("获取筛选结果失败: %w", err)
 	}
 
-	if len(taskResumes) == 0 {
-		return nil // 没有已完成的简历，无需排名
-	}
-
-	// 按分数降序排序简历
-	type resumeScore struct {
-		resumeID uuid.UUID
-		score    float64
-	}
-
-	var resumeScores []resumeScore
-	for _, tr := range taskResumes {
-		if tr.Score != 0 { // 只处理有分数的简历
-			resumeScores = append(resumeScores, resumeScore{
-				resumeID: tr.ResumeID,
-				score:    tr.Score,
-			})
+	// 按分数降序排序并更新排名
+	for i, result := range results {
+		ranking := i + 1
+		if err := u.repo.UpdateScreeningTaskResume(ctx, taskID, result.ResumeID, map[string]any{
+			"ranking": ranking,
+		}); err != nil {
+			u.logger.Warn("更新简历排名失败",
+				slog.Any("task_id", taskID),
+				slog.Any("resume_id", result.ResumeID),
+				slog.Any("ranking", ranking),
+				slog.Any("err", err))
 		}
 	}
 
-	if len(resumeScores) == 0 {
-		return nil // 没有有效分数的简历
+	return nil
+}
+
+// publishScreeningTaskCompletedNotification 发布筛选任务完成通知
+func (u *ScreeningUsecase) publishScreeningTaskCompletedNotification(ctx context.Context, task *db.ScreeningTask, totalCount, passedCount int, avgScore float64) {
+	// 获取用户名，如果创建者信息已预加载
+	var userName string
+	if task.Edges.Creator != nil {
+		userName = task.Edges.Creator.Username
+	}
+	// 如果用户名为空，使用用户ID作为fallback
+	if userName == "" {
+		userName = task.CreatedBy.String()
 	}
 
-	// 按分数降序排序
-	for i := 0; i < len(resumeScores)-1; i++ {
-		for j := i + 1; j < len(resumeScores); j++ {
-			if resumeScores[i].score < resumeScores[j].score {
-				resumeScores[i], resumeScores[j] = resumeScores[j], resumeScores[i]
-			}
-		}
+	payload := domain.ScreeningTaskCompletedPayload{
+		TaskID:      task.ID,
+		UserID:      task.CreatedBy,
+		UserName:    userName,
+		JobID:       task.JobPositionID,
+		JobName:     task.Edges.JobPosition.Name,
+		TotalCount:  totalCount,
+		PassedCount: passedCount,
+		AvgScore:    avgScore,
+		CompletedAt: time.Now(),
 	}
 
-	// 构建排名映射，处理相同分数的情况
-	rankings := make(map[uuid.UUID]int)
-	currentRank := 1
-
-	for i, rs := range resumeScores {
-		if i > 0 && resumeScores[i-1].score != rs.score {
-			currentRank = i + 1 // 分数不同时，排名为当前位置+1
-		}
-		rankings[rs.resumeID] = currentRank
+	if err := u.notificationUsecase.PublishEvent(ctx, payload); err != nil {
+		// 记录错误但不影响主流程
+		u.logger.Error("Failed to publish screening task completed notification", slog.Any("error", err), slog.Any("task_id", task.ID))
 	}
-
-	// 批量更新排名
-	return u.repo.BatchUpdateScreeningTaskResumeRankings(ctx, taskID, rankings)
 }

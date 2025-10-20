@@ -20,6 +20,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/db/notificationevent"
+	"github.com/chaitin/WhaleHire/backend/db/notificationsetting"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
@@ -400,6 +402,80 @@ func init() {
 	messageDescID := messageFields[0].Descriptor()
 	// message.DefaultID holds the default value on creation for the id field.
 	message.DefaultID = messageDescID.Default.(func() uuid.UUID)
+	notificationeventMixin := schema.NotificationEvent{}.Mixin()
+	notificationeventMixinHooks0 := notificationeventMixin[0].Hooks()
+	notificationevent.Hooks[0] = notificationeventMixinHooks0[0]
+	notificationeventMixinInters0 := notificationeventMixin[0].Interceptors()
+	notificationevent.Interceptors[0] = notificationeventMixinInters0[0]
+	notificationeventFields := schema.NotificationEvent{}.Fields()
+	_ = notificationeventFields
+	// notificationeventDescChannel is the schema descriptor for channel field.
+	notificationeventDescChannel := notificationeventFields[2].Descriptor()
+	// notificationevent.DefaultChannel holds the default value on creation for the channel field.
+	notificationevent.DefaultChannel = consts.NotificationChannel(notificationeventDescChannel.Default.(string))
+	// notificationeventDescStatus is the schema descriptor for status field.
+	notificationeventDescStatus := notificationeventFields[3].Descriptor()
+	// notificationevent.DefaultStatus holds the default value on creation for the status field.
+	notificationevent.DefaultStatus = consts.NotificationStatus(notificationeventDescStatus.Default.(string))
+	// notificationeventDescRetryCount is the schema descriptor for retry_count field.
+	notificationeventDescRetryCount := notificationeventFields[7].Descriptor()
+	// notificationevent.DefaultRetryCount holds the default value on creation for the retry_count field.
+	notificationevent.DefaultRetryCount = notificationeventDescRetryCount.Default.(int)
+	// notificationeventDescMaxRetry is the schema descriptor for max_retry field.
+	notificationeventDescMaxRetry := notificationeventFields[8].Descriptor()
+	// notificationevent.DefaultMaxRetry holds the default value on creation for the max_retry field.
+	notificationevent.DefaultMaxRetry = notificationeventDescMaxRetry.Default.(int)
+	// notificationeventDescTimeout is the schema descriptor for timeout field.
+	notificationeventDescTimeout := notificationeventFields[9].Descriptor()
+	// notificationevent.DefaultTimeout holds the default value on creation for the timeout field.
+	notificationevent.DefaultTimeout = notificationeventDescTimeout.Default.(int)
+	// notificationeventDescCreatedAt is the schema descriptor for created_at field.
+	notificationeventDescCreatedAt := notificationeventFields[14].Descriptor()
+	// notificationevent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notificationevent.DefaultCreatedAt = notificationeventDescCreatedAt.Default.(func() time.Time)
+	// notificationeventDescUpdatedAt is the schema descriptor for updated_at field.
+	notificationeventDescUpdatedAt := notificationeventFields[15].Descriptor()
+	// notificationevent.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	notificationevent.DefaultUpdatedAt = notificationeventDescUpdatedAt.Default.(func() time.Time)
+	// notificationevent.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	notificationevent.UpdateDefaultUpdatedAt = notificationeventDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// notificationeventDescID is the schema descriptor for id field.
+	notificationeventDescID := notificationeventFields[0].Descriptor()
+	// notificationevent.DefaultID holds the default value on creation for the id field.
+	notificationevent.DefaultID = notificationeventDescID.Default.(func() uuid.UUID)
+	notificationsettingMixin := schema.NotificationSetting{}.Mixin()
+	notificationsettingMixinHooks0 := notificationsettingMixin[0].Hooks()
+	notificationsetting.Hooks[0] = notificationsettingMixinHooks0[0]
+	notificationsettingMixinInters0 := notificationsettingMixin[0].Interceptors()
+	notificationsetting.Interceptors[0] = notificationsettingMixinInters0[0]
+	notificationsettingFields := schema.NotificationSetting{}.Fields()
+	_ = notificationsettingFields
+	// notificationsettingDescEnabled is the schema descriptor for enabled field.
+	notificationsettingDescEnabled := notificationsettingFields[2].Descriptor()
+	// notificationsetting.DefaultEnabled holds the default value on creation for the enabled field.
+	notificationsetting.DefaultEnabled = notificationsettingDescEnabled.Default.(bool)
+	// notificationsettingDescMaxRetry is the schema descriptor for max_retry field.
+	notificationsettingDescMaxRetry := notificationsettingFields[4].Descriptor()
+	// notificationsetting.DefaultMaxRetry holds the default value on creation for the max_retry field.
+	notificationsetting.DefaultMaxRetry = notificationsettingDescMaxRetry.Default.(int)
+	// notificationsettingDescTimeout is the schema descriptor for timeout field.
+	notificationsettingDescTimeout := notificationsettingFields[5].Descriptor()
+	// notificationsetting.DefaultTimeout holds the default value on creation for the timeout field.
+	notificationsetting.DefaultTimeout = notificationsettingDescTimeout.Default.(int)
+	// notificationsettingDescCreatedAt is the schema descriptor for created_at field.
+	notificationsettingDescCreatedAt := notificationsettingFields[7].Descriptor()
+	// notificationsetting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notificationsetting.DefaultCreatedAt = notificationsettingDescCreatedAt.Default.(func() time.Time)
+	// notificationsettingDescUpdatedAt is the schema descriptor for updated_at field.
+	notificationsettingDescUpdatedAt := notificationsettingFields[8].Descriptor()
+	// notificationsetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	notificationsetting.DefaultUpdatedAt = notificationsettingDescUpdatedAt.Default.(func() time.Time)
+	// notificationsetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	notificationsetting.UpdateDefaultUpdatedAt = notificationsettingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// notificationsettingDescID is the schema descriptor for id field.
+	notificationsettingDescID := notificationsettingFields[0].Descriptor()
+	// notificationsetting.DefaultID holds the default value on creation for the id field.
+	notificationsetting.DefaultID = notificationsettingDescID.Default.(func() uuid.UUID)
 	resumeMixin := schema.Resume{}.Mixin()
 	resumeMixinHooks0 := resumeMixin[0].Hooks()
 	resume.Hooks[0] = resumeMixinHooks0[0]

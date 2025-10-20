@@ -72,7 +72,11 @@ func (r *ScreeningRepo) CreateScreeningTask(ctx context.Context, task *db.Screen
 
 // GetScreeningTask 查询任务
 func (r *ScreeningRepo) GetScreeningTask(ctx context.Context, id uuid.UUID) (*db.ScreeningTask, error) {
-	task, err := r.db.ScreeningTask.Get(ctx, id)
+	task, err := r.db.ScreeningTask.Query().
+		Where(screeningtask.ID(id)).
+		WithCreator().     // 预加载创建者信息
+		WithJobPosition(). // 预加载职位信息
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}

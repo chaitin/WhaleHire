@@ -23,6 +23,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/db/notificationevent"
+	"github.com/chaitin/WhaleHire/backend/db/notificationsetting"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
@@ -503,6 +505,60 @@ func (f TraverseMessage) Traverse(ctx context.Context, q db.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *db.MessageQuery", q)
+}
+
+// The NotificationEventFunc type is an adapter to allow the use of ordinary function as a Querier.
+type NotificationEventFunc func(context.Context, *db.NotificationEventQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f NotificationEventFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.NotificationEventQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.NotificationEventQuery", q)
+}
+
+// The TraverseNotificationEvent type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseNotificationEvent func(context.Context, *db.NotificationEventQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseNotificationEvent) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseNotificationEvent) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.NotificationEventQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.NotificationEventQuery", q)
+}
+
+// The NotificationSettingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type NotificationSettingFunc func(context.Context, *db.NotificationSettingQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f NotificationSettingFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.NotificationSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.NotificationSettingQuery", q)
+}
+
+// The TraverseNotificationSetting type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseNotificationSetting func(context.Context, *db.NotificationSettingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseNotificationSetting) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseNotificationSetting) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.NotificationSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.NotificationSettingQuery", q)
 }
 
 // The ResumeFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1024,6 +1080,10 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.JobSkillMetaQuery, predicate.JobSkillMeta, jobskillmeta.OrderOption]{typ: db.TypeJobSkillMeta, tq: q}, nil
 	case *db.MessageQuery:
 		return &query[*db.MessageQuery, predicate.Message, message.OrderOption]{typ: db.TypeMessage, tq: q}, nil
+	case *db.NotificationEventQuery:
+		return &query[*db.NotificationEventQuery, predicate.NotificationEvent, notificationevent.OrderOption]{typ: db.TypeNotificationEvent, tq: q}, nil
+	case *db.NotificationSettingQuery:
+		return &query[*db.NotificationSettingQuery, predicate.NotificationSetting, notificationsetting.OrderOption]{typ: db.TypeNotificationSetting, tq: q}, nil
 	case *db.ResumeQuery:
 		return &query[*db.ResumeQuery, predicate.Resume, resume.OrderOption]{typ: db.TypeResume, tq: q}, nil
 	case *db.ResumeDocumentParseQuery:

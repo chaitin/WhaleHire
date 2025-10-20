@@ -221,6 +221,34 @@ func (m *MessageQuery) Page(ctx context.Context, page, size int) ([]*Message, *P
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (ne *NotificationEventQuery) Page(ctx context.Context, page, size int) ([]*NotificationEvent, *PageInfo, error) {
+	cnt, err := ne.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := ne.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
+func (ns *NotificationSettingQuery) Page(ctx context.Context, page, size int) ([]*NotificationSetting, *PageInfo, error) {
+	cnt, err := ns.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := ns.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (r *ResumeQuery) Page(ctx context.Context, page, size int) ([]*Resume, *PageInfo, error) {
 	cnt, err := r.Count(ctx)
 	if err != nil {
