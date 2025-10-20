@@ -51,6 +51,12 @@ type JobSkillMeta func(*sql.Selector)
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 
+// NotificationEvent is the predicate function for notificationevent builders.
+type NotificationEvent func(*sql.Selector)
+
+// NotificationSetting is the predicate function for notificationsetting builders.
+type NotificationSetting func(*sql.Selector)
+
 // Resume is the predicate function for resume builders.
 type Resume func(*sql.Selector)
 

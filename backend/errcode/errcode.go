@@ -48,4 +48,12 @@ var (
 	ErrScreeningTaskNotFound     = web.NewBadRequestBusinessErr(70000, "err-screening-task-not-found")
 	ErrScreeningTaskRunning      = web.NewBadRequestBusinessErr(70001, "err-screening-task-running")
 	ErrScreeningTaskDeleteFailed = web.NewBadRequestBusinessErr(70002, "err-screening-task-delete-failed")
+
+	// ========== 通知设置模块 (80000-89999) ==========
+	ErrNotificationSettingCreateFailed = web.NewBadRequestBusinessErr(80000, "err-notification-setting-create-failed")
+	ErrNotificationSettingGetFailed    = web.NewBadRequestBusinessErr(80001, "err-notification-setting-get-failed")
+	ErrNotificationSettingListFailed   = web.NewBadRequestBusinessErr(80002, "err-notification-setting-list-failed")
+	ErrNotificationSettingUpdateFailed = web.NewBadRequestBusinessErr(80003, "err-notification-setting-update-failed")
+	ErrNotificationSettingDeleteFailed = web.NewBadRequestBusinessErr(80004, "err-notification-setting-delete-failed")
+	ErrNotificationSettingNotFound     = web.NewBadRequestBusinessErr(80005, "err-notification-setting-not-found")
 )

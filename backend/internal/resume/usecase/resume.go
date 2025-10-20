@@ -23,6 +23,7 @@ type ResumeUsecase struct {
 	parserService         domain.ParserService
 	storageService        domain.StorageService
 	jobApplicationUsecase domain.JobApplicationUsecase
+	notificationUsecase   domain.NotificationUsecase
 	redis                 *redis.Client
 	logger                *slog.Logger
 }
@@ -34,6 +35,7 @@ func NewResumeUsecase(
 	parserService domain.ParserService,
 	storageService domain.StorageService,
 	jobApplicationUsecase domain.JobApplicationUsecase,
+	notificationUsecase domain.NotificationUsecase,
 	redis *redis.Client,
 	logger *slog.Logger,
 ) domain.ResumeUsecase {
@@ -43,6 +45,7 @@ func NewResumeUsecase(
 		parserService:         parserService,
 		storageService:        storageService,
 		jobApplicationUsecase: jobApplicationUsecase,
+		notificationUsecase:   notificationUsecase,
 		redis:                 redis,
 		logger:                logger,
 	}
@@ -50,6 +53,11 @@ func NewResumeUsecase(
 
 // Upload 上传简历
 func (u *ResumeUsecase) Upload(ctx context.Context, req *domain.UploadResumeReq) (*domain.Resume, error) {
+	return u.uploadWithOptions(ctx, req, false)
+}
+
+// uploadWithOptions 内部上传函数，支持控制是否等待解析完成
+func (u *ResumeUsecase) uploadWithOptions(ctx context.Context, req *domain.UploadResumeReq, waitForParsing bool) (*domain.Resume, error) {
 	// 上传文件到存储服务
 	fileInfo, err := u.storageService.Upload(ctx, req.File, req.Filename)
 	if err != nil {
@@ -79,8 +87,22 @@ func (u *ResumeUsecase) Upload(ctx context.Context, req *domain.UploadResumeReq)
 		return nil, fmt.Errorf("failed to create resume: %w", err)
 	}
 
-	// 异步解析简历 - 使用独立的context避免HTTP请求context被取消
-	go u.parseResumeAsync(context.Background(), createdResume.ID.String())
+	if waitForParsing {
+		// 同步解析简历（用于批量上传）
+		u.parseResumeSync(ctx, createdResume.ID.String())
+
+		// 重新获取更新后的简历数据
+		updatedResume, err := u.repo.GetByID(ctx, createdResume.ID.String())
+		if err != nil {
+			u.logger.Error("Failed to get updated resume after parsing", "error", err)
+			// 即使获取失败，也返回原始简历数据
+		} else {
+			createdResume = updatedResume
+		}
+	} else {
+		// 异步解析简历 - 使用独立的context避免HTTP请求context被取消
+		go u.parseResumeAsync(context.Background(), createdResume.ID.String())
+	}
 
 	// 转换为domain对象
 	result := &domain.Resume{}
@@ -417,6 +439,132 @@ func (u *ResumeUsecase) parseResumeAsync(ctx context.Context, resumeID string) {
 	}
 
 	u.logger.Info("Resume parsed successfully", "resume_id", resumeID)
+}
+
+// parseResumeSync 同步解析简历，用于批量上传场景
+func (u *ResumeUsecase) parseResumeSync(ctx context.Context, resumeID string) error {
+	// 获取简历信息
+	resume, err := u.repo.GetByID(ctx, resumeID)
+	if err != nil {
+		u.logger.Error("Failed to get resume for parsing", "error", err, "resume_id", resumeID)
+		u.updateParseError(ctx, resumeID, fmt.Sprintf("获取简历失败: %v", err))
+		return err
+	}
+
+	// 更新状态为处理中
+	if errUpdate := u.repo.UpdateStatus(ctx, resumeID, domain.ResumeStatusProcessing); errUpdate != nil {
+		u.logger.Error("Failed to update status to processing", "error", errUpdate, "resume_id", resumeID)
+	}
+
+	// 调用LLM解析服务
+	parsedData, err := u.parserService.ParseResume(ctx, resumeID, resume.ResumeFileURL, "pdf")
+	if err != nil {
+		u.logger.Error("Failed to parse resume", "error", err, "resume_id", resumeID)
+		u.updateParseError(ctx, resumeID, fmt.Sprintf("解析失败: %v", err))
+		return err
+	}
+
+	u.logger.Debug("Parsed resume data", "resume_id", resumeID, "data", parsedData)
+
+	// 更新解析后的数据
+	if err := u.updateParsedData(ctx, resumeID, parsedData); err != nil {
+		u.logger.Error("Failed to update parsed data", "error", err, "resume_id", resumeID)
+		u.updateParseError(ctx, resumeID, fmt.Sprintf("保存解析数据失败: %v", err))
+		return err
+	}
+
+	// 更新状态为完成
+	if err := u.repo.UpdateStatus(ctx, resumeID, domain.ResumeStatusCompleted); err != nil {
+		u.logger.Error("Failed to update status to completed", "error", err, "resume_id", resumeID)
+		return err
+	}
+
+	u.logger.Info("Resume parsed successfully", "resume_id", resumeID)
+	return nil
+}
+
+// publishResumeParseCompletedNotification 发布简历解析完成通知
+func (u *ResumeUsecase) publishResumeParseCompletedNotification(ctx context.Context, resumeID string, success bool, errorMsg string) {
+	// 获取简历信息
+	resume, err := u.repo.GetByID(ctx, resumeID)
+	if err != nil {
+		u.logger.Error("Failed to get resume for notification", "error", err, "resume_id", resumeID)
+		return
+	}
+
+	// 解析UUID
+	resumeUUID, err := uuid.Parse(resumeID)
+	if err != nil {
+		u.logger.Error("Invalid resume ID for notification", "error", err, "resume_id", resumeID)
+		return
+	}
+
+	// 创建通知负载
+	payload := domain.ResumeParseCompletedPayload{
+		ResumeID: resumeUUID,
+		UserID:   resume.UploaderID,
+		FileName: resume.Name,
+		ParsedAt: time.Now(),
+		Success:  success,
+		ErrorMsg: errorMsg,
+	}
+
+	// 发布通知事件
+	if err := u.notificationUsecase.PublishEvent(ctx, payload); err != nil {
+		u.logger.Error("Failed to publish resume parse completed notification", "error", err, "resume_id", resumeID)
+	}
+}
+
+// publishBatchResumeParseCompletedNotification 发送批量简历解析完成通知
+func (u *ResumeUsecase) publishBatchResumeParseCompletedNotification(ctx context.Context, task *domain.BatchUploadTask) {
+	// 解析UUID
+	uploaderUUID, err := uuid.Parse(task.UploaderID)
+	if err != nil {
+		u.logger.Error("Invalid uploader ID for batch notification", "error", err, "uploader_id", task.UploaderID)
+		return
+	}
+
+	// 获取上传人姓名
+	uploaderName := ""
+	// 通过任何一个成功的简历获取用户信息
+	for _, item := range task.Items {
+		if item.ResumeID != nil && item.Status == domain.BatchUploadStatusCompleted {
+			resume, err := u.repo.GetByID(ctx, *item.ResumeID)
+			if err == nil && resume.Edges.User != nil {
+				uploaderName = resume.Edges.User.Username
+				break
+			}
+		}
+	}
+
+	// 如果没有成功的简历，使用UploaderID作为默认值
+	if uploaderName == "" {
+		uploaderName = task.UploaderID
+	}
+
+	// 处理Source字段
+	source := ""
+	if task.Source != nil {
+		source = *task.Source
+	}
+
+	// 创建通知负载
+	payload := domain.BatchResumeParseCompletedPayload{
+		TaskID:         task.TaskID,
+		UploaderID:     uploaderUUID,
+		UploaderName:   uploaderName,
+		TotalCount:     task.TotalCount,
+		SuccessCount:   task.SuccessCount,
+		FailedCount:    task.FailedCount,
+		JobPositionIDs: task.JobPositionIDs,
+		Source:         source,
+		CompletedAt:    time.Now(),
+	}
+
+	// 发布通知事件
+	if err := u.notificationUsecase.PublishEvent(ctx, payload); err != nil {
+		u.logger.Error("Failed to publish batch resume parse completed notification", "error", err, "task_id", task.TaskID)
+	}
 }
 
 // updateParseError 更新解析错误
@@ -1074,77 +1222,19 @@ func (u *ResumeUsecase) GetBatchUploadStatus(ctx context.Context, taskID string)
 	}
 
 	// 汇总各个简历项目的状态
-	for i := range task.Items {
-		itemKey := fmt.Sprintf("batch_upload_item:%s:%d", taskID, i)
-		itemData, err := u.redis.Get(ctx, itemKey).Result()
-		if err != nil {
-			if err == redis.Nil {
-				// 项目状态不存在，保持原有状态（pending）
-				continue
-			}
-			u.logger.Error("failed to get item status", "task_id", taskID, "item_index", i, "error", err)
-			continue
-		}
+	u.recalculateBatchUploadTaskStatus(ctx, task)
 
-		// 解析项目状态
-		var itemStatus map[string]interface{}
-		if err := json.Unmarshal([]byte(itemData), &itemStatus); err != nil {
-			u.logger.Error("failed to unmarshal item status", "task_id", taskID, "item_index", i, "error", err)
-			continue
+	// 根据统计信息确定任务状态
+	if task.CompletedCount == task.TotalCount {
+		if task.FailedCount > 0 && task.SuccessCount == 0 {
+			task.Status = domain.BatchUploadStatusFailed
+		} else {
+			task.Status = domain.BatchUploadStatusCompleted
 		}
-
-		// 更新项目状态
-		if status, ok := itemStatus["status"].(string); ok {
-			task.Items[i].Status = domain.BatchUploadStatus(status)
-		}
-		if errorMsg, ok := itemStatus["error_message"].(string); ok {
-			task.Items[i].ErrorMessage = &errorMsg
-		}
-		if resumeID, ok := itemStatus["resume_id"].(string); ok {
-			task.Items[i].ResumeID = &resumeID
-		}
-		if completedAtStr, ok := itemStatus["completed_at"].(string); ok {
-			if completedAt, err := time.Parse(time.RFC3339, completedAtStr); err == nil {
-				task.Items[i].CompletedAt = &completedAt
-			}
-		}
-		if updatedAtStr, ok := itemStatus["updated_at"].(string); ok {
-			if updatedAt, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
-				task.Items[i].UpdatedAt = updatedAt
-			}
-		}
-	}
-
-	// 重新计算任务统计信息
-	task.CompletedCount = 0
-	task.SuccessCount = 0
-	task.FailedCount = 0
-
-	for _, item := range task.Items {
-		switch item.Status {
-		case domain.BatchUploadStatusCompleted:
-			task.CompletedCount++
-			task.SuccessCount++
-		case domain.BatchUploadStatusFailed:
-			task.CompletedCount++
-			task.FailedCount++
-		}
-	}
-
-	// 更新任务状态
-	if task.Status != domain.BatchUploadStatusCancelled {
-		if task.CompletedCount == task.TotalCount {
-			if task.FailedCount == 0 {
-				task.Status = domain.BatchUploadStatusCompleted
-			} else if task.SuccessCount == 0 {
-				task.Status = domain.BatchUploadStatusFailed
-			} else {
-				// 部分成功，部分失败的情况，仍然标记为完成
-				task.Status = domain.BatchUploadStatusCompleted
-			}
-		} else if task.CompletedCount > 0 {
-			task.Status = domain.BatchUploadStatusProcessing
-		}
+	} else if task.FailedCount > 0 || task.SuccessCount > 0 {
+		task.Status = domain.BatchUploadStatusProcessing
+	} else {
+		task.Status = domain.BatchUploadStatusPending
 	}
 
 	return task, nil
@@ -1258,8 +1348,8 @@ func (u *ResumeUsecase) processSingleFileInBatch(ctx context.Context, taskID str
 		Notes:          req.Notes,
 	}
 
-	// 调用单个文件上传逻辑
-	resume, err := u.Upload(ctx, uploadReq)
+	// 调用单个文件上传逻辑，使用同步解析模式
+	resume, err := u.uploadWithOptions(ctx, uploadReq, true) // waitForParsing = true
 	now := time.Now()
 
 	if err != nil {
@@ -1309,6 +1399,9 @@ func (u *ResumeUsecase) updateFinalBatchUploadStatus(ctx context.Context, taskID
 		return
 	}
 
+	// 重新计算任务状态和统计信息
+	u.recalculateBatchUploadTaskStatus(ctx, task)
+
 	// 更新最终状态
 	if task.FailedCount > 0 && task.SuccessCount == 0 {
 		task.Status = domain.BatchUploadStatusFailed
@@ -1324,7 +1417,71 @@ func (u *ResumeUsecase) updateFinalBatchUploadStatus(ctx context.Context, taskID
 		u.logger.Error("failed to save final batch upload task to redis", "task_id", taskID, "error", err)
 		// 即使Redis保存失败，也记录完成日志
 	}
+
+	u.publishBatchResumeParseCompletedNotification(ctx, task)
+
 	u.logger.Info("batch upload task completed", "task_id", taskID, "success_count", task.SuccessCount, "failed_count", task.FailedCount)
+}
+
+// recalculateBatchUploadTaskStatus 重新计算批量上传任务的状态和统计信息
+func (u *ResumeUsecase) recalculateBatchUploadTaskStatus(ctx context.Context, task *domain.BatchUploadTask) {
+	// 汇总各个简历项目的状态
+	for i := range task.Items {
+		itemKey := fmt.Sprintf("batch_upload_item:%s:%d", task.TaskID, i)
+		itemData, err := u.redis.Get(ctx, itemKey).Result()
+		if err != nil {
+			if err == redis.Nil {
+				// 项目状态不存在，保持原有状态（pending）
+				continue
+			}
+			u.logger.Error("failed to get item status", "task_id", task.TaskID, "item_index", i, "error", err)
+			continue
+		}
+
+		// 解析项目状态
+		var itemStatus map[string]interface{}
+		if err := json.Unmarshal([]byte(itemData), &itemStatus); err != nil {
+			u.logger.Error("failed to unmarshal item status", "task_id", task.TaskID, "item_index", i, "error", err)
+			continue
+		}
+
+		// 更新项目状态
+		if status, ok := itemStatus["status"].(string); ok {
+			task.Items[i].Status = domain.BatchUploadStatus(status)
+		}
+		if errorMsg, ok := itemStatus["error_message"].(string); ok {
+			task.Items[i].ErrorMessage = &errorMsg
+		}
+		if resumeID, ok := itemStatus["resume_id"].(string); ok {
+			task.Items[i].ResumeID = &resumeID
+		}
+		if completedAtStr, ok := itemStatus["completed_at"].(string); ok {
+			if completedAt, err := time.Parse(time.RFC3339, completedAtStr); err == nil {
+				task.Items[i].CompletedAt = &completedAt
+			}
+		}
+		if updatedAtStr, ok := itemStatus["updated_at"].(string); ok {
+			if updatedAt, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
+				task.Items[i].UpdatedAt = updatedAt
+			}
+		}
+	}
+
+	// 重新计算任务统计信息
+	task.CompletedCount = 0
+	task.SuccessCount = 0
+	task.FailedCount = 0
+
+	for _, item := range task.Items {
+		switch item.Status {
+		case domain.BatchUploadStatusCompleted:
+			task.CompletedCount++
+			task.SuccessCount++
+		case domain.BatchUploadStatusFailed:
+			task.CompletedCount++
+			task.FailedCount++
+		}
+	}
 }
 
 // saveBatchUploadTaskToRedis 将批量上传任务保存到Redis

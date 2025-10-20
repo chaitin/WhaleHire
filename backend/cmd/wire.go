@@ -18,6 +18,8 @@ import (
 	generalagentV1 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
 	jobapplicationV1 "github.com/chaitin/WhaleHire/backend/internal/job_application/handler/v1"
 	jobprofileV1 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
+	notificationV1 "github.com/chaitin/WhaleHire/backend/internal/notification/handler/v1"
+	notificationworker "github.com/chaitin/WhaleHire/backend/internal/notification/worker"
 	resumeV1 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
 	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
@@ -25,20 +27,22 @@ import (
 )
 
 type Server struct {
-	config           *config.Config
-	web              *web.Web
-	ent              *db.Client
-	logger           *slog.Logger
-	userV1           *userV1.UserHandler
-	resumeV1         *resumeV1.ResumeHandler
-	generalagentV1   *generalagentV1.GeneralAgentHandler
-	jobprofileV1     *jobprofileV1.JobProfileHandler
-	departmentV1     *departmentV1.DepartmentHandler
-	jobapplicationV1 *jobapplicationV1.JobApplicationHandler
-	screeningV1      *screeningV1.ScreeningHandler
-	auditV1          *auditV1.AuditHandler
-	fileV1           *fileV1.FileHandler
-	version          *version.VersionInfo
+	config             *config.Config
+	web                *web.Web
+	ent                *db.Client
+	logger             *slog.Logger
+	userV1             *userV1.UserHandler
+	resumeV1           *resumeV1.ResumeHandler
+	generalagentV1     *generalagentV1.GeneralAgentHandler
+	jobprofileV1       *jobprofileV1.JobProfileHandler
+	departmentV1       *departmentV1.DepartmentHandler
+	jobapplicationV1   *jobapplicationV1.JobApplicationHandler
+	screeningV1        *screeningV1.ScreeningHandler
+	auditV1            *auditV1.AuditHandler
+	fileV1             *fileV1.FileHandler
+	notificationWorker *notificationworker.NotificationWorker
+	notificationV1     *notificationV1.NotificationSettingHandler
+	version            *version.VersionInfo
 }
 
 func newServer() (*Server, error) {
