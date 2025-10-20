@@ -182,10 +182,23 @@ export function SelectJobModal({
         keyword: searchKeyword || undefined,
       });
 
-      setJobs(response.items || []);
-      const totalCount = response.page_info?.total_count || 0;
+      console.log('📋 岗位列表响应:', response);
+      console.log('📋 response.items:', response.items);
+      console.log('📋 response.page_info:', response.page_info);
+
+      const items = response.items || [];
+      setJobs(items);
+
+      // 优先使用 page_info.total_count，如果不存在则使用当前页的items长度作为总数
+      const totalCount = response.page_info?.total_count || items.length;
+      const calculatedTotalPages =
+        totalCount > 0 ? Math.ceil(totalCount / pageSize) : 1;
+
+      console.log(
+        `📊 总数: ${totalCount}, 每页: ${pageSize}, 总页数: ${calculatedTotalPages}`
+      );
       setTotal(totalCount);
-      setTotalPages(Math.ceil(totalCount / pageSize));
+      setTotalPages(calculatedTotalPages);
     } catch (error) {
       console.error('加载岗位列表失败:', error);
       setJobs([]);
@@ -228,7 +241,13 @@ export function SelectJobModal({
 
   // 渲染分页按钮
   const renderPaginationButtons = () => {
-    const pages = [];
+    const pages: JSX.Element[] = [];
+
+    // 如果总页数为0,不渲染任何分页按钮
+    if (totalPages === 0) {
+      return pages;
+    }
+
     const maxVisiblePages = 5;
 
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
@@ -237,6 +256,10 @@ export function SelectJobModal({
     if (endPage - startPage < maxVisiblePages - 1) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
+
+    console.log(
+      `🔢 渲染分页按钮: startPage=${startPage}, endPage=${endPage}, totalPages=${totalPages}`
+    );
 
     for (let i = startPage; i <= endPage; i++) {
       pages.push(
@@ -500,14 +523,14 @@ export function SelectJobModal({
 
             {/* 分页控件 */}
             <div className="flex items-center justify-between">
-              {/* 分页信息 */}
-              <div className="text-[13px] text-[#666666]">
-                显示第 {total > 0 ? (currentPage - 1) * pageSize + 1 : 0} 到{' '}
-                {Math.min(currentPage * pageSize, total)} 条，共 {total} 条结果
-              </div>
+              {/* 分页信息和每页条数 */}
+              <div className="flex items-center gap-3">
+                <div className="text-[13px] text-[#666666]">
+                  显示第 {total > 0 ? (currentPage - 1) * pageSize + 1 : 0} 到{' '}
+                  {Math.min(currentPage * pageSize, total)} 条，共 {total}{' '}
+                  条结果
+                </div>
 
-              {/* 分页按钮 */}
-              <div className="flex items-center gap-2">
                 {/* 每页条数 */}
                 <Select
                   value={pageSize.toString()}
@@ -522,33 +545,33 @@ export function SelectJobModal({
                     <SelectItem value="50">50条/页</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
 
-                {/* 页码按钮 */}
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="h-8 w-8 p-0"
-                  >
-                    <ChevronLeft className="h-4 w-4 text-[#999999]" />
-                  </Button>
+              {/* 分页按钮 */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4 text-[#999999]" />
+                </Button>
 
-                  {renderPaginationButtons()}
+                {renderPaginationButtons()}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setCurrentPage(Math.min(totalPages, currentPage + 1))
-                    }
-                    disabled={currentPage >= totalPages}
-                    className="h-8 w-8 p-0"
-                  >
-                    <ChevronRight className="h-4 w-4 text-[#999999]" />
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage >= totalPages}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4 text-[#999999]" />
+                </Button>
               </div>
             </div>
           </div>

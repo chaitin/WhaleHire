@@ -8,45 +8,43 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
-  Play,
-  Pause,
-  TestTube,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
+import { getCurrentUser } from '@/services/auth';
+import { listJobProfiles } from '@/services/job-profile';
+import type { JobProfileDetail } from '@/types/job-profile';
 
 // 邮箱配置类型定义
 interface EmailConfigFormData {
-  display_name: string;
+  task_name: string;
   email_address: string;
-  email_type: string;
+  auth_code: string;
+  server_type: string;
   imap_server: string;
   imap_port: number;
-  auth_code: string;
   use_ssl: boolean;
-  monitor_folder: string;
-  sync_frequency: string;
-  keyword_filter: string;
-  attachment_types: string[];
+  status: 'enabled' | 'disabled';
+  resume_uploader: string;
+  uploader_id: string;
+  job_profile_id: string;
 }
 
 interface EmailConfig {
   id: string;
-  display_name: string;
+  task_name: string;
   email_address: string;
-  email_type: string;
-  status: 'running' | 'stopped' | 'error';
-  sync_frequency: string;
-  last_sync: number;
+  status: 'enabled' | 'disabled';
+  last_sync_time: number;
   synced_count: number;
+  resume_uploader: string;
+  job_profile_name: string;
+  server_type: string;
   imap_server: string;
   imap_port: number;
   use_ssl: boolean;
   auth_code: string;
-  monitor_folder: string;
-  keyword_filter?: string;
-  attachment_types: string[];
   created_at: number;
 }
 
@@ -64,44 +62,34 @@ export function EmailConfigTab() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // 表单数据
-  const [formData, setFormData] = useState<{
-    display_name: string;
-    email_address: string;
-    email_type: string;
-    imap_server: string;
-    imap_port: number;
-    auth_code: string;
-    use_ssl: boolean;
-    monitor_folder: string;
-    sync_frequency: string;
-    keyword_filter: string;
-    attachment_types: string[];
-  }>({
-    display_name: '',
+  const [formData, setFormData] = useState<EmailConfigFormData>({
+    task_name: '',
     email_address: '',
-    email_type: '',
+    auth_code: '',
+    server_type: 'IMAP',
     imap_server: '',
     imap_port: 993,
-    auth_code: '',
     use_ssl: true,
-    monitor_folder: 'INBOX',
-    sync_frequency: '实时同步',
-    keyword_filter: '',
-    attachment_types: ['PDF', 'Word'],
+    status: 'enabled',
+    resume_uploader: '',
+    uploader_id: '',
+    job_profile_id: '',
   });
+
+  // 岗位画像列表
+  const [jobProfiles, setJobProfiles] = useState<JobProfileDetail[]>([]);
+  const [loadingJobProfiles, setLoadingJobProfiles] = useState(false);
 
   // 删除确认弹窗状态
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [configToDelete, setConfigToDelete] = useState<{
     id: string;
-    display_name: string;
+    task_name: string;
   } | null>(null);
 
   // 操作状态
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [statusChangingId, setStatusChangingId] = useState<string | null>(null);
-  const [testingId, setTestingId] = useState<string | null>(null);
 
   // Mock数据 - 获取邮箱配置列表
   const fetchEmailConfigs = useCallback(
@@ -118,38 +106,34 @@ export function EmailConfigTab() {
         const mockData: EmailConfig[] = [
           {
             id: '1',
-            display_name: '公司招聘邮箱',
+            task_name: '公司招聘邮箱收集',
             email_address: 'hr@company.com',
-            email_type: '企业邮箱',
-            status: 'running',
-            sync_frequency: '每15分钟',
-            last_sync: Date.now() / 1000 - 3600, // 1小时前
+            status: 'enabled',
+            last_sync_time: Date.now() / 1000 - 3600, // 1小时前
             synced_count: 156,
+            resume_uploader: '张三',
+            job_profile_name: '高级前端工程师',
+            server_type: 'IMAP',
             imap_server: 'imap.company.com',
             imap_port: 993,
             use_ssl: true,
             auth_code: '****',
-            monitor_folder: 'INBOX',
-            keyword_filter: '简历,应聘,求职',
-            attachment_types: ['PDF', 'Word'],
             created_at: Date.now() / 1000 - 86400 * 30, // 30天前
           },
           {
             id: '2',
-            display_name: '备用招聘邮箱',
+            task_name: '备用招聘邮箱',
             email_address: 'recruitment@company.com',
-            email_type: '企业邮箱',
-            status: 'stopped',
-            sync_frequency: '实时同步',
-            last_sync: Date.now() / 1000 - 86400, // 1天前
+            status: 'disabled',
+            last_sync_time: Date.now() / 1000 - 86400, // 1天前
             synced_count: 89,
+            resume_uploader: '李四',
+            job_profile_name: 'Java开发工程师',
+            server_type: 'IMAP',
             imap_server: 'imap.company.com',
             imap_port: 993,
             use_ssl: true,
             auth_code: '****',
-            monitor_folder: 'INBOX',
-            keyword_filter: '简历',
-            attachment_types: ['PDF', 'Word', '图片'],
             created_at: Date.now() / 1000 - 86400 * 15, // 15天前
           },
         ];
@@ -182,9 +166,39 @@ export function EmailConfigTab() {
     [currentPage, pageSize]
   );
 
+  // 获取当前登录用户信息
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const user = await getCurrentUser();
+      setFormData((prev) => ({
+        ...prev,
+        resume_uploader: user.username,
+        uploader_id: user.id,
+      }));
+    } catch (err) {
+      console.error('获取当前用户信息失败:', err);
+    }
+  }, []);
+
+  // 获取岗位画像列表
+  const fetchJobProfiles = useCallback(async () => {
+    try {
+      setLoadingJobProfiles(true);
+      const response = await listJobProfiles({ page: 1, page_size: 100 });
+      setJobProfiles(response.items || []);
+    } catch (err) {
+      console.error('获取岗位画像列表失败:', err);
+      setJobProfiles([]);
+    } finally {
+      setLoadingJobProfiles(false);
+    }
+  }, []);
+
   // 打开添加弹窗
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = async () => {
     setIsAddModalOpen(true);
+    // 获取当前用户信息和岗位画像列表
+    await Promise.all([fetchCurrentUser(), fetchJobProfiles()]);
   };
 
   // 关闭添加弹窗
@@ -192,17 +206,17 @@ export function EmailConfigTab() {
     setIsAddModalOpen(false);
     // 重置表单
     setFormData({
-      display_name: '',
+      task_name: '',
       email_address: '',
-      email_type: '',
+      auth_code: '',
+      server_type: 'IMAP',
       imap_server: '',
       imap_port: 993,
-      auth_code: '',
       use_ssl: true,
-      monitor_folder: 'INBOX',
-      sync_frequency: '实时同步',
-      keyword_filter: '',
-      attachment_types: ['PDF', 'Word'],
+      status: 'enabled',
+      resume_uploader: '',
+      uploader_id: '',
+      job_profile_id: '',
     });
   };
 
@@ -219,28 +233,28 @@ export function EmailConfigTab() {
 
   // 保存邮箱配置
   const handleSaveEmailConfig = async () => {
+    if (!formData.task_name.trim()) {
+      setError('任务名称不能为空');
+      return;
+    }
+
     if (!formData.email_address.trim()) {
       setError('邮箱地址不能为空');
       return;
     }
 
-    if (!formData.email_type) {
-      setError('请选择邮箱类型');
+    if (!formData.auth_code.trim()) {
+      setError('邮箱授权码不能为空');
       return;
     }
 
     if (!formData.imap_server.trim()) {
-      setError('IMAP服务器不能为空');
+      setError('服务器地址不能为空');
       return;
     }
 
-    if (!formData.auth_code.trim()) {
-      setError('授权码不能为空');
-      return;
-    }
-
-    if (!formData.sync_frequency) {
-      setError('请选择同步频率');
+    if (!formData.job_profile_id) {
+      setError('请选择岗位画像');
       return;
     }
 
@@ -264,59 +278,9 @@ export function EmailConfigTab() {
     }
   };
 
-  // 测试连接
-  const handleTestConnection = async () => {
-    if (
-      !formData.email_address.trim() ||
-      !formData.imap_server.trim() ||
-      !formData.auth_code.trim()
-    ) {
-      setError('请填写完整的连接信息');
-      return;
-    }
-
-    try {
-      setTestingId('test');
-      setError(null);
-
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      alert('连接测试成功！');
-    } catch (err) {
-      setError('连接测试失败，请检查配置');
-      console.error('连接测试失败:', err);
-    } finally {
-      setTestingId(null);
-    }
-  };
-
-  // 切换邮箱状态
-  const handleToggleStatus = async (
-    configId: string,
-    currentStatus: string
-  ) => {
-    try {
-      setStatusChangingId(configId);
-      setError(null);
-
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      console.log(`切换邮箱状态: ${configId}, 当前状态: ${currentStatus}`);
-
-      await fetchEmailConfigs(currentPage);
-    } catch (err) {
-      setError('切换状态失败，请重试');
-      console.error('切换状态失败:', err);
-    } finally {
-      setStatusChangingId(null);
-    }
-  };
-
   // 删除邮箱配置
-  const handleDeleteConfig = (configId: string, displayName: string) => {
-    setConfigToDelete({ id: configId, display_name: displayName });
+  const handleDeleteConfig = (configId: string, taskName: string) => {
+    setConfigToDelete({ id: configId, task_name: taskName });
     setIsDeleteConfirmOpen(true);
   };
 
@@ -395,33 +359,31 @@ export function EmailConfigTab() {
     });
   };
 
+  // 截断邮箱地址,只显示前10位
+  const truncateEmail = (email: string) => {
+    if (email.length <= 10) {
+      return email;
+    }
+    return email.substring(0, 10) + '...';
+  };
+
   // 获取状态显示
   const getStatusDisplay = (status: string) => {
     switch (status) {
-      case 'running':
+      case 'enabled':
         return {
-          icon: '✓',
-          text: '运行中',
+          text: '启用',
           bgColor: 'bg-green-50',
           textColor: 'text-green-600',
         };
-      case 'stopped':
+      case 'disabled':
         return {
-          icon: '⏸',
-          text: '已停用',
+          text: '禁用',
           bgColor: 'bg-gray-50',
           textColor: 'text-gray-600',
         };
-      case 'error':
-        return {
-          icon: '✗',
-          text: '错误',
-          bgColor: 'bg-red-50',
-          textColor: 'text-red-600',
-        };
       default:
         return {
-          icon: '?',
           text: '未知',
           bgColor: 'bg-gray-50',
           textColor: 'text-gray-600',
@@ -448,8 +410,8 @@ export function EmailConfigTab() {
           </div>
         )}
 
-        {/* 添加配置按钮 */}
-        <div className="mb-6 flex justify-end">
+        {/* 添加配置按钮 - 左侧显示 */}
+        <div className="mb-6">
           <Button
             size="sm"
             className="gap-1.5 rounded-lg px-3 py-1.5 shadow-sm"
@@ -466,32 +428,22 @@ export function EmailConfigTab() {
           {/* 表格头部 */}
           <div className="bg-gray-50 border-b border-gray-200">
             <div className="flex items-center px-6 py-3 w-full">
-              <div className="flex items-center w-48 pr-4">
+              <div className="flex items-center w-40 pr-4">
                 <span className="text-sm font-medium text-gray-700">
-                  显示名称
+                  任务名称
                 </span>
               </div>
-              <div className="flex items-center w-52 pr-4">
+              <div className="flex items-center w-48 pr-4">
                 <span className="text-sm font-medium text-gray-700">
                   邮箱地址
                 </span>
               </div>
-              <div className="flex items-center w-28 pr-4">
-                <span className="text-sm font-medium text-gray-700">
-                  邮箱类型
-                </span>
-              </div>
-              <div className="flex items-center w-28 pr-4">
+              <div className="flex items-center w-24 pr-4">
                 <span className="text-sm font-medium text-gray-700">状态</span>
-              </div>
-              <div className="flex items-center w-28 pr-4">
-                <span className="text-sm font-medium text-gray-700">
-                  同步频率
-                </span>
               </div>
               <div className="flex items-center w-40 pr-4">
                 <span className="text-sm font-medium text-gray-700">
-                  最后同步
+                  最后同步时间
                 </span>
               </div>
               <div className="flex items-center w-24 pr-4">
@@ -499,7 +451,17 @@ export function EmailConfigTab() {
                   已同步数
                 </span>
               </div>
-              <div className="flex items-center justify-center w-40">
+              <div className="flex items-center w-32 pr-4">
+                <span className="text-sm font-medium text-gray-700">
+                  简历上传人
+                </span>
+              </div>
+              <div className="flex items-center w-40 pr-4">
+                <span className="text-sm font-medium text-gray-700">
+                  岗位名称
+                </span>
+              </div>
+              <div className="flex items-center justify-center w-24">
                 <span className="text-sm font-medium text-gray-700">操作</span>
               </div>
             </div>
@@ -524,63 +486,66 @@ export function EmailConfigTab() {
                     key={config.id}
                     className={`flex items-center px-6 py-4 w-full ${index !== emailConfigs.length - 1 ? 'border-b border-gray-100' : ''}`}
                   >
-                    {/* 显示名称 */}
-                    <div className="flex items-center w-48 pr-4">
+                    {/* 任务名称 */}
+                    <div className="flex items-center w-40 pr-4">
                       <span className="text-sm text-gray-900 truncate">
-                        {config.display_name}
+                        {config.task_name}
                       </span>
                     </div>
 
                     {/* 邮箱地址 */}
-                    <div className="flex items-center w-52 pr-4">
-                      <span className="text-sm text-gray-900 truncate">
-                        {config.email_address}
-                      </span>
-                    </div>
-
-                    {/* 邮箱类型 */}
-                    <div className="flex items-center w-28 pr-4">
-                      <span className="text-sm text-gray-500 truncate">
-                        {config.email_type}
+                    <div className="flex items-center w-48 pr-4">
+                      <span
+                        className="text-sm text-gray-900"
+                        title={config.email_address}
+                      >
+                        {truncateEmail(config.email_address)}
                       </span>
                     </div>
 
                     {/* 状态 */}
-                    <div className="flex items-center w-28 pr-4">
+                    <div className="flex items-center w-24 pr-4">
                       <div
                         className={`px-3 py-1 rounded ${statusDisplay.bgColor}`}
                       >
                         <span
                           className={`text-xs font-medium ${statusDisplay.textColor}`}
                         >
-                          {statusDisplay.icon} {statusDisplay.text}
+                          {statusDisplay.text}
                         </span>
                       </div>
                     </div>
 
-                    {/* 同步频率 */}
-                    <div className="flex items-center w-28 pr-4">
-                      <span className="text-sm text-gray-500 truncate">
-                        {config.sync_frequency}
-                      </span>
-                    </div>
-
-                    {/* 最后同步 */}
+                    {/* 最后同步时间 */}
                     <div className="flex items-center w-40 pr-4">
                       <span className="text-xs text-gray-500">
-                        {formatDateTime(config.last_sync)}
+                        {formatDateTime(config.last_sync_time)}
                       </span>
                     </div>
 
                     {/* 已同步数 */}
                     <div className="flex items-center w-24 pr-4">
                       <span className="text-sm text-gray-900">
-                        {config.synced_count} 份
+                        {config.synced_count}
+                      </span>
+                    </div>
+
+                    {/* 简历上传人 */}
+                    <div className="flex items-center w-32 pr-4">
+                      <span className="text-sm text-gray-500 truncate">
+                        {config.resume_uploader}
+                      </span>
+                    </div>
+
+                    {/* 岗位名称 */}
+                    <div className="flex items-center w-40 pr-4">
+                      <span className="text-sm text-gray-500 truncate">
+                        {config.job_profile_name}
                       </span>
                     </div>
 
                     {/* 操作 */}
-                    <div className="flex items-center justify-center gap-2 w-40">
+                    <div className="flex items-center justify-center gap-2 w-24">
                       <button
                         className="text-gray-500 hover:text-blue-500 transition-colors"
                         title="编辑"
@@ -590,40 +555,10 @@ export function EmailConfigTab() {
                       </button>
 
                       <button
-                        className={cn(
-                          'transition-colors',
-                          config.status === 'running'
-                            ? 'text-gray-500 hover:text-orange-500'
-                            : 'text-gray-500 hover:text-green-500'
-                        )}
-                        title={config.status === 'running' ? '停用' : '启用'}
-                        onClick={() =>
-                          handleToggleStatus(config.id, config.status)
-                        }
-                        disabled={submitting || statusChangingId === config.id}
-                      >
-                        {statusChangingId === config.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : config.status === 'running' ? (
-                          <Pause className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4" />
-                        )}
-                      </button>
-
-                      <button
-                        className="text-gray-500 hover:text-purple-500 transition-colors"
-                        title="测试连接"
-                        disabled={submitting}
-                      >
-                        <TestTube className="w-4 h-4" />
-                      </button>
-
-                      <button
                         className="text-gray-500 hover:text-red-500 transition-colors"
                         title="删除"
                         onClick={() =>
-                          handleDeleteConfig(config.id, config.display_name)
+                          handleDeleteConfig(config.id, config.task_name)
                         }
                         disabled={submitting || deletingId === config.id}
                       >
@@ -719,10 +654,10 @@ export function EmailConfigTab() {
           formData={formData}
           onFormChange={handleFormChange}
           onSave={handleSaveEmailConfig}
-          onTest={handleTestConnection}
           submitting={submitting}
-          testingId={testingId}
           error={error}
+          jobProfiles={jobProfiles}
+          loadingJobProfiles={loadingJobProfiles}
         />
       )}
 
@@ -734,7 +669,7 @@ export function EmailConfigTab() {
         description={
           configToDelete ? (
             <span>
-              确定要删除 <strong>{configToDelete.display_name}</strong>{' '}
+              确定要删除 <strong>{configToDelete.task_name}</strong>{' '}
               配置吗？此操作无法撤销。
             </span>
           ) : (
@@ -762,10 +697,10 @@ interface AddEmailConfigModalProps {
     value: string | number | boolean | string[]
   ) => void;
   onSave: () => void;
-  onTest: () => void;
   submitting: boolean;
-  testingId: string | null;
   error: string | null;
+  jobProfiles: JobProfileDetail[];
+  loadingJobProfiles: boolean;
 }
 
 function AddEmailConfigModal({
@@ -774,10 +709,10 @@ function AddEmailConfigModal({
   formData,
   onFormChange,
   onSave,
-  onTest,
   submitting,
-  testingId,
   error: _error,
+  jobProfiles,
+  loadingJobProfiles,
 }: AddEmailConfigModalProps) {
   if (!isOpen) return null;
 
@@ -792,7 +727,7 @@ function AddEmailConfigModal({
       >
         {/* 弹窗头部 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-primary">添加邮箱配置</h2>
+          <h2 className="text-lg font-medium text-gray-900">添加邮箱配置</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors w-6 h-6"
@@ -803,81 +738,83 @@ function AddEmailConfigModal({
 
         {/* 表单内容 - 滚动区域 */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] space-y-6">
-          {/* 基本信息部分 */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-primary pb-3 border-b-2 border-gray-200">
-              基本信息
-            </h3>
-
-            {/* 邮箱地址 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                邮箱地址 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={formData.email_address}
-                onChange={(e) => onFormChange('email_address', e.target.value)}
-                placeholder="example@company.com"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 placeholder-gray-400"
-              />
-            </div>
-
-            {/* 邮箱类型 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                邮箱类型 <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.email_type}
-                onChange={(e) => onFormChange('email_type', e.target.value)}
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-              >
-                <option value="">请选择</option>
-                <option value="企业邮箱">企业邮箱</option>
-                <option value="个人邮箱">个人邮箱</option>
-              </select>
-            </div>
-
-            {/* 显示名称 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                显示名称
-              </label>
-              <input
-                type="text"
-                value={formData.display_name}
-                onChange={(e) => onFormChange('display_name', e.target.value)}
-                placeholder="用于区分多个邮箱"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 placeholder-gray-400"
-              />
-            </div>
+          {/* 任务名称 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              任务名称 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.task_name}
+              onChange={(e) => onFormChange('task_name', e.target.value)}
+              placeholder="请输入任务名称"
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
           </div>
 
-          {/* 授权信息部分 */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-[#1E3C72] pb-3 border-b-2 border-gray-200">
-              授权信息
-            </h3>
+          {/* 邮箱地址 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              邮箱地址 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={formData.email_address}
+              onChange={(e) => onFormChange('email_address', e.target.value)}
+              placeholder="example@company.com"
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
 
-            {/* IMAP服务器 */}
+          {/* 邮箱授权码 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              邮箱授权码 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              value={formData.auth_code}
+              onChange={(e) => onFormChange('auth_code', e.target.value)}
+              placeholder="请输入邮箱授权码"
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              请到邮箱设置中开启IMAP服务并获取授权码
+            </p>
+          </div>
+
+          {/* 服务器类型 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              服务器类型 <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.server_type}
+              onChange={(e) => onFormChange('server_type', e.target.value)}
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="IMAP">IMAP</option>
+            </select>
+          </div>
+
+          {/* 服务器地址、端口 */}
+          <div className="mb-6 grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                IMAP服务器 <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                服务器地址 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.imap_server}
                 onChange={(e) => onFormChange('imap_server', e.target.value)}
                 placeholder="imap.example.com"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700 placeholder-gray-400"
+                className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
 
-            {/* IMAP端口 */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                IMAP端口 <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                端口 <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -886,201 +823,105 @@ function AddEmailConfigModal({
                   onFormChange('imap_port', parseInt(e.target.value) || 993)
                 }
                 placeholder="993"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 placeholder-gray-400"
+                className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
+          </div>
 
-            {/* 授权码/密码 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                授权码/密码 <span className="text-red-500">*</span>
+          {/* SSL/TLS加密传输 */}
+          <div className="mb-6 flex items-center">
+            <input
+              type="checkbox"
+              id="use_ssl"
+              checked={formData.use_ssl}
+              onChange={(e) => onFormChange('use_ssl', e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-emerald-500"
+            />
+            <label
+              htmlFor="use_ssl"
+              className="ml-2 text-sm font-medium text-gray-700"
+            >
+              SSL/TLS加密传输
+            </label>
+          </div>
+
+          {/* 状态 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              状态 <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-6">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="enabled"
+                  checked={formData.status === 'enabled'}
+                  onChange={(e) => onFormChange('status', e.target.value)}
+                  className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-2 focus:ring-emerald-500"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">
+                  启用
+                </span>
               </label>
-              <input
-                type="password"
-                value={formData.auth_code}
-                onChange={(e) => onFormChange('auth_code', e.target.value)}
-                placeholder="请输入邮箱授权码"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700 placeholder-gray-400"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                请到邮箱设置中开启IMAP服务并获取授权码
-              </p>
-            </div>
 
-            {/* 使用SSL/TLS加密 */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="use_ssl"
-                checked={formData.use_ssl}
-                onChange={(e) => onFormChange('use_ssl', e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
-              />
-              <label
-                htmlFor="use_ssl"
-                className="ml-2 text-sm font-medium text-gray-900"
-              >
-                使用SSL/TLS加密
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="disabled"
+                  checked={formData.status === 'disabled'}
+                  onChange={(e) => onFormChange('status', e.target.value)}
+                  className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-2 focus:ring-emerald-500"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">
+                  禁用
+                </span>
               </label>
             </div>
           </div>
 
-          {/* 同步规则部分 */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-[#1E3C72] pb-3 border-b-2 border-gray-200">
-              同步规则
-            </h3>
+          {/* 简历创建人 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              简历创建人 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.resume_uploader}
+              onChange={(e) => onFormChange('resume_uploader', e.target.value)}
+              placeholder="默认为当前登录人"
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
 
-            {/* 监控文件夹 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                监控文件夹
-              </label>
-              <input
-                type="text"
-                value={formData.monitor_folder}
-                onChange={(e) => onFormChange('monitor_folder', e.target.value)}
-                placeholder="INBOX"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-              />
-            </div>
-
-            {/* 同步频率 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                同步频率 <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.sync_frequency}
-                onChange={(e) => onFormChange('sync_frequency', e.target.value)}
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-              >
-                <option value="实时同步">实时同步</option>
-                <option value="每5分钟">每5分钟</option>
-                <option value="每15分钟">每15分钟</option>
-                <option value="每30分钟">每30分钟</option>
-                <option value="每小时">每小时</option>
-              </select>
-            </div>
-
-            {/* 关键词过滤 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                关键词过滤
-              </label>
-              <input
-                type="text"
-                value={formData.keyword_filter}
-                onChange={(e) => onFormChange('keyword_filter', e.target.value)}
-                placeholder="简历,应聘,求职（用逗号分隔）"
-                className="w-full h-10 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700 placeholder-gray-400"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                邮件主题或正文包含这些关键词时才会同步
-              </p>
-            </div>
-
-            {/* 附件类型 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                附件类型
-              </label>
-              <div className="flex items-center gap-5">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.attachment_types.includes('PDF')}
-                    onChange={(e) => {
-                      const types = formData.attachment_types;
-                      if (e.target.checked) {
-                        onFormChange('attachment_types', [...types, 'PDF']);
-                      } else {
-                        onFormChange(
-                          'attachment_types',
-                          types.filter((t: string) => t !== 'PDF')
-                        );
-                      }
-                    }}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-900">
-                    PDF
-                  </span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.attachment_types.includes('Word')}
-                    onChange={(e) => {
-                      const types = formData.attachment_types;
-                      if (e.target.checked) {
-                        onFormChange('attachment_types', [...types, 'Word']);
-                      } else {
-                        onFormChange(
-                          'attachment_types',
-                          types.filter((t: string) => t !== 'Word')
-                        );
-                      }
-                    }}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-900">
-                    Word
-                  </span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.attachment_types.includes('图片')}
-                    onChange={(e) => {
-                      const types = formData.attachment_types;
-                      if (e.target.checked) {
-                        onFormChange('attachment_types', [...types, '图片']);
-                      } else {
-                        onFormChange(
-                          'attachment_types',
-                          types.filter((t: string) => t !== '图片')
-                        );
-                      }
-                    }}
-                    className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-900">
-                    图片
-                  </span>
-                </label>
-              </div>
-            </div>
+          {/* 岗位画像 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              岗位画像 <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.job_profile_id}
+              onChange={(e) => onFormChange('job_profile_id', e.target.value)}
+              disabled={loadingJobProfiles}
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="">
+                {loadingJobProfiles ? '加载岗位中...' : '请选择岗位画像'}
+              </option>
+              {jobProfiles.map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         {/* 弹窗底部 */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
-          <Button
-            variant="outline"
-            className="px-6"
-            onClick={onTest}
-            disabled={submitting || testingId !== null}
-          >
-            {testingId ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                测试中...
-              </>
-            ) : (
-              '测试连接'
-            )}
-          </Button>
           <Button variant="outline" className="px-6" onClick={onClose}>
             取消
           </Button>
-          <Button
-            className="px-6 bg-gradient-to-r from-[#667EEA] to-[#764BA2] hover:from-[#5568D3] to-[#6A3F93]"
-            onClick={onSave}
-            disabled={submitting}
-          >
+          <Button className="px-6" onClick={onSave} disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />

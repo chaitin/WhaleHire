@@ -337,7 +337,7 @@ export default function AuditLogPage() {
                       {/* 操作人 */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {log.operator_name}
+                          {log.resource_name || '-'}
                         </div>
                       </td>
 
