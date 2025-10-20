@@ -484,18 +484,9 @@ export function MatchingResultModal({
                             {resumeNameMap[result.id] || result.candidateName}
                           </td>
                           <td className="px-3 py-4 text-sm text-[#333333]">
-                            <div className="flex flex-col gap-1">
-                              <span>
-                                {jobPositionName ||
-                                  result.position ||
-                                  '未知岗位'}
-                              </span>
-                              {taskData?.task?.job_position_id && (
-                                <span className="text-xs text-gray-500">
-                                  ID: {taskData.task.job_position_id}
-                                </span>
-                              )}
-                            </div>
+                            <span>
+                              {jobPositionName || result.position || '未知岗位'}
+                            </span>
                           </td>
                           <td className="px-3 py-4">
                             <span className="text-lg font-bold text-primary">
