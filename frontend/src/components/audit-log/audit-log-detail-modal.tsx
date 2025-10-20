@@ -102,11 +102,11 @@ ${log.business_data ? `业务数据:\n${JSON.stringify(log.business_data, null, 
                 </h4>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-medium text-sm">
-                    {log.operator_name.charAt(0)}
+                    {log.operator_name?.charAt(0) || '-'}
                   </div>
                   <div>
                     <div className="text-sm font-medium text-[#1D2129]">
-                      {log.operator_name}
+                      {log.operator_name || '-'}
                     </div>
                   </div>
                 </div>

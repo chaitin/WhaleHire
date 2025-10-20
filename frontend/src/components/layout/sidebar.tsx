@@ -156,7 +156,6 @@ export function Sidebar({
         isMobile && 'pt-2',
         className
       )}
-      style={{ height: '150vh' }}
       role="navigation"
       aria-label="主导航"
     >
@@ -226,8 +225,7 @@ export function Sidebar({
         }}
       >
         <div className="scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent -mr-1 flex-1 overflow-y-auto pr-1">
-          {/* 添加顶部间距，让菜单向下移动 */}
-          <div className="pt-6">
+          <div className="pt-4">
             {menuGroups.map((group, groupIndex) => (
               <div
                 key={group.id}
@@ -281,11 +279,8 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* Upgrade Section - positioned to align with 10th row */}
-        <div
-          className="border-t px-4 pt-4 pb-4"
-          style={{ marginTop: 'auto', position: 'relative', top: '-120px' }}
-        >
+        {/* Upgrade Section */}
+        <div className="border-t px-4 pt-4 pb-4">
           <div className="rounded-lg bg-gradient-to-r from-cyan-50 to-cyan-100 border border-[#36CFC9] p-4 opacity-60 cursor-not-allowed">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#36CFC9]">

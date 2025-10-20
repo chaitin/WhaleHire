@@ -12,7 +12,7 @@ interface PollingItem {
 class ResumePollingManager {
   private pollingItems = new Map<string, PollingItem>();
   private pollingTimer: ReturnType<typeof setInterval> | null = null;
-  private pollingInterval = 6000; // 6秒轮询间隔
+  private pollingInterval = 10000; // 10秒轮询间隔
 
   // 添加轮询项
   addPolling(
@@ -35,7 +35,7 @@ class ResumePollingManager {
     }
 
     console.log(
-      `添加轮询: ${resumeId}, 当前轮询数量: ${this.pollingItems.size}`
+      `➕ 添加轮询: ${resumeId}, 当前轮询数量: ${this.pollingItems.size}`
     );
   }
 
@@ -53,7 +53,7 @@ class ResumePollingManager {
     if (item.callbacks.size === 0) {
       this.pollingItems.delete(resumeId);
       console.log(
-        `移除轮询: ${resumeId}, 剩余轮询数量: ${this.pollingItems.size}`
+        `➖ 移除轮询: ${resumeId}, 剩余轮询数量: ${this.pollingItems.size}`
       );
     }
 
@@ -67,7 +67,9 @@ class ResumePollingManager {
   private startPolling() {
     if (this.pollingTimer) return;
 
-    console.log('启动全局简历进度轮询');
+    console.log(
+      `🔄 启动全局简历进度轮询 (间隔: ${this.pollingInterval / 1000}秒)`
+    );
     this.pollingTimer = setInterval(() => {
       this.pollAllItems();
     }, this.pollingInterval);
@@ -81,7 +83,7 @@ class ResumePollingManager {
     if (this.pollingTimer) {
       clearInterval(this.pollingTimer);
       this.pollingTimer = null;
-      console.log('停止全局简历进度轮询');
+      console.log('⏹️ 停止全局简历进度轮询');
     }
   }
 

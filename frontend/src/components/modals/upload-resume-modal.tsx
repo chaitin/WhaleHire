@@ -117,7 +117,7 @@ function ResumeParsingStatus({
       case ResumeStatus.FAILED:
         return `解析失败${parseProgress.error_message ? ': ' + parseProgress.error_message : ''}`;
       case ResumeStatus.PROCESSING:
-        return `解析中 (${parseProgress.progress}%)`;
+        return '解析中'; // 移除百分比，在进度条后单独显示
       case ResumeStatus.PENDING:
         return '等待解析';
       default:
@@ -143,28 +143,37 @@ function ResumeParsingStatus({
   };
 
   return (
-    <div className="flex items-center justify-between bg-white rounded px-2.5 py-1.5 text-xs">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+    <div className="bg-white rounded px-2.5 py-1.5 text-xs">
+      {/* 第一行：图标和文件名 */}
+      <div className="flex items-center gap-2">
         <div className="flex-shrink-0">{getStatusIcon()}</div>
-        <div className="flex-1 min-w-0">
-          <p className="truncate text-gray-700 font-medium text-xs">
-            {filename}
-          </p>
-          <p className={`text-[10px] mt-0.5 ${getStatusColor()}`}>
-            {getStatusText()}
-          </p>
-        </div>
+        <p className="truncate text-gray-700 font-medium text-xs flex-1">
+          {filename}
+        </p>
       </div>
-      {parseProgress && parseProgress.status === ResumeStatus.PROCESSING && (
-        <div className="flex-shrink-0 ml-2">
-          <div className="w-12 bg-gray-200 rounded-full h-1">
-            <div
-              className="bg-blue-500 h-1 rounded-full transition-all duration-300"
-              style={{ width: `${parseProgress.progress}%` }}
-            ></div>
-          </div>
-        </div>
-      )}
+
+      {/* 第二行：状态文本、进度条和百分比 */}
+      <div className="flex items-center gap-2 mt-1.5 ml-6">
+        <p className={`text-[10px] ${getStatusColor()} flex-shrink-0`}>
+          {getStatusText()}
+        </p>
+        {/* 解析中时显示进度条和百分比 */}
+        {parseProgress && parseProgress.status === ResumeStatus.PROCESSING && (
+          <>
+            <div className="flex-1 max-w-[120px]">
+              <div className="bg-gray-200 rounded-full h-1">
+                <div
+                  className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                  style={{ width: `${parseProgress.progress}%` }}
+                ></div>
+              </div>
+            </div>
+            <span className="text-[10px] text-blue-700 font-medium flex-shrink-0">
+              {parseProgress.progress}%
+            </span>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -430,6 +439,7 @@ export function UploadResumeModal({
     // 清理函数
     const cleanup = () => {
       if (batchStatusPollingTimerRef.current) {
+        console.log('🧹 清除批量上传状态轮询定时器');
         clearInterval(batchStatusPollingTimerRef.current);
         batchStatusPollingTimerRef.current = null;
       }
@@ -439,11 +449,23 @@ export function UploadResumeModal({
     if (currentStep === 'complete' && taskId) {
       console.log('🔄 启动批量上传状态轮询，taskId:', taskId);
 
+      let pollCount = 0;
+      const maxPollCount = 60; // 最多轮询60次（6分钟）
+      let hasNotifiedSuccess = false; // 标记是否已经通知过成功
+
       // 定义轮询函数
       const pollBatchStatus = async () => {
+        // 防止无限轮询
+        pollCount++;
+        if (pollCount > maxPollCount) {
+          console.log('⛔ 达到最大轮询次数(60次)，停止轮询');
+          cleanup();
+          return;
+        }
+
         try {
           const batchStatus = await getBatchUploadStatus(taskId);
-          console.log('📊 批量上传状态轮询结果:', {
+          console.log(`📊 批量上传状态轮询结果 (第${pollCount}次):`, {
             taskId,
             status: batchStatus.status,
             items: batchStatus.items?.length || 0,
@@ -480,12 +502,13 @@ export function UploadResumeModal({
               (d) => d.status === 'completed' || d.status === 'failed'
             );
 
-            if (allCompleted) {
+            if (allCompleted && !hasNotifiedSuccess) {
               console.log('✅ 所有简历解析完成，停止轮询并通知父组件刷新列表');
+              hasNotifiedSuccess = true; // 标记已通知，防止重复调用
               cleanup();
               // 通知父组件刷新列表，传递第一个简历数据
-              if (resumeDetails.length > 0) {
-                onSuccess?.(resumeDetails[0] as Resume);
+              if (resumeDetails.length > 0 && onSuccess) {
+                onSuccess(resumeDetails[0] as Resume);
               }
             }
           }
@@ -506,7 +529,9 @@ export function UploadResumeModal({
       // 如果不在 complete 步骤，确保清理定时器
       cleanup();
     }
-  }, [currentStep, taskId, onSuccess]);
+    // 移除 onSuccess 从依赖项，避免因其引用变化导致重新创建轮询
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, taskId]);
 
   // 选择文件
   const handleSelectFiles = () => {

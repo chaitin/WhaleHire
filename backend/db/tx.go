@@ -44,6 +44,10 @@ type Tx struct {
 	JobSkillMeta *JobSkillMetaClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// NotificationEvent is the client for interacting with the NotificationEvent builders.
+	NotificationEvent *NotificationEventClient
+	// NotificationSetting is the client for interacting with the NotificationSetting builders.
+	NotificationSetting *NotificationSettingClient
 	// Resume is the client for interacting with the Resume builders.
 	Resume *ResumeClient
 	// ResumeDocumentParse is the client for interacting with the ResumeDocumentParse builders.
@@ -226,6 +230,8 @@ func (tx *Tx) init() {
 	tx.JobSkill = NewJobSkillClient(tx.config)
 	tx.JobSkillMeta = NewJobSkillMetaClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
+	tx.NotificationEvent = NewNotificationEventClient(tx.config)
+	tx.NotificationSetting = NewNotificationSettingClient(tx.config)
 	tx.Resume = NewResumeClient(tx.config)
 	tx.ResumeDocumentParse = NewResumeDocumentParseClient(tx.config)
 	tx.ResumeEducation = NewResumeEducationClient(tx.config)

@@ -141,6 +141,8 @@ export interface ResumeListParams {
   position?: string;
   status?: string;
   keywords?: string;
+  job_position_id?: string; // 单个岗位ID筛选（后端只支持单个）
+  job_position_ids?: string[]; // 保留兼容性，但实际使用job_position_id
 }
 
 // 简历搜索参数

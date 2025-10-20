@@ -836,6 +836,7 @@ export function IntelligentMatchingPage() {
         onOpenChange={setIsSelectResumeModalOpen}
         onNext={handleResumesSelected}
         onPrevious={handleBackToSelectJob}
+        selectedJobIds={selectedJobIds}
       />
 
       {/* 创建任务模态框 - 权重配置 */}

@@ -30,12 +30,15 @@ import {
 import { cn } from '@/lib/utils';
 import { Resume, ResumeStatus } from '@/types/resume';
 import { getResumeList } from '@/services/resume';
+import { listJobProfiles } from '@/services/job-profile';
+import type { JobProfileDetail } from '@/types/job-profile';
 
 interface SelectResumeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNext: (selectedResumeIds: string[]) => void;
   onPrevious: () => void;
+  selectedJobIds: string[]; // 第一步选择的岗位ID列表
 }
 
 // 流程步骤配置
@@ -52,10 +55,11 @@ export function SelectResumeModal({
   onOpenChange,
   onNext,
   onPrevious,
+  selectedJobIds,
 }: SelectResumeModalProps) {
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [experienceFilter, setExperienceFilter] = useState<string>('');
-  const [educationFilter, setEducationFilter] = useState<string>('');
+  // 岗位筛选：默认使用第一步选择的岗位ID（如果只有一个），否则为'all'
+  const [jobFilter, setJobFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedResumeIds, setSelectedResumeIds] = useState<string[]>([]);
@@ -63,77 +67,73 @@ export function SelectResumeModal({
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [experienceOptions, setExperienceOptions] = useState<string[]>([]);
-  const [educationOptions, setEducationOptions] = useState<string[]>([]);
+  const [jobProfiles, setJobProfiles] = useState<JobProfileDetail[]>([]); // 岗位画像列表
 
-  // 加载筛选条件选项
-  const loadFilterOptions = async () => {
+  // 加载岗位画像列表 - 显示所有岗位供用户选择
+  const loadJobProfiles = useCallback(async () => {
     try {
-      // 工作经验范围选项（与筛选逻辑保持一致的值）
-      setExperienceOptions(['0-1', '1-3', '3-5', '5-10', '10+']);
-
-      // 学历选项：从接口第一页数据中提取（避免一次性加载过多数据）
-      const response = await getResumeList({
-        page: 1,
-        size: 50,
-        status: ResumeStatus.COMPLETED,
-      });
-      const educations = Array.from(
-        new Set(
-          (response.resumes || [])
-            .map((r) => r.highest_education)
-            .filter((edu): edu is string => !!edu)
-        )
+      const response = await listJobProfiles({ page: 1, page_size: 100 });
+      // 显示所有岗位,不仅限于第一步选择的岗位
+      const profiles = response.items || [];
+      console.log('📋 加载岗位画像列表:', profiles.length, '个岗位');
+      console.log(
+        '📋 岗位详情:',
+        profiles.map((p) => ({ id: p.id, name: p.name }))
       );
-      setEducationOptions(educations);
+      setJobProfiles(profiles);
     } catch (error) {
-      console.error('加载筛选选项失败:', error);
+      console.error('加载岗位列表失败:', error);
+      setJobProfiles([]);
     }
-  };
+  }, []);
 
-  // 加载简历数据（服务端分页）
+  // 加载简历数据（服务端分页）- 使用第一步选择的岗位进行筛选
   const loadResumes = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getResumeList({
+      // 构建请求参数
+      const params: {
+        page: number;
+        size: number;
+        keywords?: string;
+        status: string;
+        job_position_id?: string; // 后端只支持单个岗位ID筛选
+      } = {
         page: currentPage,
         size: pageSize,
         keywords: searchKeyword || undefined,
         status: ResumeStatus.COMPLETED, // 只显示已完成解析的简历
-      });
+      };
 
-      // 当前页数据基础上应用前端附加筛选（仅影响当前页显示，不影响总数与分页）
-      let pageResumes = response.resumes || [];
+      // 如果有选择的岗位ID,使用它来筛选简历
+      // 后端只支持单个job_position_id，所以只取第一个岗位ID
+      if (jobFilter && jobFilter !== 'all') {
+        params.job_position_id = jobFilter;
+        console.log('📋 使用jobFilter筛选简历:', jobFilter);
+      } else if (selectedJobIds && selectedJobIds.length > 0) {
+        // 如果第一步选择了多个岗位，只使用第一个进行筛选
+        params.job_position_id = selectedJobIds[0];
+        console.log('📋 使用selectedJobIds[0]筛选简历:', selectedJobIds[0]);
+      }
 
-      // 工作经验筛选（与选项值保持一致）
-      if (experienceFilter && experienceFilter !== 'all') {
-        pageResumes = pageResumes.filter((resume) => {
-          const exp = resume.years_experience || 0;
-          switch (experienceFilter) {
-            case '0-1':
-              return exp < 1;
-            case '1-3':
-              return exp >= 1 && exp < 3;
-            case '3-5':
-              return exp >= 3 && exp < 5;
-            case '5-10':
-              return exp >= 5 && exp < 10;
-            case '10+':
-              return exp >= 10;
-            default:
-              return true;
-          }
+      console.log('📋 简历列表请求参数:', params);
+      const response = await getResumeList(params);
+
+      console.log('📋 简历列表响应:', response);
+      console.log('📋 返回的简历数量:', response.resumes?.length);
+
+      // 调试：检查返回的简历关联的岗位ID
+      if (response.resumes && response.resumes.length > 0) {
+        response.resumes.forEach((resume, index) => {
+          console.log(
+            `📋 简历${index + 1} [${resume.name}] 关联的岗位:`,
+            resume.job_ids,
+            resume.job_names
+          );
         });
       }
 
-      // 学历筛选（仅影响当前页显示）
-      if (educationFilter && educationFilter !== 'all') {
-        pageResumes = pageResumes.filter(
-          (resume) => resume.highest_education === educationFilter
-        );
-      }
-
-      setResumes(pageResumes);
+      setResumes(response.resumes || []);
       const totalCount = response.total_count || 0;
       setTotalResults(totalCount);
       setTotalPages(Math.ceil(totalCount / pageSize));
@@ -145,21 +145,49 @@ export function SelectResumeModal({
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchKeyword, experienceFilter, educationFilter]);
+  }, [currentPage, pageSize, searchKeyword, jobFilter, selectedJobIds]);
 
-  // 加载筛选选项
+  // 当弹窗打开时，初始化岗位筛选条件；关闭时重置状态
   useEffect(() => {
     if (open) {
-      loadFilterOptions();
+      console.log('📋 选择简历弹窗打开，第一步选择的岗位IDs:', selectedJobIds);
+      // 如果第一步选择了岗位，将其设置为默认筛选条件
+      if (selectedJobIds && selectedJobIds.length === 1) {
+        console.log('📋 初始化岗位筛选条件为单个岗位:', selectedJobIds[0]);
+        setJobFilter(selectedJobIds[0]);
+      } else if (selectedJobIds && selectedJobIds.length > 1) {
+        console.log(
+          '📋 第一步选择了多个岗位，筛选条件默认为全部:',
+          selectedJobIds
+        );
+        setJobFilter('all');
+      } else {
+        console.log('📋 第一步未选择岗位，筛选条件默认为全部');
+        setJobFilter('all');
+      }
+    } else {
+      // 弹窗关闭时重置状态
+      setJobFilter('all');
+      setSearchKeyword('');
+      setCurrentPage(1);
+      setSelectedResumeIds([]);
     }
-  }, [open]);
+  }, [open, selectedJobIds]);
 
-  // 加载简历列表
+  // 加载岗位列表
   useEffect(() => {
     if (open) {
+      loadJobProfiles();
+    }
+  }, [open, loadJobProfiles]);
+
+  // 当弹窗打开且jobFilter初始化完成后，加载简历列表
+  useEffect(() => {
+    if (open) {
+      console.log('📋 触发简历列表加载，当前jobFilter:', jobFilter);
       loadResumes();
     }
-  }, [open, loadResumes]);
+  }, [open, jobFilter, loadResumes]);
 
   // 处理搜索
   const handleSearch = () => {
@@ -454,41 +482,17 @@ export function SelectResumeModal({
           {/* 筛选和搜索 */}
           <div className="bg-[#FAFAFA] rounded-lg p-5 mb-4">
             <div className="flex items-center justify-between gap-3 mb-4">
-              {/* 筛选器 */}
+              {/* 筛选器 - 仅显示岗位筛选 */}
               <div className="flex items-center gap-3">
-                <Select
-                  value={experienceFilter}
-                  onValueChange={setExperienceFilter}
-                >
-                  <SelectTrigger className="w-[144px] h-[33.5px] text-sm">
-                    <SelectValue placeholder="请选择工作经验" />
+                <Select value={jobFilter} onValueChange={setJobFilter}>
+                  <SelectTrigger className="w-[200px] h-[33.5px] text-sm">
+                    <SelectValue placeholder="请选择岗位" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部经验</SelectItem>
-                    {experienceOptions.map((exp) => (
-                      <SelectItem key={exp} value={exp}>
-                        {exp === '0-1' && '1年以下'}
-                        {exp === '1-3' && '1-3年'}
-                        {exp === '3-5' && '3-5年'}
-                        {exp === '5-10' && '5-10年'}
-                        {exp === '10+' && '10年以上'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={educationFilter}
-                  onValueChange={setEducationFilter}
-                >
-                  <SelectTrigger className="w-[116px] h-[33.5px] text-sm">
-                    <SelectValue placeholder="请选择学历" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部学历</SelectItem>
-                    {educationOptions.map((edu) => (
-                      <SelectItem key={edu} value={edu}>
-                        {edu}
+                    <SelectItem value="all">全部岗位</SelectItem>
+                    {jobProfiles.map((job) => (
+                      <SelectItem key={job.id} value={job.id}>
+                        {job.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

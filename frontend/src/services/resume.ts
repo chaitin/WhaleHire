@@ -26,6 +26,15 @@ export const getResumeList = async (
     queryParams.append('status', params.status);
   if (params.keywords) queryParams.append('keywords', params.keywords);
 
+  // 优先使用单个job_position_id（后端实际支持的参数）
+  if (params.job_position_id) {
+    queryParams.append('job_position_id', params.job_position_id);
+  }
+  // 保留兼容性：如果有job_position_ids但没有job_position_id，使用第一个
+  else if (params.job_position_ids && params.job_position_ids.length > 0) {
+    queryParams.append('job_position_id', params.job_position_ids[0]);
+  }
+
   return apiGet<ResumeListResponse>(
     `/v1/resume/list?${queryParams.toString()}`
   );

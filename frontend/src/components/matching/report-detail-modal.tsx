@@ -18,7 +18,7 @@ import {
   Building2,
   Smartphone,
 } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 import { getScreeningResult } from '@/services/screening';
@@ -2538,6 +2538,7 @@ export function ReportDetailModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogTitle className="sr-only">匹配报告详情</DialogTitle>
         {/* 头部 */}
         {renderHeader()}
 

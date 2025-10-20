@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, Edit, Trash2, Send } from 'lucide-react';
+import { X, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddNotificationModal } from './add-notification-modal';
 
@@ -26,7 +26,6 @@ export function NotificationConfigModal({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingNotification, setEditingNotification] =
     useState<NotificationConfig | null>(null);
-  const [testingId, setTestingId] = useState<string | null>(null);
 
   // 添加通知
   const handleAddNotification = (notification: NotificationConfig) => {
@@ -47,25 +46,6 @@ export function NotificationConfigModal({
     if (confirm('确定要删除此通知配置吗？')) {
       setNotifications(notifications.filter((n) => n.id !== id));
     }
-  };
-
-  // 测试通知
-  const handleTestNotification = async (id: string) => {
-    setTestingId(id);
-    try {
-      // TODO: 调用测试接口
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert('测试通知已发送');
-    } catch {
-      alert('测试失败，请检查配置');
-    } finally {
-      setTestingId(null);
-    }
-  };
-
-  // 格式化时间
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('zh-CN');
   };
 
   if (!open) return null;
@@ -106,19 +86,24 @@ export function NotificationConfigModal({
               {/* 表格头部 */}
               <div className="bg-gray-50 border-b border-gray-200">
                 <div className="flex items-center px-6 py-3 w-full">
-                  <div className="flex items-center flex-1 min-w-0 pr-4">
+                  <div className="flex items-center w-40 pr-4">
                     <span className="text-sm font-medium text-gray-700">
                       通知名称
                     </span>
                   </div>
-                  <div className="flex items-center w-32 pr-4">
+                  <div className="flex items-center w-28 pr-4">
                     <span className="text-sm font-medium text-gray-700">
                       通知方式
                     </span>
                   </div>
-                  <div className="flex items-center w-40 pr-4">
+                  <div className="flex items-center flex-1 min-w-0 pr-4">
                     <span className="text-sm font-medium text-gray-700">
-                      创建时间
+                      通知内容
+                    </span>
+                  </div>
+                  <div className="flex items-center flex-1 min-w-0 pr-4">
+                    <span className="text-sm font-medium text-gray-700">
+                      Webhook地址
                     </span>
                   </div>
                   <div className="flex items-center justify-center w-32">
@@ -141,36 +126,34 @@ export function NotificationConfigModal({
                       key={notification.id}
                       className="flex items-center px-6 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors"
                     >
-                      <div className="flex items-center flex-1 min-w-0 pr-4">
+                      <div className="flex items-center w-40 pr-4">
                         <span className="text-sm text-gray-900 truncate">
                           {notification.name}
                         </span>
                       </div>
-                      <div className="flex items-center w-32 pr-4">
+                      <div className="flex items-center w-28 pr-4">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {notification.type === 'webhook'
                             ? 'Webhook'
                             : '邮件通知'}
                         </span>
                       </div>
-                      <div className="flex items-center w-40 pr-4">
-                        <span className="text-sm text-gray-500">
-                          {formatDate(notification.created_at)}
+                      <div className="flex items-center flex-1 min-w-0 pr-4">
+                        <span className="text-sm text-gray-700 truncate">
+                          {notification.type === 'webhook'
+                            ? '发送Webhook请求'
+                            : `发送邮件到: ${notification.email_recipients?.join(', ') || '-'}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center flex-1 min-w-0 pr-4">
+                        <span
+                          className="text-sm text-gray-700 truncate"
+                          title={notification.webhook_url || '-'}
+                        >
+                          {notification.webhook_url || '-'}
                         </span>
                       </div>
                       <div className="flex items-center justify-center gap-2 w-32">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleTestNotification(notification.id)
-                          }
-                          disabled={testingId === notification.id}
-                          className="h-8 w-8 p-0"
-                          title="测试通知"
-                        >
-                          <Send className="h-4 w-4 text-blue-600" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

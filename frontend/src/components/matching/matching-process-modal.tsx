@@ -52,12 +52,24 @@ export function MatchingProcessModal({
   const isFinished = (data: GetTaskProgressResp | null) => {
     if (!data) return false;
     const completed = data.status === 'completed';
-    const percentDone = (data.progress_percent ?? 0) >= 100;
+    // 只有在明确完成状态时才判定为已完成，不依赖 progress_percent
+    // 因为后端可能一开始就返回 100%，导致进度条不展示
     const total = data.resume_total ?? 0;
     const processed = data.resume_processed ?? 0;
     const allProcessed = total > 0 && processed >= total;
-    return completed || percentDone || allProcessed;
+    return completed || allProcessed;
   };
+
+  // 重置进度条状态（当弹窗打开时）
+  useEffect(() => {
+    if (open) {
+      console.log('🔄 弹窗打开，重置进度条状态');
+      setDisplayProgress(0);
+      setProgressData(null);
+      setPreviousStatus(null);
+      taskStartAtRef.current = null;
+    }
+  }, [open]);
 
   // 获取任务进度
   useEffect(() => {
@@ -67,11 +79,19 @@ export function MatchingProcessModal({
     const fetchProgress = async () => {
       try {
         const data = await getTaskProgress(taskId);
+        console.log('📊 获取任务进度:', {
+          status: data.status,
+          progress_percent: data.progress_percent,
+          resume_total: data.resume_total,
+          resume_processed: data.resume_processed,
+          isFinished: isFinished(data),
+        });
         setProgressData(data);
 
         // 当任务判定已完成时自动跳转到结果
         if (isFinished(data)) {
           if (previousStatus !== 'completed') {
+            console.log('✅ 任务完成，1秒后跳转到结果页');
             setTimeout(() => {
               onComplete?.();
             }, 1000);
@@ -125,46 +145,62 @@ export function MatchingProcessModal({
 
     // 完成状态直接显示为100%
     if (isFinished(progressData)) {
+      console.log('🎯 任务已完成，设置进度条为100%');
       setDisplayProgress(100);
       return;
     }
+
+    console.log('🔄 进度条动画更新:', {
+      status,
+      realProgress,
+      taskStarted: !!taskStartAtRef.current,
+    });
 
     // 基于简历总数和开始时间估算目标进度（前端动画，不依赖后端）
     const totalResumes = Math.max(
       1,
       progressData?.resume_total || selectedResumeCount || 1
     );
-    const basePerResumeMs =
-      totalResumes <= 10 ? 6000 : totalResumes <= 50 ? 12000 : 16000; // 简历越多，速率越慢（进一步调慢）
-    const expectedTotalMs = Math.max(40000, totalResumes * basePerResumeMs); // 保底至少40秒（进一步调慢）
+    // 统一使用较慢的增长速度，确保所有情况下都有平滑动画
+    const basePerResumeMs = 3000; // 每份简历预计3秒（统一速率）
+    const expectedTotalMs = Math.max(60000, totalResumes * basePerResumeMs); // 保底至少60秒
     const startedAt = taskStartAtRef.current;
     const elapsedMs = startedAt ? Date.now() - startedAt : 0;
 
     const isActive = status === 'in_progress' || String(status) === 'running';
     const estimatedPercent = isActive
-      ? Math.min(80, Math.max(0, (elapsedMs / expectedTotalMs) * 100)) // 上限降至80%
+      ? Math.min(85, Math.max(0, (elapsedMs / expectedTotalMs) * 100)) // 基于时间的估算进度，上限85%
       : 0;
 
     const step = () => {
       setDisplayProgress((prev) => {
-        // 在任务开始或运行中，即使后端进度为0，也缓慢增长到一个估算/基线值
+        // 在任务开始或运行中，缓慢增长
         const baseline = isActive
-          ? Math.min(80, Math.max(prev, 1, estimatedPercent)) // 基线下限降至1%，上限80%
+          ? Math.min(85, Math.max(prev, 1, estimatedPercent)) // 基线下限1%，上限85%
           : prev;
 
-        // 目标不回退：不小于当前可视进度，避免突然下降
-        const target = Math.max(realProgress, baseline);
+        // 目标值：优先使用估算的平滑进度，只有当后端进度超过估算进度较多时才缓慢追赶
+        // 但绝不允许直接跳跃到后端进度
+        let target = baseline;
+        if (realProgress > baseline + 5) {
+          // 如果后端进度超过估算进度5%以上，缓慢追赶，但不超过当前进度+2%
+          target = Math.min(baseline + 2, realProgress);
+        }
+
+        // 确保目标不回退
+        target = Math.max(prev, target);
 
         const delta = target - prev;
         if (Math.abs(delta) <= 0.05) return target; // 接近目标则停止
-        const inc = Math.max(0.02, delta / 60); // 每步增量继续调小，减速
+        // 更平滑的增长：每次只增加很小的量
+        const inc = Math.max(0.015, delta / 80);
         return Math.min(prev + inc, target);
       });
     };
 
-    // 立即执行一次，然后每900ms缓慢增长（进一步降低频率）
+    // 立即执行一次，然后每800ms缓慢增长
     step();
-    const intervalId = setInterval(step, 900);
+    const intervalId = setInterval(step, 800);
 
     return () => {
       if (intervalId) clearInterval(intervalId);

@@ -12,6 +12,9 @@ import (
 	"github.com/chaitin/WhaleHire/backend/internal"
 	"github.com/chaitin/WhaleHire/backend/pkg/service"
 	"github.com/chaitin/WhaleHire/backend/pkg/store"
+
+	// 新增：将通知 Worker 作为一个独立的服务加入生命周期管理
+	"github.com/chaitin/WhaleHire/backend/internal/notification/worker"
 )
 
 // @title WhaleHire API
@@ -59,6 +62,8 @@ func main() {
 	s.logger.Info("服务启动完成，开始监听请求", "addr", s.config.Server.Addr)
 	svc := service.NewService(service.WithPprof())
 	svc.Add(s)
+	// 新增：将通知 Worker 封装为 Servicer，交由 Service 管理
+	svc.Add(worker.NewServicer(s.notificationWorker))
 	if err := svc.Run(); err != nil {
 		panic(err)
 	}
@@ -85,4 +90,5 @@ var appSet = wire.NewSet(
 	config.Init,
 	pkg.Provider,
 	internal.Provider,
+	internal.QueueProvider,
 )

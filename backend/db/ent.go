@@ -27,6 +27,8 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/db/jobskillmeta"
 	"github.com/chaitin/WhaleHire/backend/db/message"
+	"github.com/chaitin/WhaleHire/backend/db/notificationevent"
+	"github.com/chaitin/WhaleHire/backend/db/notificationsetting"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
@@ -120,6 +122,8 @@ func checkColumn(table, column string) error {
 			jobskill.Table:                 jobskill.ValidColumn,
 			jobskillmeta.Table:             jobskillmeta.ValidColumn,
 			message.Table:                  message.ValidColumn,
+			notificationevent.Table:        notificationevent.ValidColumn,
+			notificationsetting.Table:      notificationsetting.ValidColumn,
 			resume.Table:                   resume.ValidColumn,
 			resumedocumentparse.Table:      resumedocumentparse.ValidColumn,
 			resumeeducation.Table:          resumeeducation.ValidColumn,

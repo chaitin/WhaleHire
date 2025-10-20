@@ -20,8 +20,8 @@ export type OperationStatus =
 // 操作日志接口
 export interface AuditLog {
   id: string; // 日志ID
-  operator_name: string; // 操作人姓名
-  operator_id: string; // 操作人ID
+  operator_name?: string; // 操作人姓名
+  operator_id?: string; // 操作人ID
   operation_type: OperationType; // 操作类型
   resource_name?: string; // 资源名称（操作内容描述）
   resource_type?: string; // 资源类型
