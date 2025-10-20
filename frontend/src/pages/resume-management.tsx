@@ -85,6 +85,16 @@ export function ResumeManagementPage() {
       (resume) => resume.status === 'pending' || resume.status === 'processing'
     );
 
+    console.log('📊 当前简历列表状态检查:', {
+      总数: resumes.length,
+      处理中: resumes.filter(
+        (r) => r.status === 'pending' || r.status === 'processing'
+      ).length,
+      已完成: resumes.filter((r) => r.status === 'completed').length,
+      失败: resumes.filter((r) => r.status === 'failed').length,
+      是否有处理中: processingResumes,
+    });
+
     // 检测状态变化
     const hasStatusChanged =
       previousResumesRef.current.length > 0 &&
@@ -96,7 +106,7 @@ export function ResumeManagementPage() {
       });
 
     if (hasStatusChanged) {
-      console.log('检测到简历状态变化');
+      console.log('✅ 检测到简历状态变化');
       refreshCountRef.current = 0; // 重置刷新计数
     }
 
@@ -108,13 +118,14 @@ export function ResumeManagementPage() {
 
     // 清除现有的定时器
     if (autoRefreshIntervalRef.current) {
+      console.log('🧹 清除现有的自动刷新定时器');
       clearInterval(autoRefreshIntervalRef.current);
       autoRefreshIntervalRef.current = null;
     }
 
     // 只有当存在处理中的简历时才启动自动刷新
     if (processingResumes && fetchResumesRef.current) {
-      console.log('检测到处理中的简历，启动自动刷新监控');
+      console.log('🔄 检测到处理中的简历，启动自动刷新监控 (每12秒一次)');
       refreshCountRef.current = 0;
 
       autoRefreshIntervalRef.current = setInterval(() => {
@@ -134,13 +145,13 @@ export function ResumeManagementPage() {
           };
 
           console.log(
-            `自动刷新简历列表 (第${refreshCountRef.current}次)，检查状态变化`
+            `🔄 自动刷新简历列表 (第${refreshCountRef.current}次)，检查状态变化`
           );
           fetchResumesRef.current(params, { force: true }); // 强制刷新以获取最新状态
 
           // 防止无限刷新，最多刷新60次（12分钟）
           if (refreshCountRef.current >= 60) {
-            console.log('达到最大刷新次数，停止自动刷新');
+            console.log('⛔ 达到最大刷新次数(60次)，停止自动刷新');
             if (autoRefreshIntervalRef.current) {
               clearInterval(autoRefreshIntervalRef.current);
               autoRefreshIntervalRef.current = null;
@@ -149,13 +160,14 @@ export function ResumeManagementPage() {
         }
       }, 12000); // 12秒刷新一次，检查状态变化
     } else if (!processingResumes) {
-      console.log('所有简历处理完成，停止自动刷新');
+      console.log('✅ 所有简历处理完成，停止自动刷新');
       refreshCountRef.current = 0;
     }
 
-    // 清理函数
+    // 清理函数：组件卸载或依赖变化时清除定时器
     return () => {
       if (autoRefreshIntervalRef.current) {
+        console.log('🧹 useEffect清理：清除自动刷新定时器');
         clearInterval(autoRefreshIntervalRef.current);
         autoRefreshIntervalRef.current = null;
       }
@@ -308,8 +320,8 @@ export function ResumeManagementPage() {
   const handleUploadSuccess = (uploadedResume?: Resume) => {
     console.log('简历上传成功回调触发，返回的数据:', uploadedResume);
 
-    // 显示成功提示
-    setSuccessMessage('简历上传成功！');
+    // 不再显示成功提示框
+    // setSuccessMessage('简历上传成功！');
 
     // 重置到第一页
     setCurrentPage(1);
@@ -349,10 +361,10 @@ export function ResumeManagementPage() {
       console.log('列表刷新完成，应该可以看到包含岗位信息的最新简历');
     }, 1500);
 
-    // 3秒后自动隐藏成功提示
-    setTimeout(() => {
-      setSuccessMessage(null);
-    }, 3000);
+    // 不再显示成功提示，无需自动隐藏
+    // setTimeout(() => {
+    //   setSuccessMessage(null);
+    // }, 3000);
   };
 
   const handleDelete = async (id: string) => {

@@ -570,13 +570,13 @@ export function ResumePreviewModal({
           </div>
 
           {/* 内容区域 */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-8 overflow-y-auto max-h-[calc(90vh-140px)]">
+          <div className="bg-gradient-to-br from-cyan-50 to-teal-50 p-8 overflow-y-auto max-h-[calc(90vh-140px)]">
             {/* 重新解析消息提示 */}
             {reparseMessage && (
               <div
                 className={`mb-4 p-3 rounded-lg text-center ${
                   reparseMessage.includes('成功')
-                    ? 'bg-green-100 text-green-700 border border-green-200'
+                    ? 'bg-cyan-100 text-[#36CFC9] border border-cyan-200'
                     : 'bg-red-100 text-red-700 border border-red-200'
                 }`}
               >
@@ -611,7 +611,7 @@ export function ResumePreviewModal({
                       {/* 编辑模式下的岗位选择 */}
                       <div className="mt-4">
                         <div className="text-sm font-medium text-gray-700 mb-2 text-left">
-                          <Briefcase className="w-4 h-4 inline-block mr-1 text-green-600" />
+                          <Briefcase className="w-4 h-4 inline-block mr-1 text-[#36CFC9]" />
                           选择岗位
                         </div>
                         <MultiSelect
@@ -641,16 +641,16 @@ export function ResumePreviewModal({
                     resumeDetail.job_positions &&
                     resumeDetail.job_positions.length > 0 && (
                       <div className="flex items-center justify-center gap-2 text-sm mb-3">
-                        <Briefcase className="w-4 h-4 text-emerald-500" />
+                        <Briefcase className="w-4 h-4 text-[#36CFC9]" />
                         {resumeDetail.job_positions.length === 1 ? (
-                          <span className="text-emerald-600">
+                          <span className="text-[#36CFC9]">
                             {resumeDetail.job_positions[0].job_title}
                           </span>
                         ) : (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="cursor-pointer text-emerald-600">
+                                <span className="cursor-pointer text-[#36CFC9]">
                                   {resumeDetail.job_positions[0].job_title}等
                                   <span className="font-medium underline decoration-dotted mx-1">
                                     {resumeDetail.job_positions.length - 1}
@@ -750,7 +750,7 @@ export function ResumePreviewModal({
                 {((isEditing && editFormData?.experiences) ||
                   (!isEditing && resumeDetail.experiences)) && (
                   <div className="mb-8">
-                    <div className="border-l-4 border-green-500 pl-4 mb-6">
+                    <div className="border-l-4 border-[#36CFC9] pl-4 mb-6">
                       <h2 className="text-xl font-semibold text-gray-900">
                         工作经验
                       </h2>
@@ -790,7 +790,7 @@ export function ResumePreviewModal({
                                       )
                                     }
                                     placeholder="职位"
-                                    className="text-green-600 font-medium"
+                                    className="text-[#36CFC9] font-medium"
                                   />
                                 </div>
                               ) : (
@@ -798,7 +798,7 @@ export function ResumePreviewModal({
                                   <h3 className="text-lg font-semibold text-gray-900">
                                     {exp.company}
                                   </h3>
-                                  <p className="text-green-600 font-medium">
+                                  <p className="text-[#36CFC9] font-medium">
                                     {exp.position}
                                   </p>
                                 </>
@@ -846,7 +846,7 @@ export function ResumePreviewModal({
                 {((isEditing && editFormData?.projects) ||
                   (!isEditing && resumeDetail.projects)) && (
                   <div className="mb-8">
-                    <div className="border-l-4 border-green-500 pl-4 mb-6">
+                    <div className="border-l-4 border-[#36CFC9] pl-4 mb-6">
                       <h2 className="text-xl font-semibold text-gray-900">
                         项目经历
                       </h2>
@@ -966,7 +966,7 @@ export function ResumePreviewModal({
                                     )
                                   }
                                   placeholder="技术栈"
-                                  className="text-green-600 font-medium"
+                                  className="text-[#36CFC9] font-medium"
                                 />
                               ) : (
                                 <div className="flex flex-wrap gap-2">
@@ -981,7 +981,7 @@ export function ResumePreviewModal({
                                       .map((tech, techIndex) => (
                                         <span
                                           key={techIndex}
-                                          className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium"
+                                          className="bg-cyan-100 text-[#36CFC9] px-2 py-1 rounded text-xs font-medium"
                                         >
                                           {tech.trim()}
                                         </span>
@@ -1156,7 +1156,7 @@ export function ResumePreviewModal({
                 {((isEditing && editFormData?.educations) ||
                   (!isEditing && resumeDetail.educations)) && (
                   <div className="mb-8">
-                    <div className="border-l-4 border-green-500 pl-4 mb-6">
+                    <div className="border-l-4 border-[#36CFC9] pl-4 mb-6">
                       <h2 className="text-xl font-semibold text-gray-900">
                         教育经历
                       </h2>
@@ -1196,7 +1196,7 @@ export function ResumePreviewModal({
                                       )
                                     }
                                     placeholder="专业"
-                                    className="text-green-600 font-medium"
+                                    className="text-[#36CFC9] font-medium"
                                   />
                                   <Input
                                     value={edu.degree || ''}
@@ -1247,7 +1247,7 @@ export function ResumePreviewModal({
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-green-600 font-medium">
+                                  <p className="text-[#36CFC9] font-medium">
                                     {edu.major}
                                   </p>
                                   {edu.degree && (
@@ -1273,7 +1273,7 @@ export function ResumePreviewModal({
                 {((isEditing && editFormData?.skills) ||
                   (!isEditing && resumeDetail.skills)) && (
                   <div className="mb-8">
-                    <div className="border-l-4 border-green-500 pl-4 mb-6">
+                    <div className="border-l-4 border-[#36CFC9] pl-4 mb-6">
                       <h2 className="text-xl font-semibold text-gray-900">
                         技能特长
                       </h2>
@@ -1309,7 +1309,7 @@ export function ResumePreviewModal({
                           ) : (
                             <span
                               key={skill.id || index}
-                              className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium"
+                              className="bg-cyan-100 text-[#36CFC9] px-4 py-2 rounded-full text-sm font-medium"
                             >
                               {skill.skill_name}
                             </span>
@@ -1319,7 +1319,7 @@ export function ResumePreviewModal({
                       {isEditing && (
                         <button
                           onClick={addSkill}
-                          className="flex items-center gap-1 px-3 py-2 border-2 border-dashed border-green-300 text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+                          className="flex items-center gap-1 px-3 py-2 border-2 border-dashed border-cyan-300 text-[#36CFC9] rounded-lg hover:bg-cyan-50 transition-colors"
                           title="添加技能"
                         >
                           <Plus className="w-4 h-4" />
@@ -1336,7 +1336,7 @@ export function ResumePreviewModal({
                     <button
                       onClick={handleSaveEdit}
                       disabled={isSaving}
-                      className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-2 px-6 py-2 bg-[#36CFC9] text-white rounded-lg hover:bg-[#2eb8b2] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <Save className="w-4 h-4" />
                       {isSaving ? '保存中...' : '保存修改'}
@@ -1357,7 +1357,7 @@ export function ResumePreviewModal({
           {/* 底部操作栏 */}
           <div className="bg-white border-t px-6 py-4 flex justify-end">
             <button
-              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-6 py-2 bg-white text-gray-900 border border-gray-300 rounded hover:bg-gray-50"
               onClick={handleClose}
             >
               关闭
@@ -1389,12 +1389,12 @@ export function ResumePreviewModal({
             <div className="text-center">
               <div
                 className={`mx-auto mb-4 w-12 h-12 rounded-full flex items-center justify-center ${
-                  reparseResult.success ? 'bg-green-100' : 'bg-red-100'
+                  reparseResult.success ? 'bg-cyan-100' : 'bg-red-100'
                 }`}
               >
                 {reparseResult.success ? (
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-6 h-6 text-[#36CFC9]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1424,7 +1424,7 @@ export function ResumePreviewModal({
               </div>
               <h3
                 className={`text-lg font-medium mb-2 ${
-                  reparseResult.success ? 'text-green-900' : 'text-red-900'
+                  reparseResult.success ? 'text-[#36CFC9]' : 'text-red-900'
                 }`}
               >
                 {reparseResult.success ? '解析成功' : '解析失败'}
@@ -1434,7 +1434,7 @@ export function ResumePreviewModal({
                 onClick={() => setShowReparseResult(false)}
                 className={`px-6 py-2 rounded-lg text-white font-medium ${
                   reparseResult.success
-                    ? 'bg-green-600 hover:bg-green-700'
+                    ? 'bg-[#36CFC9] hover:bg-[#2eb8b2]'
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
