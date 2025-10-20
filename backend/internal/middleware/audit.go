@@ -30,6 +30,36 @@ type AuditMiddleware struct {
 	session   *session.Session
 }
 
+var (
+	// auditSkipPrefixes 默认应当跳过审计的路径前缀
+	auditSkipPrefixes = []string{
+		"/health",
+		"/metrics",
+		"/favicon.ico",
+		"/api/v1/ping",
+		"/api/v1/health",
+		"/swagger",
+		"/docs",
+		"/static",
+		"/assets",
+	}
+	// auditAllowPrefixes 需要强制保留审计日志的路径前缀
+	auditAllowPrefixes = []string{
+		"/api/v1/admin",
+		"/api/v1/audit",
+		"/api/v1/user",
+		"/api/v1/users",
+		"/api/v1/resume",
+		"/api/v1/departments",
+		"/api/v1/job-profiles",
+		"/api/v1/job-skills",
+		"/api/v1/job-applications",
+		"/api/v1/file",
+		"/api/v1/screening",
+		"/api/v1/general-agent",
+	}
+)
+
 const (
 	// maxAuditBodyBytes 限制审计记录保存的请求和响应体大小，避免大对象导致内存和延迟问题
 	maxAuditBodyBytes = 4 * 1024
@@ -212,24 +242,19 @@ func (m *AuditMiddleware) Audit() echo.MiddlewareFunc {
 
 // shouldSkip 判断是否跳过审计
 func (m *AuditMiddleware) shouldSkip(path string) bool {
-	skipPaths := []string{
-		"/health",
-		"/metrics",
-		"/favicon.ico",
-		"/api/v1/ping",
-		"/api/v1/health",
-		"/swagger",
-		"/docs",
-		"/static",
-		"/assets",
-	}
-
-	for _, skipPath := range skipPaths {
+	for _, skipPath := range auditSkipPrefixes {
 		if strings.HasPrefix(path, skipPath) {
 			return true
 		}
 	}
-	return false
+
+	for _, allowPath := range auditAllowPrefixes {
+		if strings.HasPrefix(path, allowPath) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // shouldCaptureRequestBody 判断是否需要采集请求体
@@ -497,8 +522,6 @@ func (m *AuditMiddleware) parseResourceInfo(c echo.Context) (consts.ResourceType
 	case strings.HasPrefix(path, "/api/v1/users"):
 		return m.parseUserResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/resume"):
-		return m.parseResumeResource(c, path)
-	case strings.HasPrefix(path, "/api/v1/resumes"):
 		return m.parseResumeResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/departments"):
 		return m.parseDepartmentResource(c, path)
