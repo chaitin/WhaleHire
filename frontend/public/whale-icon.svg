@@ -1,0 +1,22 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 鲸鱼主体 - 科技感流线设计 -->
+  <path d="M48 28C48 22.477 43.523 18 38 18C36.5 18 35.1 18.4 33.9 19.1C32.8 15.7 29.6 13 25.8 13C21.2 13 17.5 16.7 17.5 21.3C17.5 21.8 17.6 22.3 17.6 22.8C14.5 24.2 12.3 27.3 12.3 31C12.3 36 16.3 40 21.3 40H46C50.4 40 54 36.4 54 32C54 29.8 52.4 28 48 28Z" fill="#36CFC9" fill-opacity="0.2"/>
+  
+  <!-- 鲸鱼身体主线 -->
+  <path d="M12 35C12 35 18 30 25 30C32 30 38 35 45 35C52 35 56 32 56 32" stroke="#36CFC9" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- 鲸鱼尾巴 -->
+  <path d="M8 38C8 38 10 35 12 35C12 35 10 32 8 32" stroke="#36CFC9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- 鲸鱼喷水效果 - 科技感粒子 -->
+  <circle cx="50" cy="22" r="1.5" fill="#36CFC9"/>
+  <circle cx="53" cy="20" r="1.2" fill="#36CFC9" opacity="0.8"/>
+  <circle cx="48" cy="19" r="1" fill="#36CFC9" opacity="0.6"/>
+  <circle cx="51" cy="24" r="0.8" fill="#36CFC9" opacity="0.5"/>
+  
+  <!-- 鲸鱼眼睛 - 简约科技风 -->
+  <circle cx="48" cy="33" r="2" fill="#36CFC9"/>
+  
+  <!-- 装饰性波浪线 -->
+  <path d="M15 45C19 43 23 43 27 45C31 47 35 47 39 45" stroke="#36CFC9" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+</svg>

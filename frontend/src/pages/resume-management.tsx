@@ -306,10 +306,17 @@ export function ResumeManagementPage() {
   // 原来的定时刷新逻辑已移除，现在使用基于状态变化的刷新机制
 
   const handleUploadSuccess = (uploadedResume?: Resume) => {
-    console.log('简历上传成功，返回的数据:', uploadedResume);
+    console.log('简历上传成功回调触发，返回的数据:', uploadedResume);
 
     // 显示成功提示
-    setSuccessMessage('简历上传成功！正在解析中...');
+    setSuccessMessage('简历上传成功！');
+
+    // 重置到第一页
+    setCurrentPage(1);
+
+    // 重置筛选条件到默认状态，确保新简历能被显示
+    setQueryFilters((prev) => ({ ...prev, status: 'all' }));
+    setFilters((prev) => ({ ...prev, status: 'all' }));
 
     // 如果有返回的简历数据，立即添加到列表顶部
     if (uploadedResume) {
@@ -317,43 +324,30 @@ export function ResumeManagementPage() {
         '将新简历添加到列表顶部:',
         uploadedResume.name,
         '状态:',
-        uploadedResume.status
+        uploadedResume.status,
+        '岗位信息:',
+        uploadedResume.job_positions
       );
 
       // 使用 addResumeItem 方法将新简历添加到列表
       addResumeItem(uploadedResume);
+    }
 
-      // 重置到第一页以确保能看到新上传的简历
-      setCurrentPage(1);
-
-      // 重置筛选条件到默认状态，确保新简历能被显示
-      if (queryFilters.status !== 'all') {
-        setQueryFilters((prev) => ({ ...prev, status: 'all' }));
-        setFilters((prev) => ({ ...prev, status: 'all' }));
-      }
-    } else {
-      console.log('未返回简历数据，强制刷新列表');
-
-      // 如果没有返回数据，则强制刷新列表
+    // 无论是否有返回数据，都延迟刷新列表以确保获取最新数据
+    // 这样可以确保岗位关联信息已经在后端完成
+    console.log('延迟刷新列表，确保获取完整的简历和岗位关联数据');
+    setTimeout(() => {
       const params = {
-        page: 1, // 重置到第一页
+        page: 1,
         size: pagination.pageSize,
         position:
           queryFilters.position !== 'all' ? queryFilters.position : undefined,
-        status: undefined, // 重置状态筛选，确保能看到新上传的简历
+        status: undefined, // 不筛选状态，显示所有简历
         keywords: queryFilters.keywords?.trim() || undefined,
       };
-
-      // 更新当前页码状态和筛选条件
-      setCurrentPage(1);
-      setQueryFilters((prev) => ({ ...prev, status: 'all' }));
-      setFilters((prev) => ({ ...prev, status: 'all' }));
-
-      // 强制刷新列表
       fetchResumes(params, { force: true });
-    }
-
-    console.log('上传成功处理完成，自动刷新机制将监控状态变化');
+      console.log('列表刷新完成，应该可以看到包含岗位信息的最新简历');
+    }, 1500);
 
     // 3秒后自动隐藏成功提示
     setTimeout(() => {

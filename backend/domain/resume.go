@@ -33,6 +33,11 @@ type ResumeUsecase interface {
 
 	// 获取解析进度
 	GetParseProgress(ctx context.Context, id string) (*ResumeParseProgress, error)
+
+	// 批量上传相关接口
+	BatchUpload(ctx context.Context, req *BatchUploadResumeReq) (*BatchUploadTask, error)
+	GetBatchUploadStatus(ctx context.Context, taskID string) (*BatchUploadTask, error)
+	CancelBatchUpload(ctx context.Context, taskID string) error
 }
 
 // ResumeRepo 简历数据访问接口
@@ -546,6 +551,58 @@ type ResumeParseProgress struct {
 	StartedAt    *time.Time   `json:"started_at"`    // 开始解析时间
 	CompletedAt  *time.Time   `json:"completed_at"`  // 完成解析时间
 }
+
+// 批量上传相关数据结构
+type BatchUploadResumeReq struct {
+	UploaderID     string                 `json:"uploader_id" validate:"required"`
+	Files          []*BatchUploadFileInfo `json:"files" validate:"required,min=1"`
+	JobPositionIDs []string               `json:"job_position_ids,omitempty"` // 关联的岗位ID列表
+	Source         *string                `json:"source,omitempty"`           // 申请来源
+	Notes          *string                `json:"notes,omitempty"`            // 备注信息
+}
+
+type BatchUploadFileInfo struct {
+	File     io.Reader `json:"-"`
+	Filename string    `json:"filename" validate:"required"`
+}
+
+type BatchUploadTask struct {
+	TaskID         string             `json:"task_id"`
+	UploaderID     string             `json:"uploader_id"`
+	Status         BatchUploadStatus  `json:"status"`
+	TotalCount     int                `json:"total_count"`
+	CompletedCount int                `json:"completed_count"`
+	SuccessCount   int                `json:"success_count"`
+	FailedCount    int                `json:"failed_count"`
+	JobPositionIDs []string           `json:"job_position_ids,omitempty"`
+	Source         *string            `json:"source,omitempty"`
+	Notes          *string            `json:"notes,omitempty"`
+	Items          []*BatchUploadItem `json:"items"`
+	CreatedAt      time.Time          `json:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at"`
+	CompletedAt    *time.Time         `json:"completed_at,omitempty"`
+}
+
+type BatchUploadItem struct {
+	ItemID       string            `json:"item_id"`
+	Filename     string            `json:"filename"`
+	Status       BatchUploadStatus `json:"status"`
+	ResumeID     *string           `json:"resume_id,omitempty"`
+	ErrorMessage *string           `json:"error_message,omitempty"`
+	CreatedAt    time.Time         `json:"created_at"`
+	UpdatedAt    time.Time         `json:"updated_at"`
+	CompletedAt  *time.Time        `json:"completed_at,omitempty"`
+}
+
+type BatchUploadStatus string
+
+const (
+	BatchUploadStatusPending    BatchUploadStatus = "pending"    // 等待处理
+	BatchUploadStatusProcessing BatchUploadStatus = "processing" // 正在处理
+	BatchUploadStatusCompleted  BatchUploadStatus = "completed"  // 已完成
+	BatchUploadStatusFailed     BatchUploadStatus = "failed"     // 失败
+	BatchUploadStatusCancelled  BatchUploadStatus = "cancelled"  // 已取消
+)
 
 // ResumeDocumentParse 文档解析结果
 type ResumeDocumentParse struct {

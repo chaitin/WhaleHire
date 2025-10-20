@@ -488,12 +488,24 @@ func convertToCompanyMatchInfo(data map[string]interface{}) *CompanyMatchInfo {
 		info.TargetCompany = targetCompany
 	}
 
+	if companySize, ok := data["company_size"].(string); ok {
+		info.CompanySize = companySize
+	}
+
+	if reputation, ok := data["reputation"].(float64); ok {
+		info.Reputation = reputation
+	}
+
 	if score, ok := data["score"].(float64); ok {
 		info.Score = score
 	}
 
 	if isExact, ok := data["is_exact"].(bool); ok {
 		info.IsExact = isExact
+	}
+
+	if analysis, ok := data["analysis"].(string); ok {
+		info.Analysis = analysis
 	}
 
 	return info
@@ -734,6 +746,26 @@ func convertToIndustryMatchDetail(data map[string]interface{}) *IndustryMatchDet
 				}
 			}
 		}
+	}
+
+	// 转换行业深度评估
+	if depthData, ok := data["industry_depth"].(map[string]interface{}); ok {
+		depth := &IndustryDepthInfo{}
+		if years, ok := depthData["total_years"].(float64); ok {
+			depth.TotalYears = years
+		}
+		if dscore, ok := depthData["score"].(float64); ok {
+			depth.Score = dscore
+		}
+		if analysis, ok := depthData["analysis"].(string); ok {
+			depth.Analysis = analysis
+		}
+		detail.IndustryDepth = depth
+	}
+
+	// 转换整体分析
+	if overall, ok := data["overall_analysis"].(string); ok {
+		detail.OverallAnalysis = overall
 	}
 
 	return detail

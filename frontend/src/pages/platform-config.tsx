@@ -644,7 +644,7 @@ export default function PlatformConfig() {
       </div>
 
       {/* 工作技能配置卡片 */}
-      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden card-hover">
         {/* 卡片头部 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-4">

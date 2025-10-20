@@ -10,6 +10,7 @@ import { ResumeManagementPage } from '@/pages/resume-management';
 import JobProfilePage from '@/pages/job-profile';
 import PlatformConfig from '@/pages/platform-config';
 import { IntelligentMatchingPage } from '@/pages/intelligent-matching';
+import AuditLogPage from '@/pages/audit-log';
 import { PlaceholderPage } from '@/pages/placeholder-page';
 import LoginPage from '@/pages/login';
 import RegisterPage from '@/pages/register';
@@ -97,6 +98,7 @@ function App() {
                   />
                 }
               />
+              <Route path="operation-log" element={<AuditLogPage />} />
               <Route
                 path="permission-management"
                 element={

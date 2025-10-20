@@ -146,7 +146,7 @@ export function ResumeTable({
 
     if (jobPositions.length === 1) {
       return (
-        <span className="text-sm text-gray-900">
+        <span className="text-sm text-gray-500">
           {jobPositions[0].job_title}
         </span>
       );
@@ -157,7 +157,7 @@ export function ResumeTable({
     const remainingCount = jobPositions.length - 1;
 
     return (
-      <div className="text-sm text-gray-900">
+      <div className="text-sm text-gray-500">
         {firstJobTitle}等
         <TooltipProvider>
           <Tooltip>
