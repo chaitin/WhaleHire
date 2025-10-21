@@ -39,6 +39,7 @@ import (
 	repo3 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	usecase4 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	adapter2 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/adapter"
 	v1_11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
 	repo10 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/repo"
 	usecase11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/usecase"
@@ -132,12 +133,15 @@ func newServer() (*Server, error) {
 	notificationWorker := worker.NewNotificationWorker(consumer, notificationEventRepo, dingTalkAdapter, slogLogger)
 	notificationSettingHandler := v1_10.NewNotificationSettingHandler(web, notificationSettingUsecase, slogLogger, authMiddleware)
 	resumeMailboxSettingRepo := repo10.NewResumeMailboxSettingRepo(client)
+	resumeMailboxCursorRepo := repo10.NewResumeMailboxCursorRepo(client)
 	credentialVault, err := credential.NewCredentialVault(configConfig)
 	if err != nil {
 		return nil, err
 	}
-	resumeMailboxSettingUsecase := usecase11.NewResumeMailboxSettingUsecase(resumeMailboxSettingRepo, credentialVault)
-	resumeMailboxSettingHandler := v1_11.NewResumeMailboxSettingHandler(web, resumeMailboxSettingUsecase, slogLogger, authMiddleware)
+	mailboxAdapterFactory := adapter2.NewAdapterFactory(slogLogger)
+	resumeMailboxSettingUsecase := usecase11.NewResumeMailboxSettingUsecase(resumeMailboxSettingRepo, credentialVault, mailboxAdapterFactory)
+	resumeMailboxSyncUsecase := usecase11.NewResumeMailboxSyncUsecase(resumeMailboxSettingRepo, resumeMailboxCursorRepo, credentialVault, mailboxAdapterFactory, resumeUsecase, jobApplicationUsecase, slogLogger)
+	resumeMailboxSettingHandler := v1_11.NewResumeMailboxSettingHandler(web, resumeMailboxSettingUsecase, resumeMailboxSyncUsecase, slogLogger, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
 		config:                 configConfig,

@@ -11,19 +11,22 @@ import (
 )
 
 type ResumeMailboxSettingHandler struct {
-	usecase domain.ResumeMailboxSettingUsecase
-	logger  *slog.Logger
+	usecase     domain.ResumeMailboxSettingUsecase
+	syncUsecase domain.ResumeMailboxSyncUsecase
+	logger      *slog.Logger
 }
 
 func NewResumeMailboxSettingHandler(
 	w *web.Web,
 	usecase domain.ResumeMailboxSettingUsecase,
+	syncUsecase domain.ResumeMailboxSyncUsecase,
 	logger *slog.Logger,
 	auth *middleware.AuthMiddleware,
 ) *ResumeMailboxSettingHandler {
 	h := &ResumeMailboxSettingHandler{
-		usecase: usecase,
-		logger:  logger,
+		usecase:     usecase,
+		syncUsecase: syncUsecase,
+		logger:      logger,
 	}
 
 	// 注册路由
@@ -38,8 +41,9 @@ func NewResumeMailboxSettingHandler(
 	group.DELETE("/:id", web.BaseHandler(h.DeleteSetting))
 
 	// 邮箱连接测试和状态管理
-	group.POST("/:id/test", web.BaseHandler(h.TestConnection))
+	group.POST("/:id/test-connection", web.BaseHandler(h.TestConnection))
 	group.PUT("/:id/status", web.BindHandler(h.UpdateStatus))
+	group.POST("/:id/sync-now", web.BaseHandler(h.SyncNow))
 
 	return h
 }
@@ -306,7 +310,18 @@ func (h *ResumeMailboxSettingHandler) TestConnection(ctx *web.Context) error {
 		return err
 	}
 
-	// 构建测试连接请求
+	// 检查凭证是否已解密（GetByID方法会自动解密）
+	credential := setting.EncryptedCredential
+
+	// 如果凭证包含错误信息，说明解密失败
+	if errorMsg, hasError := credential["error"].(string); hasError {
+		h.logger.ErrorContext(ctx.Request().Context(), "Credential decryption failed",
+			slog.String("error", errorMsg),
+		)
+		return errcode.ErrInvalidParam.WithData("message", "Failed to decrypt stored credentials")
+	}
+
+	// 构建测试连接请求，直接使用已解密的凭证
 	testReq := &domain.TestConnectionRequest{
 		EmailAddress:        setting.EmailAddress,
 		Protocol:            setting.Protocol,
@@ -315,7 +330,7 @@ func (h *ResumeMailboxSettingHandler) TestConnection(ctx *web.Context) error {
 		UseSsl:              setting.UseSsl,
 		Folder:              &setting.Folder,
 		AuthType:            setting.AuthType,
-		EncryptedCredential: setting.EncryptedCredential,
+		EncryptedCredential: credential, // 这里实际上是已解密的凭证
 	}
 
 	err = h.usecase.TestConnection(ctx.Request().Context(), testReq)
@@ -356,4 +371,46 @@ func (h *ResumeMailboxSettingHandler) UpdateStatus(ctx *web.Context, req domain.
 	}
 
 	return ctx.Success(map[string]string{"status": "success", "message": "Status updated successfully"})
+}
+
+// SyncNow 手动触发邮箱同步
+//
+//	@Tags			Resume Mailbox
+//	@Summary		手动触发邮箱简历同步
+//	@Description	手动执行一次邮箱同步任务，拉取新邮件并解析简历附件
+//	@ID				sync-resume-mailbox-now
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"邮箱设置ID"
+//	@Success		200	{object}	web.Resp{data=domain.ResumeMailboxSyncResult}
+//	@Failure		400	{object}	web.Resp{}	"参数错误"
+//	@Failure		401	{object}	web.Resp{}	"未授权"
+//	@Failure		500	{object}	web.Resp{}	"同步失败"
+//	@Router			/api/v1/resume-mailbox-settings/{id}/sync-now [post]
+func (h *ResumeMailboxSettingHandler) SyncNow(ctx *web.Context) error {
+	user := middleware.GetUser(ctx)
+	if user == nil {
+		h.logger.ErrorContext(ctx.Request().Context(), "Failed to get user for sync-now")
+		return errcode.ErrPermission
+	}
+
+	idStr := ctx.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		h.logger.ErrorContext(ctx.Request().Context(), "Invalid ID format for sync-now",
+			slog.String("id", idStr),
+		)
+		return errcode.ErrInvalidParam.WithData("message", "Invalid ID format")
+	}
+
+	result, err := h.syncUsecase.SyncNow(ctx.Request().Context(), id)
+	if err != nil {
+		h.logger.ErrorContext(ctx.Request().Context(), "Failed to sync resume mailbox",
+			slog.String("error", err.Error()),
+			slog.String("mailbox_id", id.String()),
+		)
+		return err
+	}
+
+	return ctx.Success(result)
 }

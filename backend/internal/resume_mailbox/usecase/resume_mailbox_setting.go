@@ -3,7 +3,9 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/google/uuid"
 )
@@ -12,16 +14,19 @@ import (
 type ResumeMailboxSettingUsecase struct {
 	repo            domain.ResumeMailboxSettingRepo
 	credentialVault domain.CredentialVault
+	adapterFactory  domain.MailboxAdapterFactory
 }
 
 // NewResumeMailboxSettingUsecase 创建邮箱设置用例实例
 func NewResumeMailboxSettingUsecase(
 	repo domain.ResumeMailboxSettingRepo,
 	credentialVault domain.CredentialVault,
+	adapterFactory domain.MailboxAdapterFactory,
 ) domain.ResumeMailboxSettingUsecase {
 	return &ResumeMailboxSettingUsecase{
 		repo:            repo,
 		credentialVault: credentialVault,
+		adapterFactory:  adapterFactory,
 	}
 }
 
@@ -147,31 +152,55 @@ func (u *ResumeMailboxSettingUsecase) List(ctx context.Context, req *domain.List
 
 // TestConnection 测试邮箱连接
 func (u *ResumeMailboxSettingUsecase) TestConnection(ctx context.Context, req *domain.TestConnectionRequest) error {
-	// 解密凭证信息
-	decryptedCredential, err := u.credentialVault.Decrypt(ctx, req.EncryptedCredential)
-	if err != nil {
-		return fmt.Errorf("failed to decrypt credential: %w", err)
-	}
+	// 检查凭证是否已经是解密后的格式
+	credential := req.EncryptedCredential
 
-	// 这里应该实现实际的邮箱连接测试逻辑
-	// 由于涉及到具体的邮箱协议实现，这里先返回成功
-	// 在实际项目中，需要根据 Protocol 类型调用相应的连接测试逻辑
+	// 如果凭证包含 encrypted_data 和 algorithm 字段，说明还需要解密
+	if _, hasEncryptedData := credential["encrypted_data"].(string); hasEncryptedData {
+		if algorithm, hasAlgorithm := credential["algorithm"].(string); hasAlgorithm && algorithm == "AES-256-GCM" {
+			// 需要解密
+			decryptedCredential, err := u.credentialVault.Decrypt(ctx, credential)
+			if err != nil {
+				return fmt.Errorf("failed to decrypt credential: %w", err)
+			}
+			credential = decryptedCredential
+		}
+	}
 
 	// 验证必要的凭证字段
-	if req.AuthType == "password" {
-		if _, ok := decryptedCredential["password"]; !ok {
+	if req.AuthType == string(consts.MailboxAuthTypePassword) {
+		if _, ok := credential["password"]; !ok {
 			return domain.ErrInvalidCredentials
 		}
-	} else if req.AuthType == "oauth" {
-		if _, ok := decryptedCredential["access_token"]; !ok {
+	} else if req.AuthType == string(consts.MailboxAuthTypeOAuth) {
+		if _, ok := credential["access_token"]; !ok {
 			return domain.ErrInvalidCredentials
 		}
 	}
 
-	// TODO: 实现实际的邮箱连接测试
-	// 1. 根据 Protocol (imap/pop3) 创建相应的客户端
-	// 2. 使用解密后的凭证进行连接测试
-	// 3. 如果是 IMAP，还需要测试指定的 Folder 是否存在
+	adapter, err := u.adapterFactory.GetAdapter(strings.ToLower(req.Protocol))
+	if err != nil {
+		return err
+	}
+
+	folder := ""
+	if req.Folder != nil {
+		folder = *req.Folder
+	}
+
+	config := &domain.MailboxConnectionConfig{
+		Host:         req.Host,
+		Port:         req.Port,
+		UseSSL:       req.UseSsl,
+		EmailAddress: req.EmailAddress,
+		Folder:       folder,
+		AuthType:     req.AuthType,
+		Credential:   credential,
+	}
+
+	if err := adapter.TestConnection(ctx, config); err != nil {
+		return fmt.Errorf("邮箱连接失败: %w", err)
+	}
 
 	return nil
 }
@@ -179,7 +208,7 @@ func (u *ResumeMailboxSettingUsecase) TestConnection(ctx context.Context, req *d
 // UpdateStatus 启用/禁用邮箱设置
 func (u *ResumeMailboxSettingUsecase) UpdateStatus(ctx context.Context, id uuid.UUID, status string) error {
 	// 验证状态值
-	if status != "enabled" && status != "disabled" {
+	if status != string(consts.MailboxStatusEnabled) && status != string(consts.MailboxStatusDisabled) {
 		return fmt.Errorf("invalid status: %s", status)
 	}
 

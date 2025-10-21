@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,6 +62,14 @@ type ResumeMailboxSettingRepo interface {
 	GetActiveSettings(ctx context.Context) ([]*db.ResumeMailboxSetting, error)
 }
 
+// ResumeMailboxCursorRepo 邮箱游标仓储接口
+type ResumeMailboxCursorRepo interface {
+	// 根据邮箱ID获取游标
+	GetByMailboxID(ctx context.Context, mailboxID uuid.UUID) (*ResumeMailboxCursor, error)
+	// 更新或创建游标
+	Upsert(ctx context.Context, mailboxID uuid.UUID, protocolCursor string, lastMessageID string) (*ResumeMailboxCursor, error)
+}
+
 // CredentialVault 凭证加密存储接口
 type CredentialVault interface {
 	// 加密凭证
@@ -69,21 +78,43 @@ type CredentialVault interface {
 	Decrypt(ctx context.Context, encryptedCredential map[string]interface{}) (map[string]interface{}, error)
 }
 
+// MailboxProtocolAdapter 邮箱协议适配器接口
+type MailboxProtocolAdapter interface {
+	// TestConnection 测试邮箱连接
+	TestConnection(ctx context.Context, config *MailboxConnectionConfig) error
+	// Fetch 拉取新邮件
+	Fetch(ctx context.Context, config *MailboxConnectionConfig, req *MailboxFetchRequest) (*MailboxFetchResult, error)
+	// GetProtocol 返回协议标识
+	GetProtocol() string
+}
+
+// MailboxAdapterFactory 邮箱适配器工厂接口
+type MailboxAdapterFactory interface {
+	// GetAdapter 根据协议获取适配器
+	GetAdapter(protocol string) (MailboxProtocolAdapter, error)
+}
+
+// ResumeMailboxSyncUsecase 邮箱同步用例接口
+type ResumeMailboxSyncUsecase interface {
+	// SyncNow 手动触发同步
+	SyncNow(ctx context.Context, mailboxID uuid.UUID) (*ResumeMailboxSyncResult, error)
+}
+
 // =========================
 // 请求和响应结构体
 // =========================
 
 // CreateResumeMailboxSettingRequest 创建邮箱设置请求
 type CreateResumeMailboxSettingRequest struct {
-	Name                string                 `json:"name" validate:"required,min=1,max=100"`                              // 邮箱设置名称
-	EmailAddress        string                 `json:"email_address" validate:"required,email"`                             // 邮箱地址
-	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`                        // 邮箱协议：imap或pop3
-	Host                string                 `json:"host" validate:"required,min=1,max=255"`                              // 邮箱服务器地址
-	Port                int                    `json:"port" validate:"required,min=1,max=65535"`                            // 邮箱服务器端口
-	UseSsl              bool                   `json:"use_ssl"`                                                             // 是否使用SSL连接
-	Folder              *string                `json:"folder,omitempty"`                                                    // 邮箱文件夹，可选
-	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"`                  // 认证类型：password或oauth
-	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required"`                            // 加密后的认证凭据
+	Name                string                 `json:"name" validate:"required,min=1,max=100"`             // 邮箱设置名称
+	EmailAddress        string                 `json:"email_address" validate:"required,email"`            // 邮箱地址
+	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`       // 邮箱协议：imap或pop3
+	Host                string                 `json:"host" validate:"required,min=1,max=255"`             // 邮箱服务器地址
+	Port                int                    `json:"port" validate:"required,min=1,max=65535"`           // 邮箱服务器端口
+	UseSsl              bool                   `json:"use_ssl"`                                            // 是否使用SSL连接
+	Folder              *string                `json:"folder,omitempty"`                                   // 邮箱文件夹，可选
+	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"` // 认证类型：password或oauth
+	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required"`
 	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`                                     // 上传者ID
 	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`                                            // 关联的职位档案ID，可选
 	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
@@ -99,7 +130,7 @@ type UpdateResumeMailboxSettingRequest struct {
 	UseSsl              *bool                   `json:"use_ssl,omitempty"`                                                   // 是否使用SSL连接，可选
 	Folder              *string                 `json:"folder,omitempty"`                                                    // 邮箱文件夹，可选
 	AuthType            *string                 `json:"auth_type,omitempty" validate:"omitempty,oneof=password oauth"`       // 认证类型：password或oauth，可选
-	EncryptedCredential *map[string]interface{} `json:"encrypted_credential,omitempty"`                                      // 加密后的认证凭据，可选
+	EncryptedCredential *map[string]interface{} `json:"encrypted_credential,omitempty"`                                      // 加密后的认证凭据，可选。password类型需要：username(可选,默认使用email_address)、password(必需)；oauth类型需要：username(可选,默认使用email_address)、access_token(必需)
 	JobProfileID        *uuid.UUID              `json:"job_profile_id,omitempty"`                                            // 关联的职位档案ID，可选
 	SyncIntervalMinutes *int                    `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
 	Status              *string                 `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`        // 状态：enabled或disabled，可选
@@ -124,14 +155,14 @@ type ListResumeMailboxSettingsResponse struct {
 
 // TestConnectionRequest 测试连接请求
 type TestConnectionRequest struct {
-	EmailAddress        string                 `json:"email_address" validate:"required,email"`            // 邮箱地址
-	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`       // 邮箱协议：imap或pop3
-	Host                string                 `json:"host" validate:"required,min=1,max=255"`             // 邮箱服务器地址
-	Port                int                    `json:"port" validate:"required,min=1,max=65535"`           // 邮箱服务器端口
-	UseSsl              bool                   `json:"use_ssl"`                                            // 是否使用SSL连接
-	Folder              *string                `json:"folder,omitempty"`                                   // 邮箱文件夹，可选
-	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"` // 认证类型：password或oauth
-	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required"`           // 加密后的认证凭据
+	EmailAddress        string                 `json:"email_address" validate:"required,email"`                       // 邮箱地址
+	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`                  // 邮箱协议：imap或pop3
+	Host                string                 `json:"host" validate:"required,min=1,max=255"`                        // 邮箱服务器地址
+	Port                int                    `json:"port" validate:"required,min=1,max=65535"`                      // 邮箱服务器端口
+	UseSsl              bool                   `json:"use_ssl"`                                                       // 是否使用SSL连接
+	Folder              *string                `json:"folder,omitempty"`                                              // 邮箱文件夹，可选
+	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"`            // 认证类型：password或oauth
+	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required" swaggertype:"object"` // 加密后的认证凭据。password类型需要：username(可选,默认使用email_address)、password(必需)；oauth类型需要：username(可选,默认使用email_address)、access_token(必需)
 }
 
 // TestConnectionResponse 测试连接响应
@@ -317,6 +348,61 @@ func (c *ResumeMailboxCursor) From(entity *db.ResumeMailboxCursor) *ResumeMailbo
 	c.UpdatedAt = entity.UpdatedAt
 
 	return c
+}
+
+// MailboxConnectionConfig 邮箱连接配置
+type MailboxConnectionConfig struct {
+	Host         string
+	Port         int
+	UseSSL       bool
+	EmailAddress string
+	Folder       string
+	AuthType     string
+	Credential   map[string]interface{}
+}
+
+// MailboxFetchRequest 邮箱拉取请求参数
+type MailboxFetchRequest struct {
+	Cursor string
+	Limit  int
+}
+
+// MailboxFetchResult 邮箱拉取结果
+type MailboxFetchResult struct {
+	Messages      []*MailboxEmail
+	NextCursor    string
+	LastMessageID string
+}
+
+// MailboxEmail 邮件摘要
+type MailboxEmail struct {
+	MessageID   string
+	Subject     string
+	ReceivedAt  time.Time
+	Attachments []*MailboxAttachment
+	RawSize     int64
+}
+
+// MailboxAttachment 邮件附件
+type MailboxAttachment struct {
+	Filename    string
+	ContentType string
+	Content     []byte
+	Size        int64
+	Hash        string
+	Reader      io.Reader `json:"-"`
+}
+
+// ResumeMailboxSyncResult 邮箱同步结果
+type ResumeMailboxSyncResult struct {
+	MailboxID          uuid.UUID     `json:"mailbox_id"`
+	ProcessedEmails    int           `json:"processed_emails"`
+	SuccessAttachments int           `json:"success_attachments"`
+	FailedAttachments  int           `json:"failed_attachments"`
+	SkippedAttachments int           `json:"skipped_attachments"`
+	Duration           time.Duration `json:"duration"`
+	LastMessageID      string        `json:"last_message_id"`
+	Errors             []string      `json:"errors,omitempty"`
 }
 
 // ResumeMailboxStatistic 邮箱统计信息
