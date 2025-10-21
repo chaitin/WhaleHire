@@ -32,6 +32,9 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxcursor"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxstatistic"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
@@ -723,6 +726,87 @@ func (f TraverseResumeLog) Traverse(ctx context.Context, q db.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *db.ResumeLogQuery", q)
 }
 
+// The ResumeMailboxCursorFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeMailboxCursorFunc func(context.Context, *db.ResumeMailboxCursorQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeMailboxCursorFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeMailboxCursorQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeMailboxCursorQuery", q)
+}
+
+// The TraverseResumeMailboxCursor type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeMailboxCursor func(context.Context, *db.ResumeMailboxCursorQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeMailboxCursor) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeMailboxCursor) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeMailboxCursorQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeMailboxCursorQuery", q)
+}
+
+// The ResumeMailboxSettingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeMailboxSettingFunc func(context.Context, *db.ResumeMailboxSettingQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeMailboxSettingFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeMailboxSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeMailboxSettingQuery", q)
+}
+
+// The TraverseResumeMailboxSetting type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeMailboxSetting func(context.Context, *db.ResumeMailboxSettingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeMailboxSetting) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeMailboxSetting) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeMailboxSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeMailboxSettingQuery", q)
+}
+
+// The ResumeMailboxStatisticFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ResumeMailboxStatisticFunc func(context.Context, *db.ResumeMailboxStatisticQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f ResumeMailboxStatisticFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.ResumeMailboxStatisticQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.ResumeMailboxStatisticQuery", q)
+}
+
+// The TraverseResumeMailboxStatistic type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseResumeMailboxStatistic func(context.Context, *db.ResumeMailboxStatisticQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseResumeMailboxStatistic) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseResumeMailboxStatistic) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.ResumeMailboxStatisticQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.ResumeMailboxStatisticQuery", q)
+}
+
 // The ResumeProjectFunc type is an adapter to allow the use of ordinary function as a Querier.
 type ResumeProjectFunc func(context.Context, *db.ResumeProjectQuery) (db.Value, error)
 
@@ -1096,6 +1180,12 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.ResumeJobApplicationQuery, predicate.ResumeJobApplication, resumejobapplication.OrderOption]{typ: db.TypeResumeJobApplication, tq: q}, nil
 	case *db.ResumeLogQuery:
 		return &query[*db.ResumeLogQuery, predicate.ResumeLog, resumelog.OrderOption]{typ: db.TypeResumeLog, tq: q}, nil
+	case *db.ResumeMailboxCursorQuery:
+		return &query[*db.ResumeMailboxCursorQuery, predicate.ResumeMailboxCursor, resumemailboxcursor.OrderOption]{typ: db.TypeResumeMailboxCursor, tq: q}, nil
+	case *db.ResumeMailboxSettingQuery:
+		return &query[*db.ResumeMailboxSettingQuery, predicate.ResumeMailboxSetting, resumemailboxsetting.OrderOption]{typ: db.TypeResumeMailboxSetting, tq: q}, nil
+	case *db.ResumeMailboxStatisticQuery:
+		return &query[*db.ResumeMailboxStatisticQuery, predicate.ResumeMailboxStatistic, resumemailboxstatistic.OrderOption]{typ: db.TypeResumeMailboxStatistic, tq: q}, nil
 	case *db.ResumeProjectQuery:
 		return &query[*db.ResumeProjectQuery, predicate.ResumeProject, resumeproject.OrderOption]{typ: db.TypeResumeProject, tq: q}, nil
 	case *db.ResumeSkillQuery:

@@ -1,0 +1,364 @@
+package domain
+
+import (
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/errcode"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
+)
+
+// =========================
+// 错误定义
+// =========================
+
+var (
+	ErrResumeMailboxSettingNotFound = errcode.ErrResumeMailboxSettingNotFound
+	ErrInvalidCredentials           = errcode.ErrInvalidCredentials
+	ErrMailboxConnectionFailed      = errcode.ErrMailboxConnectionFailed
+)
+
+// =========================
+// 接口定义
+// =========================
+
+// ResumeMailboxSettingUsecase 邮箱设置用例接口
+type ResumeMailboxSettingUsecase interface {
+	// 创建邮箱设置
+	Create(ctx context.Context, req *CreateResumeMailboxSettingRequest) (*ResumeMailboxSetting, error)
+	// 获取邮箱设置详情
+	GetByID(ctx context.Context, id uuid.UUID) (*ResumeMailboxSetting, error)
+	// 更新邮箱设置
+	Update(ctx context.Context, id uuid.UUID, req *UpdateResumeMailboxSettingRequest) (*ResumeMailboxSetting, error)
+	// 删除邮箱设置
+	Delete(ctx context.Context, id uuid.UUID) error
+	// 获取邮箱设置列表
+	List(ctx context.Context, req *ListResumeMailboxSettingsRequest) (*ListResumeMailboxSettingsResponse, error)
+	// 测试邮箱连接
+	TestConnection(ctx context.Context, req *TestConnectionRequest) error
+	// 启用/禁用邮箱设置
+	UpdateStatus(ctx context.Context, id uuid.UUID, status string) error
+}
+
+// ResumeMailboxSettingRepo 邮箱设置仓储接口
+type ResumeMailboxSettingRepo interface {
+	// 创建邮箱设置
+	Create(ctx context.Context, req *CreateResumeMailboxSettingRequest) (*db.ResumeMailboxSetting, error)
+	// 根据ID获取邮箱设置
+	GetByID(ctx context.Context, id uuid.UUID) (*db.ResumeMailboxSetting, error)
+	// 更新邮箱设置
+	Update(ctx context.Context, id uuid.UUID, req *UpdateResumeMailboxSettingRequest) (*db.ResumeMailboxSetting, error)
+	// 删除邮箱设置
+	Delete(ctx context.Context, id uuid.UUID) error
+	// 获取邮箱设置列表
+	List(ctx context.Context, req *ListResumeMailboxSettingsRequest) ([]*db.ResumeMailboxSetting, *db.PageInfo, error)
+	// 更新同步状态
+	UpdateSyncStatus(ctx context.Context, id uuid.UUID, req *UpdateSyncStatusRequest) error
+	// 获取活跃的邮箱设置
+	GetActiveSettings(ctx context.Context) ([]*db.ResumeMailboxSetting, error)
+}
+
+// CredentialVault 凭证加密存储接口
+type CredentialVault interface {
+	// 加密凭证
+	Encrypt(ctx context.Context, credential map[string]interface{}) (map[string]interface{}, error)
+	// 解密凭证
+	Decrypt(ctx context.Context, encryptedCredential map[string]interface{}) (map[string]interface{}, error)
+}
+
+// =========================
+// 请求和响应结构体
+// =========================
+
+// CreateResumeMailboxSettingRequest 创建邮箱设置请求
+type CreateResumeMailboxSettingRequest struct {
+	Name                string                 `json:"name" validate:"required,min=1,max=100"`                              // 邮箱设置名称
+	EmailAddress        string                 `json:"email_address" validate:"required,email"`                             // 邮箱地址
+	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`                        // 邮箱协议：imap或pop3
+	Host                string                 `json:"host" validate:"required,min=1,max=255"`                              // 邮箱服务器地址
+	Port                int                    `json:"port" validate:"required,min=1,max=65535"`                            // 邮箱服务器端口
+	UseSsl              bool                   `json:"use_ssl"`                                                             // 是否使用SSL连接
+	Folder              *string                `json:"folder,omitempty"`                                                    // 邮箱文件夹，可选
+	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"`                  // 认证类型：password或oauth
+	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required"`                            // 加密后的认证凭据
+	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`                                     // 上传者ID
+	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`                                            // 关联的职位档案ID，可选
+	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
+}
+
+// UpdateResumeMailboxSettingRequest 更新邮箱设置请求
+type UpdateResumeMailboxSettingRequest struct {
+	Name                *string                 `json:"name,omitempty" validate:"omitempty,min=1,max=100"`                   // 邮箱设置名称，可选
+	EmailAddress        *string                 `json:"email_address,omitempty" validate:"omitempty,email"`                  // 邮箱地址，可选
+	Protocol            *string                 `json:"protocol,omitempty" validate:"omitempty,oneof=imap pop3"`             // 邮箱协议：imap或pop3，可选
+	Host                *string                 `json:"host,omitempty" validate:"omitempty,min=1,max=255"`                   // 邮箱服务器地址，可选
+	Port                *int                    `json:"port,omitempty" validate:"omitempty,min=1,max=65535"`                 // 邮箱服务器端口，可选
+	UseSsl              *bool                   `json:"use_ssl,omitempty"`                                                   // 是否使用SSL连接，可选
+	Folder              *string                 `json:"folder,omitempty"`                                                    // 邮箱文件夹，可选
+	AuthType            *string                 `json:"auth_type,omitempty" validate:"omitempty,oneof=password oauth"`       // 认证类型：password或oauth，可选
+	EncryptedCredential *map[string]interface{} `json:"encrypted_credential,omitempty"`                                      // 加密后的认证凭据，可选
+	JobProfileID        *uuid.UUID              `json:"job_profile_id,omitempty"`                                            // 关联的职位档案ID，可选
+	SyncIntervalMinutes *int                    `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
+	Status              *string                 `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`        // 状态：enabled或disabled，可选
+}
+
+// ListResumeMailboxSettingsRequest 获取邮箱设置列表请求
+type ListResumeMailboxSettingsRequest struct {
+	web.Pagination
+
+	// 过滤条件
+	UploaderID   *uuid.UUID `json:"uploader_id,omitempty" query:"uploader_id"`                                   // 上传者ID筛选，可选
+	JobProfileID *uuid.UUID `json:"job_profile_id,omitempty" query:"job_profile_id"`                             // 职位档案ID筛选，可选
+	Status       *string    `json:"status,omitempty" query:"status" validate:"omitempty,oneof=enabled disabled"` // 状态筛选：enabled或disabled，可选
+	Protocol     *string    `json:"protocol,omitempty" query:"protocol" validate:"omitempty,oneof=imap pop3"`    // 协议筛选：imap或pop3，可选
+}
+
+// ListResumeMailboxSettingsResponse 获取邮箱设置列表响应
+type ListResumeMailboxSettingsResponse struct {
+	Items []*ResumeMailboxSetting `json:"items"` // 邮箱设置列表
+	*db.PageInfo
+}
+
+// TestConnectionRequest 测试连接请求
+type TestConnectionRequest struct {
+	EmailAddress        string                 `json:"email_address" validate:"required,email"`            // 邮箱地址
+	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`       // 邮箱协议：imap或pop3
+	Host                string                 `json:"host" validate:"required,min=1,max=255"`             // 邮箱服务器地址
+	Port                int                    `json:"port" validate:"required,min=1,max=65535"`           // 邮箱服务器端口
+	UseSsl              bool                   `json:"use_ssl"`                                            // 是否使用SSL连接
+	Folder              *string                `json:"folder,omitempty"`                                   // 邮箱文件夹，可选
+	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"` // 认证类型：password或oauth
+	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required"`           // 加密后的认证凭据
+}
+
+// TestConnectionResponse 测试连接响应
+type TestConnectionResponse struct {
+	Success bool   `json:"success"` // 连接是否成功
+	Message string `json:"message"` // 连接结果消息
+}
+
+// GetResumeMailboxSettingRequest 获取邮箱设置详情请求
+type GetResumeMailboxSettingRequest struct {
+	ID uuid.UUID `json:"id" validate:"required"` // 邮箱设置ID
+}
+
+// DeleteResumeMailboxSettingRequest 删除邮箱设置请求
+type DeleteResumeMailboxSettingRequest struct {
+	ID uuid.UUID `json:"id" validate:"required"` // 邮箱设置ID
+}
+
+// UpdateResumeMailboxSettingStatusRequest 更新邮箱设置状态请求
+type UpdateResumeMailboxSettingStatusRequest struct {
+	Status string `json:"status" validate:"required,oneof=enabled disabled"` // 状态：enabled或disabled
+}
+
+// UpdateSyncStatusRequest 更新同步状态请求
+type UpdateSyncStatusRequest struct {
+	Status       *string    `json:"status,omitempty"`
+	LastSyncedAt *time.Time `json:"last_synced_at,omitempty"`
+	LastError    *string    `json:"last_error,omitempty"`
+	RetryCount   *int       `json:"retry_count,omitempty"`
+}
+
+// =========================
+// 请求与响应模型（保留原有结构）
+// =========================
+
+// CreateResumeMailboxSettingReq 创建邮箱设置请求
+type CreateResumeMailboxSettingReq struct {
+	Name                string                 `json:"name" validate:"required,max=256"`
+	EmailAddress        string                 `json:"email_address" validate:"required,email,max=256"`
+	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`
+	Host                string                 `json:"host" validate:"required,max=256"`
+	Port                int                    `json:"port" validate:"required,min=1,max=65535"`
+	UseSSL              bool                   `json:"use_ssl"`
+	Folder              *string                `json:"folder,omitempty" validate:"omitempty,max=256"`
+	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"`
+	Credential          map[string]interface{} `json:"credential" validate:"required"`
+	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`
+	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`
+	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5"`
+}
+
+// UpdateResumeMailboxSettingReq 更新邮箱设置请求
+type UpdateResumeMailboxSettingReq struct {
+	ID                  uuid.UUID              `json:"-"`
+	Name                *string                `json:"name,omitempty" validate:"omitempty,max=256"`
+	Host                *string                `json:"host,omitempty" validate:"omitempty,max=256"`
+	Port                *int                   `json:"port,omitempty" validate:"omitempty,min=1,max=65535"`
+	UseSSL              *bool                  `json:"use_ssl,omitempty"`
+	Folder              *string                `json:"folder,omitempty" validate:"omitempty,max=256"`
+	AuthType            *string                `json:"auth_type,omitempty" validate:"omitempty,oneof=password oauth"`
+	Credential          map[string]interface{} `json:"credential,omitempty"`
+	UploaderID          *uuid.UUID             `json:"uploader_id,omitempty"`
+	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`
+	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5"`
+}
+
+// ListResumeMailboxSettingReq 邮箱设置列表请求
+type ListResumeMailboxSettingReq struct {
+	web.Pagination
+	Status       *string `json:"status,omitempty" query:"status" validate:"omitempty,oneof=enabled disabled"`
+	Protocol     *string `json:"protocol,omitempty" query:"protocol" validate:"omitempty,oneof=imap pop3"`
+	EmailAddress *string `json:"email_address,omitempty" query:"email_address"`
+	UploaderID   *string `json:"uploader_id,omitempty" query:"uploader_id"`
+	Keyword      *string `json:"keyword,omitempty" query:"keyword"`
+}
+
+// ListResumeMailboxSettingResp 邮箱设置列表响应
+type ListResumeMailboxSettingResp struct {
+	*db.PageInfo
+	Items []*ResumeMailboxSetting `json:"items"`
+}
+
+// GetMailboxStatisticsReq 获取邮箱统计请求
+type GetMailboxStatisticsReq struct {
+	DateFrom *time.Time `json:"date_from,omitempty" query:"date_from"`
+	DateTo   *time.Time `json:"date_to,omitempty" query:"date_to"`
+	Range    *string    `json:"range,omitempty" query:"range" validate:"omitempty,oneof=7d 30d 90d"`
+}
+
+// GetMailboxStatisticsResp 获取邮箱统计响应
+type GetMailboxStatisticsResp struct {
+	Statistics []*ResumeMailboxStatistic `json:"statistics"`
+	Summary    *MailboxStatisticsSummary `json:"summary"`
+}
+
+// =========================
+// 数据模型
+// =========================
+
+// ResumeMailboxSetting 邮箱设置数据模型
+type ResumeMailboxSetting struct {
+	ID                  uuid.UUID              `json:"id"`
+	Name                string                 `json:"name"`
+	EmailAddress        string                 `json:"email_address"`
+	Protocol            string                 `json:"protocol"`
+	Host                string                 `json:"host"`
+	Port                int                    `json:"port"`
+	UseSsl              bool                   `json:"use_ssl"`
+	Folder              string                 `json:"folder"`
+	AuthType            string                 `json:"auth_type"`
+	EncryptedCredential map[string]interface{} `json:"encrypted_credential"`
+	UploaderID          uuid.UUID              `json:"uploader_id"`
+	UploaderName        string                 `json:"uploader_name,omitempty"`
+	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`
+	JobProfileName      string                 `json:"job_profile_name,omitempty"`
+	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty"`
+	Status              string                 `json:"status"`
+	LastSyncedAt        *time.Time             `json:"last_synced_at,omitempty"`
+	LastError           string                 `json:"last_error"`
+	RetryCount          int                    `json:"retry_count"`
+	CreatedAt           time.Time              `json:"created_at"`
+	UpdatedAt           time.Time              `json:"updated_at"`
+}
+
+// From 从数据库实体转换为domain对象
+func (s *ResumeMailboxSetting) From(entity *db.ResumeMailboxSetting) *ResumeMailboxSetting {
+	if entity == nil {
+		return nil
+	}
+
+	s.ID = entity.ID
+	s.Name = entity.Name
+	s.EmailAddress = entity.EmailAddress
+	s.Protocol = string(entity.Protocol)
+	s.Host = entity.Host
+	s.Port = entity.Port
+	s.UseSsl = entity.UseSsl
+	s.Folder = entity.Folder
+	s.AuthType = string(entity.AuthType)
+	s.EncryptedCredential = entity.EncryptedCredential
+	s.UploaderID = entity.UploaderID
+	s.JobProfileID = entity.JobProfileID
+	s.SyncIntervalMinutes = entity.SyncIntervalMinutes
+	s.Status = string(entity.Status)
+	s.LastSyncedAt = entity.LastSyncedAt
+	s.LastError = entity.LastError
+	s.RetryCount = entity.RetryCount
+	s.CreatedAt = entity.CreatedAt
+	s.UpdatedAt = entity.UpdatedAt
+
+	// 填充关联数据
+	if entity.Edges.Uploader != nil {
+		s.UploaderName = entity.Edges.Uploader.Username
+	}
+	if entity.Edges.JobProfile != nil {
+		s.JobProfileName = entity.Edges.JobProfile.Name
+	}
+
+	return s
+}
+
+// ResumeMailboxCursor 邮箱同步游标数据模型
+type ResumeMailboxCursor struct {
+	ID             uuid.UUID `json:"id"`
+	MailboxID      uuid.UUID `json:"mailbox_id"`
+	ProtocolCursor string    `json:"protocol_cursor"`
+	LastMessageID  string    `json:"last_message_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// From 从数据库实体转换为domain对象
+func (c *ResumeMailboxCursor) From(entity *db.ResumeMailboxCursor) *ResumeMailboxCursor {
+	if entity == nil {
+		return nil
+	}
+
+	c.ID = entity.ID
+	c.MailboxID = entity.MailboxID
+	c.ProtocolCursor = entity.ProtocolCursor
+	c.LastMessageID = entity.LastMessageID
+	c.CreatedAt = entity.CreatedAt
+	c.UpdatedAt = entity.UpdatedAt
+
+	return c
+}
+
+// ResumeMailboxStatistic 邮箱统计信息
+type ResumeMailboxStatistic struct {
+	ID                 uuid.UUID `json:"id"`
+	MailboxID          uuid.UUID `json:"mailbox_id"`
+	Date               time.Time `json:"date"`
+	SyncedEmails       int       `json:"synced_emails"`
+	ParsedResumes      int       `json:"parsed_resumes"`
+	FailedResumes      int       `json:"failed_resumes"`
+	SkippedAttachments int       `json:"skipped_attachments"`
+	LastSyncDurationMs int       `json:"last_sync_duration_ms"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+}
+
+// From 从数据库实体转换为domain对象
+func (s *ResumeMailboxStatistic) From(entity *db.ResumeMailboxStatistic) *ResumeMailboxStatistic {
+	if entity == nil {
+		return s
+	}
+
+	s.ID = entity.ID
+	s.MailboxID = entity.MailboxID
+	s.Date = entity.Date
+	s.SyncedEmails = entity.SyncedEmails
+	s.ParsedResumes = entity.ParsedResumes
+	s.FailedResumes = entity.FailedResumes
+	s.SkippedAttachments = entity.SkippedAttachments
+	s.LastSyncDurationMs = entity.LastSyncDurationMs
+	s.CreatedAt = entity.CreatedAt
+	s.UpdatedAt = entity.UpdatedAt
+
+	return s
+}
+
+// MailboxStatisticsSummary 邮箱统计汇总
+type MailboxStatisticsSummary struct {
+	TotalSyncedEmails       int     `json:"total_synced_emails"`
+	TotalParsedResumes      int     `json:"total_parsed_resumes"`
+	TotalFailedResumes      int     `json:"total_failed_resumes"`
+	TotalSkippedAttachments int     `json:"total_skipped_attachments"`
+	AvgSyncDurationMs       float64 `json:"avg_sync_duration_ms"`
+	SuccessRate             float64 `json:"success_rate"`
+}

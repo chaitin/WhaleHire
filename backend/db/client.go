@@ -39,6 +39,9 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxcursor"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxstatistic"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
@@ -106,6 +109,12 @@ type Client struct {
 	ResumeJobApplication *ResumeJobApplicationClient
 	// ResumeLog is the client for interacting with the ResumeLog builders.
 	ResumeLog *ResumeLogClient
+	// ResumeMailboxCursor is the client for interacting with the ResumeMailboxCursor builders.
+	ResumeMailboxCursor *ResumeMailboxCursorClient
+	// ResumeMailboxSetting is the client for interacting with the ResumeMailboxSetting builders.
+	ResumeMailboxSetting *ResumeMailboxSettingClient
+	// ResumeMailboxStatistic is the client for interacting with the ResumeMailboxStatistic builders.
+	ResumeMailboxStatistic *ResumeMailboxStatisticClient
 	// ResumeProject is the client for interacting with the ResumeProject builders.
 	ResumeProject *ResumeProjectClient
 	// ResumeSkill is the client for interacting with the ResumeSkill builders.
@@ -164,6 +173,9 @@ func (c *Client) init() {
 	c.ResumeExperience = NewResumeExperienceClient(c.config)
 	c.ResumeJobApplication = NewResumeJobApplicationClient(c.config)
 	c.ResumeLog = NewResumeLogClient(c.config)
+	c.ResumeMailboxCursor = NewResumeMailboxCursorClient(c.config)
+	c.ResumeMailboxSetting = NewResumeMailboxSettingClient(c.config)
+	c.ResumeMailboxStatistic = NewResumeMailboxStatisticClient(c.config)
 	c.ResumeProject = NewResumeProjectClient(c.config)
 	c.ResumeSkill = NewResumeSkillClient(c.config)
 	c.Role = NewRoleClient(c.config)
@@ -291,6 +303,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ResumeExperience:         NewResumeExperienceClient(cfg),
 		ResumeJobApplication:     NewResumeJobApplicationClient(cfg),
 		ResumeLog:                NewResumeLogClient(cfg),
+		ResumeMailboxCursor:      NewResumeMailboxCursorClient(cfg),
+		ResumeMailboxSetting:     NewResumeMailboxSettingClient(cfg),
+		ResumeMailboxStatistic:   NewResumeMailboxStatisticClient(cfg),
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
@@ -345,6 +360,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ResumeExperience:         NewResumeExperienceClient(cfg),
 		ResumeJobApplication:     NewResumeJobApplicationClient(cfg),
 		ResumeLog:                NewResumeLogClient(cfg),
+		ResumeMailboxCursor:      NewResumeMailboxCursorClient(cfg),
+		ResumeMailboxSetting:     NewResumeMailboxSettingClient(cfg),
+		ResumeMailboxStatistic:   NewResumeMailboxStatisticClient(cfg),
 		ResumeProject:            NewResumeProjectClient(cfg),
 		ResumeSkill:              NewResumeSkillClient(cfg),
 		Role:                     NewRoleClient(cfg),
@@ -392,6 +410,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.JobResponsibility, c.JobSkill, c.JobSkillMeta, c.Message,
 		c.NotificationEvent, c.NotificationSetting, c.Resume, c.ResumeDocumentParse,
 		c.ResumeEducation, c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog,
+		c.ResumeMailboxCursor, c.ResumeMailboxSetting, c.ResumeMailboxStatistic,
 		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
 		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
 		c.User, c.UserIdentity, c.UserLoginHistory,
@@ -410,6 +429,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.JobResponsibility, c.JobSkill, c.JobSkillMeta, c.Message,
 		c.NotificationEvent, c.NotificationSetting, c.Resume, c.ResumeDocumentParse,
 		c.ResumeEducation, c.ResumeExperience, c.ResumeJobApplication, c.ResumeLog,
+		c.ResumeMailboxCursor, c.ResumeMailboxSetting, c.ResumeMailboxStatistic,
 		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
 		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
 		c.User, c.UserIdentity, c.UserLoginHistory,
@@ -467,6 +487,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ResumeJobApplication.mutate(ctx, m)
 	case *ResumeLogMutation:
 		return c.ResumeLog.mutate(ctx, m)
+	case *ResumeMailboxCursorMutation:
+		return c.ResumeMailboxCursor.mutate(ctx, m)
+	case *ResumeMailboxSettingMutation:
+		return c.ResumeMailboxSetting.mutate(ctx, m)
+	case *ResumeMailboxStatisticMutation:
+		return c.ResumeMailboxStatistic.mutate(ctx, m)
 	case *ResumeProjectMutation:
 		return c.ResumeProject.mutate(ctx, m)
 	case *ResumeSkillMutation:
@@ -4315,6 +4341,507 @@ func (c *ResumeLogClient) mutate(ctx context.Context, m *ResumeLogMutation) (Val
 	}
 }
 
+// ResumeMailboxCursorClient is a client for the ResumeMailboxCursor schema.
+type ResumeMailboxCursorClient struct {
+	config
+}
+
+// NewResumeMailboxCursorClient returns a client for the ResumeMailboxCursor from the given config.
+func NewResumeMailboxCursorClient(c config) *ResumeMailboxCursorClient {
+	return &ResumeMailboxCursorClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resumemailboxcursor.Hooks(f(g(h())))`.
+func (c *ResumeMailboxCursorClient) Use(hooks ...Hook) {
+	c.hooks.ResumeMailboxCursor = append(c.hooks.ResumeMailboxCursor, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `resumemailboxcursor.Intercept(f(g(h())))`.
+func (c *ResumeMailboxCursorClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ResumeMailboxCursor = append(c.inters.ResumeMailboxCursor, interceptors...)
+}
+
+// Create returns a builder for creating a ResumeMailboxCursor entity.
+func (c *ResumeMailboxCursorClient) Create() *ResumeMailboxCursorCreate {
+	mutation := newResumeMailboxCursorMutation(c.config, OpCreate)
+	return &ResumeMailboxCursorCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ResumeMailboxCursor entities.
+func (c *ResumeMailboxCursorClient) CreateBulk(builders ...*ResumeMailboxCursorCreate) *ResumeMailboxCursorCreateBulk {
+	return &ResumeMailboxCursorCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ResumeMailboxCursorClient) MapCreateBulk(slice any, setFunc func(*ResumeMailboxCursorCreate, int)) *ResumeMailboxCursorCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ResumeMailboxCursorCreateBulk{err: fmt.Errorf("calling to ResumeMailboxCursorClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ResumeMailboxCursorCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ResumeMailboxCursorCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ResumeMailboxCursor.
+func (c *ResumeMailboxCursorClient) Update() *ResumeMailboxCursorUpdate {
+	mutation := newResumeMailboxCursorMutation(c.config, OpUpdate)
+	return &ResumeMailboxCursorUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResumeMailboxCursorClient) UpdateOne(rmc *ResumeMailboxCursor) *ResumeMailboxCursorUpdateOne {
+	mutation := newResumeMailboxCursorMutation(c.config, OpUpdateOne, withResumeMailboxCursor(rmc))
+	return &ResumeMailboxCursorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResumeMailboxCursorClient) UpdateOneID(id uuid.UUID) *ResumeMailboxCursorUpdateOne {
+	mutation := newResumeMailboxCursorMutation(c.config, OpUpdateOne, withResumeMailboxCursorID(id))
+	return &ResumeMailboxCursorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResumeMailboxCursor.
+func (c *ResumeMailboxCursorClient) Delete() *ResumeMailboxCursorDelete {
+	mutation := newResumeMailboxCursorMutation(c.config, OpDelete)
+	return &ResumeMailboxCursorDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ResumeMailboxCursorClient) DeleteOne(rmc *ResumeMailboxCursor) *ResumeMailboxCursorDeleteOne {
+	return c.DeleteOneID(rmc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ResumeMailboxCursorClient) DeleteOneID(id uuid.UUID) *ResumeMailboxCursorDeleteOne {
+	builder := c.Delete().Where(resumemailboxcursor.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResumeMailboxCursorDeleteOne{builder}
+}
+
+// Query returns a query builder for ResumeMailboxCursor.
+func (c *ResumeMailboxCursorClient) Query() *ResumeMailboxCursorQuery {
+	return &ResumeMailboxCursorQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeResumeMailboxCursor},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ResumeMailboxCursor entity by its id.
+func (c *ResumeMailboxCursorClient) Get(ctx context.Context, id uuid.UUID) (*ResumeMailboxCursor, error) {
+	return c.Query().Where(resumemailboxcursor.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResumeMailboxCursorClient) GetX(ctx context.Context, id uuid.UUID) *ResumeMailboxCursor {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMailbox queries the mailbox edge of a ResumeMailboxCursor.
+func (c *ResumeMailboxCursorClient) QueryMailbox(rmc *ResumeMailboxCursor) *ResumeMailboxSettingQuery {
+	query := (&ResumeMailboxSettingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rmc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumemailboxcursor.Table, resumemailboxcursor.FieldID, id),
+			sqlgraph.To(resumemailboxsetting.Table, resumemailboxsetting.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, resumemailboxcursor.MailboxTable, resumemailboxcursor.MailboxColumn),
+		)
+		fromV = sqlgraph.Neighbors(rmc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ResumeMailboxCursorClient) Hooks() []Hook {
+	hooks := c.hooks.ResumeMailboxCursor
+	return append(hooks[:len(hooks):len(hooks)], resumemailboxcursor.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ResumeMailboxCursorClient) Interceptors() []Interceptor {
+	inters := c.inters.ResumeMailboxCursor
+	return append(inters[:len(inters):len(inters)], resumemailboxcursor.Interceptors[:]...)
+}
+
+func (c *ResumeMailboxCursorClient) mutate(ctx context.Context, m *ResumeMailboxCursorMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ResumeMailboxCursorCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ResumeMailboxCursorUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ResumeMailboxCursorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ResumeMailboxCursorDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ResumeMailboxCursor mutation op: %q", m.Op())
+	}
+}
+
+// ResumeMailboxSettingClient is a client for the ResumeMailboxSetting schema.
+type ResumeMailboxSettingClient struct {
+	config
+}
+
+// NewResumeMailboxSettingClient returns a client for the ResumeMailboxSetting from the given config.
+func NewResumeMailboxSettingClient(c config) *ResumeMailboxSettingClient {
+	return &ResumeMailboxSettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resumemailboxsetting.Hooks(f(g(h())))`.
+func (c *ResumeMailboxSettingClient) Use(hooks ...Hook) {
+	c.hooks.ResumeMailboxSetting = append(c.hooks.ResumeMailboxSetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `resumemailboxsetting.Intercept(f(g(h())))`.
+func (c *ResumeMailboxSettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ResumeMailboxSetting = append(c.inters.ResumeMailboxSetting, interceptors...)
+}
+
+// Create returns a builder for creating a ResumeMailboxSetting entity.
+func (c *ResumeMailboxSettingClient) Create() *ResumeMailboxSettingCreate {
+	mutation := newResumeMailboxSettingMutation(c.config, OpCreate)
+	return &ResumeMailboxSettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ResumeMailboxSetting entities.
+func (c *ResumeMailboxSettingClient) CreateBulk(builders ...*ResumeMailboxSettingCreate) *ResumeMailboxSettingCreateBulk {
+	return &ResumeMailboxSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ResumeMailboxSettingClient) MapCreateBulk(slice any, setFunc func(*ResumeMailboxSettingCreate, int)) *ResumeMailboxSettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ResumeMailboxSettingCreateBulk{err: fmt.Errorf("calling to ResumeMailboxSettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ResumeMailboxSettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ResumeMailboxSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ResumeMailboxSetting.
+func (c *ResumeMailboxSettingClient) Update() *ResumeMailboxSettingUpdate {
+	mutation := newResumeMailboxSettingMutation(c.config, OpUpdate)
+	return &ResumeMailboxSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResumeMailboxSettingClient) UpdateOne(rms *ResumeMailboxSetting) *ResumeMailboxSettingUpdateOne {
+	mutation := newResumeMailboxSettingMutation(c.config, OpUpdateOne, withResumeMailboxSetting(rms))
+	return &ResumeMailboxSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResumeMailboxSettingClient) UpdateOneID(id uuid.UUID) *ResumeMailboxSettingUpdateOne {
+	mutation := newResumeMailboxSettingMutation(c.config, OpUpdateOne, withResumeMailboxSettingID(id))
+	return &ResumeMailboxSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResumeMailboxSetting.
+func (c *ResumeMailboxSettingClient) Delete() *ResumeMailboxSettingDelete {
+	mutation := newResumeMailboxSettingMutation(c.config, OpDelete)
+	return &ResumeMailboxSettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ResumeMailboxSettingClient) DeleteOne(rms *ResumeMailboxSetting) *ResumeMailboxSettingDeleteOne {
+	return c.DeleteOneID(rms.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ResumeMailboxSettingClient) DeleteOneID(id uuid.UUID) *ResumeMailboxSettingDeleteOne {
+	builder := c.Delete().Where(resumemailboxsetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResumeMailboxSettingDeleteOne{builder}
+}
+
+// Query returns a query builder for ResumeMailboxSetting.
+func (c *ResumeMailboxSettingClient) Query() *ResumeMailboxSettingQuery {
+	return &ResumeMailboxSettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeResumeMailboxSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ResumeMailboxSetting entity by its id.
+func (c *ResumeMailboxSettingClient) Get(ctx context.Context, id uuid.UUID) (*ResumeMailboxSetting, error) {
+	return c.Query().Where(resumemailboxsetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResumeMailboxSettingClient) GetX(ctx context.Context, id uuid.UUID) *ResumeMailboxSetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUploader queries the uploader edge of a ResumeMailboxSetting.
+func (c *ResumeMailboxSettingClient) QueryUploader(rms *ResumeMailboxSetting) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rms.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumemailboxsetting.Table, resumemailboxsetting.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, resumemailboxsetting.UploaderTable, resumemailboxsetting.UploaderColumn),
+		)
+		fromV = sqlgraph.Neighbors(rms.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryJobProfile queries the job_profile edge of a ResumeMailboxSetting.
+func (c *ResumeMailboxSettingClient) QueryJobProfile(rms *ResumeMailboxSetting) *JobPositionQuery {
+	query := (&JobPositionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rms.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumemailboxsetting.Table, resumemailboxsetting.FieldID, id),
+			sqlgraph.To(jobposition.Table, jobposition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, resumemailboxsetting.JobProfileTable, resumemailboxsetting.JobProfileColumn),
+		)
+		fromV = sqlgraph.Neighbors(rms.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCursors queries the cursors edge of a ResumeMailboxSetting.
+func (c *ResumeMailboxSettingClient) QueryCursors(rms *ResumeMailboxSetting) *ResumeMailboxCursorQuery {
+	query := (&ResumeMailboxCursorClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rms.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumemailboxsetting.Table, resumemailboxsetting.FieldID, id),
+			sqlgraph.To(resumemailboxcursor.Table, resumemailboxcursor.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resumemailboxsetting.CursorsTable, resumemailboxsetting.CursorsColumn),
+		)
+		fromV = sqlgraph.Neighbors(rms.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStatistics queries the statistics edge of a ResumeMailboxSetting.
+func (c *ResumeMailboxSettingClient) QueryStatistics(rms *ResumeMailboxSetting) *ResumeMailboxStatisticQuery {
+	query := (&ResumeMailboxStatisticClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rms.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumemailboxsetting.Table, resumemailboxsetting.FieldID, id),
+			sqlgraph.To(resumemailboxstatistic.Table, resumemailboxstatistic.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, resumemailboxsetting.StatisticsTable, resumemailboxsetting.StatisticsColumn),
+		)
+		fromV = sqlgraph.Neighbors(rms.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ResumeMailboxSettingClient) Hooks() []Hook {
+	hooks := c.hooks.ResumeMailboxSetting
+	return append(hooks[:len(hooks):len(hooks)], resumemailboxsetting.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ResumeMailboxSettingClient) Interceptors() []Interceptor {
+	inters := c.inters.ResumeMailboxSetting
+	return append(inters[:len(inters):len(inters)], resumemailboxsetting.Interceptors[:]...)
+}
+
+func (c *ResumeMailboxSettingClient) mutate(ctx context.Context, m *ResumeMailboxSettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ResumeMailboxSettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ResumeMailboxSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ResumeMailboxSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ResumeMailboxSettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ResumeMailboxSetting mutation op: %q", m.Op())
+	}
+}
+
+// ResumeMailboxStatisticClient is a client for the ResumeMailboxStatistic schema.
+type ResumeMailboxStatisticClient struct {
+	config
+}
+
+// NewResumeMailboxStatisticClient returns a client for the ResumeMailboxStatistic from the given config.
+func NewResumeMailboxStatisticClient(c config) *ResumeMailboxStatisticClient {
+	return &ResumeMailboxStatisticClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resumemailboxstatistic.Hooks(f(g(h())))`.
+func (c *ResumeMailboxStatisticClient) Use(hooks ...Hook) {
+	c.hooks.ResumeMailboxStatistic = append(c.hooks.ResumeMailboxStatistic, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `resumemailboxstatistic.Intercept(f(g(h())))`.
+func (c *ResumeMailboxStatisticClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ResumeMailboxStatistic = append(c.inters.ResumeMailboxStatistic, interceptors...)
+}
+
+// Create returns a builder for creating a ResumeMailboxStatistic entity.
+func (c *ResumeMailboxStatisticClient) Create() *ResumeMailboxStatisticCreate {
+	mutation := newResumeMailboxStatisticMutation(c.config, OpCreate)
+	return &ResumeMailboxStatisticCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ResumeMailboxStatistic entities.
+func (c *ResumeMailboxStatisticClient) CreateBulk(builders ...*ResumeMailboxStatisticCreate) *ResumeMailboxStatisticCreateBulk {
+	return &ResumeMailboxStatisticCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ResumeMailboxStatisticClient) MapCreateBulk(slice any, setFunc func(*ResumeMailboxStatisticCreate, int)) *ResumeMailboxStatisticCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ResumeMailboxStatisticCreateBulk{err: fmt.Errorf("calling to ResumeMailboxStatisticClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ResumeMailboxStatisticCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ResumeMailboxStatisticCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ResumeMailboxStatistic.
+func (c *ResumeMailboxStatisticClient) Update() *ResumeMailboxStatisticUpdate {
+	mutation := newResumeMailboxStatisticMutation(c.config, OpUpdate)
+	return &ResumeMailboxStatisticUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResumeMailboxStatisticClient) UpdateOne(rms *ResumeMailboxStatistic) *ResumeMailboxStatisticUpdateOne {
+	mutation := newResumeMailboxStatisticMutation(c.config, OpUpdateOne, withResumeMailboxStatistic(rms))
+	return &ResumeMailboxStatisticUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResumeMailboxStatisticClient) UpdateOneID(id uuid.UUID) *ResumeMailboxStatisticUpdateOne {
+	mutation := newResumeMailboxStatisticMutation(c.config, OpUpdateOne, withResumeMailboxStatisticID(id))
+	return &ResumeMailboxStatisticUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResumeMailboxStatistic.
+func (c *ResumeMailboxStatisticClient) Delete() *ResumeMailboxStatisticDelete {
+	mutation := newResumeMailboxStatisticMutation(c.config, OpDelete)
+	return &ResumeMailboxStatisticDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ResumeMailboxStatisticClient) DeleteOne(rms *ResumeMailboxStatistic) *ResumeMailboxStatisticDeleteOne {
+	return c.DeleteOneID(rms.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ResumeMailboxStatisticClient) DeleteOneID(id uuid.UUID) *ResumeMailboxStatisticDeleteOne {
+	builder := c.Delete().Where(resumemailboxstatistic.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResumeMailboxStatisticDeleteOne{builder}
+}
+
+// Query returns a query builder for ResumeMailboxStatistic.
+func (c *ResumeMailboxStatisticClient) Query() *ResumeMailboxStatisticQuery {
+	return &ResumeMailboxStatisticQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeResumeMailboxStatistic},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ResumeMailboxStatistic entity by its id.
+func (c *ResumeMailboxStatisticClient) Get(ctx context.Context, id uuid.UUID) (*ResumeMailboxStatistic, error) {
+	return c.Query().Where(resumemailboxstatistic.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResumeMailboxStatisticClient) GetX(ctx context.Context, id uuid.UUID) *ResumeMailboxStatistic {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMailbox queries the mailbox edge of a ResumeMailboxStatistic.
+func (c *ResumeMailboxStatisticClient) QueryMailbox(rms *ResumeMailboxStatistic) *ResumeMailboxSettingQuery {
+	query := (&ResumeMailboxSettingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rms.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(resumemailboxstatistic.Table, resumemailboxstatistic.FieldID, id),
+			sqlgraph.To(resumemailboxsetting.Table, resumemailboxsetting.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, resumemailboxstatistic.MailboxTable, resumemailboxstatistic.MailboxColumn),
+		)
+		fromV = sqlgraph.Neighbors(rms.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ResumeMailboxStatisticClient) Hooks() []Hook {
+	hooks := c.hooks.ResumeMailboxStatistic
+	return append(hooks[:len(hooks):len(hooks)], resumemailboxstatistic.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ResumeMailboxStatisticClient) Interceptors() []Interceptor {
+	inters := c.inters.ResumeMailboxStatistic
+	return append(inters[:len(inters):len(inters)], resumemailboxstatistic.Interceptors[:]...)
+}
+
+func (c *ResumeMailboxStatisticClient) mutate(ctx context.Context, m *ResumeMailboxStatisticMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ResumeMailboxStatisticCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ResumeMailboxStatisticUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ResumeMailboxStatisticUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ResumeMailboxStatisticDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown ResumeMailboxStatistic mutation op: %q", m.Op())
+	}
+}
+
 // ResumeProjectClient is a client for the ResumeProject schema.
 type ResumeProjectClient struct {
 	config
@@ -6369,6 +6896,7 @@ type (
 		JobIndustryRequirement, JobPosition, JobResponsibility, JobSkill, JobSkillMeta,
 		Message, NotificationEvent, NotificationSetting, Resume, ResumeDocumentParse,
 		ResumeEducation, ResumeExperience, ResumeJobApplication, ResumeLog,
+		ResumeMailboxCursor, ResumeMailboxSetting, ResumeMailboxStatistic,
 		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
 		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
 		UserIdentity, UserLoginHistory []ent.Hook
@@ -6379,6 +6907,7 @@ type (
 		JobIndustryRequirement, JobPosition, JobResponsibility, JobSkill, JobSkillMeta,
 		Message, NotificationEvent, NotificationSetting, Resume, ResumeDocumentParse,
 		ResumeEducation, ResumeExperience, ResumeJobApplication, ResumeLog,
+		ResumeMailboxCursor, ResumeMailboxSetting, ResumeMailboxStatistic,
 		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
 		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
 		UserIdentity, UserLoginHistory []ent.Interceptor

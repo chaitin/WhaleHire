@@ -285,6 +285,42 @@ func (f ResumeLogFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeLogMutation", m)
 }
 
+// The ResumeMailboxCursorFunc type is an adapter to allow the use of ordinary
+// function as ResumeMailboxCursor mutator.
+type ResumeMailboxCursorFunc func(context.Context, *db.ResumeMailboxCursorMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeMailboxCursorFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeMailboxCursorMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeMailboxCursorMutation", m)
+}
+
+// The ResumeMailboxSettingFunc type is an adapter to allow the use of ordinary
+// function as ResumeMailboxSetting mutator.
+type ResumeMailboxSettingFunc func(context.Context, *db.ResumeMailboxSettingMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeMailboxSettingFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeMailboxSettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeMailboxSettingMutation", m)
+}
+
+// The ResumeMailboxStatisticFunc type is an adapter to allow the use of ordinary
+// function as ResumeMailboxStatistic mutator.
+type ResumeMailboxStatisticFunc func(context.Context, *db.ResumeMailboxStatisticMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ResumeMailboxStatisticFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.ResumeMailboxStatisticMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.ResumeMailboxStatisticMutation", m)
+}
+
 // The ResumeProjectFunc type is an adapter to allow the use of ordinary
 // function as ResumeProject mutator.
 type ResumeProjectFunc func(context.Context, *db.ResumeProjectMutation) (db.Value, error)

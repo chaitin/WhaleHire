@@ -36,6 +36,9 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxcursor"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxstatistic"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
@@ -84,6 +87,9 @@ const (
 	TypeResumeExperience         = "ResumeExperience"
 	TypeResumeJobApplication     = "ResumeJobApplication"
 	TypeResumeLog                = "ResumeLog"
+	TypeResumeMailboxCursor      = "ResumeMailboxCursor"
+	TypeResumeMailboxSetting     = "ResumeMailboxSetting"
+	TypeResumeMailboxStatistic   = "ResumeMailboxStatistic"
 	TypeResumeProject            = "ResumeProject"
 	TypeResumeSkill              = "ResumeSkill"
 	TypeRole                     = "Role"
@@ -23642,6 +23648,3557 @@ func (m *ResumeLogMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ResumeLog edge %s", name)
+}
+
+// ResumeMailboxCursorMutation represents an operation that mutates the ResumeMailboxCursor nodes in the graph.
+type ResumeMailboxCursorMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	deleted_at      *time.Time
+	protocol_cursor *string
+	last_message_id *string
+	created_at      *time.Time
+	updated_at      *time.Time
+	clearedFields   map[string]struct{}
+	mailbox         *uuid.UUID
+	clearedmailbox  bool
+	done            bool
+	oldValue        func(context.Context) (*ResumeMailboxCursor, error)
+	predicates      []predicate.ResumeMailboxCursor
+}
+
+var _ ent.Mutation = (*ResumeMailboxCursorMutation)(nil)
+
+// resumemailboxcursorOption allows management of the mutation configuration using functional options.
+type resumemailboxcursorOption func(*ResumeMailboxCursorMutation)
+
+// newResumeMailboxCursorMutation creates new mutation for the ResumeMailboxCursor entity.
+func newResumeMailboxCursorMutation(c config, op Op, opts ...resumemailboxcursorOption) *ResumeMailboxCursorMutation {
+	m := &ResumeMailboxCursorMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeResumeMailboxCursor,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withResumeMailboxCursorID sets the ID field of the mutation.
+func withResumeMailboxCursorID(id uuid.UUID) resumemailboxcursorOption {
+	return func(m *ResumeMailboxCursorMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ResumeMailboxCursor
+		)
+		m.oldValue = func(ctx context.Context) (*ResumeMailboxCursor, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ResumeMailboxCursor.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withResumeMailboxCursor sets the old ResumeMailboxCursor of the mutation.
+func withResumeMailboxCursor(node *ResumeMailboxCursor) resumemailboxcursorOption {
+	return func(m *ResumeMailboxCursorMutation) {
+		m.oldValue = func(context.Context) (*ResumeMailboxCursor, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ResumeMailboxCursorMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ResumeMailboxCursorMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ResumeMailboxCursor entities.
+func (m *ResumeMailboxCursorMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ResumeMailboxCursorMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ResumeMailboxCursorMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ResumeMailboxCursor.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ResumeMailboxCursorMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ResumeMailboxCursorMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ResumeMailboxCursor entity.
+// If the ResumeMailboxCursor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxCursorMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ResumeMailboxCursorMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[resumemailboxcursor.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ResumeMailboxCursorMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[resumemailboxcursor.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ResumeMailboxCursorMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, resumemailboxcursor.FieldDeletedAt)
+}
+
+// SetMailboxID sets the "mailbox_id" field.
+func (m *ResumeMailboxCursorMutation) SetMailboxID(u uuid.UUID) {
+	m.mailbox = &u
+}
+
+// MailboxID returns the value of the "mailbox_id" field in the mutation.
+func (m *ResumeMailboxCursorMutation) MailboxID() (r uuid.UUID, exists bool) {
+	v := m.mailbox
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMailboxID returns the old "mailbox_id" field's value of the ResumeMailboxCursor entity.
+// If the ResumeMailboxCursor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxCursorMutation) OldMailboxID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMailboxID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMailboxID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMailboxID: %w", err)
+	}
+	return oldValue.MailboxID, nil
+}
+
+// ResetMailboxID resets all changes to the "mailbox_id" field.
+func (m *ResumeMailboxCursorMutation) ResetMailboxID() {
+	m.mailbox = nil
+}
+
+// SetProtocolCursor sets the "protocol_cursor" field.
+func (m *ResumeMailboxCursorMutation) SetProtocolCursor(s string) {
+	m.protocol_cursor = &s
+}
+
+// ProtocolCursor returns the value of the "protocol_cursor" field in the mutation.
+func (m *ResumeMailboxCursorMutation) ProtocolCursor() (r string, exists bool) {
+	v := m.protocol_cursor
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProtocolCursor returns the old "protocol_cursor" field's value of the ResumeMailboxCursor entity.
+// If the ResumeMailboxCursor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxCursorMutation) OldProtocolCursor(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProtocolCursor is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProtocolCursor requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProtocolCursor: %w", err)
+	}
+	return oldValue.ProtocolCursor, nil
+}
+
+// ResetProtocolCursor resets all changes to the "protocol_cursor" field.
+func (m *ResumeMailboxCursorMutation) ResetProtocolCursor() {
+	m.protocol_cursor = nil
+}
+
+// SetLastMessageID sets the "last_message_id" field.
+func (m *ResumeMailboxCursorMutation) SetLastMessageID(s string) {
+	m.last_message_id = &s
+}
+
+// LastMessageID returns the value of the "last_message_id" field in the mutation.
+func (m *ResumeMailboxCursorMutation) LastMessageID() (r string, exists bool) {
+	v := m.last_message_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastMessageID returns the old "last_message_id" field's value of the ResumeMailboxCursor entity.
+// If the ResumeMailboxCursor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxCursorMutation) OldLastMessageID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastMessageID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastMessageID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastMessageID: %w", err)
+	}
+	return oldValue.LastMessageID, nil
+}
+
+// ClearLastMessageID clears the value of the "last_message_id" field.
+func (m *ResumeMailboxCursorMutation) ClearLastMessageID() {
+	m.last_message_id = nil
+	m.clearedFields[resumemailboxcursor.FieldLastMessageID] = struct{}{}
+}
+
+// LastMessageIDCleared returns if the "last_message_id" field was cleared in this mutation.
+func (m *ResumeMailboxCursorMutation) LastMessageIDCleared() bool {
+	_, ok := m.clearedFields[resumemailboxcursor.FieldLastMessageID]
+	return ok
+}
+
+// ResetLastMessageID resets all changes to the "last_message_id" field.
+func (m *ResumeMailboxCursorMutation) ResetLastMessageID() {
+	m.last_message_id = nil
+	delete(m.clearedFields, resumemailboxcursor.FieldLastMessageID)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ResumeMailboxCursorMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ResumeMailboxCursorMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ResumeMailboxCursor entity.
+// If the ResumeMailboxCursor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxCursorMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ResumeMailboxCursorMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ResumeMailboxCursorMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ResumeMailboxCursorMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ResumeMailboxCursor entity.
+// If the ResumeMailboxCursor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxCursorMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ResumeMailboxCursorMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearMailbox clears the "mailbox" edge to the ResumeMailboxSetting entity.
+func (m *ResumeMailboxCursorMutation) ClearMailbox() {
+	m.clearedmailbox = true
+	m.clearedFields[resumemailboxcursor.FieldMailboxID] = struct{}{}
+}
+
+// MailboxCleared reports if the "mailbox" edge to the ResumeMailboxSetting entity was cleared.
+func (m *ResumeMailboxCursorMutation) MailboxCleared() bool {
+	return m.clearedmailbox
+}
+
+// MailboxIDs returns the "mailbox" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MailboxID instead. It exists only for internal usage by the builders.
+func (m *ResumeMailboxCursorMutation) MailboxIDs() (ids []uuid.UUID) {
+	if id := m.mailbox; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMailbox resets all changes to the "mailbox" edge.
+func (m *ResumeMailboxCursorMutation) ResetMailbox() {
+	m.mailbox = nil
+	m.clearedmailbox = false
+}
+
+// Where appends a list predicates to the ResumeMailboxCursorMutation builder.
+func (m *ResumeMailboxCursorMutation) Where(ps ...predicate.ResumeMailboxCursor) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ResumeMailboxCursorMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ResumeMailboxCursorMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ResumeMailboxCursor, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ResumeMailboxCursorMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ResumeMailboxCursorMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ResumeMailboxCursor).
+func (m *ResumeMailboxCursorMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ResumeMailboxCursorMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.deleted_at != nil {
+		fields = append(fields, resumemailboxcursor.FieldDeletedAt)
+	}
+	if m.mailbox != nil {
+		fields = append(fields, resumemailboxcursor.FieldMailboxID)
+	}
+	if m.protocol_cursor != nil {
+		fields = append(fields, resumemailboxcursor.FieldProtocolCursor)
+	}
+	if m.last_message_id != nil {
+		fields = append(fields, resumemailboxcursor.FieldLastMessageID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, resumemailboxcursor.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, resumemailboxcursor.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ResumeMailboxCursorMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case resumemailboxcursor.FieldDeletedAt:
+		return m.DeletedAt()
+	case resumemailboxcursor.FieldMailboxID:
+		return m.MailboxID()
+	case resumemailboxcursor.FieldProtocolCursor:
+		return m.ProtocolCursor()
+	case resumemailboxcursor.FieldLastMessageID:
+		return m.LastMessageID()
+	case resumemailboxcursor.FieldCreatedAt:
+		return m.CreatedAt()
+	case resumemailboxcursor.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ResumeMailboxCursorMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case resumemailboxcursor.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case resumemailboxcursor.FieldMailboxID:
+		return m.OldMailboxID(ctx)
+	case resumemailboxcursor.FieldProtocolCursor:
+		return m.OldProtocolCursor(ctx)
+	case resumemailboxcursor.FieldLastMessageID:
+		return m.OldLastMessageID(ctx)
+	case resumemailboxcursor.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case resumemailboxcursor.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ResumeMailboxCursor field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeMailboxCursorMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case resumemailboxcursor.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case resumemailboxcursor.FieldMailboxID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMailboxID(v)
+		return nil
+	case resumemailboxcursor.FieldProtocolCursor:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProtocolCursor(v)
+		return nil
+	case resumemailboxcursor.FieldLastMessageID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastMessageID(v)
+		return nil
+	case resumemailboxcursor.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case resumemailboxcursor.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxCursor field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ResumeMailboxCursorMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ResumeMailboxCursorMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeMailboxCursorMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ResumeMailboxCursor numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ResumeMailboxCursorMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(resumemailboxcursor.FieldDeletedAt) {
+		fields = append(fields, resumemailboxcursor.FieldDeletedAt)
+	}
+	if m.FieldCleared(resumemailboxcursor.FieldLastMessageID) {
+		fields = append(fields, resumemailboxcursor.FieldLastMessageID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ResumeMailboxCursorMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ResumeMailboxCursorMutation) ClearField(name string) error {
+	switch name {
+	case resumemailboxcursor.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case resumemailboxcursor.FieldLastMessageID:
+		m.ClearLastMessageID()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxCursor nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ResumeMailboxCursorMutation) ResetField(name string) error {
+	switch name {
+	case resumemailboxcursor.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case resumemailboxcursor.FieldMailboxID:
+		m.ResetMailboxID()
+		return nil
+	case resumemailboxcursor.FieldProtocolCursor:
+		m.ResetProtocolCursor()
+		return nil
+	case resumemailboxcursor.FieldLastMessageID:
+		m.ResetLastMessageID()
+		return nil
+	case resumemailboxcursor.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case resumemailboxcursor.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxCursor field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ResumeMailboxCursorMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.mailbox != nil {
+		edges = append(edges, resumemailboxcursor.EdgeMailbox)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ResumeMailboxCursorMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case resumemailboxcursor.EdgeMailbox:
+		if id := m.mailbox; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ResumeMailboxCursorMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ResumeMailboxCursorMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ResumeMailboxCursorMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedmailbox {
+		edges = append(edges, resumemailboxcursor.EdgeMailbox)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ResumeMailboxCursorMutation) EdgeCleared(name string) bool {
+	switch name {
+	case resumemailboxcursor.EdgeMailbox:
+		return m.clearedmailbox
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ResumeMailboxCursorMutation) ClearEdge(name string) error {
+	switch name {
+	case resumemailboxcursor.EdgeMailbox:
+		m.ClearMailbox()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxCursor unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ResumeMailboxCursorMutation) ResetEdge(name string) error {
+	switch name {
+	case resumemailboxcursor.EdgeMailbox:
+		m.ResetMailbox()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxCursor edge %s", name)
+}
+
+// ResumeMailboxSettingMutation represents an operation that mutates the ResumeMailboxSetting nodes in the graph.
+type ResumeMailboxSettingMutation struct {
+	config
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	deleted_at               *time.Time
+	name                     *string
+	email_address            *string
+	protocol                 *resumemailboxsetting.Protocol
+	host                     *string
+	port                     *int
+	addport                  *int
+	use_ssl                  *bool
+	folder                   *string
+	auth_type                *resumemailboxsetting.AuthType
+	encrypted_credential     *map[string]interface{}
+	sync_interval_minutes    *int
+	addsync_interval_minutes *int
+	status                   *resumemailboxsetting.Status
+	last_synced_at           *time.Time
+	last_error               *string
+	retry_count              *int
+	addretry_count           *int
+	created_at               *time.Time
+	updated_at               *time.Time
+	clearedFields            map[string]struct{}
+	uploader                 *uuid.UUID
+	cleareduploader          bool
+	job_profile              *uuid.UUID
+	clearedjob_profile       bool
+	cursors                  map[uuid.UUID]struct{}
+	removedcursors           map[uuid.UUID]struct{}
+	clearedcursors           bool
+	statistics               map[uuid.UUID]struct{}
+	removedstatistics        map[uuid.UUID]struct{}
+	clearedstatistics        bool
+	done                     bool
+	oldValue                 func(context.Context) (*ResumeMailboxSetting, error)
+	predicates               []predicate.ResumeMailboxSetting
+}
+
+var _ ent.Mutation = (*ResumeMailboxSettingMutation)(nil)
+
+// resumemailboxsettingOption allows management of the mutation configuration using functional options.
+type resumemailboxsettingOption func(*ResumeMailboxSettingMutation)
+
+// newResumeMailboxSettingMutation creates new mutation for the ResumeMailboxSetting entity.
+func newResumeMailboxSettingMutation(c config, op Op, opts ...resumemailboxsettingOption) *ResumeMailboxSettingMutation {
+	m := &ResumeMailboxSettingMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeResumeMailboxSetting,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withResumeMailboxSettingID sets the ID field of the mutation.
+func withResumeMailboxSettingID(id uuid.UUID) resumemailboxsettingOption {
+	return func(m *ResumeMailboxSettingMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ResumeMailboxSetting
+		)
+		m.oldValue = func(ctx context.Context) (*ResumeMailboxSetting, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ResumeMailboxSetting.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withResumeMailboxSetting sets the old ResumeMailboxSetting of the mutation.
+func withResumeMailboxSetting(node *ResumeMailboxSetting) resumemailboxsettingOption {
+	return func(m *ResumeMailboxSettingMutation) {
+		m.oldValue = func(context.Context) (*ResumeMailboxSetting, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ResumeMailboxSettingMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ResumeMailboxSettingMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ResumeMailboxSetting entities.
+func (m *ResumeMailboxSettingMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ResumeMailboxSettingMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ResumeMailboxSettingMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ResumeMailboxSetting.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ResumeMailboxSettingMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ResumeMailboxSettingMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ResumeMailboxSettingMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[resumemailboxsetting.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[resumemailboxsetting.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ResumeMailboxSettingMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, resumemailboxsetting.FieldDeletedAt)
+}
+
+// SetName sets the "name" field.
+func (m *ResumeMailboxSettingMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ResumeMailboxSettingMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ResumeMailboxSettingMutation) ResetName() {
+	m.name = nil
+}
+
+// SetEmailAddress sets the "email_address" field.
+func (m *ResumeMailboxSettingMutation) SetEmailAddress(s string) {
+	m.email_address = &s
+}
+
+// EmailAddress returns the value of the "email_address" field in the mutation.
+func (m *ResumeMailboxSettingMutation) EmailAddress() (r string, exists bool) {
+	v := m.email_address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmailAddress returns the old "email_address" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldEmailAddress(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmailAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmailAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmailAddress: %w", err)
+	}
+	return oldValue.EmailAddress, nil
+}
+
+// ResetEmailAddress resets all changes to the "email_address" field.
+func (m *ResumeMailboxSettingMutation) ResetEmailAddress() {
+	m.email_address = nil
+}
+
+// SetProtocol sets the "protocol" field.
+func (m *ResumeMailboxSettingMutation) SetProtocol(r resumemailboxsetting.Protocol) {
+	m.protocol = &r
+}
+
+// Protocol returns the value of the "protocol" field in the mutation.
+func (m *ResumeMailboxSettingMutation) Protocol() (r resumemailboxsetting.Protocol, exists bool) {
+	v := m.protocol
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProtocol returns the old "protocol" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldProtocol(ctx context.Context) (v resumemailboxsetting.Protocol, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProtocol is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProtocol requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProtocol: %w", err)
+	}
+	return oldValue.Protocol, nil
+}
+
+// ResetProtocol resets all changes to the "protocol" field.
+func (m *ResumeMailboxSettingMutation) ResetProtocol() {
+	m.protocol = nil
+}
+
+// SetHost sets the "host" field.
+func (m *ResumeMailboxSettingMutation) SetHost(s string) {
+	m.host = &s
+}
+
+// Host returns the value of the "host" field in the mutation.
+func (m *ResumeMailboxSettingMutation) Host() (r string, exists bool) {
+	v := m.host
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHost returns the old "host" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldHost(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHost: %w", err)
+	}
+	return oldValue.Host, nil
+}
+
+// ResetHost resets all changes to the "host" field.
+func (m *ResumeMailboxSettingMutation) ResetHost() {
+	m.host = nil
+}
+
+// SetPort sets the "port" field.
+func (m *ResumeMailboxSettingMutation) SetPort(i int) {
+	m.port = &i
+	m.addport = nil
+}
+
+// Port returns the value of the "port" field in the mutation.
+func (m *ResumeMailboxSettingMutation) Port() (r int, exists bool) {
+	v := m.port
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPort returns the old "port" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldPort(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPort is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPort requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPort: %w", err)
+	}
+	return oldValue.Port, nil
+}
+
+// AddPort adds i to the "port" field.
+func (m *ResumeMailboxSettingMutation) AddPort(i int) {
+	if m.addport != nil {
+		*m.addport += i
+	} else {
+		m.addport = &i
+	}
+}
+
+// AddedPort returns the value that was added to the "port" field in this mutation.
+func (m *ResumeMailboxSettingMutation) AddedPort() (r int, exists bool) {
+	v := m.addport
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPort resets all changes to the "port" field.
+func (m *ResumeMailboxSettingMutation) ResetPort() {
+	m.port = nil
+	m.addport = nil
+}
+
+// SetUseSsl sets the "use_ssl" field.
+func (m *ResumeMailboxSettingMutation) SetUseSsl(b bool) {
+	m.use_ssl = &b
+}
+
+// UseSsl returns the value of the "use_ssl" field in the mutation.
+func (m *ResumeMailboxSettingMutation) UseSsl() (r bool, exists bool) {
+	v := m.use_ssl
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUseSsl returns the old "use_ssl" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldUseSsl(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUseSsl is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUseSsl requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUseSsl: %w", err)
+	}
+	return oldValue.UseSsl, nil
+}
+
+// ResetUseSsl resets all changes to the "use_ssl" field.
+func (m *ResumeMailboxSettingMutation) ResetUseSsl() {
+	m.use_ssl = nil
+}
+
+// SetFolder sets the "folder" field.
+func (m *ResumeMailboxSettingMutation) SetFolder(s string) {
+	m.folder = &s
+}
+
+// Folder returns the value of the "folder" field in the mutation.
+func (m *ResumeMailboxSettingMutation) Folder() (r string, exists bool) {
+	v := m.folder
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFolder returns the old "folder" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldFolder(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFolder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFolder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFolder: %w", err)
+	}
+	return oldValue.Folder, nil
+}
+
+// ClearFolder clears the value of the "folder" field.
+func (m *ResumeMailboxSettingMutation) ClearFolder() {
+	m.folder = nil
+	m.clearedFields[resumemailboxsetting.FieldFolder] = struct{}{}
+}
+
+// FolderCleared returns if the "folder" field was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) FolderCleared() bool {
+	_, ok := m.clearedFields[resumemailboxsetting.FieldFolder]
+	return ok
+}
+
+// ResetFolder resets all changes to the "folder" field.
+func (m *ResumeMailboxSettingMutation) ResetFolder() {
+	m.folder = nil
+	delete(m.clearedFields, resumemailboxsetting.FieldFolder)
+}
+
+// SetAuthType sets the "auth_type" field.
+func (m *ResumeMailboxSettingMutation) SetAuthType(rt resumemailboxsetting.AuthType) {
+	m.auth_type = &rt
+}
+
+// AuthType returns the value of the "auth_type" field in the mutation.
+func (m *ResumeMailboxSettingMutation) AuthType() (r resumemailboxsetting.AuthType, exists bool) {
+	v := m.auth_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAuthType returns the old "auth_type" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldAuthType(ctx context.Context) (v resumemailboxsetting.AuthType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAuthType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAuthType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAuthType: %w", err)
+	}
+	return oldValue.AuthType, nil
+}
+
+// ResetAuthType resets all changes to the "auth_type" field.
+func (m *ResumeMailboxSettingMutation) ResetAuthType() {
+	m.auth_type = nil
+}
+
+// SetEncryptedCredential sets the "encrypted_credential" field.
+func (m *ResumeMailboxSettingMutation) SetEncryptedCredential(value map[string]interface{}) {
+	m.encrypted_credential = &value
+}
+
+// EncryptedCredential returns the value of the "encrypted_credential" field in the mutation.
+func (m *ResumeMailboxSettingMutation) EncryptedCredential() (r map[string]interface{}, exists bool) {
+	v := m.encrypted_credential
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEncryptedCredential returns the old "encrypted_credential" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldEncryptedCredential(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEncryptedCredential is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEncryptedCredential requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEncryptedCredential: %w", err)
+	}
+	return oldValue.EncryptedCredential, nil
+}
+
+// ResetEncryptedCredential resets all changes to the "encrypted_credential" field.
+func (m *ResumeMailboxSettingMutation) ResetEncryptedCredential() {
+	m.encrypted_credential = nil
+}
+
+// SetUploaderID sets the "uploader_id" field.
+func (m *ResumeMailboxSettingMutation) SetUploaderID(u uuid.UUID) {
+	m.uploader = &u
+}
+
+// UploaderID returns the value of the "uploader_id" field in the mutation.
+func (m *ResumeMailboxSettingMutation) UploaderID() (r uuid.UUID, exists bool) {
+	v := m.uploader
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUploaderID returns the old "uploader_id" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldUploaderID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUploaderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUploaderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUploaderID: %w", err)
+	}
+	return oldValue.UploaderID, nil
+}
+
+// ResetUploaderID resets all changes to the "uploader_id" field.
+func (m *ResumeMailboxSettingMutation) ResetUploaderID() {
+	m.uploader = nil
+}
+
+// SetJobProfileID sets the "job_profile_id" field.
+func (m *ResumeMailboxSettingMutation) SetJobProfileID(u uuid.UUID) {
+	m.job_profile = &u
+}
+
+// JobProfileID returns the value of the "job_profile_id" field in the mutation.
+func (m *ResumeMailboxSettingMutation) JobProfileID() (r uuid.UUID, exists bool) {
+	v := m.job_profile
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJobProfileID returns the old "job_profile_id" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldJobProfileID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJobProfileID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJobProfileID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJobProfileID: %w", err)
+	}
+	return oldValue.JobProfileID, nil
+}
+
+// ClearJobProfileID clears the value of the "job_profile_id" field.
+func (m *ResumeMailboxSettingMutation) ClearJobProfileID() {
+	m.job_profile = nil
+	m.clearedFields[resumemailboxsetting.FieldJobProfileID] = struct{}{}
+}
+
+// JobProfileIDCleared returns if the "job_profile_id" field was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) JobProfileIDCleared() bool {
+	_, ok := m.clearedFields[resumemailboxsetting.FieldJobProfileID]
+	return ok
+}
+
+// ResetJobProfileID resets all changes to the "job_profile_id" field.
+func (m *ResumeMailboxSettingMutation) ResetJobProfileID() {
+	m.job_profile = nil
+	delete(m.clearedFields, resumemailboxsetting.FieldJobProfileID)
+}
+
+// SetSyncIntervalMinutes sets the "sync_interval_minutes" field.
+func (m *ResumeMailboxSettingMutation) SetSyncIntervalMinutes(i int) {
+	m.sync_interval_minutes = &i
+	m.addsync_interval_minutes = nil
+}
+
+// SyncIntervalMinutes returns the value of the "sync_interval_minutes" field in the mutation.
+func (m *ResumeMailboxSettingMutation) SyncIntervalMinutes() (r int, exists bool) {
+	v := m.sync_interval_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSyncIntervalMinutes returns the old "sync_interval_minutes" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldSyncIntervalMinutes(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSyncIntervalMinutes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSyncIntervalMinutes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSyncIntervalMinutes: %w", err)
+	}
+	return oldValue.SyncIntervalMinutes, nil
+}
+
+// AddSyncIntervalMinutes adds i to the "sync_interval_minutes" field.
+func (m *ResumeMailboxSettingMutation) AddSyncIntervalMinutes(i int) {
+	if m.addsync_interval_minutes != nil {
+		*m.addsync_interval_minutes += i
+	} else {
+		m.addsync_interval_minutes = &i
+	}
+}
+
+// AddedSyncIntervalMinutes returns the value that was added to the "sync_interval_minutes" field in this mutation.
+func (m *ResumeMailboxSettingMutation) AddedSyncIntervalMinutes() (r int, exists bool) {
+	v := m.addsync_interval_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSyncIntervalMinutes clears the value of the "sync_interval_minutes" field.
+func (m *ResumeMailboxSettingMutation) ClearSyncIntervalMinutes() {
+	m.sync_interval_minutes = nil
+	m.addsync_interval_minutes = nil
+	m.clearedFields[resumemailboxsetting.FieldSyncIntervalMinutes] = struct{}{}
+}
+
+// SyncIntervalMinutesCleared returns if the "sync_interval_minutes" field was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) SyncIntervalMinutesCleared() bool {
+	_, ok := m.clearedFields[resumemailboxsetting.FieldSyncIntervalMinutes]
+	return ok
+}
+
+// ResetSyncIntervalMinutes resets all changes to the "sync_interval_minutes" field.
+func (m *ResumeMailboxSettingMutation) ResetSyncIntervalMinutes() {
+	m.sync_interval_minutes = nil
+	m.addsync_interval_minutes = nil
+	delete(m.clearedFields, resumemailboxsetting.FieldSyncIntervalMinutes)
+}
+
+// SetStatus sets the "status" field.
+func (m *ResumeMailboxSettingMutation) SetStatus(r resumemailboxsetting.Status) {
+	m.status = &r
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ResumeMailboxSettingMutation) Status() (r resumemailboxsetting.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldStatus(ctx context.Context) (v resumemailboxsetting.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ResumeMailboxSettingMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetLastSyncedAt sets the "last_synced_at" field.
+func (m *ResumeMailboxSettingMutation) SetLastSyncedAt(t time.Time) {
+	m.last_synced_at = &t
+}
+
+// LastSyncedAt returns the value of the "last_synced_at" field in the mutation.
+func (m *ResumeMailboxSettingMutation) LastSyncedAt() (r time.Time, exists bool) {
+	v := m.last_synced_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastSyncedAt returns the old "last_synced_at" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldLastSyncedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastSyncedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastSyncedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastSyncedAt: %w", err)
+	}
+	return oldValue.LastSyncedAt, nil
+}
+
+// ClearLastSyncedAt clears the value of the "last_synced_at" field.
+func (m *ResumeMailboxSettingMutation) ClearLastSyncedAt() {
+	m.last_synced_at = nil
+	m.clearedFields[resumemailboxsetting.FieldLastSyncedAt] = struct{}{}
+}
+
+// LastSyncedAtCleared returns if the "last_synced_at" field was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) LastSyncedAtCleared() bool {
+	_, ok := m.clearedFields[resumemailboxsetting.FieldLastSyncedAt]
+	return ok
+}
+
+// ResetLastSyncedAt resets all changes to the "last_synced_at" field.
+func (m *ResumeMailboxSettingMutation) ResetLastSyncedAt() {
+	m.last_synced_at = nil
+	delete(m.clearedFields, resumemailboxsetting.FieldLastSyncedAt)
+}
+
+// SetLastError sets the "last_error" field.
+func (m *ResumeMailboxSettingMutation) SetLastError(s string) {
+	m.last_error = &s
+}
+
+// LastError returns the value of the "last_error" field in the mutation.
+func (m *ResumeMailboxSettingMutation) LastError() (r string, exists bool) {
+	v := m.last_error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastError returns the old "last_error" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldLastError(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastError: %w", err)
+	}
+	return oldValue.LastError, nil
+}
+
+// ClearLastError clears the value of the "last_error" field.
+func (m *ResumeMailboxSettingMutation) ClearLastError() {
+	m.last_error = nil
+	m.clearedFields[resumemailboxsetting.FieldLastError] = struct{}{}
+}
+
+// LastErrorCleared returns if the "last_error" field was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) LastErrorCleared() bool {
+	_, ok := m.clearedFields[resumemailboxsetting.FieldLastError]
+	return ok
+}
+
+// ResetLastError resets all changes to the "last_error" field.
+func (m *ResumeMailboxSettingMutation) ResetLastError() {
+	m.last_error = nil
+	delete(m.clearedFields, resumemailboxsetting.FieldLastError)
+}
+
+// SetRetryCount sets the "retry_count" field.
+func (m *ResumeMailboxSettingMutation) SetRetryCount(i int) {
+	m.retry_count = &i
+	m.addretry_count = nil
+}
+
+// RetryCount returns the value of the "retry_count" field in the mutation.
+func (m *ResumeMailboxSettingMutation) RetryCount() (r int, exists bool) {
+	v := m.retry_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetryCount returns the old "retry_count" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldRetryCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetryCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetryCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetryCount: %w", err)
+	}
+	return oldValue.RetryCount, nil
+}
+
+// AddRetryCount adds i to the "retry_count" field.
+func (m *ResumeMailboxSettingMutation) AddRetryCount(i int) {
+	if m.addretry_count != nil {
+		*m.addretry_count += i
+	} else {
+		m.addretry_count = &i
+	}
+}
+
+// AddedRetryCount returns the value that was added to the "retry_count" field in this mutation.
+func (m *ResumeMailboxSettingMutation) AddedRetryCount() (r int, exists bool) {
+	v := m.addretry_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRetryCount resets all changes to the "retry_count" field.
+func (m *ResumeMailboxSettingMutation) ResetRetryCount() {
+	m.retry_count = nil
+	m.addretry_count = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ResumeMailboxSettingMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ResumeMailboxSettingMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ResumeMailboxSettingMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ResumeMailboxSettingMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ResumeMailboxSettingMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ResumeMailboxSetting entity.
+// If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxSettingMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ResumeMailboxSettingMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearUploader clears the "uploader" edge to the User entity.
+func (m *ResumeMailboxSettingMutation) ClearUploader() {
+	m.cleareduploader = true
+	m.clearedFields[resumemailboxsetting.FieldUploaderID] = struct{}{}
+}
+
+// UploaderCleared reports if the "uploader" edge to the User entity was cleared.
+func (m *ResumeMailboxSettingMutation) UploaderCleared() bool {
+	return m.cleareduploader
+}
+
+// UploaderIDs returns the "uploader" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UploaderID instead. It exists only for internal usage by the builders.
+func (m *ResumeMailboxSettingMutation) UploaderIDs() (ids []uuid.UUID) {
+	if id := m.uploader; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUploader resets all changes to the "uploader" edge.
+func (m *ResumeMailboxSettingMutation) ResetUploader() {
+	m.uploader = nil
+	m.cleareduploader = false
+}
+
+// ClearJobProfile clears the "job_profile" edge to the JobPosition entity.
+func (m *ResumeMailboxSettingMutation) ClearJobProfile() {
+	m.clearedjob_profile = true
+	m.clearedFields[resumemailboxsetting.FieldJobProfileID] = struct{}{}
+}
+
+// JobProfileCleared reports if the "job_profile" edge to the JobPosition entity was cleared.
+func (m *ResumeMailboxSettingMutation) JobProfileCleared() bool {
+	return m.JobProfileIDCleared() || m.clearedjob_profile
+}
+
+// JobProfileIDs returns the "job_profile" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// JobProfileID instead. It exists only for internal usage by the builders.
+func (m *ResumeMailboxSettingMutation) JobProfileIDs() (ids []uuid.UUID) {
+	if id := m.job_profile; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetJobProfile resets all changes to the "job_profile" edge.
+func (m *ResumeMailboxSettingMutation) ResetJobProfile() {
+	m.job_profile = nil
+	m.clearedjob_profile = false
+}
+
+// AddCursorIDs adds the "cursors" edge to the ResumeMailboxCursor entity by ids.
+func (m *ResumeMailboxSettingMutation) AddCursorIDs(ids ...uuid.UUID) {
+	if m.cursors == nil {
+		m.cursors = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.cursors[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCursors clears the "cursors" edge to the ResumeMailboxCursor entity.
+func (m *ResumeMailboxSettingMutation) ClearCursors() {
+	m.clearedcursors = true
+}
+
+// CursorsCleared reports if the "cursors" edge to the ResumeMailboxCursor entity was cleared.
+func (m *ResumeMailboxSettingMutation) CursorsCleared() bool {
+	return m.clearedcursors
+}
+
+// RemoveCursorIDs removes the "cursors" edge to the ResumeMailboxCursor entity by IDs.
+func (m *ResumeMailboxSettingMutation) RemoveCursorIDs(ids ...uuid.UUID) {
+	if m.removedcursors == nil {
+		m.removedcursors = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.cursors, ids[i])
+		m.removedcursors[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCursors returns the removed IDs of the "cursors" edge to the ResumeMailboxCursor entity.
+func (m *ResumeMailboxSettingMutation) RemovedCursorsIDs() (ids []uuid.UUID) {
+	for id := range m.removedcursors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CursorsIDs returns the "cursors" edge IDs in the mutation.
+func (m *ResumeMailboxSettingMutation) CursorsIDs() (ids []uuid.UUID) {
+	for id := range m.cursors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCursors resets all changes to the "cursors" edge.
+func (m *ResumeMailboxSettingMutation) ResetCursors() {
+	m.cursors = nil
+	m.clearedcursors = false
+	m.removedcursors = nil
+}
+
+// AddStatisticIDs adds the "statistics" edge to the ResumeMailboxStatistic entity by ids.
+func (m *ResumeMailboxSettingMutation) AddStatisticIDs(ids ...uuid.UUID) {
+	if m.statistics == nil {
+		m.statistics = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.statistics[ids[i]] = struct{}{}
+	}
+}
+
+// ClearStatistics clears the "statistics" edge to the ResumeMailboxStatistic entity.
+func (m *ResumeMailboxSettingMutation) ClearStatistics() {
+	m.clearedstatistics = true
+}
+
+// StatisticsCleared reports if the "statistics" edge to the ResumeMailboxStatistic entity was cleared.
+func (m *ResumeMailboxSettingMutation) StatisticsCleared() bool {
+	return m.clearedstatistics
+}
+
+// RemoveStatisticIDs removes the "statistics" edge to the ResumeMailboxStatistic entity by IDs.
+func (m *ResumeMailboxSettingMutation) RemoveStatisticIDs(ids ...uuid.UUID) {
+	if m.removedstatistics == nil {
+		m.removedstatistics = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.statistics, ids[i])
+		m.removedstatistics[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedStatistics returns the removed IDs of the "statistics" edge to the ResumeMailboxStatistic entity.
+func (m *ResumeMailboxSettingMutation) RemovedStatisticsIDs() (ids []uuid.UUID) {
+	for id := range m.removedstatistics {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// StatisticsIDs returns the "statistics" edge IDs in the mutation.
+func (m *ResumeMailboxSettingMutation) StatisticsIDs() (ids []uuid.UUID) {
+	for id := range m.statistics {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetStatistics resets all changes to the "statistics" edge.
+func (m *ResumeMailboxSettingMutation) ResetStatistics() {
+	m.statistics = nil
+	m.clearedstatistics = false
+	m.removedstatistics = nil
+}
+
+// Where appends a list predicates to the ResumeMailboxSettingMutation builder.
+func (m *ResumeMailboxSettingMutation) Where(ps ...predicate.ResumeMailboxSetting) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ResumeMailboxSettingMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ResumeMailboxSettingMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ResumeMailboxSetting, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ResumeMailboxSettingMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ResumeMailboxSettingMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ResumeMailboxSetting).
+func (m *ResumeMailboxSettingMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ResumeMailboxSettingMutation) Fields() []string {
+	fields := make([]string, 0, 19)
+	if m.deleted_at != nil {
+		fields = append(fields, resumemailboxsetting.FieldDeletedAt)
+	}
+	if m.name != nil {
+		fields = append(fields, resumemailboxsetting.FieldName)
+	}
+	if m.email_address != nil {
+		fields = append(fields, resumemailboxsetting.FieldEmailAddress)
+	}
+	if m.protocol != nil {
+		fields = append(fields, resumemailboxsetting.FieldProtocol)
+	}
+	if m.host != nil {
+		fields = append(fields, resumemailboxsetting.FieldHost)
+	}
+	if m.port != nil {
+		fields = append(fields, resumemailboxsetting.FieldPort)
+	}
+	if m.use_ssl != nil {
+		fields = append(fields, resumemailboxsetting.FieldUseSsl)
+	}
+	if m.folder != nil {
+		fields = append(fields, resumemailboxsetting.FieldFolder)
+	}
+	if m.auth_type != nil {
+		fields = append(fields, resumemailboxsetting.FieldAuthType)
+	}
+	if m.encrypted_credential != nil {
+		fields = append(fields, resumemailboxsetting.FieldEncryptedCredential)
+	}
+	if m.uploader != nil {
+		fields = append(fields, resumemailboxsetting.FieldUploaderID)
+	}
+	if m.job_profile != nil {
+		fields = append(fields, resumemailboxsetting.FieldJobProfileID)
+	}
+	if m.sync_interval_minutes != nil {
+		fields = append(fields, resumemailboxsetting.FieldSyncIntervalMinutes)
+	}
+	if m.status != nil {
+		fields = append(fields, resumemailboxsetting.FieldStatus)
+	}
+	if m.last_synced_at != nil {
+		fields = append(fields, resumemailboxsetting.FieldLastSyncedAt)
+	}
+	if m.last_error != nil {
+		fields = append(fields, resumemailboxsetting.FieldLastError)
+	}
+	if m.retry_count != nil {
+		fields = append(fields, resumemailboxsetting.FieldRetryCount)
+	}
+	if m.created_at != nil {
+		fields = append(fields, resumemailboxsetting.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, resumemailboxsetting.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ResumeMailboxSettingMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case resumemailboxsetting.FieldDeletedAt:
+		return m.DeletedAt()
+	case resumemailboxsetting.FieldName:
+		return m.Name()
+	case resumemailboxsetting.FieldEmailAddress:
+		return m.EmailAddress()
+	case resumemailboxsetting.FieldProtocol:
+		return m.Protocol()
+	case resumemailboxsetting.FieldHost:
+		return m.Host()
+	case resumemailboxsetting.FieldPort:
+		return m.Port()
+	case resumemailboxsetting.FieldUseSsl:
+		return m.UseSsl()
+	case resumemailboxsetting.FieldFolder:
+		return m.Folder()
+	case resumemailboxsetting.FieldAuthType:
+		return m.AuthType()
+	case resumemailboxsetting.FieldEncryptedCredential:
+		return m.EncryptedCredential()
+	case resumemailboxsetting.FieldUploaderID:
+		return m.UploaderID()
+	case resumemailboxsetting.FieldJobProfileID:
+		return m.JobProfileID()
+	case resumemailboxsetting.FieldSyncIntervalMinutes:
+		return m.SyncIntervalMinutes()
+	case resumemailboxsetting.FieldStatus:
+		return m.Status()
+	case resumemailboxsetting.FieldLastSyncedAt:
+		return m.LastSyncedAt()
+	case resumemailboxsetting.FieldLastError:
+		return m.LastError()
+	case resumemailboxsetting.FieldRetryCount:
+		return m.RetryCount()
+	case resumemailboxsetting.FieldCreatedAt:
+		return m.CreatedAt()
+	case resumemailboxsetting.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ResumeMailboxSettingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case resumemailboxsetting.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case resumemailboxsetting.FieldName:
+		return m.OldName(ctx)
+	case resumemailboxsetting.FieldEmailAddress:
+		return m.OldEmailAddress(ctx)
+	case resumemailboxsetting.FieldProtocol:
+		return m.OldProtocol(ctx)
+	case resumemailboxsetting.FieldHost:
+		return m.OldHost(ctx)
+	case resumemailboxsetting.FieldPort:
+		return m.OldPort(ctx)
+	case resumemailboxsetting.FieldUseSsl:
+		return m.OldUseSsl(ctx)
+	case resumemailboxsetting.FieldFolder:
+		return m.OldFolder(ctx)
+	case resumemailboxsetting.FieldAuthType:
+		return m.OldAuthType(ctx)
+	case resumemailboxsetting.FieldEncryptedCredential:
+		return m.OldEncryptedCredential(ctx)
+	case resumemailboxsetting.FieldUploaderID:
+		return m.OldUploaderID(ctx)
+	case resumemailboxsetting.FieldJobProfileID:
+		return m.OldJobProfileID(ctx)
+	case resumemailboxsetting.FieldSyncIntervalMinutes:
+		return m.OldSyncIntervalMinutes(ctx)
+	case resumemailboxsetting.FieldStatus:
+		return m.OldStatus(ctx)
+	case resumemailboxsetting.FieldLastSyncedAt:
+		return m.OldLastSyncedAt(ctx)
+	case resumemailboxsetting.FieldLastError:
+		return m.OldLastError(ctx)
+	case resumemailboxsetting.FieldRetryCount:
+		return m.OldRetryCount(ctx)
+	case resumemailboxsetting.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case resumemailboxsetting.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ResumeMailboxSetting field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeMailboxSettingMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case resumemailboxsetting.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case resumemailboxsetting.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case resumemailboxsetting.FieldEmailAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmailAddress(v)
+		return nil
+	case resumemailboxsetting.FieldProtocol:
+		v, ok := value.(resumemailboxsetting.Protocol)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProtocol(v)
+		return nil
+	case resumemailboxsetting.FieldHost:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHost(v)
+		return nil
+	case resumemailboxsetting.FieldPort:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPort(v)
+		return nil
+	case resumemailboxsetting.FieldUseSsl:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUseSsl(v)
+		return nil
+	case resumemailboxsetting.FieldFolder:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFolder(v)
+		return nil
+	case resumemailboxsetting.FieldAuthType:
+		v, ok := value.(resumemailboxsetting.AuthType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAuthType(v)
+		return nil
+	case resumemailboxsetting.FieldEncryptedCredential:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEncryptedCredential(v)
+		return nil
+	case resumemailboxsetting.FieldUploaderID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUploaderID(v)
+		return nil
+	case resumemailboxsetting.FieldJobProfileID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJobProfileID(v)
+		return nil
+	case resumemailboxsetting.FieldSyncIntervalMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSyncIntervalMinutes(v)
+		return nil
+	case resumemailboxsetting.FieldStatus:
+		v, ok := value.(resumemailboxsetting.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case resumemailboxsetting.FieldLastSyncedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastSyncedAt(v)
+		return nil
+	case resumemailboxsetting.FieldLastError:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastError(v)
+		return nil
+	case resumemailboxsetting.FieldRetryCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetryCount(v)
+		return nil
+	case resumemailboxsetting.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case resumemailboxsetting.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxSetting field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ResumeMailboxSettingMutation) AddedFields() []string {
+	var fields []string
+	if m.addport != nil {
+		fields = append(fields, resumemailboxsetting.FieldPort)
+	}
+	if m.addsync_interval_minutes != nil {
+		fields = append(fields, resumemailboxsetting.FieldSyncIntervalMinutes)
+	}
+	if m.addretry_count != nil {
+		fields = append(fields, resumemailboxsetting.FieldRetryCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ResumeMailboxSettingMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case resumemailboxsetting.FieldPort:
+		return m.AddedPort()
+	case resumemailboxsetting.FieldSyncIntervalMinutes:
+		return m.AddedSyncIntervalMinutes()
+	case resumemailboxsetting.FieldRetryCount:
+		return m.AddedRetryCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeMailboxSettingMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case resumemailboxsetting.FieldPort:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPort(v)
+		return nil
+	case resumemailboxsetting.FieldSyncIntervalMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSyncIntervalMinutes(v)
+		return nil
+	case resumemailboxsetting.FieldRetryCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRetryCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxSetting numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ResumeMailboxSettingMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(resumemailboxsetting.FieldDeletedAt) {
+		fields = append(fields, resumemailboxsetting.FieldDeletedAt)
+	}
+	if m.FieldCleared(resumemailboxsetting.FieldFolder) {
+		fields = append(fields, resumemailboxsetting.FieldFolder)
+	}
+	if m.FieldCleared(resumemailboxsetting.FieldJobProfileID) {
+		fields = append(fields, resumemailboxsetting.FieldJobProfileID)
+	}
+	if m.FieldCleared(resumemailboxsetting.FieldSyncIntervalMinutes) {
+		fields = append(fields, resumemailboxsetting.FieldSyncIntervalMinutes)
+	}
+	if m.FieldCleared(resumemailboxsetting.FieldLastSyncedAt) {
+		fields = append(fields, resumemailboxsetting.FieldLastSyncedAt)
+	}
+	if m.FieldCleared(resumemailboxsetting.FieldLastError) {
+		fields = append(fields, resumemailboxsetting.FieldLastError)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ResumeMailboxSettingMutation) ClearField(name string) error {
+	switch name {
+	case resumemailboxsetting.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case resumemailboxsetting.FieldFolder:
+		m.ClearFolder()
+		return nil
+	case resumemailboxsetting.FieldJobProfileID:
+		m.ClearJobProfileID()
+		return nil
+	case resumemailboxsetting.FieldSyncIntervalMinutes:
+		m.ClearSyncIntervalMinutes()
+		return nil
+	case resumemailboxsetting.FieldLastSyncedAt:
+		m.ClearLastSyncedAt()
+		return nil
+	case resumemailboxsetting.FieldLastError:
+		m.ClearLastError()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxSetting nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ResumeMailboxSettingMutation) ResetField(name string) error {
+	switch name {
+	case resumemailboxsetting.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case resumemailboxsetting.FieldName:
+		m.ResetName()
+		return nil
+	case resumemailboxsetting.FieldEmailAddress:
+		m.ResetEmailAddress()
+		return nil
+	case resumemailboxsetting.FieldProtocol:
+		m.ResetProtocol()
+		return nil
+	case resumemailboxsetting.FieldHost:
+		m.ResetHost()
+		return nil
+	case resumemailboxsetting.FieldPort:
+		m.ResetPort()
+		return nil
+	case resumemailboxsetting.FieldUseSsl:
+		m.ResetUseSsl()
+		return nil
+	case resumemailboxsetting.FieldFolder:
+		m.ResetFolder()
+		return nil
+	case resumemailboxsetting.FieldAuthType:
+		m.ResetAuthType()
+		return nil
+	case resumemailboxsetting.FieldEncryptedCredential:
+		m.ResetEncryptedCredential()
+		return nil
+	case resumemailboxsetting.FieldUploaderID:
+		m.ResetUploaderID()
+		return nil
+	case resumemailboxsetting.FieldJobProfileID:
+		m.ResetJobProfileID()
+		return nil
+	case resumemailboxsetting.FieldSyncIntervalMinutes:
+		m.ResetSyncIntervalMinutes()
+		return nil
+	case resumemailboxsetting.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case resumemailboxsetting.FieldLastSyncedAt:
+		m.ResetLastSyncedAt()
+		return nil
+	case resumemailboxsetting.FieldLastError:
+		m.ResetLastError()
+		return nil
+	case resumemailboxsetting.FieldRetryCount:
+		m.ResetRetryCount()
+		return nil
+	case resumemailboxsetting.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case resumemailboxsetting.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxSetting field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ResumeMailboxSettingMutation) AddedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.uploader != nil {
+		edges = append(edges, resumemailboxsetting.EdgeUploader)
+	}
+	if m.job_profile != nil {
+		edges = append(edges, resumemailboxsetting.EdgeJobProfile)
+	}
+	if m.cursors != nil {
+		edges = append(edges, resumemailboxsetting.EdgeCursors)
+	}
+	if m.statistics != nil {
+		edges = append(edges, resumemailboxsetting.EdgeStatistics)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ResumeMailboxSettingMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case resumemailboxsetting.EdgeUploader:
+		if id := m.uploader; id != nil {
+			return []ent.Value{*id}
+		}
+	case resumemailboxsetting.EdgeJobProfile:
+		if id := m.job_profile; id != nil {
+			return []ent.Value{*id}
+		}
+	case resumemailboxsetting.EdgeCursors:
+		ids := make([]ent.Value, 0, len(m.cursors))
+		for id := range m.cursors {
+			ids = append(ids, id)
+		}
+		return ids
+	case resumemailboxsetting.EdgeStatistics:
+		ids := make([]ent.Value, 0, len(m.statistics))
+		for id := range m.statistics {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ResumeMailboxSettingMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.removedcursors != nil {
+		edges = append(edges, resumemailboxsetting.EdgeCursors)
+	}
+	if m.removedstatistics != nil {
+		edges = append(edges, resumemailboxsetting.EdgeStatistics)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ResumeMailboxSettingMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case resumemailboxsetting.EdgeCursors:
+		ids := make([]ent.Value, 0, len(m.removedcursors))
+		for id := range m.removedcursors {
+			ids = append(ids, id)
+		}
+		return ids
+	case resumemailboxsetting.EdgeStatistics:
+		ids := make([]ent.Value, 0, len(m.removedstatistics))
+		for id := range m.removedstatistics {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.cleareduploader {
+		edges = append(edges, resumemailboxsetting.EdgeUploader)
+	}
+	if m.clearedjob_profile {
+		edges = append(edges, resumemailboxsetting.EdgeJobProfile)
+	}
+	if m.clearedcursors {
+		edges = append(edges, resumemailboxsetting.EdgeCursors)
+	}
+	if m.clearedstatistics {
+		edges = append(edges, resumemailboxsetting.EdgeStatistics)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) EdgeCleared(name string) bool {
+	switch name {
+	case resumemailboxsetting.EdgeUploader:
+		return m.cleareduploader
+	case resumemailboxsetting.EdgeJobProfile:
+		return m.clearedjob_profile
+	case resumemailboxsetting.EdgeCursors:
+		return m.clearedcursors
+	case resumemailboxsetting.EdgeStatistics:
+		return m.clearedstatistics
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ResumeMailboxSettingMutation) ClearEdge(name string) error {
+	switch name {
+	case resumemailboxsetting.EdgeUploader:
+		m.ClearUploader()
+		return nil
+	case resumemailboxsetting.EdgeJobProfile:
+		m.ClearJobProfile()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxSetting unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ResumeMailboxSettingMutation) ResetEdge(name string) error {
+	switch name {
+	case resumemailboxsetting.EdgeUploader:
+		m.ResetUploader()
+		return nil
+	case resumemailboxsetting.EdgeJobProfile:
+		m.ResetJobProfile()
+		return nil
+	case resumemailboxsetting.EdgeCursors:
+		m.ResetCursors()
+		return nil
+	case resumemailboxsetting.EdgeStatistics:
+		m.ResetStatistics()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxSetting edge %s", name)
+}
+
+// ResumeMailboxStatisticMutation represents an operation that mutates the ResumeMailboxStatistic nodes in the graph.
+type ResumeMailboxStatisticMutation struct {
+	config
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	deleted_at               *time.Time
+	date                     *time.Time
+	synced_emails            *int
+	addsynced_emails         *int
+	parsed_resumes           *int
+	addparsed_resumes        *int
+	failed_resumes           *int
+	addfailed_resumes        *int
+	skipped_attachments      *int
+	addskipped_attachments   *int
+	last_sync_duration_ms    *int
+	addlast_sync_duration_ms *int
+	created_at               *time.Time
+	updated_at               *time.Time
+	clearedFields            map[string]struct{}
+	mailbox                  *uuid.UUID
+	clearedmailbox           bool
+	done                     bool
+	oldValue                 func(context.Context) (*ResumeMailboxStatistic, error)
+	predicates               []predicate.ResumeMailboxStatistic
+}
+
+var _ ent.Mutation = (*ResumeMailboxStatisticMutation)(nil)
+
+// resumemailboxstatisticOption allows management of the mutation configuration using functional options.
+type resumemailboxstatisticOption func(*ResumeMailboxStatisticMutation)
+
+// newResumeMailboxStatisticMutation creates new mutation for the ResumeMailboxStatistic entity.
+func newResumeMailboxStatisticMutation(c config, op Op, opts ...resumemailboxstatisticOption) *ResumeMailboxStatisticMutation {
+	m := &ResumeMailboxStatisticMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeResumeMailboxStatistic,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withResumeMailboxStatisticID sets the ID field of the mutation.
+func withResumeMailboxStatisticID(id uuid.UUID) resumemailboxstatisticOption {
+	return func(m *ResumeMailboxStatisticMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ResumeMailboxStatistic
+		)
+		m.oldValue = func(ctx context.Context) (*ResumeMailboxStatistic, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ResumeMailboxStatistic.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withResumeMailboxStatistic sets the old ResumeMailboxStatistic of the mutation.
+func withResumeMailboxStatistic(node *ResumeMailboxStatistic) resumemailboxstatisticOption {
+	return func(m *ResumeMailboxStatisticMutation) {
+		m.oldValue = func(context.Context) (*ResumeMailboxStatistic, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ResumeMailboxStatisticMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ResumeMailboxStatisticMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ResumeMailboxStatistic entities.
+func (m *ResumeMailboxStatisticMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ResumeMailboxStatisticMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ResumeMailboxStatisticMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ResumeMailboxStatistic.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ResumeMailboxStatisticMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ResumeMailboxStatisticMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[resumemailboxstatistic.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ResumeMailboxStatisticMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[resumemailboxstatistic.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ResumeMailboxStatisticMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, resumemailboxstatistic.FieldDeletedAt)
+}
+
+// SetMailboxID sets the "mailbox_id" field.
+func (m *ResumeMailboxStatisticMutation) SetMailboxID(u uuid.UUID) {
+	m.mailbox = &u
+}
+
+// MailboxID returns the value of the "mailbox_id" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) MailboxID() (r uuid.UUID, exists bool) {
+	v := m.mailbox
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMailboxID returns the old "mailbox_id" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldMailboxID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMailboxID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMailboxID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMailboxID: %w", err)
+	}
+	return oldValue.MailboxID, nil
+}
+
+// ResetMailboxID resets all changes to the "mailbox_id" field.
+func (m *ResumeMailboxStatisticMutation) ResetMailboxID() {
+	m.mailbox = nil
+}
+
+// SetDate sets the "date" field.
+func (m *ResumeMailboxStatisticMutation) SetDate(t time.Time) {
+	m.date = &t
+}
+
+// Date returns the value of the "date" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) Date() (r time.Time, exists bool) {
+	v := m.date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDate returns the old "date" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDate: %w", err)
+	}
+	return oldValue.Date, nil
+}
+
+// ResetDate resets all changes to the "date" field.
+func (m *ResumeMailboxStatisticMutation) ResetDate() {
+	m.date = nil
+}
+
+// SetSyncedEmails sets the "synced_emails" field.
+func (m *ResumeMailboxStatisticMutation) SetSyncedEmails(i int) {
+	m.synced_emails = &i
+	m.addsynced_emails = nil
+}
+
+// SyncedEmails returns the value of the "synced_emails" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) SyncedEmails() (r int, exists bool) {
+	v := m.synced_emails
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSyncedEmails returns the old "synced_emails" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldSyncedEmails(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSyncedEmails is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSyncedEmails requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSyncedEmails: %w", err)
+	}
+	return oldValue.SyncedEmails, nil
+}
+
+// AddSyncedEmails adds i to the "synced_emails" field.
+func (m *ResumeMailboxStatisticMutation) AddSyncedEmails(i int) {
+	if m.addsynced_emails != nil {
+		*m.addsynced_emails += i
+	} else {
+		m.addsynced_emails = &i
+	}
+}
+
+// AddedSyncedEmails returns the value that was added to the "synced_emails" field in this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedSyncedEmails() (r int, exists bool) {
+	v := m.addsynced_emails
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSyncedEmails resets all changes to the "synced_emails" field.
+func (m *ResumeMailboxStatisticMutation) ResetSyncedEmails() {
+	m.synced_emails = nil
+	m.addsynced_emails = nil
+}
+
+// SetParsedResumes sets the "parsed_resumes" field.
+func (m *ResumeMailboxStatisticMutation) SetParsedResumes(i int) {
+	m.parsed_resumes = &i
+	m.addparsed_resumes = nil
+}
+
+// ParsedResumes returns the value of the "parsed_resumes" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) ParsedResumes() (r int, exists bool) {
+	v := m.parsed_resumes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParsedResumes returns the old "parsed_resumes" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldParsedResumes(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParsedResumes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParsedResumes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParsedResumes: %w", err)
+	}
+	return oldValue.ParsedResumes, nil
+}
+
+// AddParsedResumes adds i to the "parsed_resumes" field.
+func (m *ResumeMailboxStatisticMutation) AddParsedResumes(i int) {
+	if m.addparsed_resumes != nil {
+		*m.addparsed_resumes += i
+	} else {
+		m.addparsed_resumes = &i
+	}
+}
+
+// AddedParsedResumes returns the value that was added to the "parsed_resumes" field in this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedParsedResumes() (r int, exists bool) {
+	v := m.addparsed_resumes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetParsedResumes resets all changes to the "parsed_resumes" field.
+func (m *ResumeMailboxStatisticMutation) ResetParsedResumes() {
+	m.parsed_resumes = nil
+	m.addparsed_resumes = nil
+}
+
+// SetFailedResumes sets the "failed_resumes" field.
+func (m *ResumeMailboxStatisticMutation) SetFailedResumes(i int) {
+	m.failed_resumes = &i
+	m.addfailed_resumes = nil
+}
+
+// FailedResumes returns the value of the "failed_resumes" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) FailedResumes() (r int, exists bool) {
+	v := m.failed_resumes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFailedResumes returns the old "failed_resumes" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldFailedResumes(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFailedResumes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFailedResumes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFailedResumes: %w", err)
+	}
+	return oldValue.FailedResumes, nil
+}
+
+// AddFailedResumes adds i to the "failed_resumes" field.
+func (m *ResumeMailboxStatisticMutation) AddFailedResumes(i int) {
+	if m.addfailed_resumes != nil {
+		*m.addfailed_resumes += i
+	} else {
+		m.addfailed_resumes = &i
+	}
+}
+
+// AddedFailedResumes returns the value that was added to the "failed_resumes" field in this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedFailedResumes() (r int, exists bool) {
+	v := m.addfailed_resumes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFailedResumes resets all changes to the "failed_resumes" field.
+func (m *ResumeMailboxStatisticMutation) ResetFailedResumes() {
+	m.failed_resumes = nil
+	m.addfailed_resumes = nil
+}
+
+// SetSkippedAttachments sets the "skipped_attachments" field.
+func (m *ResumeMailboxStatisticMutation) SetSkippedAttachments(i int) {
+	m.skipped_attachments = &i
+	m.addskipped_attachments = nil
+}
+
+// SkippedAttachments returns the value of the "skipped_attachments" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) SkippedAttachments() (r int, exists bool) {
+	v := m.skipped_attachments
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSkippedAttachments returns the old "skipped_attachments" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldSkippedAttachments(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSkippedAttachments is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSkippedAttachments requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSkippedAttachments: %w", err)
+	}
+	return oldValue.SkippedAttachments, nil
+}
+
+// AddSkippedAttachments adds i to the "skipped_attachments" field.
+func (m *ResumeMailboxStatisticMutation) AddSkippedAttachments(i int) {
+	if m.addskipped_attachments != nil {
+		*m.addskipped_attachments += i
+	} else {
+		m.addskipped_attachments = &i
+	}
+}
+
+// AddedSkippedAttachments returns the value that was added to the "skipped_attachments" field in this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedSkippedAttachments() (r int, exists bool) {
+	v := m.addskipped_attachments
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSkippedAttachments resets all changes to the "skipped_attachments" field.
+func (m *ResumeMailboxStatisticMutation) ResetSkippedAttachments() {
+	m.skipped_attachments = nil
+	m.addskipped_attachments = nil
+}
+
+// SetLastSyncDurationMs sets the "last_sync_duration_ms" field.
+func (m *ResumeMailboxStatisticMutation) SetLastSyncDurationMs(i int) {
+	m.last_sync_duration_ms = &i
+	m.addlast_sync_duration_ms = nil
+}
+
+// LastSyncDurationMs returns the value of the "last_sync_duration_ms" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) LastSyncDurationMs() (r int, exists bool) {
+	v := m.last_sync_duration_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastSyncDurationMs returns the old "last_sync_duration_ms" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldLastSyncDurationMs(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastSyncDurationMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastSyncDurationMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastSyncDurationMs: %w", err)
+	}
+	return oldValue.LastSyncDurationMs, nil
+}
+
+// AddLastSyncDurationMs adds i to the "last_sync_duration_ms" field.
+func (m *ResumeMailboxStatisticMutation) AddLastSyncDurationMs(i int) {
+	if m.addlast_sync_duration_ms != nil {
+		*m.addlast_sync_duration_ms += i
+	} else {
+		m.addlast_sync_duration_ms = &i
+	}
+}
+
+// AddedLastSyncDurationMs returns the value that was added to the "last_sync_duration_ms" field in this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedLastSyncDurationMs() (r int, exists bool) {
+	v := m.addlast_sync_duration_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLastSyncDurationMs resets all changes to the "last_sync_duration_ms" field.
+func (m *ResumeMailboxStatisticMutation) ResetLastSyncDurationMs() {
+	m.last_sync_duration_ms = nil
+	m.addlast_sync_duration_ms = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ResumeMailboxStatisticMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ResumeMailboxStatisticMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ResumeMailboxStatisticMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ResumeMailboxStatisticMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ResumeMailboxStatistic entity.
+// If the ResumeMailboxStatistic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMailboxStatisticMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ResumeMailboxStatisticMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearMailbox clears the "mailbox" edge to the ResumeMailboxSetting entity.
+func (m *ResumeMailboxStatisticMutation) ClearMailbox() {
+	m.clearedmailbox = true
+	m.clearedFields[resumemailboxstatistic.FieldMailboxID] = struct{}{}
+}
+
+// MailboxCleared reports if the "mailbox" edge to the ResumeMailboxSetting entity was cleared.
+func (m *ResumeMailboxStatisticMutation) MailboxCleared() bool {
+	return m.clearedmailbox
+}
+
+// MailboxIDs returns the "mailbox" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MailboxID instead. It exists only for internal usage by the builders.
+func (m *ResumeMailboxStatisticMutation) MailboxIDs() (ids []uuid.UUID) {
+	if id := m.mailbox; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMailbox resets all changes to the "mailbox" edge.
+func (m *ResumeMailboxStatisticMutation) ResetMailbox() {
+	m.mailbox = nil
+	m.clearedmailbox = false
+}
+
+// Where appends a list predicates to the ResumeMailboxStatisticMutation builder.
+func (m *ResumeMailboxStatisticMutation) Where(ps ...predicate.ResumeMailboxStatistic) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ResumeMailboxStatisticMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ResumeMailboxStatisticMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ResumeMailboxStatistic, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ResumeMailboxStatisticMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ResumeMailboxStatisticMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ResumeMailboxStatistic).
+func (m *ResumeMailboxStatisticMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ResumeMailboxStatisticMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.deleted_at != nil {
+		fields = append(fields, resumemailboxstatistic.FieldDeletedAt)
+	}
+	if m.mailbox != nil {
+		fields = append(fields, resumemailboxstatistic.FieldMailboxID)
+	}
+	if m.date != nil {
+		fields = append(fields, resumemailboxstatistic.FieldDate)
+	}
+	if m.synced_emails != nil {
+		fields = append(fields, resumemailboxstatistic.FieldSyncedEmails)
+	}
+	if m.parsed_resumes != nil {
+		fields = append(fields, resumemailboxstatistic.FieldParsedResumes)
+	}
+	if m.failed_resumes != nil {
+		fields = append(fields, resumemailboxstatistic.FieldFailedResumes)
+	}
+	if m.skipped_attachments != nil {
+		fields = append(fields, resumemailboxstatistic.FieldSkippedAttachments)
+	}
+	if m.last_sync_duration_ms != nil {
+		fields = append(fields, resumemailboxstatistic.FieldLastSyncDurationMs)
+	}
+	if m.created_at != nil {
+		fields = append(fields, resumemailboxstatistic.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, resumemailboxstatistic.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ResumeMailboxStatisticMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case resumemailboxstatistic.FieldDeletedAt:
+		return m.DeletedAt()
+	case resumemailboxstatistic.FieldMailboxID:
+		return m.MailboxID()
+	case resumemailboxstatistic.FieldDate:
+		return m.Date()
+	case resumemailboxstatistic.FieldSyncedEmails:
+		return m.SyncedEmails()
+	case resumemailboxstatistic.FieldParsedResumes:
+		return m.ParsedResumes()
+	case resumemailboxstatistic.FieldFailedResumes:
+		return m.FailedResumes()
+	case resumemailboxstatistic.FieldSkippedAttachments:
+		return m.SkippedAttachments()
+	case resumemailboxstatistic.FieldLastSyncDurationMs:
+		return m.LastSyncDurationMs()
+	case resumemailboxstatistic.FieldCreatedAt:
+		return m.CreatedAt()
+	case resumemailboxstatistic.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ResumeMailboxStatisticMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case resumemailboxstatistic.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case resumemailboxstatistic.FieldMailboxID:
+		return m.OldMailboxID(ctx)
+	case resumemailboxstatistic.FieldDate:
+		return m.OldDate(ctx)
+	case resumemailboxstatistic.FieldSyncedEmails:
+		return m.OldSyncedEmails(ctx)
+	case resumemailboxstatistic.FieldParsedResumes:
+		return m.OldParsedResumes(ctx)
+	case resumemailboxstatistic.FieldFailedResumes:
+		return m.OldFailedResumes(ctx)
+	case resumemailboxstatistic.FieldSkippedAttachments:
+		return m.OldSkippedAttachments(ctx)
+	case resumemailboxstatistic.FieldLastSyncDurationMs:
+		return m.OldLastSyncDurationMs(ctx)
+	case resumemailboxstatistic.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case resumemailboxstatistic.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ResumeMailboxStatistic field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeMailboxStatisticMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case resumemailboxstatistic.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case resumemailboxstatistic.FieldMailboxID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMailboxID(v)
+		return nil
+	case resumemailboxstatistic.FieldDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDate(v)
+		return nil
+	case resumemailboxstatistic.FieldSyncedEmails:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSyncedEmails(v)
+		return nil
+	case resumemailboxstatistic.FieldParsedResumes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParsedResumes(v)
+		return nil
+	case resumemailboxstatistic.FieldFailedResumes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFailedResumes(v)
+		return nil
+	case resumemailboxstatistic.FieldSkippedAttachments:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSkippedAttachments(v)
+		return nil
+	case resumemailboxstatistic.FieldLastSyncDurationMs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastSyncDurationMs(v)
+		return nil
+	case resumemailboxstatistic.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case resumemailboxstatistic.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxStatistic field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedFields() []string {
+	var fields []string
+	if m.addsynced_emails != nil {
+		fields = append(fields, resumemailboxstatistic.FieldSyncedEmails)
+	}
+	if m.addparsed_resumes != nil {
+		fields = append(fields, resumemailboxstatistic.FieldParsedResumes)
+	}
+	if m.addfailed_resumes != nil {
+		fields = append(fields, resumemailboxstatistic.FieldFailedResumes)
+	}
+	if m.addskipped_attachments != nil {
+		fields = append(fields, resumemailboxstatistic.FieldSkippedAttachments)
+	}
+	if m.addlast_sync_duration_ms != nil {
+		fields = append(fields, resumemailboxstatistic.FieldLastSyncDurationMs)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ResumeMailboxStatisticMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case resumemailboxstatistic.FieldSyncedEmails:
+		return m.AddedSyncedEmails()
+	case resumemailboxstatistic.FieldParsedResumes:
+		return m.AddedParsedResumes()
+	case resumemailboxstatistic.FieldFailedResumes:
+		return m.AddedFailedResumes()
+	case resumemailboxstatistic.FieldSkippedAttachments:
+		return m.AddedSkippedAttachments()
+	case resumemailboxstatistic.FieldLastSyncDurationMs:
+		return m.AddedLastSyncDurationMs()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ResumeMailboxStatisticMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case resumemailboxstatistic.FieldSyncedEmails:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSyncedEmails(v)
+		return nil
+	case resumemailboxstatistic.FieldParsedResumes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddParsedResumes(v)
+		return nil
+	case resumemailboxstatistic.FieldFailedResumes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFailedResumes(v)
+		return nil
+	case resumemailboxstatistic.FieldSkippedAttachments:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSkippedAttachments(v)
+		return nil
+	case resumemailboxstatistic.FieldLastSyncDurationMs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLastSyncDurationMs(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxStatistic numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ResumeMailboxStatisticMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(resumemailboxstatistic.FieldDeletedAt) {
+		fields = append(fields, resumemailboxstatistic.FieldDeletedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ResumeMailboxStatisticMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ResumeMailboxStatisticMutation) ClearField(name string) error {
+	switch name {
+	case resumemailboxstatistic.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxStatistic nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ResumeMailboxStatisticMutation) ResetField(name string) error {
+	switch name {
+	case resumemailboxstatistic.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case resumemailboxstatistic.FieldMailboxID:
+		m.ResetMailboxID()
+		return nil
+	case resumemailboxstatistic.FieldDate:
+		m.ResetDate()
+		return nil
+	case resumemailboxstatistic.FieldSyncedEmails:
+		m.ResetSyncedEmails()
+		return nil
+	case resumemailboxstatistic.FieldParsedResumes:
+		m.ResetParsedResumes()
+		return nil
+	case resumemailboxstatistic.FieldFailedResumes:
+		m.ResetFailedResumes()
+		return nil
+	case resumemailboxstatistic.FieldSkippedAttachments:
+		m.ResetSkippedAttachments()
+		return nil
+	case resumemailboxstatistic.FieldLastSyncDurationMs:
+		m.ResetLastSyncDurationMs()
+		return nil
+	case resumemailboxstatistic.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case resumemailboxstatistic.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxStatistic field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.mailbox != nil {
+		edges = append(edges, resumemailboxstatistic.EdgeMailbox)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ResumeMailboxStatisticMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case resumemailboxstatistic.EdgeMailbox:
+		if id := m.mailbox; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ResumeMailboxStatisticMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ResumeMailboxStatisticMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ResumeMailboxStatisticMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedmailbox {
+		edges = append(edges, resumemailboxstatistic.EdgeMailbox)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ResumeMailboxStatisticMutation) EdgeCleared(name string) bool {
+	switch name {
+	case resumemailboxstatistic.EdgeMailbox:
+		return m.clearedmailbox
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ResumeMailboxStatisticMutation) ClearEdge(name string) error {
+	switch name {
+	case resumemailboxstatistic.EdgeMailbox:
+		m.ClearMailbox()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxStatistic unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ResumeMailboxStatisticMutation) ResetEdge(name string) error {
+	switch name {
+	case resumemailboxstatistic.EdgeMailbox:
+		m.ResetMailbox()
+		return nil
+	}
+	return fmt.Errorf("unknown ResumeMailboxStatistic edge %s", name)
 }
 
 // ResumeProjectMutation represents an operation that mutates the ResumeProject nodes in the graph.

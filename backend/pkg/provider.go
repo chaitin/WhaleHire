@@ -11,6 +11,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/errcode"
 	mid "github.com/chaitin/WhaleHire/backend/internal/middleware"
+	"github.com/chaitin/WhaleHire/backend/pkg/credential"
 	"github.com/chaitin/WhaleHire/backend/pkg/docparser"
 	"github.com/chaitin/WhaleHire/backend/pkg/ipdb"
 	"github.com/chaitin/WhaleHire/backend/pkg/logger"
@@ -30,6 +31,7 @@ var Provider = wire.NewSet(
 	version.NewVersionInfo,
 	s3.NewMinioClient,
 	docparser.NewDocumentParserServiceFromConfig,
+	credential.NewCredentialVault,
 )
 
 func NewWeb(cfg *config.Config, auditMiddleware *mid.AuditMiddleware) *web.Web {

@@ -4,9 +4,9 @@
 -- Add name field to notification_settings table
 ALTER TABLE "notification_settings"
 ADD COLUMN "name" varchar(256) NOT NULL DEFAULT '';
--- Update existing records to have a default name based on channel
+-- Update existing records to have a unique name based on channel and id
 UPDATE "notification_settings"
-SET "name" = 'default_' || "channel"
+SET "name" = 'default_' || "channel" || '_' || "id"::text
 WHERE "name" = '';
 -- Remove the old channel index
 DROP INDEX IF EXISTS idx_notification_settings_channel;

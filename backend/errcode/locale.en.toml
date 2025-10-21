@@ -65,19 +65,28 @@ other = "Cannot delete running task, please wait for completion or failure"
 other = "Failed to delete screening task"
 
 [err-notification-setting-create-failed]
-other = "Failed to create notification setting: {{.message}}"
+other = "Failed to create notification setting"
 
 [err-notification-setting-get-failed]
-other = "Failed to get notification setting: {{.message}}"
+other = "Failed to get notification setting"
 
 [err-notification-setting-list-failed]
-other = "Failed to list notification settings: {{.message}}"
+other = "Failed to list notification settings"
 
 [err-notification-setting-update-failed]
-other = "Failed to update notification setting: {{.message}}"
+other = "Failed to update notification setting"
 
 [err-notification-setting-delete-failed]
-other = "Failed to delete notification setting: {{.message}}"
+other = "Failed to delete notification setting"
 
 [err-notification-setting-not-found]
-other = "Notification setting not found: {{.message}}"
+other = "Notification setting not found"
+
+[err-resume-mailbox-setting-not-found]
+other = "Resume mailbox setting not found"
+
+[err-invalid-credentials]
+other = "Invalid mailbox credentials"
+
+[err-mailbox-connection-failed]
+other = "Mailbox connection failed"

@@ -30,6 +30,9 @@ import (
 	resumerepo "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	resumeservice "github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	resumeusecase "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	resumemailV1 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
+	resumemailboxsettingrepo "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/repo"
+	resumemailboxsettingusecase "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/usecase"
 	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	screeningrepo "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	screeningservice "github.com/chaitin/WhaleHire/backend/internal/screening/service"
@@ -107,5 +110,8 @@ var Provider = wire.NewSet(
 	notificationusecase.NewNotificationSettingUsecase,
 	notificationadapter.NewDingTalkAdapter,
 	notificationworker.NewNotificationWorker,
+	resumemailV1.NewResumeMailboxSettingHandler,
+	resumemailboxsettingrepo.NewResumeMailboxSettingRepo,
+	resumemailboxsettingusecase.NewResumeMailboxSettingUsecase,
 	NewAPIHandlers,
 )

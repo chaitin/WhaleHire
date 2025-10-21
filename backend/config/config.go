@@ -106,6 +106,11 @@ type Config struct {
 	Langsmith struct {
 		APIKey string `mapstructure:"api_key" json:"api_key"`
 	} `mapstructure:"langsmith" json:"langsmith"`
+
+	// 凭证加密配置
+	Credential struct {
+		EncryptionKey string `mapstructure:"encryption_key" json:"encryption_key"`
+	} `mapstructure:"credential" json:"credential"`
 }
 
 func (c *Config) GetBaseURL(req *http.Request, settings *domain.Setting) string {
@@ -202,6 +207,9 @@ func Init() (*Config, error) {
 
 	// Langsmith 默认配置
 	v.SetDefault("langsmith.api_key", "")
+
+	// 凭证加密默认配置
+	v.SetDefault("credential.encryption_key", "")
 
 	// 打印从环境变量中读取的所有配置值
 	fmt.Println("从环境变量读取的配置值:")
