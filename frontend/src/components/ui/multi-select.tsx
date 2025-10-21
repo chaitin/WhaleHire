@@ -196,7 +196,7 @@ export function MultiSelect({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            'min-h-10 h-auto w-full justify-between border-[#D1D5DB] text-[14px] hover:border-[#9CA3AF] focus:border-[#36CFC9] focus:ring-1 focus:ring-[#36CFC9]',
+            'min-h-10 h-auto w-full justify-between border-[#D1D5DB] text-[14px] hover:border-[#9CA3AF] focus:border-[#7bb8ff] focus:ring-1 focus:ring-[#7bb8ff]',
             className
           )}
         >
@@ -265,7 +265,7 @@ export function MultiSelect({
                 e.stopPropagation();
                 handleSelectAll();
               }}
-              className="text-xs h-6 px-2 text-[#36CFC9] hover:text-[#36CFC9] hover:bg-[#F0FDF4]"
+              className="text-xs h-6 px-2 text-[#7bb8ff] hover:text-[#7bb8ff] hover:bg-[#F0FDF4]"
               disabled={filteredOptions.length === 0}
             >
               {searchValue.trim() ? '全选搜索结果' : '全选'}
@@ -330,8 +330,8 @@ export function MultiSelect({
                           className={cn(
                             'flex h-4 w-4 items-center justify-center rounded border-2 transition-all',
                             isSelected
-                              ? 'bg-[#36CFC9] border-[#36CFC9]'
-                              : 'bg-white border-[#D1D5DB] hover:border-[#36CFC9]'
+                              ? 'bg-[#7bb8ff] border-[#7bb8ff]'
+                              : 'bg-white border-[#D1D5DB] hover:border-[#7bb8ff]'
                           )}
                         >
                           {isSelected && (
@@ -343,12 +343,12 @@ export function MultiSelect({
                           className={cn(
                             'flex h-4 w-4 items-center justify-center rounded-full border-2 transition-all',
                             isSelected
-                              ? 'border-[#36CFC9]'
-                              : 'border-[#D1D5DB] hover:border-[#36CFC9]'
+                              ? 'border-[#7bb8ff]'
+                              : 'border-[#D1D5DB] hover:border-[#7bb8ff]'
                           )}
                         >
                           {isSelected && (
-                            <div className="h-2 w-2 rounded-full bg-[#36CFC9]" />
+                            <div className="h-2 w-2 rounded-full bg-[#7bb8ff]" />
                           )}
                         </div>
                       )}
@@ -365,7 +365,7 @@ export function MultiSelect({
                       </span>
                       {/* 选中指示器 */}
                       {isSelected && multiple && (
-                        <div className="w-2 h-2 rounded-full bg-[#36CFC9]" />
+                        <div className="w-2 h-2 rounded-full bg-[#7bb8ff]" />
                       )}
                     </div>
                   </DropdownMenuItem>
@@ -375,7 +375,7 @@ export function MultiSelect({
               {loading && (
                 <div className="py-3 text-center">
                   <div className="inline-flex items-center gap-2 text-sm text-[#6B7280]">
-                    <div className="w-4 h-4 border-2 border-[#36CFC9] border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-[#7bb8ff] border-t-transparent rounded-full animate-spin"></div>
                     <span>加载中...</span>
                   </div>
                 </div>

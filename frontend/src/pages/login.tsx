@@ -136,7 +136,7 @@ export default function LoginPage() {
       {/* Left Section - Hero */}
       <section className="flex-1 relative overflow-hidden">
         {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 via-blue-50 to-purple-50"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-50 to-purple-50"></div>
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center h-full px-16">
@@ -149,7 +149,7 @@ export default function LoginPage() {
             {/* Subtitle */}
             <h2 className="text-3xl font-semibold text-gray-900 text-left">
               智能招聘
-              <span className="text-[#36CFC9] ml-3">AI驱动未来</span>
+              <span className="text-[#7bb8ff] ml-3">AI驱动未来</span>
             </h2>
 
             {/* Description */}
@@ -164,7 +164,7 @@ export default function LoginPage() {
                   {/* Tech Background Pattern */}
                   <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-4 left-4 w-8 h-8 border-2 border-blue-400 rounded rotate-45"></div>
-                    <div className="absolute top-8 right-8 w-6 h-6 bg-[#36CFC9] rounded-full"></div>
+                    <div className="absolute top-8 right-8 w-6 h-6 bg-[#7bb8ff] rounded-full"></div>
                     <div className="absolute bottom-8 left-8 w-4 h-4 bg-purple-400 rounded"></div>
                     <div className="absolute bottom-4 right-12 w-10 h-10 border-2 border-indigo-400 rounded-full"></div>
                   </div>
@@ -184,7 +184,7 @@ export default function LoginPage() {
                           </svg>
                         </div>
                         {/* Floating particles */}
-                        <div className="absolute -top-2 -right-2 w-4 h-4 bg-[#36CFC9] rounded-full animate-pulse"></div>
+                        <div className="absolute -top-2 -right-2 w-4 h-4 bg-[#7bb8ff] rounded-full animate-pulse"></div>
                         <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-blue-400 rounded-full animate-pulse delay-300"></div>
                       </div>
 
@@ -203,8 +203,8 @@ export default function LoginPage() {
                         <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                           <div className="w-4 h-4 bg-blue-500 rounded"></div>
                         </div>
-                        <div className="w-8 h-8 bg-[#36CFC9]/20 rounded-lg flex items-center justify-center">
-                          <div className="w-4 h-4 bg-[#36CFC9] rounded-full"></div>
+                        <div className="w-8 h-8 bg-[#7bb8ff]/20 rounded-lg flex items-center justify-center">
+                          <div className="w-4 h-4 bg-[#7bb8ff] rounded-full"></div>
                         </div>
                         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                           <div className="w-4 h-4 bg-purple-500 rounded rotate-45"></div>
@@ -268,7 +268,7 @@ export default function LoginPage() {
                     type="text"
                     value={formData.username}
                     onChange={handleInputChange}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#36CFC9] focus:border-[#36CFC9] outline-none transition-colors"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7bb8ff] focus:border-[#7bb8ff] outline-none transition-colors"
                     placeholder="请输入账号"
                   />
                 </div>
@@ -292,7 +292,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#36CFC9] focus:border-[#36CFC9] outline-none transition-colors"
+                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7bb8ff] focus:border-[#7bb8ff] outline-none transition-colors"
                     placeholder="请输入密码"
                   />
                   <button
@@ -325,10 +325,10 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'w-full font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#36CFC9] focus:ring-offset-2',
+                  'w-full font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#7bb8ff] focus:ring-offset-2',
                   isLoading
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-[#36CFC9] hover:bg-[#2AB8C1] text-white'
+                    : 'bg-[#7bb8ff] hover:bg-[#5aa3e6] text-white'
                 )}
               >
                 {isLoading ? (
@@ -380,7 +380,7 @@ export default function LoginPage() {
                   还没有账号？
                   <Link
                     to="/register"
-                    className="text-[#36CFC9] font-medium hover:text-[#2AB8C1] ml-1"
+                    className="text-[#7bb8ff] font-medium hover:text-[#5aa3e6] ml-1"
                   >
                     立即注册
                   </Link>

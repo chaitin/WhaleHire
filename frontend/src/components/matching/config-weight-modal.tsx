@@ -184,7 +184,7 @@ export function ConfigWeightModal({
                       className={cn(
                         'text-sm text-center',
                         step.active
-                          ? 'text-[#36CFC9] font-semibold'
+                          ? 'text-[#7bb8ff] font-semibold'
                           : 'text-[#666666]'
                       )}
                     >

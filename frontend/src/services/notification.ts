@@ -17,7 +17,8 @@ export interface DingTalkConfig {
  */
 export interface NotificationSetting {
   id: string;
-  description: string; // 通知名称
+  name: string; // 通知名称
+  description?: string; // 通知描述（可选，默认不传）
   channel: 'dingtalk' | 'email'; // 通知方式
   dingtalk_config?: DingTalkConfig; // 钉钉配置
   enabled: boolean; // 是否启用
@@ -29,10 +30,13 @@ export interface NotificationSetting {
  * 创建通知配置的请求参数
  */
 export interface CreateNotificationSettingReq {
-  description: string; // 通知名称
+  name: string; // 通知名称（必填）
+  description?: string; // 通知描述（可选，默认不传）
   channel: 'dingtalk' | 'email'; // 通知方式
   dingtalk_config?: DingTalkConfig; // 钉钉配置
   enabled: boolean; // 是否启用
+  max_retry?: number; // 最大重试次数（可选，默认不传）
+  timeout?: number; // 超时时间（可选，默认不传）
   [key: string]: unknown; // 索引签名
 }
 
@@ -40,10 +44,13 @@ export interface CreateNotificationSettingReq {
  * 更新通知配置的请求参数
  */
 export interface UpdateNotificationSettingReq {
-  description?: string; // 通知名称
+  name?: string; // 通知名称
+  description?: string; // 通知描述（可选）
   channel?: 'dingtalk' | 'email'; // 通知方式
   dingtalk_config?: DingTalkConfig; // 钉钉配置
   enabled?: boolean; // 是否启用
+  max_retry?: number; // 最大重试次数（可选）
+  timeout?: number; // 超时时间（可选）
   [key: string]: unknown; // 索引签名
 }
 
@@ -54,11 +61,13 @@ export const getNotificationSettings = async (): Promise<
   NotificationSetting[]
 > => {
   const response = await apiGet<{
-    settings?: NotificationSetting[];
     items?: NotificationSetting[];
+    total_count?: number;
+    has_next_page?: boolean;
+    next_token?: string;
   }>('/v1/notification-settings');
-  // 后端返回的是 settings 字段，兼容 items 字段
-  return response.settings || response.items || [];
+  // 后端返回的是 items 字段（根据 swagger 定义：domain.ListSettingsResponse）
+  return response.items || [];
 };
 
 /**
