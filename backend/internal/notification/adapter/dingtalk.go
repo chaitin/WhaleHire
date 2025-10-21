@@ -317,7 +317,7 @@ func (d *DingTalkAdapter) sendBatchResumeParseCompletedNotification(ctx context.
 		FailedCount:  payload.FailedCount,
 		SuccessRate:  successRate,
 		Source:       payload.Source,
-		CompletedAt:  payload.CompletedAt.Format("2006-01-02 15:04:05"),
+		CompletedAt:  payload.CompletedAt.In(time.Local).Format("2006-01-02 15:04:05"),
 	}
 
 	content, err := d.renderTemplate("batch_resume_parse_completed", templateData)
@@ -397,7 +397,7 @@ func (d *DingTalkAdapter) sendScreeningTaskCompletedNotification(ctx context.Con
 		return fmt.Errorf("failed to unmarshal payload: %w", errJson)
 	}
 
-	title := "📋 简历筛选任务完成"
+	title := "📋 智能匹配任务完成"
 
 	// 使用模板渲染通知内容
 	templateData := struct {
@@ -407,7 +407,6 @@ func (d *DingTalkAdapter) sendScreeningTaskCompletedNotification(ctx context.Con
 		UserName    string
 		TotalCount  int
 		PassedCount int
-		AvgScore    float64
 		CompletedAt string
 	}{
 		TaskID:      payload.TaskID.String(),
@@ -415,8 +414,7 @@ func (d *DingTalkAdapter) sendScreeningTaskCompletedNotification(ctx context.Con
 		UserName:    payload.UserName,
 		TotalCount:  payload.TotalCount,
 		PassedCount: payload.PassedCount,
-		AvgScore:    payload.AvgScore,
-		CompletedAt: payload.CompletedAt.Format("2006-01-02 15:04:05"),
+		CompletedAt: payload.CompletedAt.In(time.Local).Format("2006-01-02 15:04:05"),
 	}
 
 	content, err := d.renderTemplate("screening_task_completed", templateData)
