@@ -122,8 +122,8 @@ type UpdateSettingRequest struct {
 	Channel        consts.NotificationChannel `json:"channel" validate:"required"`
 	Enabled        bool                       `json:"enabled"`
 	DingTalkConfig NotificationDingTalkConfig `json:"dingtalk_config,omitempty"`
-	MaxRetry       int                        `json:"max_retry" validate:"min=0,max=10"`
-	Timeout        int                        `json:"timeout" validate:"min=1,max=300"`
+	MaxRetry       int                        `json:"max_retry" validate:"min=0,max=10" default:"3"`
+	Timeout        int                        `json:"timeout" validate:"min=1,max=300" default:"300"`
 	Description    string                     `json:"description" validate:"max=500"`
 }
 

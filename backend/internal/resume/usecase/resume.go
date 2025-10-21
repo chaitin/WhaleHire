@@ -89,15 +89,18 @@ func (u *ResumeUsecase) uploadWithOptions(ctx context.Context, req *domain.Uploa
 
 	if waitForParsing {
 		// 同步解析简历（用于批量上传）
-		u.parseResumeSync(ctx, createdResume.ID.String())
-
-		// 重新获取更新后的简历数据
-		updatedResume, err := u.repo.GetByID(ctx, createdResume.ID.String())
-		if err != nil {
-			u.logger.Error("Failed to get updated resume after parsing", "error", err)
-			// 即使获取失败，也返回原始简历数据
+		if err := u.parseResumeSync(ctx, createdResume.ID.String()); err != nil {
+			u.logger.Error("Failed to parse resume synchronously", "error", err, "resume_id", createdResume.ID.String())
+			// 解析失败时不返回错误，继续返回创建的简历记录
 		} else {
-			createdResume = updatedResume
+			// 重新获取更新后的简历数据
+			updatedResume, err := u.repo.GetByID(ctx, createdResume.ID.String())
+			if err != nil {
+				u.logger.Error("Failed to get updated resume after parsing", "error", err)
+				// 即使获取失败，也返回原始简历数据
+			} else {
+				createdResume = updatedResume
+			}
 		}
 	} else {
 		// 异步解析简历 - 使用独立的context避免HTTP请求context被取消
@@ -481,38 +484,6 @@ func (u *ResumeUsecase) parseResumeSync(ctx context.Context, resumeID string) er
 
 	u.logger.Info("Resume parsed successfully", "resume_id", resumeID)
 	return nil
-}
-
-// publishResumeParseCompletedNotification 发布简历解析完成通知
-func (u *ResumeUsecase) publishResumeParseCompletedNotification(ctx context.Context, resumeID string, success bool, errorMsg string) {
-	// 获取简历信息
-	resume, err := u.repo.GetByID(ctx, resumeID)
-	if err != nil {
-		u.logger.Error("Failed to get resume for notification", "error", err, "resume_id", resumeID)
-		return
-	}
-
-	// 解析UUID
-	resumeUUID, err := uuid.Parse(resumeID)
-	if err != nil {
-		u.logger.Error("Invalid resume ID for notification", "error", err, "resume_id", resumeID)
-		return
-	}
-
-	// 创建通知负载
-	payload := domain.ResumeParseCompletedPayload{
-		ResumeID: resumeUUID,
-		UserID:   resume.UploaderID,
-		FileName: resume.Name,
-		ParsedAt: time.Now(),
-		Success:  success,
-		ErrorMsg: errorMsg,
-	}
-
-	// 发布通知事件
-	if err := u.notificationUsecase.PublishEvent(ctx, payload); err != nil {
-		u.logger.Error("Failed to publish resume parse completed notification", "error", err, "resume_id", resumeID)
-	}
 }
 
 // publishBatchResumeParseCompletedNotification 发送批量简历解析完成通知

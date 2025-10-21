@@ -42,7 +42,7 @@ func doRequest(ctx context.Context, callMethod string, endPoint string, header m
 	if err != nil {
 		return nil, err
 	}
-	if header != nil && len(header) > 0 {
+	if len(header) > 0 {
 		for k, v := range header {
 			req.Header.Set(k, v)
 		}

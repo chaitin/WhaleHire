@@ -115,7 +115,7 @@ func (w *NotificationWorker) handleMessage(ctx context.Context, msg queue.Messag
 	}
 
 	// 获取通知事件
-	event, err := w.repo.GetByID(ctx, eventUUID)
+	dbEvent, err := w.repo.GetByID(ctx, eventUUID)
 	if err != nil {
 		w.logger.ErrorContext(ctx, "Failed to get notification event",
 			slog.String("message_id", msg.ID),
@@ -126,7 +126,7 @@ func (w *NotificationWorker) handleMessage(ctx context.Context, msg queue.Messag
 		return err
 	}
 
-	if event == nil {
+	if dbEvent == nil {
 		w.logger.ErrorContext(ctx, "Notification event not found",
 			slog.String("message_id", msg.ID),
 			slog.String("event_id", eventID),
@@ -134,6 +134,10 @@ func (w *NotificationWorker) handleMessage(ctx context.Context, msg queue.Messag
 		w.ackMessage(ctx, msg)
 		return fmt.Errorf("notification event not found: %s", eventID)
 	}
+
+	// 转换为 domain 类型
+	event := &domain.NotificationEvent{}
+	event = event.From(dbEvent)
 
 	// 检查事件状态
 	if event.Status == consts.NotificationStatusDelivered {

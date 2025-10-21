@@ -231,7 +231,7 @@ type dingMap struct {
 }
 
 func DingMap() *dingMap {
-	return &dingMap{m: make(map[string]MarkType), l: make([]string, 0, 0)}
+	return &dingMap{m: make(map[string]MarkType), l: make([]string, 0)}
 }
 
 func (d *dingMap) Set(val string, t MarkType) *dingMap {
