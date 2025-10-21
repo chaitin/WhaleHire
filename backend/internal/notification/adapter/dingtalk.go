@@ -109,7 +109,7 @@ func (d *DingTalkAdapter) getDingTalkClients(ctx context.Context) ([]*dingtalk.D
 			continue
 		}
 
-		client := dingtalk.InitDingTalkWithSecret(setting.DingTalkConfig.Token, setting.DingTalkConfig.Secret, 
+		client := dingtalk.InitDingTalkWithSecret(setting.DingTalkConfig.Token, setting.DingTalkConfig.Secret,
 			dingtalk.WithInitSendTimeout(10*time.Second)) // 增加超时时间到10秒
 		clients = append(clients, client)
 	}
@@ -130,24 +130,24 @@ func (d *DingTalkAdapter) broadcastMessage(ctx context.Context, title, content s
 
 	// 使用 channel 收集错误
 	errChan := make(chan error, len(clients))
-	
+
 	// 使用信号量限制并发数，避免同时发送过多请求
 	semaphore := make(chan struct{}, 3) // 最多同时发送3个请求
 	var wg sync.WaitGroup
-	
+
 	// 并发发送到所有钉钉群，但限制并发数
 	for _, client := range clients {
 		wg.Add(1)
 		go func(c *dingtalk.DingTalk) {
 			defer wg.Done()
-			
+
 			// 获取信号量
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
-			
+
 			// 添加随机延迟，进一步避免请求冲突
 			time.Sleep(time.Duration(len(clients)) * 50 * time.Millisecond)
-			
+
 			// 重试机制：最多重试3次
 			var lastErr error
 			for retry := 0; retry < 3; retry++ {
@@ -189,12 +189,12 @@ func (d *DingTalkAdapter) broadcastMessage(ctx context.Context, title, content s
 			slog.Int("failed_groups", len(errors)),
 			slog.Int("success_groups", len(clients)-len(errors)),
 		)
-		
+
 		// 如果所有群都发送失败，返回错误
 		if len(errors) == len(clients) {
 			return fmt.Errorf("all dingtalk groups failed to receive message")
 		}
-		
+
 		// 部分失败，记录警告但不返回错误
 		d.logger.WarnContext(ctx, "Partial success in broadcasting dingtalk message",
 			slog.Int("success_groups", len(clients)-len(errors)),

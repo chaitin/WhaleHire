@@ -7,11 +7,11 @@ import (
 
 	"github.com/google/uuid"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/db/notificationsetting"
 	"github.com/chaitin/WhaleHire/backend/domain"
-	"entgo.io/ent/dialect/sql"
 )
 
 // notificationSettingRepo 通知设置仓储实现
