@@ -61,6 +61,11 @@ func DeletedAt(v time.Time) predicate.NotificationSetting {
 	return predicate.NotificationSetting(sql.FieldEQ(FieldDeletedAt, v))
 }
 
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldEQ(FieldName, v))
+}
+
 // Channel applies equality check predicate on the "channel" field. It's identical to ChannelEQ.
 func Channel(v consts.NotificationChannel) predicate.NotificationSetting {
 	vc := string(v)
@@ -145,6 +150,71 @@ func DeletedAtIsNil() predicate.NotificationSetting {
 // DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
 func DeletedAtNotNil() predicate.NotificationSetting {
 	return predicate.NotificationSetting(sql.FieldNotNull(FieldDeletedAt))
+}
+
+// NameEQ applies the EQ predicate on the "name" field.
+func NameEQ(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldEQ(FieldName, v))
+}
+
+// NameNEQ applies the NEQ predicate on the "name" field.
+func NameNEQ(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldNEQ(FieldName, v))
+}
+
+// NameIn applies the In predicate on the "name" field.
+func NameIn(vs ...string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldIn(FieldName, vs...))
+}
+
+// NameNotIn applies the NotIn predicate on the "name" field.
+func NameNotIn(vs ...string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldNotIn(FieldName, vs...))
+}
+
+// NameGT applies the GT predicate on the "name" field.
+func NameGT(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldGT(FieldName, v))
+}
+
+// NameGTE applies the GTE predicate on the "name" field.
+func NameGTE(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldGTE(FieldName, v))
+}
+
+// NameLT applies the LT predicate on the "name" field.
+func NameLT(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldLT(FieldName, v))
+}
+
+// NameLTE applies the LTE predicate on the "name" field.
+func NameLTE(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldLTE(FieldName, v))
+}
+
+// NameContains applies the Contains predicate on the "name" field.
+func NameContains(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldContains(FieldName, v))
+}
+
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
+func NameHasPrefix(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldHasPrefix(FieldName, v))
+}
+
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
+func NameHasSuffix(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldHasSuffix(FieldName, v))
+}
+
+// NameEqualFold applies the EqualFold predicate on the "name" field.
+func NameEqualFold(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldEqualFold(FieldName, v))
+}
+
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
+func NameContainsFold(v string) predicate.NotificationSetting {
+	return predicate.NotificationSetting(sql.FieldContainsFold(FieldName, v))
 }
 
 // ChannelEQ applies the EQ predicate on the "channel" field.

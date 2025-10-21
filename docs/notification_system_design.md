@@ -1,113 +1,99 @@
-# 消息通知与异步队列设计方案
+# 消息通知系统总体设计
 
-本文档描述 WhaleHire 平台在“简历解析完成”“岗位匹配完成”等关键节点向钉钉群发送通知的后端实现方案，重点覆盖整体架构、模块划分、消息队列设计、配置要求与实施步骤，为后续开发与联调提供依据。
+本文档基于仓库当前实现，对 WhaleHire 的钉钉通知子系统进行概览性说明，帮助研发了解现状、扩展点与运行要求。重点涵盖系统架构、模块划分、事件流向及数据模型。
 
 ## 1. 背景与目标
 
-- 业务需要在多个耗时流程结束后及时告知招聘团队，避免人工轮询。
-- 现有流程多为同步调用，缺少统一通知组件，易导致耦合与重发困难。
-- 引入可靠的异步消息队列，确保通知可追踪、可重试，并便于扩展到企业微信等渠道。
+- 简历解析、岗位匹配、筛选任务等流程耗时且异步，业务需要在完成后及时向协作群同步结果，避免人工轮询。
+- 平台需要统一的事件模型、可追踪的投递链路以及模板化的通知内容，便于后续扩展更多渠道。
+- 当前实现聚焦于钉钉机器人投递，但整体架构已抽象生产者、消费者、事件仓储与发送适配器，支持后续扩容。
 
-目标：构建一套轻量但可扩展的通知子系统，支持事件抽象、模板化渲染与钉钉群机器人投递，保证消息可观测与幂等。
+通过该子系统，我们希望在保持代码内聚的同时，实现事件幂等、队列缓冲、可配置渠道与可回查的通知履历。
 
-## 2. 总体架构概览
+## 2. 系统架构
 
 ```
-Resume/Matching Usecase → NotificationUsecase.PublishEvent()
-        ↓
-   NotificationEventRepo (落库)
-        ↓
-   MQ Producer (Redis Stream)
-        ↓
-┌─────────────────────────────────────┐
-│ Notification Worker (消费 + 幂等)  │
-│   ↘ Sender Adapter (DingTalk)       │
-└─────────────────────────────────────┘
-        ↓
-  钉钉群机器人（签名 + 重试）
+业务用例 (简历/筛选等)
+        │ PublishEvent()
+        ▼
+domain.NotificationUsecase
+        │ 写库 + 推队列
+        ▼
+NotificationEventRepo (Ent)
+        │
+Redis Stream notification:events
+        │
+NotificationWorker (消费者组 notification-worker)
+        │
+DingTalkAdapter ─→ pkg/dingtalk ─→ 钉钉机器人
 ```
 
-关键能力：
+- 业务 usecase 注入 `NotificationUsecase`，构造 payload 并发布事件。
+- Usecase 落库 `notification_events`，随后使用 Redis Stream 作为异步缓冲。
+- `NotificationWorker` 消费 Stream、查询事件数据、渲染模板并调用钉钉适配器。
+- 投递成功后更新事件状态，失败则累加重试信息，由运营或后台任务触发 `RetryEvent` 重新入队。
 
-- 领域事件抽象：统一通知触发条件与负载。
-- 异步队列：缓冲高峰流量，提供失败重试。
-- Worker：读取消息，模板渲染并调用外部发送器。
-- 监控与告警：记录投递状态、错误码与重试次数。
+## 3. 核心模块
 
-## 3. 模块与目录规划
+- **领域模型（domain）**  
+  `backend/domain/notification.go` 定义事件实体、四类 payload（简历解析、批量解析、岗位匹配、筛选任务）以及幂等键生成策略；`backend/domain/notification_setting.go` 定义通知渠道配置、接口协议。
 
-- `backend/domain/notification.go`：集中定义 `NotificationEvent`、`NotificationChannel`、状态枚举与聚合根，并提供 Ent 模型到领域实体的转换方法。
-- `backend/db/notificationevent.go`：Ent Schema，存储事件数据、重试次数、最后状态。
-- `backend/internal/notification/usecase/`：提供 `PublishEvent`、`MarkDelivered` 等应用服务。
-- `backend/internal/notification/repo/`：实现事件表与状态表的读写。
-- `backend/internal/notification/templates/`：钉钉消息模板（Markdown/纯文本，支持变量）。
-- `backend/internal/notification/adapter/dingtalk/`：封装 webhook、签名、发送与限流。
-- `backend/internal/notification/worker/`：消费通知事件，调用模板与 Sender，处理重试。
-- `backend/internal/notification/config.go`：加载钉钉 webhook、签名 key、默认重试策略等配置；若后续需要跨模块复用，再抽取至 `internal/config`。
-- `backend/internal/queue/`：定义队列接口、Redis Stream 实现、统一 producer/consumer。
-- `backend/internal/resume/usecase/` & `backend/internal/matching/usecase/`：在业务流程结束时注入 `NotificationUsecase` 发布事件。
-- `backend/pkg/dingtalk/`：抽象钉钉通用工具（签名、timestamp、HTTP 请求）。
+- **应用服务（usecase）**  
+  `backend/internal/notification/usecase/notification.go` 负责幂等校验、选取启用的通知配置、写入事件并推送到 `notification:events` 流；`backend/internal/notification/usecase/notification_setting.go` 提供通知渠道配置的增删改查与校验逻辑。
 
-## 4. 消息流转流程
+- **仓储层（repo）**  
+  `backend/internal/notification/repo/notification_event.go` 与 `.../notification_setting.go` 基于 Ent 客户端读写 `notification_events` 与 `notification_settings` 表，支撑状态更新、重试计数、启用配置查询等场景。
 
-1. 业务 usecase 触发：简历解析或匹配成功后调用 `NotificationUsecase.PublishEvent(ctx, event)`。
-2. Usecase 校验事件幂等键（如 `resume_id + job_id + event_type`），落库并写入 Redis Stream。
-3. Worker 订阅 Redis Stream（消费者组），按批读取消息，加载模板渲染钉钉内容。
-4. 发送成功：更新事件状态为 `Delivered`，记录响应；失败则记录原因并安排重试。
-5. 重试超限或异常：标记为 `Failed`，并触发内部告警（Prometheus 指标或日志采集）。
+- **队列抽象（queue）**  
+  `backend/internal/queue/queue.go` 定义 Producer/Consumer 接口，`backend/internal/queue/redis/redis.go` 基于 Redis Stream 实现发布、订阅、死信处理等能力；`backend/internal/queue_provider.go` 负责将 Redis 客户端注入为 Producer/Consumer。
 
-## 5. 消息队列设计
+- **发送适配器与模板**  
+  `backend/internal/notification/adapter/dingtalk.go` 使用 `backend/pkg/dingtalk` 封装签名与 Markdown 消息发送，模板位于 `backend/templates/notification/*.tmpl`；渲染模板后以 Markdown 推送至钉钉机器人。
 
-- **实现**：基于现有 Redis，使用 Redis Stream；若未来引入专业 MQ（如 Kafka、RabbitMQ），保持接口兼容。
-- **Producer**：`backend/internal/queue/redis/producer.go` 封装 `XAdd`，支持批量写入与 TraceID。
-- **Consumer**：`backend/internal/queue/redis/consumer.go` 以消费者组消费，配置 `MaxLen` 和 `Block`。
-- **消息格式**：字段包含 `event_id`、`event_type`、`payload`（JSON）、`retry_count`、`trace_id`。
-- **幂等处理**：Worker 在消费前查询事件状态，若已 `Delivered` 则 `XAck` 并跳过。
-- **重试策略**：指数退避（如 1min / 5min / 30min），超过阈值写入死信流 `notification:deadletter`。
-- **监控指标**：消息积压、重试次数、失败率，暴露到 `pkg/metrics`。
+- **异步 Worker**  
+  `backend/internal/notification/worker/notification_worker.go` 消费 `notification:events` 流、分发到适配器并更新状态；`backend/internal/notification/worker/servicer.go` 将 Worker 封装为 `service.Servicer`，在 `backend/cmd/main.go` 中与 HTTP 服务一同纳入生命周期管理。
 
-## 6. 钉钉消息发送适配
+- **业务集成点**  
+  当前已在 `backend/internal/resume/usecase/resume.go` 与 `backend/internal/screening/usecase/screening.go` 等用例中注入通知能力，后续场景可复用 `domain.NotificationPayload` 接口快速接入。
 
-- 支持文本与 Markdown 模板，模板中使用 `${var}` 占位符，由 Usecase 提供变量。
-- 发送前增加签名：timestamp + secret 做 HmacSha256，满足钉钉安全要求。
-- 网络请求使用统一 `pkg/request` 工具；默认超时与重试（如 3 次，每次 2s 回退）。
-- 提供 `SendOptions`：@特定手机号、是否加急、是否同步返回。
-- 发送失败时，归类错误（客户端/网络/钉钉限制），用于重试与监控。
+- **运营接口**  
+  `backend/internal/notification/handler/v1/notification_setting.go` 暴露 REST API，允许运营配置钉钉 webhook、重试次数、超时等信息，配套 `errcode` 做错误映射。
 
-## 7. 数据模型与结构
+## 4. 消息流转与幂等
 
-- `notification_events`（Ent Schema）
-  - `id`（UUID）、`event_type`、`channel`、`status`（Pending/Delivering/Delivered/Failed）
-  - `payload`（JSON）、`template_id`、`target`（webhook/群 ID）
-  - `retry_count`、`max_retry`、`last_error`、`trace_id`
-  - `created_at`、`scheduled_at`、`delivered_at`、`updated_at`
-- 可选扩展：`notification_channels` 存储渠道配置，便于多渠道共存。
-- Domain 层暴露 `NotificationEvent`、`NotificationPayload` 结构体，避免直接暴露 Ent 模型。
+1. 业务用例组装具体 payload（例如 `domain.ResumeParseCompletedPayload`），调用 `PublishEvent`。
+2. Usecase 基于 payload 生成幂等键（如 `resume_parse_<resume_id>`），若已有同一 Trace ID 的事件则跳过重复投递。
+3. Usecase 查询已启用的通知设置，仅使用第一个配置的渠道，按渠道类型决定目标地址（目前仅支持钉钉 webhook）。
+4. 事件写入 `notification_events`，并以结构化字段推送至 Redis Stream `notification:events`。
+5. `NotificationWorker` 以消费者组 `notification-worker` 读取消息，回查事件记录。若状态已是 `delivered` 会直接确认消息，避免重复发送。
+6. Worker 调用 `DingTalkAdapter` 渲染模板并下发 Markdown 消息；发送成功后调用仓储 `MarkAsDelivered`，失败则通过 `IncrementRetryCount` 记录错误与次数。
+7. Worker 无论成功或失败都会 `ACK` 当前 Stream 消息，防止 Redis 重复投递；失败的事件保留在数据库，后续可通过 `RetryEvent`（或运营界面）再次推送。
+8. `PublishEventWithDelay` 支持设置计划执行时间，延迟事件会在字段 `scheduled_at` 中标记，由消费者在读取时判断是否到期。
 
-## 8. 配置与部署要求
+## 5. 数据模型
 
-- 新增 `.env.example` 配置：
-  - `DINGTALK_NOTIFICATION_WEBHOOK`
-  - `DINGTALK_NOTIFICATION_SECRET`
-  - `NOTIFICATION_MAX_RETRY`
-  - `NOTIFICATION_QUEUE_STREAM=notification:events`
-- `docker-compose.dev.yml`：复用现有 Redis，无需新增容器；如需独立实例，可添加命名空间或数据库索引。
-- `cmd/main.go`：在依赖注入中增加 NotificationUsecase、Queue Producer、Worker 启动。
-- Worker 启动支持后台 goroutine，并提供 `Shutdown` 钩子确保优雅退出。
+- **notification_events**  
+  核心字段包含 `id`, `event_type`, `channel`, `status`, `payload`(JSON), `template_id`, `target`, `retry_count`, `max_retry`, `timeout`, `last_error`, `trace_id`, `scheduled_at`, `delivered_at`, `created_at`, `updated_at`。迁移脚本 `backend/migration/000013_add_notification_tables.up.sql` 已创建索引以支撑按状态/类型检索。
 
-## 9. 监控、日志与告警
+- **notification_settings**  
+  字段包括 `id`, `channel`, `enabled`, `dingtalk_config`(JSON，含 `webhook_url`/`token`/`secret`), `max_retry`, `timeout`, `description`, `created_at`, `updated_at`。系统通过 API 管理该表，运行时从数据库加载配置，无需硬编码 webhook。
 
-- 指标：`notification_events_total`、`notification_delivery_duration_seconds`、`notification_retry_total`。
-- 日志：统一使用 `pkg/log`，记录 TraceID、事件 ID、模板 ID。
-- 告警：当 dead-letter 队列有积压或失败率超过阈值，触发内部告警（如钉钉机器人自监控群）。
-- 审计：在 `backend/domain/audit.go` 可增加通知相关审计动作，借助现有审计流水。
+- **Redis Stream 消息结构**  
+  `event_id`, `event_type`, `channel`, `payload`, `template_id`, `target`, `trace_id`, `created_at` 等字段会被序列化后写入 Stream；Worker 会解析 JSON 字符串恢复为结构体。
 
-## 10. 实施里程碑
+## 6. 配置与运维
 
-1. **基础设施**：完成 Ent Schema、Repo、Queue 抽象，编写迁移文件并验证。
-2. **业务集成**：在简历解析与岗位匹配 usecase 中发布事件，编写模板示例。
-3. **Worker 与发送器**：实现钉钉 Sender、Worker 消费逻辑、幂等与重试。
-4. **监控上线**：补充指标、日志、告警配置，完成 e2e 测试（模拟事件 → 钉钉收到消息）。
-5. **迭代与扩展**：支持多渠道通知、后台管理界面、模板动态配置。
+- **服务启动**：`backend/cmd/main.go` 使用 `worker.NewServicer` 将通知 Worker 加入统一的 `service.Service`，随主进程启动/停止；确保 Redis 在启动前可用。
+- **渠道管理**：通过 `/api/v1/notification-settings` 系列接口管理钉钉配置，支持启用/停用、设置最大重试次数与超时时间。Usecase 仅消费 `enabled=true` 的配置。
+- **模板更新**：Markdown 模板位于 `backend/templates/notification`，更新时需保证语法正确并覆盖主要字段。适配器启动时缓存模板，如需热更新目前需重启服务。
+- **重试策略**：失败事件保留在数据库，通过 `notificationUsecase.RetryEvent` 再次推送至 Stream。后续若需要后台自动重试，可在 Worker 中引入延迟策略或使用定时任务扫描 `status=failed` 事件。
+- **依赖组件**：当前仅依赖现有 Redis 服务；无需额外消息中间件或环境变量。钉钉凭据由数据库配置维护。
 
-通过上述设计，可以在保持服务内聚与模块化的前提下，引入可靠的通知链路，为后续扩展 AI 审核、面试提醒等场景打下基础。
+## 7. 后续演进方向
+
+- 扩展新的渠道适配器（企业微信、邮件等），实现 `NotificationChannel` 多态化。
+- 在 Worker 中补充失败重试调度、死信队列与 Prometheus 指标，增强可observability。
+- 引入模板管理后台，实现模板在线编辑与多语言版本。
+- 针对高频事件可增加批量消息合并或限流策略，避免钉钉机器人触发频控。
+
+以上内容覆盖了当前通知系统的主要组成与运行机制，为后续功能扩展和稳定性建设提供参考。

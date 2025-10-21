@@ -50,6 +50,20 @@ func (nsu *NotificationSettingUpdate) ClearDeletedAt() *NotificationSettingUpdat
 	return nsu
 }
 
+// SetName sets the "name" field.
+func (nsu *NotificationSettingUpdate) SetName(s string) *NotificationSettingUpdate {
+	nsu.mutation.SetName(s)
+	return nsu
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (nsu *NotificationSettingUpdate) SetNillableName(s *string) *NotificationSettingUpdate {
+	if s != nil {
+		nsu.SetName(*s)
+	}
+	return nsu
+}
+
 // SetChannel sets the "channel" field.
 func (nsu *NotificationSettingUpdate) SetChannel(cc consts.NotificationChannel) *NotificationSettingUpdate {
 	nsu.mutation.SetChannel(cc)
@@ -219,6 +233,16 @@ func (nsu *NotificationSettingUpdate) defaults() error {
 	return nil
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (nsu *NotificationSettingUpdate) check() error {
+	if v, ok := nsu.mutation.Name(); ok {
+		if err := notificationsetting.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`db: validator failed for field "NotificationSetting.name": %w`, err)}
+		}
+	}
+	return nil
+}
+
 // Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
 func (nsu *NotificationSettingUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *NotificationSettingUpdate {
 	nsu.modifiers = append(nsu.modifiers, modifiers...)
@@ -226,6 +250,9 @@ func (nsu *NotificationSettingUpdate) Modify(modifiers ...func(u *sql.UpdateBuil
 }
 
 func (nsu *NotificationSettingUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := nsu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(notificationsetting.Table, notificationsetting.Columns, sqlgraph.NewFieldSpec(notificationsetting.FieldID, field.TypeUUID))
 	if ps := nsu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -239,6 +266,9 @@ func (nsu *NotificationSettingUpdate) sqlSave(ctx context.Context) (n int, err e
 	}
 	if nsu.mutation.DeletedAtCleared() {
 		_spec.ClearField(notificationsetting.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := nsu.mutation.Name(); ok {
+		_spec.SetField(notificationsetting.FieldName, field.TypeString, value)
 	}
 	if value, ok := nsu.mutation.Channel(); ok {
 		_spec.SetField(notificationsetting.FieldChannel, field.TypeString, value)
@@ -315,6 +345,20 @@ func (nsuo *NotificationSettingUpdateOne) SetNillableDeletedAt(t *time.Time) *No
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (nsuo *NotificationSettingUpdateOne) ClearDeletedAt() *NotificationSettingUpdateOne {
 	nsuo.mutation.ClearDeletedAt()
+	return nsuo
+}
+
+// SetName sets the "name" field.
+func (nsuo *NotificationSettingUpdateOne) SetName(s string) *NotificationSettingUpdateOne {
+	nsuo.mutation.SetName(s)
+	return nsuo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (nsuo *NotificationSettingUpdateOne) SetNillableName(s *string) *NotificationSettingUpdateOne {
+	if s != nil {
+		nsuo.SetName(*s)
+	}
 	return nsuo
 }
 
@@ -500,6 +544,16 @@ func (nsuo *NotificationSettingUpdateOne) defaults() error {
 	return nil
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (nsuo *NotificationSettingUpdateOne) check() error {
+	if v, ok := nsuo.mutation.Name(); ok {
+		if err := notificationsetting.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`db: validator failed for field "NotificationSetting.name": %w`, err)}
+		}
+	}
+	return nil
+}
+
 // Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
 func (nsuo *NotificationSettingUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *NotificationSettingUpdateOne {
 	nsuo.modifiers = append(nsuo.modifiers, modifiers...)
@@ -507,6 +561,9 @@ func (nsuo *NotificationSettingUpdateOne) Modify(modifiers ...func(u *sql.Update
 }
 
 func (nsuo *NotificationSettingUpdateOne) sqlSave(ctx context.Context) (_node *NotificationSetting, err error) {
+	if err := nsuo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(notificationsetting.Table, notificationsetting.Columns, sqlgraph.NewFieldSpec(notificationsetting.FieldID, field.TypeUUID))
 	id, ok := nsuo.mutation.ID()
 	if !ok {
@@ -537,6 +594,9 @@ func (nsuo *NotificationSettingUpdateOne) sqlSave(ctx context.Context) (_node *N
 	}
 	if nsuo.mutation.DeletedAtCleared() {
 		_spec.ClearField(notificationsetting.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := nsuo.mutation.Name(); ok {
+		_spec.SetField(notificationsetting.FieldName, field.TypeString, value)
 	}
 	if value, ok := nsuo.mutation.Channel(); ok {
 		_spec.SetField(notificationsetting.FieldChannel, field.TypeString, value)

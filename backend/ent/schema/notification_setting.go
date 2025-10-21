@@ -37,6 +37,9 @@ func (NotificationSetting) Mixin() []ent.Mixin {
 func (NotificationSetting) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
+		field.String("name").
+			NotEmpty().
+			Comment("配置名称，用于区分同类型的不同配置"),
 		field.String("channel").
 			GoType(consts.NotificationChannel("")).
 			Comment("通知渠道"),
@@ -71,5 +74,6 @@ func (NotificationSetting) Indexes() []ent.Index {
 		index.Fields("channel"),
 		index.Fields("enabled"),
 		index.Fields("channel", "enabled"),
+		index.Fields("name", "channel").Unique(),
 	}
 }

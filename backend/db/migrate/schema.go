@@ -549,6 +549,7 @@ var (
 	NotificationSettingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString},
 		{Name: "channel", Type: field.TypeString},
 		{Name: "enabled", Type: field.TypeBool, Default: true},
 		{Name: "dingtalk_config", Type: field.TypeJSON, Nullable: true},
@@ -567,16 +568,21 @@ var (
 			{
 				Name:    "notificationsetting_channel",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationSettingsColumns[2]},
+				Columns: []*schema.Column{NotificationSettingsColumns[3]},
 			},
 			{
 				Name:    "notificationsetting_enabled",
 				Unique:  false,
-				Columns: []*schema.Column{NotificationSettingsColumns[3]},
+				Columns: []*schema.Column{NotificationSettingsColumns[4]},
 			},
 			{
 				Name:    "notificationsetting_channel_enabled",
 				Unique:  false,
+				Columns: []*schema.Column{NotificationSettingsColumns[3], NotificationSettingsColumns[4]},
+			},
+			{
+				Name:    "notificationsetting_name_channel",
+				Unique:  true,
 				Columns: []*schema.Column{NotificationSettingsColumns[2], NotificationSettingsColumns[3]},
 			},
 		},

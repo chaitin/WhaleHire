@@ -6,6 +6,7 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db"
+	"github.com/chaitin/WhaleHire/backend/pkg/web"
 	"github.com/google/uuid"
 )
 
@@ -15,16 +16,18 @@ type NotificationSettingUsecase interface {
 	CreateSetting(ctx context.Context, setting *NotificationSetting) error
 	// GetSetting 根据ID获取通知设置
 	GetSetting(ctx context.Context, id uuid.UUID) (*NotificationSetting, error)
-	// GetSettingByChannel 根据通道类型获取通知设置
-	GetSettingByChannel(ctx context.Context, channel consts.NotificationChannel) (*NotificationSetting, error)
+	// GetSettingByNameAndChannel 根据名称和通道类型获取通知设置
+	GetSettingByNameAndChannel(ctx context.Context, name string, channel consts.NotificationChannel) (*NotificationSetting, error)
+	// GetSettingsByChannel 根据通道类型获取所有通知设置
+	GetSettingsByChannel(ctx context.Context, channel consts.NotificationChannel) ([]*NotificationSetting, error)
 	// UpdateSetting 更新通知设置
 	UpdateSetting(ctx context.Context, setting *NotificationSetting) error
 	// DeleteSetting 删除通知设置
 	DeleteSetting(ctx context.Context, id uuid.UUID) error
 	// ValidateConfig 验证通知设置配置
 	ValidateConfig(ctx context.Context, setting *NotificationSetting) error
-	// List 获取通知设置列表
-	List(ctx context.Context) ([]*NotificationSetting, error)
+	// List 获取通知设置列表（支持过滤和分页）
+	List(ctx context.Context, req *ListSettingsRequest) (*ListSettingsResponse, error)
 	// GetEnabledSettings 获取启用的通知设置
 	GetEnabledSettings(ctx context.Context) ([]*NotificationSetting, error)
 }
@@ -35,10 +38,12 @@ type NotificationSettingRepo interface {
 	Create(ctx context.Context, setting *NotificationSetting) (*db.NotificationSetting, error)
 	// GetByID 根据ID获取通知设置
 	GetByID(ctx context.Context, id uuid.UUID) (*db.NotificationSetting, error)
-	// GetByChannel 根据通道获取通知设置
-	GetByChannel(ctx context.Context, channel consts.NotificationChannel) (*db.NotificationSetting, error)
-	// List 获取通知设置列表
-	List(ctx context.Context) ([]*db.NotificationSetting, error)
+	// GetByNameAndChannel 根据名称和通道获取通知设置
+	GetByNameAndChannel(ctx context.Context, name string, channel consts.NotificationChannel) (*db.NotificationSetting, error)
+	// GetByChannel 根据通道获取所有通知设置
+	GetByChannel(ctx context.Context, channel consts.NotificationChannel) ([]*db.NotificationSetting, error)
+	// List 获取通知设置列表（支持过滤和分页）
+	List(ctx context.Context, req *ListSettingsRequest) ([]*db.NotificationSetting, *db.PageInfo, error)
 	// Update 更新通知设置
 	Update(ctx context.Context, setting *NotificationSetting) (*db.NotificationSetting, error)
 	// Delete 删除通知设置
@@ -50,6 +55,7 @@ type NotificationSettingRepo interface {
 // NotificationSetting 通知设置领域实体
 type NotificationSetting struct {
 	ID             uuid.UUID                   `json:"id"`
+	Name           string                      `json:"name"`
 	Channel        consts.NotificationChannel  `json:"channel"`
 	Enabled        bool                        `json:"enabled"`
 	DingTalkConfig *NotificationDingTalkConfig `json:"dingtalk_config,omitempty"`
@@ -67,6 +73,7 @@ func (ns *NotificationSetting) From(dbSetting *db.NotificationSetting) *Notifica
 	}
 
 	ns.ID = dbSetting.ID
+	ns.Name = dbSetting.Name
 	ns.Channel = dbSetting.Channel
 	ns.Enabled = dbSetting.Enabled
 	ns.MaxRetry = dbSetting.MaxRetry
@@ -109,6 +116,7 @@ type NotificationDingTalkConfig struct {
 
 // CreateSettingRequest 创建通知设置请求
 type CreateSettingRequest struct {
+	Name           string                     `json:"name" validate:"required,max=100"`
 	Channel        consts.NotificationChannel `json:"channel" validate:"required"`
 	Enabled        bool                       `json:"enabled"`
 	DingTalkConfig NotificationDingTalkConfig `json:"dingtalk_config,omitempty"`
@@ -119,6 +127,7 @@ type CreateSettingRequest struct {
 
 // UpdateSettingRequest 更新通知设置请求
 type UpdateSettingRequest struct {
+	Name           string                     `json:"name" validate:"required,max=100"`
 	Channel        consts.NotificationChannel `json:"channel" validate:"required"`
 	Enabled        bool                       `json:"enabled"`
 	DingTalkConfig NotificationDingTalkConfig `json:"dingtalk_config,omitempty"`
@@ -139,13 +148,18 @@ type DeleteSettingRequest struct {
 
 // ListSettingsRequest 获取通知设置列表请求
 type ListSettingsRequest struct {
-	// 暂时不需要参数，预留扩展
+	web.Pagination
+
+	// 过滤条件
+	Channel *consts.NotificationChannel `json:"channel,omitempty" query:"channel"` // 通知渠道过滤
+	Enabled *bool                       `json:"enabled,omitempty" query:"enabled"` // 启用状态过滤
+	Keyword *string                     `json:"keyword,omitempty" query:"keyword"` // 关键词搜索（名称或描述）
 }
 
 // ListSettingsResponse 获取通知设置列表响应
 type ListSettingsResponse struct {
-	Settings []*NotificationSetting `json:"settings"`
-	Total    int                    `json:"total"`
+	Items []*NotificationSetting `json:"items"`
+	*db.PageInfo
 }
 
 // GetEnabledSettingsRequest 获取启用的通知设置列表请求
@@ -156,5 +170,20 @@ type GetEnabledSettingsRequest struct {
 // GetEnabledSettingsResponse 获取启用的通知设置列表响应
 type GetEnabledSettingsResponse struct {
 	Settings []*NotificationSetting `json:"settings"`
-	Total    int                    `json:"total"`
+}
+
+// GetSettingByNameAndChannelRequest 根据名称和通道类型获取通知设置请求
+type GetSettingByNameAndChannelRequest struct {
+	Name    string                     `param:"name" validate:"required,max=100"`
+	Channel consts.NotificationChannel `param:"channel" validate:"required"`
+}
+
+// GetSettingsByChannelRequest 根据通道类型获取通知设置列表请求
+type GetSettingsByChannelRequest struct {
+	Channel consts.NotificationChannel `param:"channel" validate:"required"`
+}
+
+// GetSettingsByChannelResponse 根据通道类型获取通知设置列表响应
+type GetSettingsByChannelResponse struct {
+	Settings []*NotificationSetting `json:"settings"`
 }

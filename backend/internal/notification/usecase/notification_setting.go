@@ -34,10 +34,10 @@ func (u *notificationSettingUsecase) CreateSetting(ctx context.Context, setting 
 		return fmt.Errorf("配置验证失败: %w", err)
 	}
 
-	// 检查同一通道是否已存在配置
-	existingEntity, err := u.repo.GetByChannel(ctx, setting.Channel)
+	// 检查同一名称和通道的配置是否已存在
+	existingEntity, err := u.repo.GetByNameAndChannel(ctx, setting.Name, setting.Channel)
 	if err == nil && existingEntity != nil {
-		return fmt.Errorf("通道 %s 的通知设置已存在", setting.Channel)
+		return fmt.Errorf("名称为 %s 的 %s 通道配置已存在", setting.Name, setting.Channel)
 	}
 
 	// 生成ID
@@ -50,7 +50,7 @@ func (u *notificationSettingUsecase) CreateSetting(ctx context.Context, setting 
 		return fmt.Errorf("创建通知设置失败: %w", err)
 	}
 
-	u.logger.Info("notification setting created", "id", setting.ID.String(), "channel", string(setting.Channel))
+	u.logger.Info("notification setting created", "id", setting.ID.String(), "name", setting.Name, "channel", string(setting.Channel))
 	return nil
 }
 
@@ -66,16 +66,32 @@ func (u *notificationSettingUsecase) GetSetting(ctx context.Context, id uuid.UUI
 	return setting, nil
 }
 
-func (u *notificationSettingUsecase) GetSettingByChannel(ctx context.Context, channel consts.NotificationChannel) (*domain.NotificationSetting, error) {
-	entity, err := u.repo.GetByChannel(ctx, channel)
+func (u *notificationSettingUsecase) GetSettingByNameAndChannel(ctx context.Context, name string, channel consts.NotificationChannel) (*domain.NotificationSetting, error) {
+	entity, err := u.repo.GetByNameAndChannel(ctx, name, channel)
 	if err != nil {
-		u.logger.Error("get notification setting by channel failed", "channel", string(channel), "error", err)
+		u.logger.Error("get notification setting by name and channel failed", "name", name, "channel", string(channel), "error", err)
 		return nil, fmt.Errorf("获取通知设置失败: %w", err)
 	}
 
 	setting := &domain.NotificationSetting{}
 	setting.From(entity)
 	return setting, nil
+}
+
+func (u *notificationSettingUsecase) GetSettingsByChannel(ctx context.Context, channel consts.NotificationChannel) ([]*domain.NotificationSetting, error) {
+	entities, err := u.repo.GetByChannel(ctx, channel)
+	if err != nil {
+		u.logger.Error("get notification settings by channel failed", "channel", string(channel), "error", err)
+		return nil, fmt.Errorf("获取通知设置失败: %w", err)
+	}
+
+	settings := make([]*domain.NotificationSetting, len(entities))
+	for i, entity := range entities {
+		setting := &domain.NotificationSetting{}
+		setting.From(entity)
+		settings[i] = setting
+	}
+	return settings, nil
 }
 
 func (u *notificationSettingUsecase) UpdateSetting(ctx context.Context, setting *domain.NotificationSetting) error {
@@ -86,24 +102,19 @@ func (u *notificationSettingUsecase) UpdateSetting(ctx context.Context, setting 
 	}
 
 	// 检查设置是否存在
-	existingEntity, err := u.repo.GetByID(ctx, setting.ID)
+	_, err := u.repo.GetByID(ctx, setting.ID)
 	if err != nil {
 		u.logger.Error("get notification setting for update failed", "id", setting.ID.String(), "error", err)
 		return fmt.Errorf("通知设置不存在: %w", err)
 	}
 
-	existing := &domain.NotificationSetting{}
-	existing.From(existingEntity)
-
-	// 如果更改了通道，检查新通道是否已被其他设置使用
-	if existing.Channel != setting.Channel {
-		existingByChannelEntity, errChannel := u.repo.GetByChannel(ctx, setting.Channel)
-		if errChannel == nil && existingByChannelEntity != nil {
-			existingByChannel := &domain.NotificationSetting{}
-			existingByChannel.From(existingByChannelEntity)
-			if existingByChannel.ID != setting.ID {
-				return fmt.Errorf("通道 %s 的通知设置已存在", setting.Channel)
-			}
+	// 检查同一名称和通道的配置是否已存在（排除当前设置）
+	existingByNameAndChannelEntity, errNameChannel := u.repo.GetByNameAndChannel(ctx, setting.Name, setting.Channel)
+	if errNameChannel == nil && existingByNameAndChannelEntity != nil {
+		existingByNameAndChannel := &domain.NotificationSetting{}
+		existingByNameAndChannel.From(existingByNameAndChannelEntity)
+		if existingByNameAndChannel.ID != setting.ID {
+			return fmt.Errorf("名称为 %s 的 %s 通道配置已存在", setting.Name, setting.Channel)
 		}
 	}
 
@@ -114,7 +125,7 @@ func (u *notificationSettingUsecase) UpdateSetting(ctx context.Context, setting 
 		return fmt.Errorf("更新通知设置失败: %w", err)
 	}
 
-	u.logger.Info("notification setting updated", "id", setting.ID.String(), "channel", string(setting.Channel))
+	u.logger.Info("notification setting updated", "id", setting.ID.String(), "name", setting.Name, "channel", string(setting.Channel))
 	return nil
 }
 
@@ -136,20 +147,26 @@ func (u *notificationSettingUsecase) DeleteSetting(ctx context.Context, id uuid.
 	return nil
 }
 
-func (u *notificationSettingUsecase) List(ctx context.Context) ([]*domain.NotificationSetting, error) {
-	entities, err := u.repo.List(ctx)
+// List 获取通知设置列表（支持过滤和分页）
+func (u *notificationSettingUsecase) List(ctx context.Context, req *domain.ListSettingsRequest) (*domain.ListSettingsResponse, error) {
+	entities, pageInfo, err := u.repo.List(ctx, req)
 	if err != nil {
 		u.logger.Error("list notification settings failed", "error", err)
 		return nil, fmt.Errorf("获取通知设置列表失败: %w", err)
 	}
 
-	settings := make([]*domain.NotificationSetting, len(entities))
-	for i, entity := range entities {
+	// 转换为领域对象
+	settings := make([]*domain.NotificationSetting, 0, len(entities))
+	for _, entity := range entities {
 		setting := &domain.NotificationSetting{}
 		setting.From(entity)
-		settings[i] = setting
+		settings = append(settings, setting)
 	}
-	return settings, nil
+
+	return &domain.ListSettingsResponse{
+		Items:    settings,
+		PageInfo: pageInfo,
+	}, nil
 }
 
 func (u *notificationSettingUsecase) GetEnabledSettings(ctx context.Context) ([]*domain.NotificationSetting, error) {

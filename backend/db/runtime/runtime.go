@@ -450,24 +450,28 @@ func init() {
 	notificationsetting.Interceptors[0] = notificationsettingMixinInters0[0]
 	notificationsettingFields := schema.NotificationSetting{}.Fields()
 	_ = notificationsettingFields
+	// notificationsettingDescName is the schema descriptor for name field.
+	notificationsettingDescName := notificationsettingFields[1].Descriptor()
+	// notificationsetting.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	notificationsetting.NameValidator = notificationsettingDescName.Validators[0].(func(string) error)
 	// notificationsettingDescEnabled is the schema descriptor for enabled field.
-	notificationsettingDescEnabled := notificationsettingFields[2].Descriptor()
+	notificationsettingDescEnabled := notificationsettingFields[3].Descriptor()
 	// notificationsetting.DefaultEnabled holds the default value on creation for the enabled field.
 	notificationsetting.DefaultEnabled = notificationsettingDescEnabled.Default.(bool)
 	// notificationsettingDescMaxRetry is the schema descriptor for max_retry field.
-	notificationsettingDescMaxRetry := notificationsettingFields[4].Descriptor()
+	notificationsettingDescMaxRetry := notificationsettingFields[5].Descriptor()
 	// notificationsetting.DefaultMaxRetry holds the default value on creation for the max_retry field.
 	notificationsetting.DefaultMaxRetry = notificationsettingDescMaxRetry.Default.(int)
 	// notificationsettingDescTimeout is the schema descriptor for timeout field.
-	notificationsettingDescTimeout := notificationsettingFields[5].Descriptor()
+	notificationsettingDescTimeout := notificationsettingFields[6].Descriptor()
 	// notificationsetting.DefaultTimeout holds the default value on creation for the timeout field.
 	notificationsetting.DefaultTimeout = notificationsettingDescTimeout.Default.(int)
 	// notificationsettingDescCreatedAt is the schema descriptor for created_at field.
-	notificationsettingDescCreatedAt := notificationsettingFields[7].Descriptor()
+	notificationsettingDescCreatedAt := notificationsettingFields[8].Descriptor()
 	// notificationsetting.DefaultCreatedAt holds the default value on creation for the created_at field.
 	notificationsetting.DefaultCreatedAt = notificationsettingDescCreatedAt.Default.(func() time.Time)
 	// notificationsettingDescUpdatedAt is the schema descriptor for updated_at field.
-	notificationsettingDescUpdatedAt := notificationsettingFields[8].Descriptor()
+	notificationsettingDescUpdatedAt := notificationsettingFields[9].Descriptor()
 	// notificationsetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	notificationsetting.DefaultUpdatedAt = notificationsettingDescUpdatedAt.Default.(func() time.Time)
 	// notificationsetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

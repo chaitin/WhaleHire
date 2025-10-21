@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"sync"
 	"text/template"
+	"time"
 
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
@@ -89,28 +91,126 @@ func (d *DingTalkAdapter) SendNotification(ctx context.Context, event *domain.No
 	}
 }
 
-// getDingTalkClient 获取钉钉客户端
-func (d *DingTalkAdapter) getDingTalkClient(ctx context.Context) (*dingtalk.DingTalk, error) {
-	setting, err := d.settingUsecase.GetSettingByChannel(ctx, consts.NotificationChannelDingTalk)
+// getDingTalkClients 获取所有启用的钉钉客户端
+func (d *DingTalkAdapter) getDingTalkClients(ctx context.Context) ([]*dingtalk.DingTalk, error) {
+	settings, err := d.settingUsecase.GetSettingsByChannel(ctx, consts.NotificationChannelDingTalk)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get dingtalk setting: %w", err)
+		return nil, fmt.Errorf("failed to get dingtalk settings: %w", err)
 	}
 
-	if setting == nil || setting.DingTalkConfig == nil {
-		return nil, fmt.Errorf("dingtalk configuration not found")
+	if len(settings) == 0 {
+		return nil, fmt.Errorf("no dingtalk configurations found")
 	}
 
-	client := dingtalk.InitDingTalkWithSecret(setting.DingTalkConfig.Token, setting.DingTalkConfig.Secret)
-	return client, nil
+	var clients []*dingtalk.DingTalk
+	for _, setting := range settings {
+		// 只处理启用的配置
+		if !setting.Enabled || setting.DingTalkConfig == nil {
+			continue
+		}
+
+		client := dingtalk.InitDingTalkWithSecret(setting.DingTalkConfig.Token, setting.DingTalkConfig.Secret, 
+			dingtalk.WithInitSendTimeout(10*time.Second)) // 增加超时时间到10秒
+		clients = append(clients, client)
+	}
+
+	if len(clients) == 0 {
+		return nil, fmt.Errorf("no enabled dingtalk configurations found")
+	}
+
+	return clients, nil
+}
+
+// broadcastMessage 群发消息到所有钉钉群
+func (d *DingTalkAdapter) broadcastMessage(ctx context.Context, title, content string) error {
+	clients, err := d.getDingTalkClients(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get dingtalk clients: %w", err)
+	}
+
+	// 使用 channel 收集错误
+	errChan := make(chan error, len(clients))
+	
+	// 使用信号量限制并发数，避免同时发送过多请求
+	semaphore := make(chan struct{}, 3) // 最多同时发送3个请求
+	var wg sync.WaitGroup
+	
+	// 并发发送到所有钉钉群，但限制并发数
+	for _, client := range clients {
+		wg.Add(1)
+		go func(c *dingtalk.DingTalk) {
+			defer wg.Done()
+			
+			// 获取信号量
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+			
+			// 添加随机延迟，进一步避免请求冲突
+			time.Sleep(time.Duration(len(clients)) * 50 * time.Millisecond)
+			
+			// 重试机制：最多重试3次
+			var lastErr error
+			for retry := 0; retry < 3; retry++ {
+				if err := c.SendMarkDownMessage(title, content); err != nil {
+					lastErr = err
+					// 指数退避：第一次重试等待1秒，第二次2秒，第三次4秒
+					if retry < 2 {
+						time.Sleep(time.Duration(1<<retry) * time.Second)
+					}
+					continue
+				}
+				// 发送成功
+				errChan <- nil
+				return
+			}
+			// 重试3次后仍然失败
+			errChan <- fmt.Errorf("failed to send message to dingtalk group after 3 retries: %w", lastErr)
+		}(client)
+	}
+
+	// 等待所有goroutine完成
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	// 收集所有结果
+	var errors []error
+	for err := range errChan {
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	// 如果有错误，记录并返回
+	if len(errors) > 0 {
+		d.logger.ErrorContext(ctx, "Some dingtalk messages failed to send",
+			slog.Int("total_groups", len(clients)),
+			slog.Int("failed_groups", len(errors)),
+			slog.Int("success_groups", len(clients)-len(errors)),
+		)
+		
+		// 如果所有群都发送失败，返回错误
+		if len(errors) == len(clients) {
+			return fmt.Errorf("all dingtalk groups failed to receive message")
+		}
+		
+		// 部分失败，记录警告但不返回错误
+		d.logger.WarnContext(ctx, "Partial success in broadcasting dingtalk message",
+			slog.Int("success_groups", len(clients)-len(errors)),
+			slog.Int("failed_groups", len(errors)),
+		)
+	} else {
+		d.logger.InfoContext(ctx, "Successfully broadcasted message to all dingtalk groups",
+			slog.Int("total_groups", len(clients)),
+		)
+	}
+
+	return nil
 }
 
 // sendResumeParseCompletedNotification 发送简历解析完成通知
 func (d *DingTalkAdapter) sendResumeParseCompletedNotification(ctx context.Context, event *domain.NotificationEvent) error {
-	client, err := d.getDingTalkClient(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get dingtalk client: %w", err)
-	}
-
 	// 将 event.Payload 反序列化为 ResumeParseCompletedPayload 结构体
 	payloadBytes, err := json.Marshal(event.Payload)
 	if err != nil {
@@ -164,12 +264,13 @@ func (d *DingTalkAdapter) sendResumeParseCompletedNotification(ctx context.Conte
 		return fmt.Errorf("failed to render resume template: %w", err)
 	}
 
-	if err := client.SendMarkDownMessage(title, content); err != nil {
-		d.logger.ErrorContext(ctx, "Failed to send resume notification",
+	// 群发消息到所有钉钉群
+	if err := d.broadcastMessage(ctx, title, content); err != nil {
+		d.logger.ErrorContext(ctx, "Failed to broadcast resume parse notification",
 			slog.String("error", err.Error()),
 			slog.String("event_id", event.ID.String()),
 		)
-		return fmt.Errorf("failed to send dingtalk message: %w", err)
+		return fmt.Errorf("failed to broadcast dingtalk message: %w", err)
 	}
 
 	return nil
@@ -177,11 +278,6 @@ func (d *DingTalkAdapter) sendResumeParseCompletedNotification(ctx context.Conte
 
 // sendBatchResumeParseCompletedNotification 发送批量简历解析完成通知
 func (d *DingTalkAdapter) sendBatchResumeParseCompletedNotification(ctx context.Context, event *domain.NotificationEvent) error {
-	client, err := d.getDingTalkClient(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get dingtalk client: %w", err)
-	}
-
 	// 直接反序列化为 BatchResumeParseCompletedPayload 结构体
 	var payload domain.BatchResumeParseCompletedPayload
 
@@ -229,12 +325,13 @@ func (d *DingTalkAdapter) sendBatchResumeParseCompletedNotification(ctx context.
 		return fmt.Errorf("failed to render batch template: %w", err)
 	}
 
-	if err := client.SendMarkDownMessage(title, content); err != nil {
-		d.logger.ErrorContext(ctx, "Failed to send batch resume parse notification",
+	// 群发消息到所有钉钉群
+	if err := d.broadcastMessage(ctx, title, content); err != nil {
+		d.logger.ErrorContext(ctx, "Failed to broadcast batch resume parse notification",
 			slog.String("error", err.Error()),
 			slog.String("event_id", event.ID.String()),
 		)
-		return fmt.Errorf("failed to send dingtalk message: %w", err)
+		return fmt.Errorf("failed to broadcast dingtalk message: %w", err)
 	}
 
 	return nil
@@ -242,11 +339,6 @@ func (d *DingTalkAdapter) sendBatchResumeParseCompletedNotification(ctx context.
 
 // sendMatchingCompletedNotification 发送匹配完成通知
 func (d *DingTalkAdapter) sendMatchingCompletedNotification(ctx context.Context, event *domain.NotificationEvent) error {
-	client, err := d.getDingTalkClient(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get dingtalk client: %w", err)
-	}
-
 	// 将 event.Payload 反序列化为 JobMatchingCompletedPayload 结构体
 	payloadBytes, err := json.Marshal(event.Payload)
 	if err != nil {
@@ -280,12 +372,13 @@ func (d *DingTalkAdapter) sendMatchingCompletedNotification(ctx context.Context,
 		return fmt.Errorf("failed to render matching template: %w", err)
 	}
 
-	if err := client.SendMarkDownMessage(title, content); err != nil {
-		d.logger.ErrorContext(ctx, "Failed to send matching notification",
+	// 群发消息到所有钉钉群
+	if err := d.broadcastMessage(ctx, title, content); err != nil {
+		d.logger.ErrorContext(ctx, "Failed to broadcast matching notification",
 			slog.String("error", err.Error()),
 			slog.String("event_id", event.ID.String()),
 		)
-		return fmt.Errorf("failed to send dingtalk message: %w", err)
+		return fmt.Errorf("failed to broadcast dingtalk message: %w", err)
 	}
 
 	return nil
@@ -293,11 +386,6 @@ func (d *DingTalkAdapter) sendMatchingCompletedNotification(ctx context.Context,
 
 // sendScreeningTaskCompletedNotification 发送筛选任务完成通知
 func (d *DingTalkAdapter) sendScreeningTaskCompletedNotification(ctx context.Context, event *domain.NotificationEvent) error {
-	client, err := d.getDingTalkClient(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get dingtalk client: %w", err)
-	}
-
 	// 将 event.Payload 反序列化为 ScreeningTaskCompletedPayload 结构体
 	payloadBytes, err := json.Marshal(event.Payload)
 	if err != nil {
@@ -336,12 +424,13 @@ func (d *DingTalkAdapter) sendScreeningTaskCompletedNotification(ctx context.Con
 		return fmt.Errorf("failed to render screening template: %w", err)
 	}
 
-	if err := client.SendMarkDownMessage(title, content); err != nil {
-		d.logger.ErrorContext(ctx, "Failed to send screening notification",
+	// 群发消息到所有钉钉群
+	if err := d.broadcastMessage(ctx, title, content); err != nil {
+		d.logger.ErrorContext(ctx, "Failed to broadcast screening notification",
 			slog.String("error", err.Error()),
 			slog.String("event_id", event.ID.String()),
 		)
-		return fmt.Errorf("failed to send dingtalk message: %w", err)
+		return fmt.Errorf("failed to broadcast dingtalk message: %w", err)
 	}
 
 	return nil
