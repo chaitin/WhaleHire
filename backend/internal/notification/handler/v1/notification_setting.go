@@ -39,7 +39,7 @@ func NewNotificationSettingHandler(
 	g.GET("/:id", web.BindHandler(h.GetSetting))
 	g.PUT("/:id", web.BindHandler(h.UpdateSetting))
 	g.DELETE("/:id", web.BindHandler(h.DeleteSetting))
-	
+
 	// 新增路由：按名称和通道类型查询
 	g.GET("/by-name/:name/channel/:channel", web.BindHandler(h.GetSettingByNameAndChannel))
 	g.GET("/by-channel/:channel", web.BindHandler(h.GetSettingsByChannel))
@@ -74,7 +74,7 @@ func (h *NotificationSettingHandler) CreateSetting(ctx *web.Context, req domain.
 
 	if err := h.usecase.CreateSetting(ctx.Request().Context(), setting); err != nil {
 		h.logger.Error("create notification setting failed", "error", err)
-		return errcode.ErrNotificationSettingCreateFailed
+		return errcode.ErrNotificationSettingCreateFailed.WithData("message", err.Error())
 	}
 
 	return ctx.Success(setting)
@@ -104,11 +104,11 @@ func (h *NotificationSettingHandler) GetSetting(ctx *web.Context, req domain.Get
 	setting, err := h.usecase.GetSetting(ctx.Request().Context(), id)
 	if err != nil {
 		h.logger.Error("get notification setting failed", "id", req.ID, "error", err)
-		return errcode.ErrNotificationSettingGetFailed
+		return errcode.ErrNotificationSettingGetFailed.WithData("message", err.Error())
 	}
 
 	if setting == nil {
-		return errcode.ErrNotificationSettingNotFound
+		return errcode.ErrNotificationSettingNotFound.WithData("message", "通知设置不存在")
 	}
 
 	return ctx.Success(setting)
@@ -150,7 +150,7 @@ func (h *NotificationSettingHandler) UpdateSetting(ctx *web.Context, req domain.
 
 	if err := h.usecase.UpdateSetting(ctx.Request().Context(), setting); err != nil {
 		h.logger.Error("update notification setting failed", "id", idStr, "error", err)
-		return errcode.ErrNotificationSettingUpdateFailed
+		return errcode.ErrNotificationSettingUpdateFailed.WithData("message", err.Error())
 	}
 
 	return ctx.Success(setting)
@@ -179,7 +179,7 @@ func (h *NotificationSettingHandler) DeleteSetting(ctx *web.Context, req domain.
 
 	if err := h.usecase.DeleteSetting(ctx.Request().Context(), id); err != nil {
 		h.logger.Error("delete notification setting failed", "id", req.ID, "error", err)
-		return errcode.ErrNotificationSettingDeleteFailed
+		return errcode.ErrNotificationSettingDeleteFailed.WithData("message", err.Error())
 	}
 
 	return ctx.Success(nil)
@@ -214,7 +214,7 @@ func (h *NotificationSettingHandler) ListSettings(ctx *web.Context, req domain.L
 	resp, err := h.usecase.List(ctx.Request().Context(), &req)
 	if err != nil {
 		h.logger.Error("list notification settings failed", "error", err)
-		return errcode.ErrNotificationSettingGetFailed
+		return errcode.ErrNotificationSettingGetFailed.WithData("message", err.Error())
 	}
 
 	return ctx.Success(resp)
@@ -236,7 +236,7 @@ func (h *NotificationSettingHandler) GetEnabledSettings(ctx *web.Context, req do
 	settings, err := h.usecase.GetEnabledSettings(ctx.Request().Context())
 	if err != nil {
 		h.logger.Error("get enabled notification settings failed", "error", err)
-		return errcode.ErrNotificationSettingGetFailed
+		return errcode.ErrNotificationSettingGetFailed.WithData("message", err.Error())
 	}
 
 	return ctx.Success(domain.GetEnabledSettingsResponse{
@@ -264,11 +264,11 @@ func (h *NotificationSettingHandler) GetSettingByNameAndChannel(ctx *web.Context
 	setting, err := h.usecase.GetSettingByNameAndChannel(ctx.Request().Context(), req.Name, req.Channel)
 	if err != nil {
 		h.logger.Error("get notification setting by name and channel failed", "name", req.Name, "channel", string(req.Channel), "error", err)
-		return errcode.ErrNotificationSettingGetFailed
+		return errcode.ErrNotificationSettingGetFailed.WithData("message", err.Error())
 	}
 
 	if setting == nil {
-		return errcode.ErrNotificationSettingNotFound
+		return errcode.ErrNotificationSettingNotFound.WithData("message", "通知设置不存在")
 	}
 
 	return ctx.Success(setting)
@@ -292,7 +292,7 @@ func (h *NotificationSettingHandler) GetSettingsByChannel(ctx *web.Context, req 
 	settings, err := h.usecase.GetSettingsByChannel(ctx.Request().Context(), req.Channel)
 	if err != nil {
 		h.logger.Error("get notification settings by channel failed", "channel", string(req.Channel), "error", err)
-		return errcode.ErrNotificationSettingGetFailed
+		return errcode.ErrNotificationSettingGetFailed.WithData("message", err.Error())
 	}
 
 	return ctx.Success(domain.GetSettingsByChannelResponse{
