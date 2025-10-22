@@ -77,6 +77,7 @@ export interface ScreeningTask {
   dimension_weights: DimensionWeights; // 维度权重
   notes?: string; // 备注
   created_by: string; // 创建者
+  creator_name?: string; // 创建者名称
   created_at: number; // 创建时间
   updated_at: number; // 更新时间
   started_at?: number; // 开始时间
@@ -292,6 +293,7 @@ export interface IndustryMatchDetail {
   score: number;
   industry_matches?: IndustryMatchInfo[];
   company_matches?: CompanyMatchInfo[];
+  overall_analysis?: string; // 整体分析文本
 }
 
 // 公司匹配信息
