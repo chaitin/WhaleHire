@@ -381,7 +381,10 @@ export function MatchingProcessModal({
                       系统正在进行AI智能匹配，请稍候...
                     </p>
                     <div className="flex justify-center">
-                      <Loader2 className="h-16 w-16 animate-spin text-green-500" />
+                      <Loader2
+                        className="h-16 w-16 animate-spin"
+                        style={{ color: '#7bb8ff' }}
+                      />
                     </div>
                   </div>
 

@@ -10,7 +10,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 178 61% 51%;
+    --primary: 209 100% 74%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 98%;
     --secondary-foreground: 222.2 84% 4.9%;
@@ -22,7 +22,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 178 61% 51%;
+    --ring: 209 100% 74%;
     --radius: 0.5rem;
   }
 
@@ -33,7 +33,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 178 61% 51%;
+    --primary: 209 100% 74%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -45,7 +45,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 178 61% 51%;
+    --ring: 209 100% 74%;
   }
 }
 
@@ -79,7 +79,8 @@
 }
 
 .sidebar-nav-item.active {
-  @apply bg-primary text-primary-foreground;
+  background-color: #7bb8ff;
+  color: white;
 }
 
 .sidebar-nav-item:not(.active) {
@@ -271,7 +272,9 @@
 }
 
 .sidebar-nav-item.active {
-  @apply bg-primary text-primary-foreground shadow-sm;
+  background-color: #7bb8ff;
+  color: white;
+  @apply shadow-sm;
 }
 
 /* 图标旋转动画 */

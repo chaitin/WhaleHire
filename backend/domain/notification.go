@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/chaitin/WhaleHire/backend/consts"
+	"github.com/chaitin/WhaleHire/backend/db"
 )
 
 // NotificationUsecase 通知用例接口
@@ -32,13 +33,13 @@ type NotificationEventRepo interface {
 	// Create 创建通知事件
 	Create(ctx context.Context, event *NotificationEvent) error
 	// GetByID 根据ID获取通知事件
-	GetByID(ctx context.Context, id uuid.UUID) (*NotificationEvent, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*db.NotificationEvent, error)
 	// GetByTraceID 根据TraceID获取通知事件
-	GetByTraceID(ctx context.Context, traceID string) (*NotificationEvent, error)
+	GetByTraceID(ctx context.Context, traceID string) (*db.NotificationEvent, error)
 	// GetPendingEvents 获取待处理的通知事件
-	GetPendingEvents(ctx context.Context, limit int) ([]*NotificationEvent, error)
+	GetPendingEvents(ctx context.Context, limit int) ([]*db.NotificationEvent, error)
 	// GetRetryableEvents 获取可重试的通知事件
-	GetRetryableEvents(ctx context.Context, limit int) ([]*NotificationEvent, error)
+	GetRetryableEvents(ctx context.Context, limit int) ([]*db.NotificationEvent, error)
 	// Update 更新通知事件
 	Update(ctx context.Context, event *NotificationEvent) error
 	// UpdateStatus 更新通知事件状态
@@ -48,9 +49,9 @@ type NotificationEventRepo interface {
 	// IncrementRetryCount 增加重试次数
 	IncrementRetryCount(ctx context.Context, id uuid.UUID, errorMsg string) error
 	// GetEventsByType 根据事件类型获取事件列表
-	GetEventsByType(ctx context.Context, eventType consts.NotificationEventType, limit int) ([]*NotificationEvent, error)
+	GetEventsByType(ctx context.Context, eventType consts.NotificationEventType, limit int) ([]*db.NotificationEvent, error)
 	// GetEventsByStatus 根据状态获取事件列表
-	GetEventsByStatus(ctx context.Context, status consts.NotificationStatus, limit int) ([]*NotificationEvent, error)
+	GetEventsByStatus(ctx context.Context, status consts.NotificationStatus, limit int) ([]*db.NotificationEvent, error)
 	// DeleteOldEvents 删除旧事件
 	DeleteOldEvents(ctx context.Context, before time.Time) (int, error)
 }
@@ -264,4 +265,41 @@ func (e *NotificationEvent) MarkAsFailed(errorMsg string) {
 // GetIdempotencyKey 获取幂等性键
 func (e *NotificationEvent) GetIdempotencyKey() string {
 	return e.ID.String()
+}
+
+// From 方法用于从 db 实体转换
+func (e *NotificationEvent) From(dbEvent *db.NotificationEvent) *NotificationEvent {
+	if dbEvent == nil {
+		return nil
+	}
+
+	var scheduledAt *time.Time
+	var deliveredAt *time.Time
+
+	if !dbEvent.ScheduledAt.IsZero() {
+		scheduledAt = &dbEvent.ScheduledAt
+	}
+
+	if !dbEvent.DeliveredAt.IsZero() {
+		deliveredAt = &dbEvent.DeliveredAt
+	}
+
+	e.ID = dbEvent.ID
+	e.EventType = dbEvent.EventType
+	e.Channel = dbEvent.Channel
+	e.Status = dbEvent.Status
+	e.Payload = dbEvent.Payload
+	e.TemplateID = dbEvent.TemplateID
+	e.Target = dbEvent.Target
+	e.RetryCount = dbEvent.RetryCount
+	e.MaxRetry = dbEvent.MaxRetry
+	e.Timeout = dbEvent.Timeout
+	e.LastError = dbEvent.LastError
+	e.TraceID = dbEvent.TraceID
+	e.CreatedAt = dbEvent.CreatedAt
+	e.ScheduledAt = scheduledAt
+	e.DeliveredAt = deliveredAt
+	e.UpdatedAt = dbEvent.UpdatedAt
+
+	return e
 }

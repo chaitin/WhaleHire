@@ -63,3 +63,21 @@ other = "正在进行中的任务不能删除，请等待任务完成或失败�
 
 [err-screening-task-delete-failed]
 other = "删除筛选任务失败"
+
+[err-notification-setting-create-failed]
+other = "创建通知设置失败: {{.message}}"
+
+[err-notification-setting-get-failed]
+other = "获取通知设置失败: {{.message}}"
+
+[err-notification-setting-list-failed]
+other = "获取通知设置列表失败: {{.message}}"
+
+[err-notification-setting-update-failed]
+other = "更新通知设置失败: {{.message}}"
+
+[err-notification-setting-delete-failed]
+other = "删除通知设置失败: {{.message}}"
+
+[err-notification-setting-not-found]
+other = "通知设置不存在: {{.message}}"

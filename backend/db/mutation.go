@@ -15706,6 +15706,7 @@ type NotificationSettingMutation struct {
 	typ             string
 	id              *uuid.UUID
 	deleted_at      *time.Time
+	name            *string
 	channel         *consts.NotificationChannel
 	enabled         *bool
 	dingtalk_config *map[string]interface{}
@@ -15873,6 +15874,42 @@ func (m *NotificationSettingMutation) DeletedAtCleared() bool {
 func (m *NotificationSettingMutation) ResetDeletedAt() {
 	m.deleted_at = nil
 	delete(m.clearedFields, notificationsetting.FieldDeletedAt)
+}
+
+// SetName sets the "name" field.
+func (m *NotificationSettingMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *NotificationSettingMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the NotificationSetting entity.
+// If the NotificationSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NotificationSettingMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *NotificationSettingMutation) ResetName() {
+	m.name = nil
 }
 
 // SetChannel sets the "channel" field.
@@ -16263,9 +16300,12 @@ func (m *NotificationSettingMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *NotificationSettingMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.deleted_at != nil {
 		fields = append(fields, notificationsetting.FieldDeletedAt)
+	}
+	if m.name != nil {
+		fields = append(fields, notificationsetting.FieldName)
 	}
 	if m.channel != nil {
 		fields = append(fields, notificationsetting.FieldChannel)
@@ -16301,6 +16341,8 @@ func (m *NotificationSettingMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case notificationsetting.FieldDeletedAt:
 		return m.DeletedAt()
+	case notificationsetting.FieldName:
+		return m.Name()
 	case notificationsetting.FieldChannel:
 		return m.Channel()
 	case notificationsetting.FieldEnabled:
@@ -16328,6 +16370,8 @@ func (m *NotificationSettingMutation) OldField(ctx context.Context, name string)
 	switch name {
 	case notificationsetting.FieldDeletedAt:
 		return m.OldDeletedAt(ctx)
+	case notificationsetting.FieldName:
+		return m.OldName(ctx)
 	case notificationsetting.FieldChannel:
 		return m.OldChannel(ctx)
 	case notificationsetting.FieldEnabled:
@@ -16359,6 +16403,13 @@ func (m *NotificationSettingMutation) SetField(name string, value ent.Value) err
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDeletedAt(v)
+		return nil
+	case notificationsetting.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
 		return nil
 	case notificationsetting.FieldChannel:
 		v, ok := value.(consts.NotificationChannel)
@@ -16515,6 +16566,9 @@ func (m *NotificationSettingMutation) ResetField(name string) error {
 	switch name {
 	case notificationsetting.FieldDeletedAt:
 		m.ResetDeletedAt()
+		return nil
+	case notificationsetting.FieldName:
+		m.ResetName()
 		return nil
 	case notificationsetting.FieldChannel:
 		m.ResetChannel()

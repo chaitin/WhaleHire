@@ -193,26 +193,26 @@ func (u *notificationUsecase) MarkAsFailed(ctx context.Context, eventID uuid.UUI
 // RetryEvent 重试事件
 func (u *notificationUsecase) RetryEvent(ctx context.Context, eventID uuid.UUID) error {
 	// 获取事件
-	event, err := u.repo.GetByID(ctx, eventID)
+	dbEvent, err := u.repo.GetByID(ctx, eventID)
 	if err != nil {
 		return fmt.Errorf("failed to get event: %w", err)
 	}
 
 	// 检查是否可以重试
-	if event.RetryCount >= event.MaxRetry {
+	if dbEvent.RetryCount >= dbEvent.MaxRetry {
 		return fmt.Errorf("event has exceeded max retry count")
 	}
 
 	// 重新发布到队列
 	queueData := map[string]interface{}{
-		"event_id":    event.ID.String(),
-		"event_type":  string(event.EventType),
-		"channel":     string(event.Channel),
-		"payload":     event.Payload,
-		"template_id": event.TemplateID,
-		"target":      event.Target,
-		"trace_id":    event.TraceID,
-		"retry_count": event.RetryCount + 1,
+		"event_id":    dbEvent.ID.String(),
+		"event_type":  string(dbEvent.EventType),
+		"channel":     string(dbEvent.Channel),
+		"payload":     dbEvent.Payload,
+		"template_id": dbEvent.TemplateID,
+		"target":      dbEvent.Target,
+		"trace_id":    dbEvent.TraceID,
+		"retry_count": dbEvent.RetryCount + 1,
 	}
 
 	streamName := "notification:events"
@@ -221,8 +221,8 @@ func (u *notificationUsecase) RetryEvent(ctx context.Context, eventID uuid.UUID)
 	}
 
 	u.logger.InfoContext(ctx, "Event republished for retry",
-		slog.String("event_id", event.ID.String()),
-		slog.Int("retry_count", event.RetryCount+1),
+		slog.String("event_id", dbEvent.ID.String()),
+		slog.Int("retry_count", dbEvent.RetryCount+1),
 	)
 
 	return nil
@@ -230,12 +230,36 @@ func (u *notificationUsecase) RetryEvent(ctx context.Context, eventID uuid.UUID)
 
 // GetEventsByStatus 根据状态获取事件
 func (u *notificationUsecase) GetEventsByStatus(ctx context.Context, status consts.NotificationStatus, limit int) ([]*domain.NotificationEvent, error) {
-	return u.repo.GetEventsByStatus(ctx, status, limit)
+	dbEvents, err := u.repo.GetEventsByStatus(ctx, status, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为 domain 类型
+	events := make([]*domain.NotificationEvent, 0, len(dbEvents))
+	for _, dbEvent := range dbEvents {
+		event := &domain.NotificationEvent{}
+		events = append(events, event.From(dbEvent))
+	}
+
+	return events, nil
 }
 
 // GetPendingEvents 获取待处理事件
 func (u *notificationUsecase) GetPendingEvents(ctx context.Context, limit int) ([]*domain.NotificationEvent, error) {
-	return u.repo.GetPendingEvents(ctx, limit)
+	dbEvents, err := u.repo.GetPendingEvents(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为 domain 类型
+	events := make([]*domain.NotificationEvent, 0, len(dbEvents))
+	for _, dbEvent := range dbEvents {
+		event := &domain.NotificationEvent{}
+		events = append(events, event.From(dbEvent))
+	}
+
+	return events, nil
 }
 
 // generateIdempotencyKey 生成幂等键

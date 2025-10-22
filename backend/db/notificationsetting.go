@@ -22,6 +22,8 @@ type NotificationSetting struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// DeletedAt holds the value of the "deleted_at" field.
 	DeletedAt time.Time `json:"deleted_at,omitempty"`
+	// 配置名称，用于区分同类型的不同配置
+	Name string `json:"name,omitempty"`
 	// 通知渠道
 	Channel consts.NotificationChannel `json:"channel,omitempty"`
 	// 是否启用
@@ -52,7 +54,7 @@ func (*NotificationSetting) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case notificationsetting.FieldMaxRetry, notificationsetting.FieldTimeout:
 			values[i] = new(sql.NullInt64)
-		case notificationsetting.FieldChannel, notificationsetting.FieldDescription:
+		case notificationsetting.FieldName, notificationsetting.FieldChannel, notificationsetting.FieldDescription:
 			values[i] = new(sql.NullString)
 		case notificationsetting.FieldDeletedAt, notificationsetting.FieldCreatedAt, notificationsetting.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -84,6 +86,12 @@ func (ns *NotificationSetting) assignValues(columns []string, values []any) erro
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
 				ns.DeletedAt = value.Time
+			}
+		case notificationsetting.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				ns.Name = value.String
 			}
 		case notificationsetting.FieldChannel:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -173,6 +181,9 @@ func (ns *NotificationSetting) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", ns.ID))
 	builder.WriteString("deleted_at=")
 	builder.WriteString(ns.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("name=")
+	builder.WriteString(ns.Name)
 	builder.WriteString(", ")
 	builder.WriteString("channel=")
 	builder.WriteString(fmt.Sprintf("%v", ns.Channel))

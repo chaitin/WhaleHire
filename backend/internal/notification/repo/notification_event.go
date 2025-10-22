@@ -48,17 +48,17 @@ func (r *notificationEventRepo) Create(ctx context.Context, event *domain.Notifi
 }
 
 // GetByID 根据ID获取通知事件
-func (r *notificationEventRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.NotificationEvent, error) {
+func (r *notificationEventRepo) GetByID(ctx context.Context, id uuid.UUID) (*db.NotificationEvent, error) {
 	event, err := r.client.NotificationEvent.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.toDomainEvent(event), nil
+	return event, nil
 }
 
 // GetByTraceID 根据TraceID获取通知事件
-func (r *notificationEventRepo) GetByTraceID(ctx context.Context, traceID string) (*domain.NotificationEvent, error) {
+func (r *notificationEventRepo) GetByTraceID(ctx context.Context, traceID string) (*db.NotificationEvent, error) {
 	event, err := r.client.NotificationEvent.Query().
 		Where(notificationevent.TraceID(traceID)).
 		First(ctx)
@@ -66,11 +66,11 @@ func (r *notificationEventRepo) GetByTraceID(ctx context.Context, traceID string
 		return nil, err
 	}
 
-	return r.toDomainEvent(event), nil
+	return event, nil
 }
 
 // GetPendingEvents 获取待处理的通知事件
-func (r *notificationEventRepo) GetPendingEvents(ctx context.Context, limit int) ([]*domain.NotificationEvent, error) {
+func (r *notificationEventRepo) GetPendingEvents(ctx context.Context, limit int) ([]*db.NotificationEvent, error) {
 	events, err := r.client.NotificationEvent.Query().
 		Where(
 			notificationevent.Status(consts.NotificationStatusPending),
@@ -87,11 +87,11 @@ func (r *notificationEventRepo) GetPendingEvents(ctx context.Context, limit int)
 		return nil, err
 	}
 
-	return r.toDomainEvents(events), nil
+	return events, nil
 }
 
 // GetRetryableEvents 获取可重试的通知事件
-func (r *notificationEventRepo) GetRetryableEvents(ctx context.Context, limit int) ([]*domain.NotificationEvent, error) {
+func (r *notificationEventRepo) GetRetryableEvents(ctx context.Context, limit int) ([]*db.NotificationEvent, error) {
 	events, err := r.client.NotificationEvent.Query().
 		Where(
 			notificationevent.Status(consts.NotificationStatusFailed),
@@ -107,7 +107,7 @@ func (r *notificationEventRepo) GetRetryableEvents(ctx context.Context, limit in
 		return nil, err
 	}
 
-	return r.toDomainEvents(events), nil
+	return events, nil
 }
 
 // Update 更新通知事件
@@ -176,7 +176,7 @@ func (r *notificationEventRepo) IncrementRetryCount(ctx context.Context, id uuid
 }
 
 // GetEventsByType 根据事件类型获取事件列表
-func (r *notificationEventRepo) GetEventsByType(ctx context.Context, eventType consts.NotificationEventType, limit int) ([]*domain.NotificationEvent, error) {
+func (r *notificationEventRepo) GetEventsByType(ctx context.Context, eventType consts.NotificationEventType, limit int) ([]*db.NotificationEvent, error) {
 	events, err := r.client.NotificationEvent.Query().
 		Where(notificationevent.EventType(eventType)).
 		Order(notificationevent.ByCreatedAt(sql.OrderDesc())).
@@ -187,11 +187,11 @@ func (r *notificationEventRepo) GetEventsByType(ctx context.Context, eventType c
 		return nil, err
 	}
 
-	return r.toDomainEvents(events), nil
+	return events, nil
 }
 
 // GetEventsByStatus 根据状态获取事件列表
-func (r *notificationEventRepo) GetEventsByStatus(ctx context.Context, status consts.NotificationStatus, limit int) ([]*domain.NotificationEvent, error) {
+func (r *notificationEventRepo) GetEventsByStatus(ctx context.Context, status consts.NotificationStatus, limit int) ([]*db.NotificationEvent, error) {
 	events, err := r.client.NotificationEvent.Query().
 		Where(notificationevent.Status(status)).
 		Order(notificationevent.ByCreatedAt(sql.OrderDesc())).
@@ -202,7 +202,7 @@ func (r *notificationEventRepo) GetEventsByStatus(ctx context.Context, status co
 		return nil, err
 	}
 
-	return r.toDomainEvents(events), nil
+	return events, nil
 }
 
 // DeleteOldEvents 删除旧事件
@@ -210,45 +210,4 @@ func (r *notificationEventRepo) DeleteOldEvents(ctx context.Context, before time
 	return r.client.NotificationEvent.Delete().
 		Where(notificationevent.CreatedAtLT(before)).
 		Exec(ctx)
-}
-
-// toDomainEvent 转换为领域事件
-func (r *notificationEventRepo) toDomainEvent(event *db.NotificationEvent) *domain.NotificationEvent {
-	var scheduledAt *time.Time
-	var deliveredAt *time.Time
-
-	if !event.ScheduledAt.IsZero() {
-		scheduledAt = &event.ScheduledAt
-	}
-
-	if !event.DeliveredAt.IsZero() {
-		deliveredAt = &event.DeliveredAt
-	}
-
-	return &domain.NotificationEvent{
-		ID:          event.ID,
-		EventType:   event.EventType,
-		Channel:     event.Channel,
-		Status:      event.Status,
-		Payload:     event.Payload,
-		TemplateID:  event.TemplateID,
-		Target:      event.Target,
-		RetryCount:  event.RetryCount,
-		MaxRetry:    event.MaxRetry,
-		LastError:   event.LastError,
-		TraceID:     event.TraceID,
-		CreatedAt:   event.CreatedAt,
-		ScheduledAt: scheduledAt,
-		DeliveredAt: deliveredAt,
-		UpdatedAt:   event.UpdatedAt,
-	}
-}
-
-// toDomainEvents 转换为领域事件列表
-func (r *notificationEventRepo) toDomainEvents(events []*db.NotificationEvent) []*domain.NotificationEvent {
-	result := make([]*domain.NotificationEvent, len(events))
-	for i, event := range events {
-		result[i] = r.toDomainEvent(event)
-	}
-	return result
 }

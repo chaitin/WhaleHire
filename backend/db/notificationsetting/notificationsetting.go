@@ -17,6 +17,8 @@ const (
 	FieldID = "id"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldChannel holds the string denoting the channel field in the database.
 	FieldChannel = "channel"
 	// FieldEnabled holds the string denoting the enabled field in the database.
@@ -41,6 +43,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldDeletedAt,
+	FieldName,
 	FieldChannel,
 	FieldEnabled,
 	FieldDingtalkConfig,
@@ -69,6 +72,8 @@ func ValidColumn(column string) bool {
 var (
 	Hooks        [1]ent.Hook
 	Interceptors [1]ent.Interceptor
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 	// DefaultEnabled holds the default value on creation for the "enabled" field.
 	DefaultEnabled bool
 	// DefaultMaxRetry holds the default value on creation for the "max_retry" field.
@@ -96,6 +101,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByDeletedAt orders the results by the deleted_at field.
 func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByChannel orders the results by the channel field.

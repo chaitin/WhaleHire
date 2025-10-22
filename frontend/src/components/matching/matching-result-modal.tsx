@@ -316,7 +316,7 @@ export function MatchingResultModal({
                           className={cn(
                             'text-sm text-center',
                             step.active
-                              ? 'text-[#36CFC9] font-semibold'
+                              ? 'text-[#7bb8ff] font-semibold'
                               : 'text-[#666666]'
                           )}
                         >
@@ -507,7 +507,7 @@ export function MatchingResultModal({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-[#36CFC9] hover:text-[#36CFC9]/80 hover:bg-[#D1FAE5]/50"
+                              className="h-8 w-8 p-0 text-[#7bb8ff] hover:text-[#7bb8ff]/80 hover:bg-[#D1FAE5]/50"
                               onClick={() => {
                                 setSelectedResumeId(result.id);
                                 setSelectedResumeName(

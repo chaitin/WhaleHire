@@ -39,6 +39,12 @@ func (nsc *NotificationSettingCreate) SetNillableDeletedAt(t *time.Time) *Notifi
 	return nsc
 }
 
+// SetName sets the "name" field.
+func (nsc *NotificationSettingCreate) SetName(s string) *NotificationSettingCreate {
+	nsc.mutation.SetName(s)
+	return nsc
+}
+
 // SetChannel sets the "channel" field.
 func (nsc *NotificationSettingCreate) SetChannel(cc consts.NotificationChannel) *NotificationSettingCreate {
 	nsc.mutation.SetChannel(cc)
@@ -224,6 +230,14 @@ func (nsc *NotificationSettingCreate) defaults() error {
 
 // check runs all checks and user-defined validators on the builder.
 func (nsc *NotificationSettingCreate) check() error {
+	if _, ok := nsc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`db: missing required field "NotificationSetting.name"`)}
+	}
+	if v, ok := nsc.mutation.Name(); ok {
+		if err := notificationsetting.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`db: validator failed for field "NotificationSetting.name": %w`, err)}
+		}
+	}
 	if _, ok := nsc.mutation.Channel(); !ok {
 		return &ValidationError{Name: "channel", err: errors.New(`db: missing required field "NotificationSetting.channel"`)}
 	}
@@ -281,6 +295,10 @@ func (nsc *NotificationSettingCreate) createSpec() (*NotificationSetting, *sqlgr
 	if value, ok := nsc.mutation.DeletedAt(); ok {
 		_spec.SetField(notificationsetting.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = value
+	}
+	if value, ok := nsc.mutation.Name(); ok {
+		_spec.SetField(notificationsetting.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := nsc.mutation.Channel(); ok {
 		_spec.SetField(notificationsetting.FieldChannel, field.TypeString, value)
@@ -381,6 +399,18 @@ func (u *NotificationSettingUpsert) UpdateDeletedAt() *NotificationSettingUpsert
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (u *NotificationSettingUpsert) ClearDeletedAt() *NotificationSettingUpsert {
 	u.SetNull(notificationsetting.FieldDeletedAt)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *NotificationSettingUpsert) SetName(v string) *NotificationSettingUpsert {
+	u.Set(notificationsetting.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *NotificationSettingUpsert) UpdateName() *NotificationSettingUpsert {
+	u.SetExcluded(notificationsetting.FieldName)
 	return u
 }
 
@@ -570,6 +600,20 @@ func (u *NotificationSettingUpsertOne) UpdateDeletedAt() *NotificationSettingUps
 func (u *NotificationSettingUpsertOne) ClearDeletedAt() *NotificationSettingUpsertOne {
 	return u.Update(func(s *NotificationSettingUpsert) {
 		s.ClearDeletedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *NotificationSettingUpsertOne) SetName(v string) *NotificationSettingUpsertOne {
+	return u.Update(func(s *NotificationSettingUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *NotificationSettingUpsertOne) UpdateName() *NotificationSettingUpsertOne {
+	return u.Update(func(s *NotificationSettingUpsert) {
+		s.UpdateName()
 	})
 }
 
@@ -946,6 +990,20 @@ func (u *NotificationSettingUpsertBulk) UpdateDeletedAt() *NotificationSettingUp
 func (u *NotificationSettingUpsertBulk) ClearDeletedAt() *NotificationSettingUpsertBulk {
 	return u.Update(func(s *NotificationSettingUpsert) {
 		s.ClearDeletedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *NotificationSettingUpsertBulk) SetName(v string) *NotificationSettingUpsertBulk {
+	return u.Update(func(s *NotificationSettingUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *NotificationSettingUpsertBulk) UpdateName() *NotificationSettingUpsertBulk {
+	return u.Update(func(s *NotificationSettingUpsert) {
+		s.UpdateName()
 	})
 }
 

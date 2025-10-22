@@ -520,8 +520,8 @@ export function UploadResumeModal({
       // 立即执行一次
       pollBatchStatus();
 
-      // 每6秒轮询一次
-      batchStatusPollingTimerRef.current = setInterval(pollBatchStatus, 6000);
+      // 每8秒轮询一次
+      batchStatusPollingTimerRef.current = setInterval(pollBatchStatus, 8000);
 
       // 清理函数
       return cleanup;
@@ -656,9 +656,9 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('upload')
-                    ? 'bg-[#36CFC9] text-white'
+                    ? 'bg-[#7bb8ff] text-white'
                     : isStepActive('upload')
-                      ? 'bg-[#36CFC9] text-white'
+                      ? 'bg-[#7bb8ff] text-white'
                       : 'bg-gray-200 text-gray-600'
                 }`}
               >
@@ -672,9 +672,9 @@ export function UploadResumeModal({
                 <div
                   className={`text-sm font-medium ${
                     isStepCompleted('upload')
-                      ? 'text-[#36CFC9]'
+                      ? 'text-[#7bb8ff]'
                       : isStepActive('upload')
-                        ? 'text-[#36CFC9]'
+                        ? 'text-[#7bb8ff]'
                         : 'text-gray-600'
                   }`}
                 >
@@ -686,7 +686,7 @@ export function UploadResumeModal({
             {/* 连接线1 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
               <div
-                className={`h-full bg-[#36CFC9] rounded transition-all duration-300 ${
+                className={`h-full bg-[#7bb8ff] rounded transition-all duration-300 ${
                   isStepCompleted('upload') ? 'w-full' : 'w-0'
                 }`}
               ></div>
@@ -697,9 +697,9 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('preview')
-                    ? 'bg-[#36CFC9] text-white'
+                    ? 'bg-[#7bb8ff] text-white'
                     : isStepActive('preview')
-                      ? 'bg-[#36CFC9] text-white'
+                      ? 'bg-[#7bb8ff] text-white'
                       : 'bg-gray-200 text-gray-600'
                 }`}
               >
@@ -713,9 +713,9 @@ export function UploadResumeModal({
                 <div
                   className={`text-sm font-medium ${
                     isStepCompleted('preview')
-                      ? 'text-[#36CFC9]'
+                      ? 'text-[#7bb8ff]'
                       : isStepActive('preview')
-                        ? 'text-[#36CFC9]'
+                        ? 'text-[#7bb8ff]'
                         : 'text-gray-600'
                   }`}
                 >
@@ -727,7 +727,7 @@ export function UploadResumeModal({
             {/* 连接线2 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
               <div
-                className={`h-full bg-[#36CFC9] rounded transition-all duration-300 ${
+                className={`h-full bg-[#7bb8ff] rounded transition-all duration-300 ${
                   isStepCompleted('preview') ? 'w-full' : 'w-0'
                 }`}
               ></div>
@@ -738,9 +738,9 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('complete')
-                    ? 'bg-[#36CFC9] text-white'
+                    ? 'bg-[#7bb8ff] text-white'
                     : isStepActive('complete')
-                      ? 'bg-[#36CFC9] text-white'
+                      ? 'bg-[#7bb8ff] text-white'
                       : 'bg-gray-200 text-gray-600'
                 }`}
               >
@@ -754,9 +754,9 @@ export function UploadResumeModal({
                 <div
                   className={`text-sm font-medium ${
                     isStepCompleted('complete')
-                      ? 'text-[#36CFC9]'
+                      ? 'text-[#7bb8ff]'
                       : isStepActive('complete')
-                        ? 'text-[#36CFC9]'
+                        ? 'text-[#7bb8ff]'
                         : 'text-gray-600'
                   }`}
                 >
@@ -802,14 +802,14 @@ export function UploadResumeModal({
                   <div
                     className={`relative p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
                       uploadMethod === 'local'
-                        ? 'border-[#36CFC9] bg-[#36CFC9]/10'
+                        ? 'border-[#7bb8ff] bg-[#7bb8ff]/10'
                         : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                     }`}
                     onClick={() => setUploadMethod('local')}
                   >
                     <div className="text-center">
-                      <div className="mx-auto w-12 h-12 bg-[#36CFC9]/20 rounded-full flex items-center justify-center mb-4">
-                        <Upload className="h-5 w-5 text-[#36CFC9]" />
+                      <div className="mx-auto w-12 h-12 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-4">
+                        <Upload className="h-5 w-5 text-[#7bb8ff]" />
                       </div>
                       <h4 className="text-base font-medium text-gray-900 mb-2">
                         本地上传
@@ -819,7 +819,7 @@ export function UploadResumeModal({
                       </p>
                     </div>
                     {uploadMethod === 'local' && (
-                      <div className="absolute top-3 right-3 w-5 h-5 bg-[#36CFC9] rounded-full flex items-center justify-center">
+                      <div className="absolute top-3 right-3 w-5 h-5 bg-[#7bb8ff] rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
                     )}
@@ -828,8 +828,8 @@ export function UploadResumeModal({
                   {/* 链接导入 - 置灰不可选 */}
                   <div className="relative p-6 border-2 border-dashed border-gray-200 rounded-xl opacity-50 cursor-not-allowed">
                     <div className="text-center">
-                      <div className="mx-auto w-12 h-12 bg-[#36CFC9]/20 rounded-full flex items-center justify-center mb-4">
-                        <Link className="h-5 w-5 text-[#36CFC9]" />
+                      <div className="mx-auto w-12 h-12 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-4">
+                        <Link className="h-5 w-5 text-[#7bb8ff]" />
                       </div>
                       <h4 className="text-base font-medium text-gray-900 mb-2">
                         链接导入
@@ -908,20 +908,20 @@ export function UploadResumeModal({
               <div className="space-y-4">
                 {/* 批量上传状态展示 - 整合进度条和文件详情 */}
                 {uploadStatus && (
-                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-100">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-100">
                     {/* 进度条 */}
                     <div className="mb-3">
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-xs font-medium text-gray-700">
                           上传进度
                         </span>
-                        <span className="text-xs font-medium text-[#36CFC9]">
+                        <span className="text-xs font-medium text-[#7bb8ff]">
                           {uploadProgress}%
                         </span>
                       </div>
                       <div className="w-full bg-white rounded-full h-2 shadow-inner">
                         <div
-                          className="bg-gradient-to-r from-[#36CFC9] to-[#52C41A] h-2 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                          className="bg-gradient-to-r from-[#7bb8ff] to-[#5aa3e6] h-2 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
                           style={{ width: `${uploadProgress}%` }}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
@@ -966,7 +966,7 @@ export function UploadResumeModal({
                                 ) : item.status === 'failed' ? (
                                   <XCircle className="w-3.5 h-3.5 text-red-500" />
                                 ) : item.status === 'processing' ? (
-                                  <div className="w-3.5 h-3.5 border-2 border-[#36CFC9] border-t-transparent rounded-full animate-spin"></div>
+                                  <div className="w-3.5 h-3.5 border-2 border-[#7bb8ff] border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                   <Clock className="w-3.5 h-3.5 text-gray-400" />
                                 )}
@@ -1015,7 +1015,7 @@ export function UploadResumeModal({
                       ) && (
                         <div className="mt-3 pt-3 border-t border-blue-200">
                           <h4 className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1.5">
-                            <FileText className="w-3.5 h-3.5 text-cyan-600" />
+                            <FileText className="w-3.5 h-3.5 text-[#7bb8ff]" />
                             简历解析进度
                           </h4>
                           <div className="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
@@ -1050,7 +1050,7 @@ export function UploadResumeModal({
                           <p className="text-xs text-gray-600">
                             以下是解析到的简历信息
                             {uploadedResumes.length > 1 && (
-                              <span className="text-[#36CFC9] ml-1">
+                              <span className="text-[#7bb8ff] ml-1">
                                 ({currentResumeIndex + 1}/
                                 {uploadedResumes.length})
                               </span>
@@ -1072,7 +1072,7 @@ export function UploadResumeModal({
                               onClick={() => setCurrentResumeIndex(index)}
                               className={`h-1.5 rounded-full transition-all ${
                                 index === currentResumeIndex
-                                  ? 'w-8 bg-[#36CFC9]'
+                                  ? 'w-8 bg-[#7bb8ff]'
                                   : 'w-1.5 bg-gray-300 hover:bg-gray-400'
                               }`}
                               title={`查看第 ${index + 1} 份简历`}
@@ -1093,7 +1093,7 @@ export function UploadResumeModal({
                               {/* 简历序号标识 */}
                               {uploadedResumes.length > 1 && (
                                 <div className="mb-2 flex items-center justify-between">
-                                  <span className="text-xs font-medium text-[#36CFC9]">
+                                  <span className="text-xs font-medium text-[#7bb8ff]">
                                     简历 {index + 1} / {uploadedResumes.length}
                                   </span>
                                   {resume.name && (
@@ -1192,7 +1192,7 @@ export function UploadResumeModal({
                                     <span
                                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
                                         resume.status === 'completed'
-                                          ? 'bg-[#36CFC9]/20 text-[#36CFC9]'
+                                          ? 'bg-[#7bb8ff]/20 text-[#7bb8ff]'
                                           : resume.status === 'processing'
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : resume.status === 'pending'
@@ -1222,14 +1222,14 @@ export function UploadResumeModal({
 
                     {/* 内容提示 */}
                     {showContentTip && (
-                      <div className="bg-[#36CFC9]/10 border border-[#36CFC9]/30 rounded-lg p-3 mt-3">
+                      <div className="bg-[#7bb8ff]/10 border border-[#7bb8ff]/30 rounded-lg p-3 mt-3">
                         <div className="flex items-center space-x-2">
-                          <CheckCircle className="h-4 w-4 text-[#36CFC9]" />
-                          <span className="text-xs font-medium text-[#36CFC9]">
+                          <CheckCircle className="h-4 w-4 text-[#7bb8ff]" />
+                          <span className="text-xs font-medium text-[#7bb8ff]">
                             简历上传成功！
                           </span>
                         </div>
-                        <p className="text-xs text-[#36CFC9] mt-1">
+                        <p className="text-xs text-[#7bb8ff] mt-1">
                           简历正在后台解析中，解析完成后您可以在简历列表中查看详细信息。
                         </p>
                       </div>
@@ -1245,7 +1245,7 @@ export function UploadResumeModal({
               {/* 完成步骤内容 */}
               <div className="space-y-4">
                 {/* 解析完成的简历信息展示 */}
-                <div className="bg-gradient-to-r from-[#36CFC9]/10 to-blue-50 rounded-lg p-4">
+                <div className="bg-gradient-to-r from-[#7bb8ff]/10 to-blue-50 rounded-lg p-4">
                   <div className="text-center mb-3">
                     <h4 className="text-sm font-semibold text-gray-900 mb-1">
                       解析结果
@@ -1253,7 +1253,7 @@ export function UploadResumeModal({
                     <p className="text-xs text-gray-600">
                       以下是从简历中提取的关键信息
                       {uploadedResumes.length > 1 && (
-                        <span className="text-[#36CFC9] ml-1">
+                        <span className="text-[#7bb8ff] ml-1">
                           (共 {uploadedResumes.length} 份简历)
                         </span>
                       )}
@@ -1269,7 +1269,7 @@ export function UploadResumeModal({
                           onClick={() => setCurrentResumeIndex(index)}
                           className={`h-1.5 rounded-full transition-all ${
                             index === currentResumeIndex
-                              ? 'w-8 bg-[#36CFC9]'
+                              ? 'w-8 bg-[#7bb8ff]'
                               : 'w-1.5 bg-gray-300 hover:bg-gray-400'
                           }`}
                           title={`查看第 ${index + 1} 份简历`}
@@ -1290,7 +1290,7 @@ export function UploadResumeModal({
                           {/* 简历序号标识 */}
                           {uploadedResumes.length > 1 && (
                             <div className="mb-3 flex items-center justify-between">
-                              <span className="text-xs font-medium text-[#36CFC9]">
+                              <span className="text-xs font-medium text-[#7bb8ff]">
                                 简历 {index + 1} / {uploadedResumes.length}
                               </span>
                               {detail.name && (
@@ -1399,7 +1399,7 @@ export function UploadResumeModal({
                                   <span
                                     className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                                       detail.status === 'completed'
-                                        ? 'bg-[#36CFC9]/20 text-[#36CFC9]'
+                                        ? 'bg-[#7bb8ff]/20 text-[#7bb8ff]'
                                         : detail.status === 'processing'
                                           ? 'bg-yellow-100 text-yellow-800'
                                           : detail.status === 'pending'
@@ -1467,7 +1467,7 @@ export function UploadResumeModal({
                     uploading ||
                     selectedJobIds.length === 0
                   }
-                  className="bg-[#36CFC9] hover:bg-[#2AB8C1] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
+                  className="bg-[#7bb8ff] hover:bg-[#5aa3e6] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
                 >
                   {uploading ? '上传中...' : '下一步'}
                   <ArrowRight className="h-4 w-4" />
