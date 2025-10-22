@@ -155,6 +155,7 @@ type CreateResumeMailboxSettingRequest struct {
 	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`                                     // 上传者ID
 	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`                                           // 关联的职位档案ID列表，可选
 	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
+	Status              *string                `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`        // 状态：enabled或disabled，可选
 }
 
 // UpdateResumeMailboxSettingRequest 更新邮箱设置请求
@@ -229,43 +230,6 @@ type UpdateSyncStatusRequest struct {
 	LastSyncedAt *time.Time `json:"last_synced_at,omitempty"`
 	LastError    *string    `json:"last_error,omitempty"`
 	RetryCount   *int       `json:"retry_count,omitempty"`
-}
-
-// =========================
-// 请求与响应模型（保留原有结构）
-// =========================
-
-// CreateResumeMailboxSettingReq 创建邮箱设置请求
-type CreateResumeMailboxSettingReq struct {
-	Name                string                 `json:"name" validate:"required,max=256"`
-	EmailAddress        string                 `json:"email_address" validate:"required,email,max=256"`
-	Protocol            string                 `json:"protocol" validate:"required,oneof=imap pop3"`
-	Host                string                 `json:"host" validate:"required,max=256"`
-	Port                int                    `json:"port" validate:"required,min=1,max=65535"`
-	UseSSL              bool                   `json:"use_ssl"`
-	Folder              *string                `json:"folder,omitempty" validate:"omitempty,max=256"`
-	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"`
-	Credential          map[string]interface{} `json:"credential" validate:"required"`
-	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`
-	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`
-	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5"`
-	Status              *string                `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`
-}
-
-// UpdateResumeMailboxSettingReq 更新邮箱设置请求
-type UpdateResumeMailboxSettingReq struct {
-	ID                  uuid.UUID              `json:"-"`
-	Name                *string                `json:"name,omitempty" validate:"omitempty,max=256"`
-	Host                *string                `json:"host,omitempty" validate:"omitempty,max=256"`
-	Port                *int                   `json:"port,omitempty" validate:"omitempty,min=1,max=65535"`
-	UseSSL              *bool                  `json:"use_ssl,omitempty"`
-	Folder              *string                `json:"folder,omitempty" validate:"omitempty,max=256"`
-	AuthType            *string                `json:"auth_type,omitempty" validate:"omitempty,oneof=password oauth"`
-	Credential          map[string]interface{} `json:"credential,omitempty"`
-	UploaderID          *uuid.UUID             `json:"uploader_id,omitempty"`
-	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`
-	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5"`
-	Status              *string                `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`
 }
 
 // ListResumeMailboxSettingReq 邮箱设置列表请求
