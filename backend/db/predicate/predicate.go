@@ -75,6 +75,15 @@ type ResumeJobApplication func(*sql.Selector)
 // ResumeLog is the predicate function for resumelog builders.
 type ResumeLog func(*sql.Selector)
 
+// ResumeMailboxCursor is the predicate function for resumemailboxcursor builders.
+type ResumeMailboxCursor func(*sql.Selector)
+
+// ResumeMailboxSetting is the predicate function for resumemailboxsetting builders.
+type ResumeMailboxSetting func(*sql.Selector)
+
+// ResumeMailboxStatistic is the predicate function for resumemailboxstatistic builders.
+type ResumeMailboxStatistic func(*sql.Selector)
+
 // ResumeProject is the predicate function for resumeproject builders.
 type ResumeProject func(*sql.Selector)
 

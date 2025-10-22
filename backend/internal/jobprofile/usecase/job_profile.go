@@ -222,6 +222,24 @@ func (u *JobProfileUsecase) GetByID(ctx context.Context, id string) (*domain.Job
 	return toJobProfileDetail(profile), nil
 }
 
+func (u *JobProfileUsecase) GetByIDs(ctx context.Context, ids []string) ([]*domain.JobProfile, error) {
+	if len(ids) == 0 {
+		return []*domain.JobProfile{}, nil
+	}
+
+	profiles, err := u.repo.GetByIDs(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get job profiles by IDs: %w", err)
+	}
+
+	result := make([]*domain.JobProfile, 0, len(profiles))
+	for _, profile := range profiles {
+		result = append(result, (&domain.JobProfile{}).From(profile))
+	}
+
+	return result, nil
+}
+
 func (u *JobProfileUsecase) List(ctx context.Context, req *domain.ListJobProfileReq) (*domain.ListJobProfileResp, error) {
 	items, pageInfo, err := u.repo.List(ctx, &domain.ListJobProfileRepoReq{ListJobProfileReq: req})
 	if err != nil {

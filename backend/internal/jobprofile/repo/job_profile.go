@@ -225,6 +225,29 @@ func (r *JobProfileRepo) GetByID(ctx context.Context, id string) (*db.JobPositio
 		Only(ctx)
 }
 
+func (r *JobProfileRepo) GetByIDs(ctx context.Context, ids []string) ([]*db.JobPosition, error) {
+	if len(ids) == 0 {
+		return []*db.JobPosition{}, nil
+	}
+
+	jobIDs := make([]uuid.UUID, 0, len(ids))
+	for _, id := range ids {
+		jobID, err := uuid.Parse(id)
+		if err != nil {
+			return nil, fmt.Errorf("invalid job profile ID %s: %w", id, err)
+		}
+		jobIDs = append(jobIDs, jobID)
+	}
+
+	return r.db.JobPosition.Query().
+		Where(jobposition.IDIn(jobIDs...), jobposition.DeletedAtIsNil()).
+		WithDepartment(func(q *db.DepartmentQuery) {
+			q.Where(department.DeletedAtIsNil())
+		}).
+		WithCreator().
+		All(ctx)
+}
+
 func (r *JobProfileRepo) List(ctx context.Context, req *domain.ListJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error) {
 	query := r.db.JobPosition.Query().
 		Where(jobposition.DeletedAtIsNil()).

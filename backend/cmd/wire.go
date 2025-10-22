@@ -21,28 +21,33 @@ import (
 	notificationV1 "github.com/chaitin/WhaleHire/backend/internal/notification/handler/v1"
 	notificationworker "github.com/chaitin/WhaleHire/backend/internal/notification/worker"
 	resumeV1 "github.com/chaitin/WhaleHire/backend/internal/resume/handler/v1"
+	resumeMailboxSettingV1 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
+	resumemailboxscheduler "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/scheduler"
 	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 )
 
 type Server struct {
-	config             *config.Config
-	web                *web.Web
-	ent                *db.Client
-	logger             *slog.Logger
-	userV1             *userV1.UserHandler
-	resumeV1           *resumeV1.ResumeHandler
-	generalagentV1     *generalagentV1.GeneralAgentHandler
-	jobprofileV1       *jobprofileV1.JobProfileHandler
-	departmentV1       *departmentV1.DepartmentHandler
-	jobapplicationV1   *jobapplicationV1.JobApplicationHandler
-	screeningV1        *screeningV1.ScreeningHandler
-	auditV1            *auditV1.AuditHandler
-	fileV1             *fileV1.FileHandler
-	notificationWorker *notificationworker.NotificationWorker
-	notificationV1     *notificationV1.NotificationSettingHandler
-	version            *version.VersionInfo
+	config                   *config.Config
+	web                      *web.Web
+	ent                      *db.Client
+	logger                   *slog.Logger
+	userV1                   *userV1.UserHandler
+	resumeV1                 *resumeV1.ResumeHandler
+	generalagentV1           *generalagentV1.GeneralAgentHandler
+	jobprofileV1             *jobprofileV1.JobProfileHandler
+	departmentV1             *departmentV1.DepartmentHandler
+	jobapplicationV1         *jobapplicationV1.JobApplicationHandler
+	screeningV1              *screeningV1.ScreeningHandler
+	auditV1                  *auditV1.AuditHandler
+	fileV1                   *fileV1.FileHandler
+	notificationWorker       *notificationworker.NotificationWorker
+	notificationV1           *notificationV1.NotificationSettingHandler
+	resumeMailboxScheduler   *resumemailboxscheduler.Scheduler
+	resumeMailboxSettingV1   *resumeMailboxSettingV1.ResumeMailboxSettingHandler
+	resumeMailboxStatisticV1 *resumeMailboxSettingV1.ResumeMailboxStatisticHandler
+	version                  *version.VersionInfo
 }
 
 func newServer() (*Server, error) {

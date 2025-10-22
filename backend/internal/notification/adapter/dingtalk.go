@@ -317,7 +317,7 @@ func (d *DingTalkAdapter) sendBatchResumeParseCompletedNotification(ctx context.
 		FailedCount:  payload.FailedCount,
 		SuccessRate:  successRate,
 		Source:       payload.Source,
-		CompletedAt:  payload.CompletedAt.Format("2006-01-02 15:04:05"),
+		CompletedAt:  payload.CompletedAt.In(time.Local).Format("2006-01-02 15:04:05"),
 	}
 
 	content, err := d.renderTemplate("batch_resume_parse_completed", templateData)

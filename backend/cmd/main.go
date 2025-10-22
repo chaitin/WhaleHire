@@ -15,6 +15,7 @@ import (
 
 	// 新增：将通知 Worker 作为一个独立的服务加入生命周期管理
 	"github.com/chaitin/WhaleHire/backend/internal/notification/worker"
+	resumemailboxscheduler "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/scheduler"
 )
 
 // @title WhaleHire API
@@ -62,6 +63,7 @@ func main() {
 	s.logger.Info("服务启动完成，开始监听请求", "addr", s.config.Server.Addr)
 	svc := service.NewService(service.WithPprof())
 	svc.Add(s)
+	svc.Add(resumemailboxscheduler.NewServicer(s.resumeMailboxScheduler))
 	// 新增：将通知 Worker 封装为 Servicer，交由 Service 管理
 	svc.Add(worker.NewServicer(s.notificationWorker))
 	if err := svc.Run(); err != nil {

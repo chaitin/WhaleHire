@@ -56,4 +56,10 @@ var (
 	ErrNotificationSettingUpdateFailed = web.NewBadRequestBusinessErr(80003, "err-notification-setting-update-failed")
 	ErrNotificationSettingDeleteFailed = web.NewBadRequestBusinessErr(80004, "err-notification-setting-delete-failed")
 	ErrNotificationSettingNotFound     = web.NewBadRequestBusinessErr(80005, "err-notification-setting-not-found")
+
+	// ========== 简历邮箱模块 (90000-99999) ==========
+	ErrResumeMailboxSettingNotFound   = web.NewBadRequestBusinessErr(90000, "err-resume-mailbox-setting-not-found")
+	ErrResumeMailboxStatisticNotFound = web.NewBadRequestBusinessErr(90003, "err-resume-mailbox-statistic-not-found")
+	ErrInvalidCredentials             = web.NewBadRequestBusinessErr(90001, "err-invalid-credentials")
+	ErrMailboxConnectionFailed        = web.NewBadRequestBusinessErr(90002, "err-mailbox-connection-failed")
 )
