@@ -89,7 +89,7 @@ export function MatchingDetailDrawer({
               : resp.task.status === 'failed'
                 ? 'failed'
                 : 'in_progress',
-          creator: resp.task.created_by,
+          creator: resp.task.creator_name || resp.task.created_by,
           createdAt: resp.task.created_at,
           results: [],
           resultsPagination: {
@@ -273,7 +273,7 @@ export function MatchingDetailDrawer({
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="text-lg font-medium text-[#1D2129] flex items-center gap-3">
                   <span>
-                    匹配任务 #{taskDetail.taskId} · {taskDetail.jobPositions[0]}
+                    匹配任务 {taskDetail.taskId} · {taskDetail.jobPositions[0]}
                   </span>
                   <span
                     className={cn(
@@ -289,17 +289,19 @@ export function MatchingDetailDrawer({
               </div>
               <p className="text-sm text-[#4E5969]">
                 创建人：{taskDetail.creator || '—'} · 创建时间：
-                {new Date(taskDetail.createdAt * 1000)
-                  .toLocaleString('zh-CN', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false,
-                  })
-                  .replace(/\//g, '-')}
+                {taskDetail.createdAt
+                  ? new Date(taskDetail.createdAt)
+                      .toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                      })
+                      .replace(/\//g, '-')
+                  : '—'}
               </p>
             </div>
           </div>
@@ -458,9 +460,9 @@ export function MatchingDetailDrawer({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
-                          onClick={() => console.log('下载', result.id)}
-                          title="下载"
+                          className="h-8 w-8 p-0 text-gray-300 cursor-not-allowed"
+                          disabled
+                          title="下载功能暂不可用"
                         >
                           <Download className="h-4 w-4" />
                         </Button>

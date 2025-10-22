@@ -12,7 +12,6 @@ import {
   UserCircle,
   Briefcase,
   Clock,
-  FileText,
   Globe,
   ShoppingCart,
   Building2,
@@ -23,8 +22,12 @@ import { Button } from '@/components/ui/button';
 
 import { getScreeningResult } from '@/services/screening';
 import { ScreeningResult, MatchLevel } from '@/types/screening';
-import { getResumeDetail } from '@/services/resume';
-import { ResumeDetail as ResumeDetailType } from '@/types/resume';
+import { getResumeDetail, downloadResumeFile } from '@/services/resume';
+import {
+  ResumeDetail as ResumeDetailType,
+  Resume,
+  ResumeStatus,
+} from '@/types/resume';
 import { getJobProfile } from '@/services/job-profile';
 
 interface ReportDetailModalProps {
@@ -50,6 +53,7 @@ export function ReportDetailModal({
   const [jobPositionName, setJobPositionName] = useState<string | null>(null);
   // removed unused state: activeTab
   const [detailActiveTab, setDetailActiveTab] = useState('基本信息');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const loadReportDetail = useCallback(async () => {
     if (!taskId || !resumeId) return;
@@ -61,6 +65,58 @@ export function ReportDetailModal({
       console.error('加载报告详情失败:', err);
     }
   }, [taskId, resumeId]);
+
+  // 处理下载简历
+  const handleDownloadResume = async () => {
+    if (!resumeDetail) {
+      console.error('❌ 简历详情不存在，无法下载');
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      console.log('🔽 报告详情开始下载简历:', {
+        resumeId: resumeDetail.id,
+        name: resumeDetail.name,
+        hasFileUrl: !!resumeDetail.resume_file_url,
+      });
+
+      // 构造 Resume 对象调用统一的 downloadResumeFile 函数
+      const resume: Resume = {
+        id: resumeDetail.id,
+        name: resumeDetail.name || '',
+        phone: resumeDetail.phone || '',
+        email: resumeDetail.email || '',
+        current_city: resumeDetail.current_city || '',
+        status: ResumeStatus.COMPLETED,
+        created_at:
+          typeof resumeDetail.created_at === 'number'
+            ? resumeDetail.created_at
+            : Date.now(),
+        updated_at:
+          typeof resumeDetail.updated_at === 'number'
+            ? resumeDetail.updated_at
+            : Date.now(),
+        uploader_name: resumeDetail.uploader_name || '',
+        resume_file_url: resumeDetail.resume_file_url || '',
+        uploader_id: resumeDetail.uploader_id || '',
+      };
+
+      await downloadResumeFile(resume);
+      console.log('✅ 报告详情下载完成');
+    } catch (error) {
+      console.error('❌ 报告详情下载简历失败:', error);
+
+      // 显示用户友好的错误信息
+      let errorMessage = '下载失败，请稍后重试';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      console.error('用户错误提示:', errorMessage);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   // 加载报告详情
   useEffect(() => {
@@ -159,7 +215,23 @@ export function ReportDetailModal({
     }
   };
 
-  // removed unused function: getOverallScoreBg
+  // 获取分数对应的颜色
+  const getScoreColor = (score: number): string => {
+    if (score >= 85) return '#ef4444'; // 红色 (85-100)
+    if (score >= 70) return '#f97316'; // 橙色 (70-84)
+    if (score >= 55) return '#eab308'; // 黄色 (55-69)
+    if (score >= 40) return '#22c55e'; // 绿色 (40-54)
+    return '#9ca3af'; // 灰色 (0-39)
+  };
+
+  // 获取分数对应的背景颜色（浅色版本）
+  const getScoreBgColor = (score: number): string => {
+    if (score >= 85) return '#fee2e2'; // 浅红色
+    if (score >= 70) return '#ffedd5'; // 浅橙色
+    if (score >= 55) return '#fef3c7'; // 浅黄色
+    if (score >= 40) return '#dcfce7'; // 浅绿色
+    return '#f3f4f6'; // 浅灰色
+  };
 
   // 获取维度名称
   const getDimensionName = (key: string): string => {
@@ -195,13 +267,6 @@ export function ReportDetailModal({
   // 渲染维度分数 - 严格按照Figma设计，3x2网格布局
   const renderDimensionScores = () => {
     if (!result) return null;
-
-    // 获取分数颜色
-    const getScoreColor = (score: number) => {
-      if (score >= 85) return '#7bb8ff'; // 蓝色
-      if (score >= 70) return '#52c41a'; // 绿色
-      return '#faad14'; // 黄色
-    };
 
     // 从各个匹配详情字段获取score值
     const getScoreByDimension = (dimension: string): number => {
@@ -355,128 +420,46 @@ export function ReportDetailModal({
 
   // removed unused function: renderDetailedMatchInfo
 
-  // 渲染基本信息详情 - 严格按照Figma设计
+  // 渲染基本信息详情 - 只显示姓名、联系方式和notes
   const renderBasicInfoDetails = () => {
     const basicDetail = result?.basic_detail;
     if (!basicDetail) return <div className="text-gray-500">暂无数据</div>;
 
-    // 从简历详情和基本信息中提取数据
+    // 从简历详情中提取基本信息
     const extractBasicInfoData = () => {
       const data: Array<{
         label: string;
         value: string;
-        score: number;
       }> = [];
 
       // 姓名
-      data.push({
-        label: '姓名',
-        value: resumeDetail?.name || '张明',
-        score: 100,
-      });
-
-      // 年龄 - 从生日计算
-      let ageValue = '32岁';
-      if (resumeDetail?.birthday) {
-        const birthYear = new Date(resumeDetail.birthday).getFullYear();
-        const currentYear = new Date().getFullYear();
-        const calculatedAge = currentYear - birthYear;
-        ageValue = `${calculatedAge}岁`;
+      if (resumeDetail?.name) {
+        data.push({
+          label: '姓名',
+          value: resumeDetail.name,
+        });
       }
-      data.push({
-        label: '年龄',
-        value: ageValue,
-        score: basicDetail.sub_scores?.['age'] || 85,
-      });
 
-      // 工作年限
-      const workYears = resumeDetail?.years_experience || 8;
-      data.push({
-        label: '工作年限',
-        value: `${workYears}年`,
-        score:
-          basicDetail.sub_scores?.['work_years'] ||
-          basicDetail.sub_scores?.['experience_years'] ||
-          90,
-      });
-
-      // 目前薪资 - 从 evidence 或简历中提取
-      let currentSalary = '25K/月';
-      if (basicDetail.evidence && basicDetail.evidence.length > 3) {
-        const salaryEvidence = basicDetail.evidence.find(
-          (e) => e.includes('薪资') || e.includes('当前')
-        );
-        if (salaryEvidence) {
-          const match = salaryEvidence.match(/\d+[Kk]/);
-          if (match) currentSalary = match[0] + '/月';
-        }
+      // 联系方式 - 手机号
+      if (resumeDetail?.phone) {
+        data.push({
+          label: '联系方式',
+          value: resumeDetail.phone,
+        });
       }
-      data.push({
-        label: '目前薪资',
-        value: currentSalary,
-        score:
-          basicDetail.sub_scores?.['current_salary'] ||
-          basicDetail.sub_scores?.['salary'] ||
-          60,
-      });
 
-      // 期望薪资
-      let expectedSalary = '30K/月';
-      if (basicDetail.evidence && basicDetail.evidence.length > 4) {
-        const salaryEvidence = basicDetail.evidence.find((e) =>
-          e.includes('期望')
-        );
-        if (salaryEvidence) {
-          const match = salaryEvidence.match(/\d+[Kk]/);
-          if (match) expectedSalary = match[0] + '/月';
-        }
+      // 邮箱
+      if (resumeDetail?.email) {
+        data.push({
+          label: '邮箱',
+          value: resumeDetail.email,
+        });
       }
-      data.push({
-        label: '期望薪资',
-        value: expectedSalary,
-        score: basicDetail.sub_scores?.['expected_salary'] || 50,
-      });
-
-      // 求职状态
-      let jobStatus = '在职-考虑机会';
-      if (basicDetail.evidence && basicDetail.evidence.length > 5) {
-        const statusEvidence = basicDetail.evidence.find(
-          (e) => e.includes('在职') || e.includes('求职')
-        );
-        if (statusEvidence) {
-          jobStatus = statusEvidence;
-        }
-      }
-      data.push({
-        label: '求职状态',
-        value: jobStatus,
-        score:
-          basicDetail.sub_scores?.['job_status'] ||
-          basicDetail.sub_scores?.['status'] ||
-          85,
-      });
 
       return data;
     };
 
     const basicInfoItems = extractBasicInfoData();
-
-    // 获取匹配状态标签
-    const getMatchTag = (score: number) => {
-      if (score >= 90) {
-        return { text: '完整匹配', bgColor: '#f6ffed', textColor: '#52c41a' };
-      } else if (score >= 70) {
-        return { text: '符合要求', bgColor: '#f6ffed', textColor: '#52c41a' };
-      } else if (score >= 50) {
-        return { text: '略高于预算', bgColor: '#fffbe6', textColor: '#faad14' };
-      } else {
-        return {
-          text: '需进一步沟通',
-          bgColor: '#fffbe6',
-          textColor: '#faad14',
-        };
-      }
-    };
 
     return (
       <div
@@ -551,17 +534,17 @@ export function ReportDetailModal({
         </div>
 
         {/* 内容区域 */}
-        <div className="px-6 pb-6 space-y-6">
-          {/* 匹配详情 */}
+        <div className="px-6 pb-6 space-y-4">
+          {/* 匹配详情 - 缩小版本 */}
           <div
-            className="rounded-lg p-5"
+            className="rounded-lg p-4"
             style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
           >
             <h3
-              className="font-medium mb-4"
+              className="font-medium mb-3"
               style={{
-                fontSize: '16px',
-                lineHeight: '24px',
+                fontSize: '14px',
+                lineHeight: '20px',
                 color: '#1f2937',
                 fontFamily: 'PingFang SC',
                 fontWeight: 500,
@@ -569,106 +552,132 @@ export function ReportDetailModal({
             >
               匹配详情
             </h3>
-            <div className="space-y-4">
-              {basicInfoItems.map((item, index) => {
-                const matchTag = getMatchTag(item.score);
-
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center"
-                    style={{ height: '24px' }}
+            <div className="space-y-2">
+              {basicInfoItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      lineHeight: '18px',
+                      color: '#6b7280',
+                      fontFamily: 'PingFang SC',
+                      fontWeight: 400,
+                      minWidth: '60px',
+                    }}
                   >
-                    <div
-                      style={{
-                        width: '120px',
-                        textAlign: 'right',
-                        paddingRight: '16px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: '14px',
-                          lineHeight: '20px',
-                          color: '#6b7280',
-                          fontFamily: 'PingFang SC',
-                          fontWeight: 400,
-                        }}
-                      >
-                        {item.label}
-                      </span>
-                    </div>
-                    <div style={{ width: '200px' }}>
-                      <span
-                        style={{
-                          fontSize: '14px',
-                          lineHeight: '20px',
-                          color: '#1d2129',
-                          fontFamily: item.label.includes('薪资')
-                            ? 'Inter'
-                            : 'PingFang SC',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {item.value}
-                      </span>
-                    </div>
-                    <div style={{ marginLeft: '16px' }}>
-                      <span
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{
-                          backgroundColor: matchTag.bgColor,
-                          color: matchTag.textColor,
-                          fontSize: '12px',
-                          lineHeight: '16px',
-                          fontFamily: 'PingFang SC',
-                          fontWeight: 400,
-                          borderRadius: '4px',
-                          padding: '3px 8px',
-                          height: '20px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                        }}
-                      >
-                        {matchTag.text}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                    {item.label}:
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      lineHeight: '18px',
+                      color: '#1d2129',
+                      fontFamily: 'PingFang SC',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+              {basicDetail.notes && (
+                <div className="flex gap-3 mt-3 pt-3 border-t border-gray-200">
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      lineHeight: '18px',
+                      color: '#6b7280',
+                      fontFamily: 'PingFang SC',
+                      fontWeight: 400,
+                      minWidth: '60px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    备注:
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      lineHeight: '20px',
+                      color: '#4b5563',
+                      fontFamily: 'PingFang SC',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {basicDetail.notes}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 详细说明 */}
+          {/* 详细说明 - 放大版本，使用 evidence */}
           <div>
             <h3
-              className="font-medium mb-3"
+              className="font-medium mb-4"
               style={{
-                fontSize: '16px',
-                lineHeight: '24px',
+                fontSize: '18px',
+                lineHeight: '26px',
                 color: '#1f2937',
                 fontFamily: 'PingFang SC',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
               详细说明
             </h3>
             <div
-              className="rounded-lg p-5"
-              style={{ backgroundColor: '#f9fafb', borderRadius: '8px' }}
+              className="rounded-lg p-6"
+              style={{
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                minHeight: '200px',
+              }}
             >
-              <p
-                style={{
-                  fontSize: '14px',
-                  lineHeight: '20px',
-                  color: '#4b5563',
-                  fontFamily: 'PingFang SC',
-                  fontWeight: 400,
-                }}
-              >
-                {basicDetail.notes ||
-                  '候选人基本信息完整，与职位要求匹配度高。年龄和工作经验符合高级前端开发工程师的定位，具备独立负责项目的能力。目前薪资略高于预算范围，期望薪资需要进一步沟通，但考虑到候选人优秀的综合能力，建议在面试中详细讨论薪资结构和福利方案。求职状态为在职考虑机会，需要合理安排面试时间，并准备有竞争力的offer方案。'}
-              </p>
+              {basicDetail.evidence && basicDetail.evidence.length > 0 ? (
+                <div className="space-y-3">
+                  {basicDetail.evidence.map((item, index) => (
+                    <div key={index} className="flex gap-3">
+                      <span
+                        style={{
+                          fontSize: '16px',
+                          lineHeight: '24px',
+                          color: '#7bb8ff',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 500,
+                          flexShrink: 0,
+                        }}
+                      >
+                        •
+                      </span>
+                      <p
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '22px',
+                          color: '#374151',
+                          fontFamily: 'PingFang SC',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {item}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '22px',
+                    color: '#9ca3af',
+                    fontFamily: 'PingFang SC',
+                    fontWeight: 400,
+                    textAlign: 'center',
+                    paddingTop: '40px',
+                  }}
+                >
+                  暂无详细说明
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -797,10 +806,7 @@ export function ReportDetailModal({
                     }}
                   >
                     {/* 标题行：学校 - 学历 */}
-                    <div
-                      className="flex items-center justify-between"
-                      style={{ height: '24px', marginBottom: '4px' }}
-                    >
+                    <div style={{ height: '24px', marginBottom: '4px' }}>
                       <h4
                         style={{
                           fontSize: '14px',
@@ -812,17 +818,6 @@ export function ReportDetailModal({
                       >
                         {edu.school} - {edu.degree}
                       </h4>
-                      <span
-                        style={{
-                          fontSize: '14px',
-                          lineHeight: '20px',
-                          color: '#6b7280',
-                          fontFamily: 'Inter',
-                          fontWeight: 400,
-                        }}
-                      >
-                        {edu.start_date} - {edu.end_date}
-                      </span>
                     </div>
 
                     {/* 专业名称 */}
@@ -1081,22 +1076,42 @@ export function ReportDetailModal({
 
                 return (
                   <div key={exp.id}>
-                    {/* 第一行：职位和时间 */}
+                    {/* 第一行：公司名称、职位、高度相关标签和时间 */}
                     <div
                       className="flex items-center justify-between"
-                      style={{ height: '24px', marginBottom: '8px' }}
+                      style={{ marginBottom: '8px' }}
                     >
-                      <h4
-                        style={{
-                          fontSize: '14px',
-                          lineHeight: '20px',
-                          color: '#1d2129',
-                          fontFamily: 'PingFang SC',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {exp.position || exp.title}
-                      </h4>
+                      <div className="flex items-center gap-2">
+                        <h4
+                          style={{
+                            fontSize: '14px',
+                            lineHeight: '20px',
+                            color: '#1d2129',
+                            fontFamily: 'PingFang SC',
+                            fontWeight: 500,
+                          }}
+                        >
+                          {exp.company} · {exp.position || exp.title}
+                        </h4>
+                        <span
+                          className="px-2 py-0.5 rounded text-xs"
+                          style={{
+                            backgroundColor: '#fff7e6',
+                            color: '#fa8c16',
+                            fontSize: '12px',
+                            lineHeight: '16px',
+                            fontFamily: 'PingFang SC',
+                            fontWeight: 400,
+                            borderRadius: '4px',
+                            padding: '2px 8px',
+                            height: '20px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          高度相关
+                        </span>
+                      </div>
                       <span
                         style={{
                           fontSize: '14px',
@@ -1113,41 +1128,25 @@ export function ReportDetailModal({
                       </span>
                     </div>
 
-                    {/* 第二行：公司名称 */}
-                    <div style={{ height: '24px', marginBottom: '8px' }}>
-                      <span
+                    {/* 第二行：工作职责 */}
+                    <div style={{ marginBottom: '12px' }}>
+                      <p
                         style={{
                           fontSize: '14px',
-                          lineHeight: '20px',
-                          color: '#7bb8ff',
-                          fontFamily: 'PingFang SC',
-                          fontWeight: 400,
-                        }}
-                      >
-                        {exp.company}
-                      </span>
-                    </div>
-
-                    {/* 第三行：工作描述 */}
-                    <div style={{ height: '24px', marginBottom: '12px' }}>
-                      <span
-                        style={{
-                          fontSize: '14px',
-                          lineHeight: '20px',
+                          lineHeight: '22px',
                           color: '#4b5563',
                           fontFamily: 'PingFang SC',
                           fontWeight: 400,
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
                         }}
                       >
-                        {exp.description}
-                      </span>
+                        {exp.description || '暂无工作描述'}
+                      </p>
                     </div>
 
-                    {/* 第四行：技能标签 */}
-                    <div
-                      className="flex items-center gap-2 flex-wrap"
-                      style={{ height: '24px' }}
-                    >
+                    {/* 第三行：技能标签 */}
+                    <div className="flex items-center gap-2 flex-wrap">
                       {skills.map((skill, idx) => (
                         <span
                           key={idx}
@@ -1592,7 +1591,8 @@ export function ReportDetailModal({
                   fontWeight: 400,
                 }}
               >
-                候选人主要在互联网和移动应用行业有丰富经验，对电商和金融行业也有一定接触。目前招聘的高级前端开发工程师职位主要面向电商领域，候选人在该领域经验相对较少，因此行业匹配度略低。不过，前端开发技能具有较强的通用性，候选人丰富的互联网行业经验可以快速迁移到电商领域。建议在面试中重点考察候选人学习新行业业务知识的能力和意愿。
+                {industryDetail.overall_analysis ||
+                  '候选人主要在互联网和移动应用行业有丰富经验，对电商和金融行业也有一定接触。目前招聘的高级前端开发工程师职位主要面向电商领域，候选人在该领域经验相对较少，因此行业匹配度略低。不过，前端开发技能具有较强的通用性，候选人丰富的互联网行业经验可以快速迁移到电商领域。建议在面试中重点考察候选人学习新行业业务知识的能力和意愿。'}
               </p>
             </div>
           </div>
@@ -2211,15 +2211,21 @@ export function ReportDetailModal({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-            <FileText className="w-6 h-6 text-orange-600" />
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+            <Download className="w-4 h-4 text-[#7bb8ff]" />
           </div>
-          <div>
-            <p className="text-sm text-gray-600">任务ID</p>
-            <p className="text-base font-medium text-gray-900 break-words max-w-xs">
-              {taskId || '未知'}
-            </p>
+          <div className="flex flex-col gap-0.5">
+            <p className="text-sm text-gray-600">简历文件</p>
+            <Button
+              onClick={handleDownloadResume}
+              disabled={isDownloading || !resumeDetail?.resume_file_url}
+              className="h-6 px-2 text-xs flex items-center gap-1 bg-[#7bb8ff] hover:bg-[#5aa3e6] text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              size="sm"
+            >
+              <Download className="w-3 h-3" />
+              {isDownloading ? '下载中...' : '下载简历'}
+            </Button>
           </div>
         </div>
       </div>
@@ -2231,6 +2237,10 @@ export function ReportDetailModal({
     if (!result?.overall_score) return null;
     const overallScore = result.overall_score;
     const matchLevelInfo = getMatchLevelInfo(result.match_level || 'fair');
+
+    // 获取综合评分的颜色
+    const scoreColor = getScoreColor(overallScore);
+    const scoreBgColor = getScoreBgColor(overallScore);
 
     return (
       <div
@@ -2304,7 +2314,7 @@ export function ReportDetailModal({
                     display: 'block',
                   }}
                 />
-                {/* 分数叠加层 */}
+                {/* 分数叠加层 - 无背景色 */}
                 <div
                   style={{
                     position: 'absolute',
@@ -2320,31 +2330,39 @@ export function ReportDetailModal({
                 >
                   <div
                     style={{
-                      fontSize: '36px',
-                      lineHeight: '40px',
-                      fontWeight: 700,
-                      color: '#7bb8ff',
-                      fontFamily: 'Inter',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
                     }}
                   >
-                    {overallScore}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      lineHeight: '20px',
-                      color: '#6b7280',
-                      fontFamily: 'PingFang SC',
-                      fontWeight: 400,
-                    }}
-                  >
-                    综合评分
+                    <div
+                      style={{
+                        fontSize: '36px',
+                        lineHeight: '40px',
+                        fontWeight: 700,
+                        color: scoreColor,
+                        fontFamily: 'Inter',
+                      }}
+                    >
+                      {overallScore}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: scoreColor,
+                        fontFamily: 'PingFang SC',
+                        fontWeight: 500,
+                      }}
+                    >
+                      综合评分
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 匹配等级标签 */}
+            {/* 匹配等级标签 - 根据综合评分分数显示颜色 */}
             <div
               style={{
                 display: 'flex',
@@ -2358,13 +2376,7 @@ export function ReportDetailModal({
                   display: 'flex',
                   justifyContent: 'center',
                   padding: '4px 12px',
-                  backgroundColor: matchLevelInfo.bgColor.includes('green')
-                    ? '#f6ffed'
-                    : matchLevelInfo.bgColor.includes('yellow')
-                      ? '#fffbe6'
-                      : matchLevelInfo.bgColor.includes('blue')
-                        ? '#e6f7ff'
-                        : '#f6ffed',
+                  backgroundColor: scoreBgColor,
                   borderRadius: '9999px',
                 }}
               >
@@ -2373,13 +2385,7 @@ export function ReportDetailModal({
                     fontSize: '14px',
                     lineHeight: '20px',
                     fontWeight: 500,
-                    color: matchLevelInfo.color.includes('green')
-                      ? '#52c41a'
-                      : matchLevelInfo.color.includes('yellow')
-                        ? '#faad14'
-                        : matchLevelInfo.color.includes('blue')
-                          ? '#1890ff'
-                          : '#52c41a',
+                    color: scoreColor,
                     fontFamily: 'PingFang SC',
                     textAlign: 'center',
                   }}
