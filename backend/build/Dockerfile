@@ -29,7 +29,7 @@ WORKDIR /app
 RUN mkdir -p /app/static
 
 ADD migration ./migration
-# ADD assets/vsix ./assets/vsix
+ADD templates ./templates
 
 COPY --from=builder /out/main /app/main
 
