@@ -76,9 +76,6 @@ services:
         condition: service_healthy
     networks:
       - whalehire-network
-    volumes:
-      - ./backend/config:/app/config
-      - ./backend/templates:/app/templates
     restart: unless-stopped
 
   # 前端服务
