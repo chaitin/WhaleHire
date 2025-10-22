@@ -35,7 +35,7 @@ func (r *ResumeMailboxSettingRepo) Create(ctx context.Context, req *domain.Creat
 		SetAuthType(req.AuthType).
 		SetEncryptedCredential(req.EncryptedCredential).
 		SetUploaderID(req.UploaderID).
-		SetStatus(*req.Status)
+		SetStatus(req.Status)
 
 	if req.Folder != nil {
 		builder = builder.SetFolder(*req.Folder)

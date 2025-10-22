@@ -152,10 +152,10 @@ type CreateResumeMailboxSettingRequest struct {
 	Folder              *string                `json:"folder,omitempty"`                                   // 邮箱文件夹，可选
 	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"` // 认证类型：password或oauth
 	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required"`
-	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`                                     // 上传者ID
+	UploaderID          uuid.UUID              `json:"uploader_id"`                                                         // 上传者ID
 	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`                                           // 关联的职位档案ID列表，可选
 	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
-	Status              *string                `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`        // 状态：enabled或disabled，可选
+	Status              string                 `json:"status" validate:"required,oneof=enabled disabled"`                   // 状态：enabled或disabled，必须
 }
 
 // UpdateResumeMailboxSettingRequest 更新邮箱设置请求
