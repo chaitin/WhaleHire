@@ -24356,17 +24356,19 @@ type ResumeMailboxSettingMutation struct {
 	deleted_at               *time.Time
 	name                     *string
 	email_address            *string
-	protocol                 *resumemailboxsetting.Protocol
+	protocol                 *string
 	host                     *string
 	port                     *int
 	addport                  *int
 	use_ssl                  *bool
 	folder                   *string
-	auth_type                *resumemailboxsetting.AuthType
+	auth_type                *string
 	encrypted_credential     *map[string]interface{}
+	job_profile_ids          *[]uuid.UUID
+	appendjob_profile_ids    []uuid.UUID
 	sync_interval_minutes    *int
 	addsync_interval_minutes *int
-	status                   *resumemailboxsetting.Status
+	status                   *string
 	last_synced_at           *time.Time
 	last_error               *string
 	retry_count              *int
@@ -24376,8 +24378,6 @@ type ResumeMailboxSettingMutation struct {
 	clearedFields            map[string]struct{}
 	uploader                 *uuid.UUID
 	cleareduploader          bool
-	job_profile              *uuid.UUID
-	clearedjob_profile       bool
 	cursors                  map[uuid.UUID]struct{}
 	removedcursors           map[uuid.UUID]struct{}
 	clearedcursors           bool
@@ -24615,12 +24615,12 @@ func (m *ResumeMailboxSettingMutation) ResetEmailAddress() {
 }
 
 // SetProtocol sets the "protocol" field.
-func (m *ResumeMailboxSettingMutation) SetProtocol(r resumemailboxsetting.Protocol) {
-	m.protocol = &r
+func (m *ResumeMailboxSettingMutation) SetProtocol(s string) {
+	m.protocol = &s
 }
 
 // Protocol returns the value of the "protocol" field in the mutation.
-func (m *ResumeMailboxSettingMutation) Protocol() (r resumemailboxsetting.Protocol, exists bool) {
+func (m *ResumeMailboxSettingMutation) Protocol() (r string, exists bool) {
 	v := m.protocol
 	if v == nil {
 		return
@@ -24631,7 +24631,7 @@ func (m *ResumeMailboxSettingMutation) Protocol() (r resumemailboxsetting.Protoc
 // OldProtocol returns the old "protocol" field's value of the ResumeMailboxSetting entity.
 // If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeMailboxSettingMutation) OldProtocol(ctx context.Context) (v resumemailboxsetting.Protocol, err error) {
+func (m *ResumeMailboxSettingMutation) OldProtocol(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldProtocol is only allowed on UpdateOne operations")
 	}
@@ -24828,12 +24828,12 @@ func (m *ResumeMailboxSettingMutation) ResetFolder() {
 }
 
 // SetAuthType sets the "auth_type" field.
-func (m *ResumeMailboxSettingMutation) SetAuthType(rt resumemailboxsetting.AuthType) {
-	m.auth_type = &rt
+func (m *ResumeMailboxSettingMutation) SetAuthType(s string) {
+	m.auth_type = &s
 }
 
 // AuthType returns the value of the "auth_type" field in the mutation.
-func (m *ResumeMailboxSettingMutation) AuthType() (r resumemailboxsetting.AuthType, exists bool) {
+func (m *ResumeMailboxSettingMutation) AuthType() (r string, exists bool) {
 	v := m.auth_type
 	if v == nil {
 		return
@@ -24844,7 +24844,7 @@ func (m *ResumeMailboxSettingMutation) AuthType() (r resumemailboxsetting.AuthTy
 // OldAuthType returns the old "auth_type" field's value of the ResumeMailboxSetting entity.
 // If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeMailboxSettingMutation) OldAuthType(ctx context.Context) (v resumemailboxsetting.AuthType, err error) {
+func (m *ResumeMailboxSettingMutation) OldAuthType(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAuthType is only allowed on UpdateOne operations")
 	}
@@ -24935,53 +24935,69 @@ func (m *ResumeMailboxSettingMutation) ResetUploaderID() {
 	m.uploader = nil
 }
 
-// SetJobProfileID sets the "job_profile_id" field.
-func (m *ResumeMailboxSettingMutation) SetJobProfileID(u uuid.UUID) {
-	m.job_profile = &u
+// SetJobProfileIds sets the "job_profile_ids" field.
+func (m *ResumeMailboxSettingMutation) SetJobProfileIds(u []uuid.UUID) {
+	m.job_profile_ids = &u
+	m.appendjob_profile_ids = nil
 }
 
-// JobProfileID returns the value of the "job_profile_id" field in the mutation.
-func (m *ResumeMailboxSettingMutation) JobProfileID() (r uuid.UUID, exists bool) {
-	v := m.job_profile
+// JobProfileIds returns the value of the "job_profile_ids" field in the mutation.
+func (m *ResumeMailboxSettingMutation) JobProfileIds() (r []uuid.UUID, exists bool) {
+	v := m.job_profile_ids
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldJobProfileID returns the old "job_profile_id" field's value of the ResumeMailboxSetting entity.
+// OldJobProfileIds returns the old "job_profile_ids" field's value of the ResumeMailboxSetting entity.
 // If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeMailboxSettingMutation) OldJobProfileID(ctx context.Context) (v *uuid.UUID, err error) {
+func (m *ResumeMailboxSettingMutation) OldJobProfileIds(ctx context.Context) (v []uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldJobProfileID is only allowed on UpdateOne operations")
+		return v, errors.New("OldJobProfileIds is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldJobProfileID requires an ID field in the mutation")
+		return v, errors.New("OldJobProfileIds requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldJobProfileID: %w", err)
+		return v, fmt.Errorf("querying old value for OldJobProfileIds: %w", err)
 	}
-	return oldValue.JobProfileID, nil
+	return oldValue.JobProfileIds, nil
 }
 
-// ClearJobProfileID clears the value of the "job_profile_id" field.
-func (m *ResumeMailboxSettingMutation) ClearJobProfileID() {
-	m.job_profile = nil
-	m.clearedFields[resumemailboxsetting.FieldJobProfileID] = struct{}{}
+// AppendJobProfileIds adds u to the "job_profile_ids" field.
+func (m *ResumeMailboxSettingMutation) AppendJobProfileIds(u []uuid.UUID) {
+	m.appendjob_profile_ids = append(m.appendjob_profile_ids, u...)
 }
 
-// JobProfileIDCleared returns if the "job_profile_id" field was cleared in this mutation.
-func (m *ResumeMailboxSettingMutation) JobProfileIDCleared() bool {
-	_, ok := m.clearedFields[resumemailboxsetting.FieldJobProfileID]
+// AppendedJobProfileIds returns the list of values that were appended to the "job_profile_ids" field in this mutation.
+func (m *ResumeMailboxSettingMutation) AppendedJobProfileIds() ([]uuid.UUID, bool) {
+	if len(m.appendjob_profile_ids) == 0 {
+		return nil, false
+	}
+	return m.appendjob_profile_ids, true
+}
+
+// ClearJobProfileIds clears the value of the "job_profile_ids" field.
+func (m *ResumeMailboxSettingMutation) ClearJobProfileIds() {
+	m.job_profile_ids = nil
+	m.appendjob_profile_ids = nil
+	m.clearedFields[resumemailboxsetting.FieldJobProfileIds] = struct{}{}
+}
+
+// JobProfileIdsCleared returns if the "job_profile_ids" field was cleared in this mutation.
+func (m *ResumeMailboxSettingMutation) JobProfileIdsCleared() bool {
+	_, ok := m.clearedFields[resumemailboxsetting.FieldJobProfileIds]
 	return ok
 }
 
-// ResetJobProfileID resets all changes to the "job_profile_id" field.
-func (m *ResumeMailboxSettingMutation) ResetJobProfileID() {
-	m.job_profile = nil
-	delete(m.clearedFields, resumemailboxsetting.FieldJobProfileID)
+// ResetJobProfileIds resets all changes to the "job_profile_ids" field.
+func (m *ResumeMailboxSettingMutation) ResetJobProfileIds() {
+	m.job_profile_ids = nil
+	m.appendjob_profile_ids = nil
+	delete(m.clearedFields, resumemailboxsetting.FieldJobProfileIds)
 }
 
 // SetSyncIntervalMinutes sets the "sync_interval_minutes" field.
@@ -25055,12 +25071,12 @@ func (m *ResumeMailboxSettingMutation) ResetSyncIntervalMinutes() {
 }
 
 // SetStatus sets the "status" field.
-func (m *ResumeMailboxSettingMutation) SetStatus(r resumemailboxsetting.Status) {
-	m.status = &r
+func (m *ResumeMailboxSettingMutation) SetStatus(s string) {
+	m.status = &s
 }
 
 // Status returns the value of the "status" field in the mutation.
-func (m *ResumeMailboxSettingMutation) Status() (r resumemailboxsetting.Status, exists bool) {
+func (m *ResumeMailboxSettingMutation) Status() (r string, exists bool) {
 	v := m.status
 	if v == nil {
 		return
@@ -25071,7 +25087,7 @@ func (m *ResumeMailboxSettingMutation) Status() (r resumemailboxsetting.Status, 
 // OldStatus returns the old "status" field's value of the ResumeMailboxSetting entity.
 // If the ResumeMailboxSetting object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeMailboxSettingMutation) OldStatus(ctx context.Context) (v resumemailboxsetting.Status, err error) {
+func (m *ResumeMailboxSettingMutation) OldStatus(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
 	}
@@ -25343,33 +25359,6 @@ func (m *ResumeMailboxSettingMutation) ResetUploader() {
 	m.cleareduploader = false
 }
 
-// ClearJobProfile clears the "job_profile" edge to the JobPosition entity.
-func (m *ResumeMailboxSettingMutation) ClearJobProfile() {
-	m.clearedjob_profile = true
-	m.clearedFields[resumemailboxsetting.FieldJobProfileID] = struct{}{}
-}
-
-// JobProfileCleared reports if the "job_profile" edge to the JobPosition entity was cleared.
-func (m *ResumeMailboxSettingMutation) JobProfileCleared() bool {
-	return m.JobProfileIDCleared() || m.clearedjob_profile
-}
-
-// JobProfileIDs returns the "job_profile" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// JobProfileID instead. It exists only for internal usage by the builders.
-func (m *ResumeMailboxSettingMutation) JobProfileIDs() (ids []uuid.UUID) {
-	if id := m.job_profile; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetJobProfile resets all changes to the "job_profile" edge.
-func (m *ResumeMailboxSettingMutation) ResetJobProfile() {
-	m.job_profile = nil
-	m.clearedjob_profile = false
-}
-
 // AddCursorIDs adds the "cursors" edge to the ResumeMailboxCursor entity by ids.
 func (m *ResumeMailboxSettingMutation) AddCursorIDs(ids ...uuid.UUID) {
 	if m.cursors == nil {
@@ -25546,8 +25535,8 @@ func (m *ResumeMailboxSettingMutation) Fields() []string {
 	if m.uploader != nil {
 		fields = append(fields, resumemailboxsetting.FieldUploaderID)
 	}
-	if m.job_profile != nil {
-		fields = append(fields, resumemailboxsetting.FieldJobProfileID)
+	if m.job_profile_ids != nil {
+		fields = append(fields, resumemailboxsetting.FieldJobProfileIds)
 	}
 	if m.sync_interval_minutes != nil {
 		fields = append(fields, resumemailboxsetting.FieldSyncIntervalMinutes)
@@ -25600,8 +25589,8 @@ func (m *ResumeMailboxSettingMutation) Field(name string) (ent.Value, bool) {
 		return m.EncryptedCredential()
 	case resumemailboxsetting.FieldUploaderID:
 		return m.UploaderID()
-	case resumemailboxsetting.FieldJobProfileID:
-		return m.JobProfileID()
+	case resumemailboxsetting.FieldJobProfileIds:
+		return m.JobProfileIds()
 	case resumemailboxsetting.FieldSyncIntervalMinutes:
 		return m.SyncIntervalMinutes()
 	case resumemailboxsetting.FieldStatus:
@@ -25647,8 +25636,8 @@ func (m *ResumeMailboxSettingMutation) OldField(ctx context.Context, name string
 		return m.OldEncryptedCredential(ctx)
 	case resumemailboxsetting.FieldUploaderID:
 		return m.OldUploaderID(ctx)
-	case resumemailboxsetting.FieldJobProfileID:
-		return m.OldJobProfileID(ctx)
+	case resumemailboxsetting.FieldJobProfileIds:
+		return m.OldJobProfileIds(ctx)
 	case resumemailboxsetting.FieldSyncIntervalMinutes:
 		return m.OldSyncIntervalMinutes(ctx)
 	case resumemailboxsetting.FieldStatus:
@@ -25694,7 +25683,7 @@ func (m *ResumeMailboxSettingMutation) SetField(name string, value ent.Value) er
 		m.SetEmailAddress(v)
 		return nil
 	case resumemailboxsetting.FieldProtocol:
-		v, ok := value.(resumemailboxsetting.Protocol)
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -25729,7 +25718,7 @@ func (m *ResumeMailboxSettingMutation) SetField(name string, value ent.Value) er
 		m.SetFolder(v)
 		return nil
 	case resumemailboxsetting.FieldAuthType:
-		v, ok := value.(resumemailboxsetting.AuthType)
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -25749,12 +25738,12 @@ func (m *ResumeMailboxSettingMutation) SetField(name string, value ent.Value) er
 		}
 		m.SetUploaderID(v)
 		return nil
-	case resumemailboxsetting.FieldJobProfileID:
-		v, ok := value.(uuid.UUID)
+	case resumemailboxsetting.FieldJobProfileIds:
+		v, ok := value.([]uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetJobProfileID(v)
+		m.SetJobProfileIds(v)
 		return nil
 	case resumemailboxsetting.FieldSyncIntervalMinutes:
 		v, ok := value.(int)
@@ -25764,7 +25753,7 @@ func (m *ResumeMailboxSettingMutation) SetField(name string, value ent.Value) er
 		m.SetSyncIntervalMinutes(v)
 		return nil
 	case resumemailboxsetting.FieldStatus:
-		v, ok := value.(resumemailboxsetting.Status)
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -25880,8 +25869,8 @@ func (m *ResumeMailboxSettingMutation) ClearedFields() []string {
 	if m.FieldCleared(resumemailboxsetting.FieldFolder) {
 		fields = append(fields, resumemailboxsetting.FieldFolder)
 	}
-	if m.FieldCleared(resumemailboxsetting.FieldJobProfileID) {
-		fields = append(fields, resumemailboxsetting.FieldJobProfileID)
+	if m.FieldCleared(resumemailboxsetting.FieldJobProfileIds) {
+		fields = append(fields, resumemailboxsetting.FieldJobProfileIds)
 	}
 	if m.FieldCleared(resumemailboxsetting.FieldSyncIntervalMinutes) {
 		fields = append(fields, resumemailboxsetting.FieldSyncIntervalMinutes)
@@ -25912,8 +25901,8 @@ func (m *ResumeMailboxSettingMutation) ClearField(name string) error {
 	case resumemailboxsetting.FieldFolder:
 		m.ClearFolder()
 		return nil
-	case resumemailboxsetting.FieldJobProfileID:
-		m.ClearJobProfileID()
+	case resumemailboxsetting.FieldJobProfileIds:
+		m.ClearJobProfileIds()
 		return nil
 	case resumemailboxsetting.FieldSyncIntervalMinutes:
 		m.ClearSyncIntervalMinutes()
@@ -25965,8 +25954,8 @@ func (m *ResumeMailboxSettingMutation) ResetField(name string) error {
 	case resumemailboxsetting.FieldUploaderID:
 		m.ResetUploaderID()
 		return nil
-	case resumemailboxsetting.FieldJobProfileID:
-		m.ResetJobProfileID()
+	case resumemailboxsetting.FieldJobProfileIds:
+		m.ResetJobProfileIds()
 		return nil
 	case resumemailboxsetting.FieldSyncIntervalMinutes:
 		m.ResetSyncIntervalMinutes()
@@ -25995,12 +25984,9 @@ func (m *ResumeMailboxSettingMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ResumeMailboxSettingMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.uploader != nil {
 		edges = append(edges, resumemailboxsetting.EdgeUploader)
-	}
-	if m.job_profile != nil {
-		edges = append(edges, resumemailboxsetting.EdgeJobProfile)
 	}
 	if m.cursors != nil {
 		edges = append(edges, resumemailboxsetting.EdgeCursors)
@@ -26017,10 +26003,6 @@ func (m *ResumeMailboxSettingMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case resumemailboxsetting.EdgeUploader:
 		if id := m.uploader; id != nil {
-			return []ent.Value{*id}
-		}
-	case resumemailboxsetting.EdgeJobProfile:
-		if id := m.job_profile; id != nil {
 			return []ent.Value{*id}
 		}
 	case resumemailboxsetting.EdgeCursors:
@@ -26041,7 +26023,7 @@ func (m *ResumeMailboxSettingMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ResumeMailboxSettingMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.removedcursors != nil {
 		edges = append(edges, resumemailboxsetting.EdgeCursors)
 	}
@@ -26073,12 +26055,9 @@ func (m *ResumeMailboxSettingMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ResumeMailboxSettingMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.cleareduploader {
 		edges = append(edges, resumemailboxsetting.EdgeUploader)
-	}
-	if m.clearedjob_profile {
-		edges = append(edges, resumemailboxsetting.EdgeJobProfile)
 	}
 	if m.clearedcursors {
 		edges = append(edges, resumemailboxsetting.EdgeCursors)
@@ -26095,8 +26074,6 @@ func (m *ResumeMailboxSettingMutation) EdgeCleared(name string) bool {
 	switch name {
 	case resumemailboxsetting.EdgeUploader:
 		return m.cleareduploader
-	case resumemailboxsetting.EdgeJobProfile:
-		return m.clearedjob_profile
 	case resumemailboxsetting.EdgeCursors:
 		return m.clearedcursors
 	case resumemailboxsetting.EdgeStatistics:
@@ -26112,9 +26089,6 @@ func (m *ResumeMailboxSettingMutation) ClearEdge(name string) error {
 	case resumemailboxsetting.EdgeUploader:
 		m.ClearUploader()
 		return nil
-	case resumemailboxsetting.EdgeJobProfile:
-		m.ClearJobProfile()
-		return nil
 	}
 	return fmt.Errorf("unknown ResumeMailboxSetting unique edge %s", name)
 }
@@ -26125,9 +26099,6 @@ func (m *ResumeMailboxSettingMutation) ResetEdge(name string) error {
 	switch name {
 	case resumemailboxsetting.EdgeUploader:
 		m.ResetUploader()
-		return nil
-	case resumemailboxsetting.EdgeJobProfile:
-		m.ResetJobProfile()
 		return nil
 	case resumemailboxsetting.EdgeCursors:
 		m.ResetCursors()

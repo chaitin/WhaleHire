@@ -14,7 +14,7 @@ CREATE TABLE "resume_mailbox_settings" (
     "auth_type" varchar(32) NOT NULL DEFAULT 'password',
     "encrypted_credential" jsonb NOT NULL,
     "uploader_id" uuid NOT NULL,
-    "job_profile_id" uuid,
+    "job_profile_ids" jsonb,
     "sync_interval_minutes" integer,
     "status" varchar(20) NOT NULL DEFAULT 'enabled' CHECK ("status" IN ('enabled', 'disabled')),
     "last_synced_at" timestamp with time zone,
@@ -51,9 +51,6 @@ CREATE TABLE "resume_mailbox_statistics" (
 -- Add foreign key constraints
 ALTER TABLE "resume_mailbox_settings"
 ADD CONSTRAINT "fk_resume_mailbox_settings_uploader" FOREIGN KEY ("uploader_id") REFERENCES "users"("id") ON DELETE CASCADE;
-ALTER TABLE "resume_mailbox_settings"
-ADD CONSTRAINT "fk_resume_mailbox_settings_job_profile" FOREIGN KEY ("job_profile_id") REFERENCES "job_position"("id") ON DELETE
-SET NULL;
 ALTER TABLE "resume_mailbox_cursors"
 ADD CONSTRAINT "fk_resume_mailbox_cursors_mailbox" FOREIGN KEY ("mailbox_id") REFERENCES "resume_mailbox_settings"("id") ON DELETE CASCADE;
 ALTER TABLE "resume_mailbox_statistics"
@@ -64,8 +61,6 @@ WHERE "deleted_at" IS NULL;
 CREATE INDEX "idx_resume_mailbox_settings_status" ON "resume_mailbox_settings"("status")
 WHERE "deleted_at" IS NULL;
 CREATE INDEX "idx_resume_mailbox_settings_uploader_id" ON "resume_mailbox_settings"("uploader_id")
-WHERE "deleted_at" IS NULL;
-CREATE INDEX "idx_resume_mailbox_settings_job_profile_id" ON "resume_mailbox_settings"("job_profile_id")
 WHERE "deleted_at" IS NULL;
 CREATE INDEX "idx_resume_mailbox_settings_last_synced_at" ON "resume_mailbox_settings"("last_synced_at")
 WHERE "deleted_at" IS NULL;
@@ -93,7 +88,7 @@ COMMENT ON COLUMN "resume_mailbox_settings"."email_address" IS '邮箱账号';
 COMMENT ON COLUMN "resume_mailbox_settings"."protocol" IS '邮箱协议';
 COMMENT ON COLUMN "resume_mailbox_settings"."encrypted_credential" IS '加密后的凭证信息(JSON格式)';
 COMMENT ON COLUMN "resume_mailbox_settings"."uploader_id" IS '上传人用户ID';
-COMMENT ON COLUMN "resume_mailbox_settings"."job_profile_id" IS '岗位画像ID';
+COMMENT ON COLUMN "resume_mailbox_settings"."job_profile_ids" IS '岗位画像ID列表(JSON数组)';
 COMMENT ON COLUMN "resume_mailbox_settings"."sync_interval_minutes" IS '自定义同步频率(分钟)，为空则使用平台默认';
 COMMENT ON COLUMN "resume_mailbox_cursors"."protocol_cursor" IS '协议游标信息(IMAP UIDVALIDITY+UID 或 POP3 UIDL列表摘要)';
 COMMENT ON COLUMN "resume_mailbox_cursors"."last_message_id" IS '最后处理的邮件ID，用于排查';

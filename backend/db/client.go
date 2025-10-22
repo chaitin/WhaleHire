@@ -4616,22 +4616,6 @@ func (c *ResumeMailboxSettingClient) QueryUploader(rms *ResumeMailboxSetting) *U
 	return query
 }
 
-// QueryJobProfile queries the job_profile edge of a ResumeMailboxSetting.
-func (c *ResumeMailboxSettingClient) QueryJobProfile(rms *ResumeMailboxSetting) *JobPositionQuery {
-	query := (&JobPositionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := rms.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(resumemailboxsetting.Table, resumemailboxsetting.FieldID, id),
-			sqlgraph.To(jobposition.Table, jobposition.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, resumemailboxsetting.JobProfileTable, resumemailboxsetting.JobProfileColumn),
-		)
-		fromV = sqlgraph.Neighbors(rms.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryCursors queries the cursors edge of a ResumeMailboxSetting.
 func (c *ResumeMailboxSettingClient) QueryCursors(rms *ResumeMailboxSetting) *ResumeMailboxCursorQuery {
 	query := (&ResumeMailboxCursorClient{config: c.config}).Query()

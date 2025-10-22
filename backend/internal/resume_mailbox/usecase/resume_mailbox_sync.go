@@ -30,6 +30,7 @@ var (
 type ResumeMailboxSyncUsecase struct {
 	settingRepo           domain.ResumeMailboxSettingRepo
 	cursorRepo            domain.ResumeMailboxCursorRepo
+	statisticRepo         domain.ResumeMailboxStatisticRepo
 	credentialVault       domain.CredentialVault
 	adapterFactory        domain.MailboxAdapterFactory
 	resumeUsecase         domain.ResumeUsecase
@@ -41,6 +42,7 @@ type ResumeMailboxSyncUsecase struct {
 func NewResumeMailboxSyncUsecase(
 	settingRepo domain.ResumeMailboxSettingRepo,
 	cursorRepo domain.ResumeMailboxCursorRepo,
+	statisticRepo domain.ResumeMailboxStatisticRepo,
 	credentialVault domain.CredentialVault,
 	adapterFactory domain.MailboxAdapterFactory,
 	resumeUsecase domain.ResumeUsecase,
@@ -50,6 +52,7 @@ func NewResumeMailboxSyncUsecase(
 	return &ResumeMailboxSyncUsecase{
 		settingRepo:           settingRepo,
 		cursorRepo:            cursorRepo,
+		statisticRepo:         statisticRepo,
 		credentialVault:       credentialVault,
 		adapterFactory:        adapterFactory,
 		resumeUsecase:         resumeUsecase,
@@ -125,8 +128,10 @@ func (u *ResumeMailboxSyncUsecase) SyncNow(ctx context.Context, mailboxID uuid.U
 	result.ProcessedEmails = len(fetchResult.Messages)
 
 	var jobPositionIDs []string
-	if setting.JobProfileID != nil {
-		jobPositionIDs = []string{setting.JobProfileID.String()}
+	if len(setting.JobProfileIDs) > 0 {
+		for _, id := range setting.JobProfileIDs {
+			jobPositionIDs = append(jobPositionIDs, id.String())
+		}
 	}
 
 	for _, mailItem := range fetchResult.Messages {
@@ -211,6 +216,26 @@ func (u *ResumeMailboxSyncUsecase) SyncNow(ctx context.Context, mailboxID uuid.U
 
 	result.LastMessageID = fetchResult.LastMessageID
 	result.Duration = time.Since(start)
+
+	// 写入统计数据到数据库
+	syncDate, _ := time.Parse("2006-01-02", now.Format("2006-01-02"))
+	durationMs := int(result.Duration.Milliseconds())
+	statisticReq := &domain.UpsertResumeMailboxStatisticRequest{
+		MailboxID:          mailboxID,
+		Date:               syncDate,
+		SyncedEmails:       &result.ProcessedEmails,
+		ParsedResumes:      &result.SuccessAttachments,
+		FailedResumes:      &result.FailedAttachments,
+		SkippedAttachments: &result.SkippedAttachments,
+		LastSyncDurationMs: &durationMs,
+	}
+
+	if _, err := u.statisticRepo.Upsert(ctx, statisticReq); err != nil {
+		u.logger.Warn("写入邮箱同步统计数据失败",
+			slog.String("mailbox", setting.EmailAddress),
+			slog.String("error", err.Error()),
+		)
+	}
 
 	return result, nil
 }

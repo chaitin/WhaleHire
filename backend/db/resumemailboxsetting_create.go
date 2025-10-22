@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxcursor"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxstatistic"
@@ -55,8 +54,8 @@ func (rmsc *ResumeMailboxSettingCreate) SetEmailAddress(s string) *ResumeMailbox
 }
 
 // SetProtocol sets the "protocol" field.
-func (rmsc *ResumeMailboxSettingCreate) SetProtocol(r resumemailboxsetting.Protocol) *ResumeMailboxSettingCreate {
-	rmsc.mutation.SetProtocol(r)
+func (rmsc *ResumeMailboxSettingCreate) SetProtocol(s string) *ResumeMailboxSettingCreate {
+	rmsc.mutation.SetProtocol(s)
 	return rmsc
 }
 
@@ -101,15 +100,15 @@ func (rmsc *ResumeMailboxSettingCreate) SetNillableFolder(s *string) *ResumeMail
 }
 
 // SetAuthType sets the "auth_type" field.
-func (rmsc *ResumeMailboxSettingCreate) SetAuthType(rt resumemailboxsetting.AuthType) *ResumeMailboxSettingCreate {
-	rmsc.mutation.SetAuthType(rt)
+func (rmsc *ResumeMailboxSettingCreate) SetAuthType(s string) *ResumeMailboxSettingCreate {
+	rmsc.mutation.SetAuthType(s)
 	return rmsc
 }
 
 // SetNillableAuthType sets the "auth_type" field if the given value is not nil.
-func (rmsc *ResumeMailboxSettingCreate) SetNillableAuthType(rt *resumemailboxsetting.AuthType) *ResumeMailboxSettingCreate {
-	if rt != nil {
-		rmsc.SetAuthType(*rt)
+func (rmsc *ResumeMailboxSettingCreate) SetNillableAuthType(s *string) *ResumeMailboxSettingCreate {
+	if s != nil {
+		rmsc.SetAuthType(*s)
 	}
 	return rmsc
 }
@@ -126,17 +125,9 @@ func (rmsc *ResumeMailboxSettingCreate) SetUploaderID(u uuid.UUID) *ResumeMailbo
 	return rmsc
 }
 
-// SetJobProfileID sets the "job_profile_id" field.
-func (rmsc *ResumeMailboxSettingCreate) SetJobProfileID(u uuid.UUID) *ResumeMailboxSettingCreate {
-	rmsc.mutation.SetJobProfileID(u)
-	return rmsc
-}
-
-// SetNillableJobProfileID sets the "job_profile_id" field if the given value is not nil.
-func (rmsc *ResumeMailboxSettingCreate) SetNillableJobProfileID(u *uuid.UUID) *ResumeMailboxSettingCreate {
-	if u != nil {
-		rmsc.SetJobProfileID(*u)
-	}
+// SetJobProfileIds sets the "job_profile_ids" field.
+func (rmsc *ResumeMailboxSettingCreate) SetJobProfileIds(u []uuid.UUID) *ResumeMailboxSettingCreate {
+	rmsc.mutation.SetJobProfileIds(u)
 	return rmsc
 }
 
@@ -155,15 +146,15 @@ func (rmsc *ResumeMailboxSettingCreate) SetNillableSyncIntervalMinutes(i *int) *
 }
 
 // SetStatus sets the "status" field.
-func (rmsc *ResumeMailboxSettingCreate) SetStatus(r resumemailboxsetting.Status) *ResumeMailboxSettingCreate {
-	rmsc.mutation.SetStatus(r)
+func (rmsc *ResumeMailboxSettingCreate) SetStatus(s string) *ResumeMailboxSettingCreate {
+	rmsc.mutation.SetStatus(s)
 	return rmsc
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (rmsc *ResumeMailboxSettingCreate) SetNillableStatus(r *resumemailboxsetting.Status) *ResumeMailboxSettingCreate {
-	if r != nil {
-		rmsc.SetStatus(*r)
+func (rmsc *ResumeMailboxSettingCreate) SetNillableStatus(s *string) *ResumeMailboxSettingCreate {
+	if s != nil {
+		rmsc.SetStatus(*s)
 	}
 	return rmsc
 }
@@ -255,11 +246,6 @@ func (rmsc *ResumeMailboxSettingCreate) SetNillableID(u *uuid.UUID) *ResumeMailb
 // SetUploader sets the "uploader" edge to the User entity.
 func (rmsc *ResumeMailboxSettingCreate) SetUploader(u *User) *ResumeMailboxSettingCreate {
 	return rmsc.SetUploaderID(u.ID)
-}
-
-// SetJobProfile sets the "job_profile" edge to the JobPosition entity.
-func (rmsc *ResumeMailboxSettingCreate) SetJobProfile(j *JobPosition) *ResumeMailboxSettingCreate {
-	return rmsc.SetJobProfileID(j.ID)
 }
 
 // AddCursorIDs adds the "cursors" edge to the ResumeMailboxCursor entity by IDs.
@@ -431,11 +417,6 @@ func (rmsc *ResumeMailboxSettingCreate) check() error {
 	if _, ok := rmsc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`db: missing required field "ResumeMailboxSetting.status"`)}
 	}
-	if v, ok := rmsc.mutation.Status(); ok {
-		if err := resumemailboxsetting.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`db: validator failed for field "ResumeMailboxSetting.status": %w`, err)}
-		}
-	}
 	if _, ok := rmsc.mutation.RetryCount(); !ok {
 		return &ValidationError{Name: "retry_count", err: errors.New(`db: missing required field "ResumeMailboxSetting.retry_count"`)}
 	}
@@ -497,7 +478,7 @@ func (rmsc *ResumeMailboxSettingCreate) createSpec() (*ResumeMailboxSetting, *sq
 		_node.EmailAddress = value
 	}
 	if value, ok := rmsc.mutation.Protocol(); ok {
-		_spec.SetField(resumemailboxsetting.FieldProtocol, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldProtocol, field.TypeString, value)
 		_node.Protocol = value
 	}
 	if value, ok := rmsc.mutation.Host(); ok {
@@ -517,19 +498,23 @@ func (rmsc *ResumeMailboxSettingCreate) createSpec() (*ResumeMailboxSetting, *sq
 		_node.Folder = value
 	}
 	if value, ok := rmsc.mutation.AuthType(); ok {
-		_spec.SetField(resumemailboxsetting.FieldAuthType, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldAuthType, field.TypeString, value)
 		_node.AuthType = value
 	}
 	if value, ok := rmsc.mutation.EncryptedCredential(); ok {
 		_spec.SetField(resumemailboxsetting.FieldEncryptedCredential, field.TypeJSON, value)
 		_node.EncryptedCredential = value
 	}
+	if value, ok := rmsc.mutation.JobProfileIds(); ok {
+		_spec.SetField(resumemailboxsetting.FieldJobProfileIds, field.TypeJSON, value)
+		_node.JobProfileIds = value
+	}
 	if value, ok := rmsc.mutation.SyncIntervalMinutes(); ok {
 		_spec.SetField(resumemailboxsetting.FieldSyncIntervalMinutes, field.TypeInt, value)
 		_node.SyncIntervalMinutes = &value
 	}
 	if value, ok := rmsc.mutation.Status(); ok {
-		_spec.SetField(resumemailboxsetting.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
 	if value, ok := rmsc.mutation.LastSyncedAt(); ok {
@@ -567,23 +552,6 @@ func (rmsc *ResumeMailboxSettingCreate) createSpec() (*ResumeMailboxSetting, *sq
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UploaderID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := rmsc.mutation.JobProfileIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   resumemailboxsetting.JobProfileTable,
-			Columns: []string{resumemailboxsetting.JobProfileColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.JobProfileID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rmsc.mutation.CursorsIDs(); len(nodes) > 0 {
@@ -713,7 +681,7 @@ func (u *ResumeMailboxSettingUpsert) UpdateEmailAddress() *ResumeMailboxSettingU
 }
 
 // SetProtocol sets the "protocol" field.
-func (u *ResumeMailboxSettingUpsert) SetProtocol(v resumemailboxsetting.Protocol) *ResumeMailboxSettingUpsert {
+func (u *ResumeMailboxSettingUpsert) SetProtocol(v string) *ResumeMailboxSettingUpsert {
 	u.Set(resumemailboxsetting.FieldProtocol, v)
 	return u
 }
@@ -785,7 +753,7 @@ func (u *ResumeMailboxSettingUpsert) ClearFolder() *ResumeMailboxSettingUpsert {
 }
 
 // SetAuthType sets the "auth_type" field.
-func (u *ResumeMailboxSettingUpsert) SetAuthType(v resumemailboxsetting.AuthType) *ResumeMailboxSettingUpsert {
+func (u *ResumeMailboxSettingUpsert) SetAuthType(v string) *ResumeMailboxSettingUpsert {
 	u.Set(resumemailboxsetting.FieldAuthType, v)
 	return u
 }
@@ -820,21 +788,21 @@ func (u *ResumeMailboxSettingUpsert) UpdateUploaderID() *ResumeMailboxSettingUps
 	return u
 }
 
-// SetJobProfileID sets the "job_profile_id" field.
-func (u *ResumeMailboxSettingUpsert) SetJobProfileID(v uuid.UUID) *ResumeMailboxSettingUpsert {
-	u.Set(resumemailboxsetting.FieldJobProfileID, v)
+// SetJobProfileIds sets the "job_profile_ids" field.
+func (u *ResumeMailboxSettingUpsert) SetJobProfileIds(v []uuid.UUID) *ResumeMailboxSettingUpsert {
+	u.Set(resumemailboxsetting.FieldJobProfileIds, v)
 	return u
 }
 
-// UpdateJobProfileID sets the "job_profile_id" field to the value that was provided on create.
-func (u *ResumeMailboxSettingUpsert) UpdateJobProfileID() *ResumeMailboxSettingUpsert {
-	u.SetExcluded(resumemailboxsetting.FieldJobProfileID)
+// UpdateJobProfileIds sets the "job_profile_ids" field to the value that was provided on create.
+func (u *ResumeMailboxSettingUpsert) UpdateJobProfileIds() *ResumeMailboxSettingUpsert {
+	u.SetExcluded(resumemailboxsetting.FieldJobProfileIds)
 	return u
 }
 
-// ClearJobProfileID clears the value of the "job_profile_id" field.
-func (u *ResumeMailboxSettingUpsert) ClearJobProfileID() *ResumeMailboxSettingUpsert {
-	u.SetNull(resumemailboxsetting.FieldJobProfileID)
+// ClearJobProfileIds clears the value of the "job_profile_ids" field.
+func (u *ResumeMailboxSettingUpsert) ClearJobProfileIds() *ResumeMailboxSettingUpsert {
+	u.SetNull(resumemailboxsetting.FieldJobProfileIds)
 	return u
 }
 
@@ -863,7 +831,7 @@ func (u *ResumeMailboxSettingUpsert) ClearSyncIntervalMinutes() *ResumeMailboxSe
 }
 
 // SetStatus sets the "status" field.
-func (u *ResumeMailboxSettingUpsert) SetStatus(v resumemailboxsetting.Status) *ResumeMailboxSettingUpsert {
+func (u *ResumeMailboxSettingUpsert) SetStatus(v string) *ResumeMailboxSettingUpsert {
 	u.Set(resumemailboxsetting.FieldStatus, v)
 	return u
 }
@@ -1041,7 +1009,7 @@ func (u *ResumeMailboxSettingUpsertOne) UpdateEmailAddress() *ResumeMailboxSetti
 }
 
 // SetProtocol sets the "protocol" field.
-func (u *ResumeMailboxSettingUpsertOne) SetProtocol(v resumemailboxsetting.Protocol) *ResumeMailboxSettingUpsertOne {
+func (u *ResumeMailboxSettingUpsertOne) SetProtocol(v string) *ResumeMailboxSettingUpsertOne {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
 		s.SetProtocol(v)
 	})
@@ -1125,7 +1093,7 @@ func (u *ResumeMailboxSettingUpsertOne) ClearFolder() *ResumeMailboxSettingUpser
 }
 
 // SetAuthType sets the "auth_type" field.
-func (u *ResumeMailboxSettingUpsertOne) SetAuthType(v resumemailboxsetting.AuthType) *ResumeMailboxSettingUpsertOne {
+func (u *ResumeMailboxSettingUpsertOne) SetAuthType(v string) *ResumeMailboxSettingUpsertOne {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
 		s.SetAuthType(v)
 	})
@@ -1166,24 +1134,24 @@ func (u *ResumeMailboxSettingUpsertOne) UpdateUploaderID() *ResumeMailboxSetting
 	})
 }
 
-// SetJobProfileID sets the "job_profile_id" field.
-func (u *ResumeMailboxSettingUpsertOne) SetJobProfileID(v uuid.UUID) *ResumeMailboxSettingUpsertOne {
+// SetJobProfileIds sets the "job_profile_ids" field.
+func (u *ResumeMailboxSettingUpsertOne) SetJobProfileIds(v []uuid.UUID) *ResumeMailboxSettingUpsertOne {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
-		s.SetJobProfileID(v)
+		s.SetJobProfileIds(v)
 	})
 }
 
-// UpdateJobProfileID sets the "job_profile_id" field to the value that was provided on create.
-func (u *ResumeMailboxSettingUpsertOne) UpdateJobProfileID() *ResumeMailboxSettingUpsertOne {
+// UpdateJobProfileIds sets the "job_profile_ids" field to the value that was provided on create.
+func (u *ResumeMailboxSettingUpsertOne) UpdateJobProfileIds() *ResumeMailboxSettingUpsertOne {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
-		s.UpdateJobProfileID()
+		s.UpdateJobProfileIds()
 	})
 }
 
-// ClearJobProfileID clears the value of the "job_profile_id" field.
-func (u *ResumeMailboxSettingUpsertOne) ClearJobProfileID() *ResumeMailboxSettingUpsertOne {
+// ClearJobProfileIds clears the value of the "job_profile_ids" field.
+func (u *ResumeMailboxSettingUpsertOne) ClearJobProfileIds() *ResumeMailboxSettingUpsertOne {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
-		s.ClearJobProfileID()
+		s.ClearJobProfileIds()
 	})
 }
 
@@ -1216,7 +1184,7 @@ func (u *ResumeMailboxSettingUpsertOne) ClearSyncIntervalMinutes() *ResumeMailbo
 }
 
 // SetStatus sets the "status" field.
-func (u *ResumeMailboxSettingUpsertOne) SetStatus(v resumemailboxsetting.Status) *ResumeMailboxSettingUpsertOne {
+func (u *ResumeMailboxSettingUpsertOne) SetStatus(v string) *ResumeMailboxSettingUpsertOne {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
 		s.SetStatus(v)
 	})
@@ -1574,7 +1542,7 @@ func (u *ResumeMailboxSettingUpsertBulk) UpdateEmailAddress() *ResumeMailboxSett
 }
 
 // SetProtocol sets the "protocol" field.
-func (u *ResumeMailboxSettingUpsertBulk) SetProtocol(v resumemailboxsetting.Protocol) *ResumeMailboxSettingUpsertBulk {
+func (u *ResumeMailboxSettingUpsertBulk) SetProtocol(v string) *ResumeMailboxSettingUpsertBulk {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
 		s.SetProtocol(v)
 	})
@@ -1658,7 +1626,7 @@ func (u *ResumeMailboxSettingUpsertBulk) ClearFolder() *ResumeMailboxSettingUpse
 }
 
 // SetAuthType sets the "auth_type" field.
-func (u *ResumeMailboxSettingUpsertBulk) SetAuthType(v resumemailboxsetting.AuthType) *ResumeMailboxSettingUpsertBulk {
+func (u *ResumeMailboxSettingUpsertBulk) SetAuthType(v string) *ResumeMailboxSettingUpsertBulk {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
 		s.SetAuthType(v)
 	})
@@ -1699,24 +1667,24 @@ func (u *ResumeMailboxSettingUpsertBulk) UpdateUploaderID() *ResumeMailboxSettin
 	})
 }
 
-// SetJobProfileID sets the "job_profile_id" field.
-func (u *ResumeMailboxSettingUpsertBulk) SetJobProfileID(v uuid.UUID) *ResumeMailboxSettingUpsertBulk {
+// SetJobProfileIds sets the "job_profile_ids" field.
+func (u *ResumeMailboxSettingUpsertBulk) SetJobProfileIds(v []uuid.UUID) *ResumeMailboxSettingUpsertBulk {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
-		s.SetJobProfileID(v)
+		s.SetJobProfileIds(v)
 	})
 }
 
-// UpdateJobProfileID sets the "job_profile_id" field to the value that was provided on create.
-func (u *ResumeMailboxSettingUpsertBulk) UpdateJobProfileID() *ResumeMailboxSettingUpsertBulk {
+// UpdateJobProfileIds sets the "job_profile_ids" field to the value that was provided on create.
+func (u *ResumeMailboxSettingUpsertBulk) UpdateJobProfileIds() *ResumeMailboxSettingUpsertBulk {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
-		s.UpdateJobProfileID()
+		s.UpdateJobProfileIds()
 	})
 }
 
-// ClearJobProfileID clears the value of the "job_profile_id" field.
-func (u *ResumeMailboxSettingUpsertBulk) ClearJobProfileID() *ResumeMailboxSettingUpsertBulk {
+// ClearJobProfileIds clears the value of the "job_profile_ids" field.
+func (u *ResumeMailboxSettingUpsertBulk) ClearJobProfileIds() *ResumeMailboxSettingUpsertBulk {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
-		s.ClearJobProfileID()
+		s.ClearJobProfileIds()
 	})
 }
 
@@ -1749,7 +1717,7 @@ func (u *ResumeMailboxSettingUpsertBulk) ClearSyncIntervalMinutes() *ResumeMailb
 }
 
 // SetStatus sets the "status" field.
-func (u *ResumeMailboxSettingUpsertBulk) SetStatus(v resumemailboxsetting.Status) *ResumeMailboxSettingUpsertBulk {
+func (u *ResumeMailboxSettingUpsertBulk) SetStatus(v string) *ResumeMailboxSettingUpsertBulk {
 	return u.Update(func(s *ResumeMailboxSettingUpsert) {
 		s.SetStatus(v)
 	})

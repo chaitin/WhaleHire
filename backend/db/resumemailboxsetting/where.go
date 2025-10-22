@@ -71,6 +71,11 @@ func EmailAddress(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldEmailAddress, v))
 }
 
+// Protocol applies equality check predicate on the "protocol" field. It's identical to ProtocolEQ.
+func Protocol(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldProtocol, v))
+}
+
 // Host applies equality check predicate on the "host" field. It's identical to HostEQ.
 func Host(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldHost, v))
@@ -91,19 +96,24 @@ func Folder(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldFolder, v))
 }
 
+// AuthType applies equality check predicate on the "auth_type" field. It's identical to AuthTypeEQ.
+func AuthType(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldAuthType, v))
+}
+
 // UploaderID applies equality check predicate on the "uploader_id" field. It's identical to UploaderIDEQ.
 func UploaderID(v uuid.UUID) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldUploaderID, v))
 }
 
-// JobProfileID applies equality check predicate on the "job_profile_id" field. It's identical to JobProfileIDEQ.
-func JobProfileID(v uuid.UUID) predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldJobProfileID, v))
-}
-
 // SyncIntervalMinutes applies equality check predicate on the "sync_interval_minutes" field. It's identical to SyncIntervalMinutesEQ.
 func SyncIntervalMinutes(v int) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldSyncIntervalMinutes, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldStatus, v))
 }
 
 // LastSyncedAt applies equality check predicate on the "last_synced_at" field. It's identical to LastSyncedAtEQ.
@@ -312,23 +322,68 @@ func EmailAddressContainsFold(v string) predicate.ResumeMailboxSetting {
 }
 
 // ProtocolEQ applies the EQ predicate on the "protocol" field.
-func ProtocolEQ(v Protocol) predicate.ResumeMailboxSetting {
+func ProtocolEQ(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldProtocol, v))
 }
 
 // ProtocolNEQ applies the NEQ predicate on the "protocol" field.
-func ProtocolNEQ(v Protocol) predicate.ResumeMailboxSetting {
+func ProtocolNEQ(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldNEQ(FieldProtocol, v))
 }
 
 // ProtocolIn applies the In predicate on the "protocol" field.
-func ProtocolIn(vs ...Protocol) predicate.ResumeMailboxSetting {
+func ProtocolIn(vs ...string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldIn(FieldProtocol, vs...))
 }
 
 // ProtocolNotIn applies the NotIn predicate on the "protocol" field.
-func ProtocolNotIn(vs ...Protocol) predicate.ResumeMailboxSetting {
+func ProtocolNotIn(vs ...string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldNotIn(FieldProtocol, vs...))
+}
+
+// ProtocolGT applies the GT predicate on the "protocol" field.
+func ProtocolGT(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldGT(FieldProtocol, v))
+}
+
+// ProtocolGTE applies the GTE predicate on the "protocol" field.
+func ProtocolGTE(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldGTE(FieldProtocol, v))
+}
+
+// ProtocolLT applies the LT predicate on the "protocol" field.
+func ProtocolLT(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldLT(FieldProtocol, v))
+}
+
+// ProtocolLTE applies the LTE predicate on the "protocol" field.
+func ProtocolLTE(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldLTE(FieldProtocol, v))
+}
+
+// ProtocolContains applies the Contains predicate on the "protocol" field.
+func ProtocolContains(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldContains(FieldProtocol, v))
+}
+
+// ProtocolHasPrefix applies the HasPrefix predicate on the "protocol" field.
+func ProtocolHasPrefix(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldHasPrefix(FieldProtocol, v))
+}
+
+// ProtocolHasSuffix applies the HasSuffix predicate on the "protocol" field.
+func ProtocolHasSuffix(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldHasSuffix(FieldProtocol, v))
+}
+
+// ProtocolEqualFold applies the EqualFold predicate on the "protocol" field.
+func ProtocolEqualFold(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldEqualFold(FieldProtocol, v))
+}
+
+// ProtocolContainsFold applies the ContainsFold predicate on the "protocol" field.
+func ProtocolContainsFold(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldContainsFold(FieldProtocol, v))
 }
 
 // HostEQ applies the EQ predicate on the "host" field.
@@ -522,23 +577,68 @@ func FolderContainsFold(v string) predicate.ResumeMailboxSetting {
 }
 
 // AuthTypeEQ applies the EQ predicate on the "auth_type" field.
-func AuthTypeEQ(v AuthType) predicate.ResumeMailboxSetting {
+func AuthTypeEQ(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldAuthType, v))
 }
 
 // AuthTypeNEQ applies the NEQ predicate on the "auth_type" field.
-func AuthTypeNEQ(v AuthType) predicate.ResumeMailboxSetting {
+func AuthTypeNEQ(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldNEQ(FieldAuthType, v))
 }
 
 // AuthTypeIn applies the In predicate on the "auth_type" field.
-func AuthTypeIn(vs ...AuthType) predicate.ResumeMailboxSetting {
+func AuthTypeIn(vs ...string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldIn(FieldAuthType, vs...))
 }
 
 // AuthTypeNotIn applies the NotIn predicate on the "auth_type" field.
-func AuthTypeNotIn(vs ...AuthType) predicate.ResumeMailboxSetting {
+func AuthTypeNotIn(vs ...string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldNotIn(FieldAuthType, vs...))
+}
+
+// AuthTypeGT applies the GT predicate on the "auth_type" field.
+func AuthTypeGT(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldGT(FieldAuthType, v))
+}
+
+// AuthTypeGTE applies the GTE predicate on the "auth_type" field.
+func AuthTypeGTE(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldGTE(FieldAuthType, v))
+}
+
+// AuthTypeLT applies the LT predicate on the "auth_type" field.
+func AuthTypeLT(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldLT(FieldAuthType, v))
+}
+
+// AuthTypeLTE applies the LTE predicate on the "auth_type" field.
+func AuthTypeLTE(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldLTE(FieldAuthType, v))
+}
+
+// AuthTypeContains applies the Contains predicate on the "auth_type" field.
+func AuthTypeContains(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldContains(FieldAuthType, v))
+}
+
+// AuthTypeHasPrefix applies the HasPrefix predicate on the "auth_type" field.
+func AuthTypeHasPrefix(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldHasPrefix(FieldAuthType, v))
+}
+
+// AuthTypeHasSuffix applies the HasSuffix predicate on the "auth_type" field.
+func AuthTypeHasSuffix(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldHasSuffix(FieldAuthType, v))
+}
+
+// AuthTypeEqualFold applies the EqualFold predicate on the "auth_type" field.
+func AuthTypeEqualFold(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldEqualFold(FieldAuthType, v))
+}
+
+// AuthTypeContainsFold applies the ContainsFold predicate on the "auth_type" field.
+func AuthTypeContainsFold(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldContainsFold(FieldAuthType, v))
 }
 
 // UploaderIDEQ applies the EQ predicate on the "uploader_id" field.
@@ -561,34 +661,14 @@ func UploaderIDNotIn(vs ...uuid.UUID) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldNotIn(FieldUploaderID, vs...))
 }
 
-// JobProfileIDEQ applies the EQ predicate on the "job_profile_id" field.
-func JobProfileIDEQ(v uuid.UUID) predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldJobProfileID, v))
+// JobProfileIdsIsNil applies the IsNil predicate on the "job_profile_ids" field.
+func JobProfileIdsIsNil() predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldIsNull(FieldJobProfileIds))
 }
 
-// JobProfileIDNEQ applies the NEQ predicate on the "job_profile_id" field.
-func JobProfileIDNEQ(v uuid.UUID) predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(sql.FieldNEQ(FieldJobProfileID, v))
-}
-
-// JobProfileIDIn applies the In predicate on the "job_profile_id" field.
-func JobProfileIDIn(vs ...uuid.UUID) predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(sql.FieldIn(FieldJobProfileID, vs...))
-}
-
-// JobProfileIDNotIn applies the NotIn predicate on the "job_profile_id" field.
-func JobProfileIDNotIn(vs ...uuid.UUID) predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(sql.FieldNotIn(FieldJobProfileID, vs...))
-}
-
-// JobProfileIDIsNil applies the IsNil predicate on the "job_profile_id" field.
-func JobProfileIDIsNil() predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(sql.FieldIsNull(FieldJobProfileID))
-}
-
-// JobProfileIDNotNil applies the NotNil predicate on the "job_profile_id" field.
-func JobProfileIDNotNil() predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(sql.FieldNotNull(FieldJobProfileID))
+// JobProfileIdsNotNil applies the NotNil predicate on the "job_profile_ids" field.
+func JobProfileIdsNotNil() predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldNotNull(FieldJobProfileIds))
 }
 
 // SyncIntervalMinutesEQ applies the EQ predicate on the "sync_interval_minutes" field.
@@ -642,23 +722,68 @@ func SyncIntervalMinutesNotNil() predicate.ResumeMailboxSetting {
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.ResumeMailboxSetting {
+func StatusEQ(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.ResumeMailboxSetting {
+func StatusNEQ(v string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldNEQ(FieldStatus, v))
 }
 
 // StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.ResumeMailboxSetting {
+func StatusIn(vs ...string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldIn(FieldStatus, vs...))
 }
 
 // StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.ResumeMailboxSetting {
+func StatusNotIn(vs ...string) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.ResumeMailboxSetting {
+	return predicate.ResumeMailboxSetting(sql.FieldContainsFold(FieldStatus, v))
 }
 
 // LastSyncedAtEQ applies the EQ predicate on the "last_synced_at" field.
@@ -921,29 +1046,6 @@ func HasUploader() predicate.ResumeMailboxSetting {
 func HasUploaderWith(preds ...predicate.User) predicate.ResumeMailboxSetting {
 	return predicate.ResumeMailboxSetting(func(s *sql.Selector) {
 		step := newUploaderStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasJobProfile applies the HasEdge predicate on the "job_profile" edge.
-func HasJobProfile() predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, JobProfileTable, JobProfileColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasJobProfileWith applies the HasEdge predicate on the "job_profile" edge with a given conditions (other predicates).
-func HasJobProfileWith(preds ...predicate.JobPosition) predicate.ResumeMailboxSetting {
-	return predicate.ResumeMailboxSetting(func(s *sql.Selector) {
-		step := newJobProfileStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

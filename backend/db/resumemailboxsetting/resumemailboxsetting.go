@@ -3,7 +3,6 @@
 package resumemailboxsetting
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent"
@@ -39,8 +38,8 @@ const (
 	FieldEncryptedCredential = "encrypted_credential"
 	// FieldUploaderID holds the string denoting the uploader_id field in the database.
 	FieldUploaderID = "uploader_id"
-	// FieldJobProfileID holds the string denoting the job_profile_id field in the database.
-	FieldJobProfileID = "job_profile_id"
+	// FieldJobProfileIds holds the string denoting the job_profile_ids field in the database.
+	FieldJobProfileIds = "job_profile_ids"
 	// FieldSyncIntervalMinutes holds the string denoting the sync_interval_minutes field in the database.
 	FieldSyncIntervalMinutes = "sync_interval_minutes"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -57,8 +56,6 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeUploader holds the string denoting the uploader edge name in mutations.
 	EdgeUploader = "uploader"
-	// EdgeJobProfile holds the string denoting the job_profile edge name in mutations.
-	EdgeJobProfile = "job_profile"
 	// EdgeCursors holds the string denoting the cursors edge name in mutations.
 	EdgeCursors = "cursors"
 	// EdgeStatistics holds the string denoting the statistics edge name in mutations.
@@ -72,13 +69,6 @@ const (
 	UploaderInverseTable = "users"
 	// UploaderColumn is the table column denoting the uploader relation/edge.
 	UploaderColumn = "uploader_id"
-	// JobProfileTable is the table that holds the job_profile relation/edge.
-	JobProfileTable = "resume_mailbox_settings"
-	// JobProfileInverseTable is the table name for the JobPosition entity.
-	// It exists in this package in order to avoid circular dependency with the "jobposition" package.
-	JobProfileInverseTable = "job_position"
-	// JobProfileColumn is the table column denoting the job_profile relation/edge.
-	JobProfileColumn = "job_profile_id"
 	// CursorsTable is the table that holds the cursors relation/edge.
 	CursorsTable = "resume_mailbox_cursors"
 	// CursorsInverseTable is the table name for the ResumeMailboxCursor entity.
@@ -109,7 +99,7 @@ var Columns = []string{
 	FieldAuthType,
 	FieldEncryptedCredential,
 	FieldUploaderID,
-	FieldJobProfileID,
+	FieldJobProfileIds,
 	FieldSyncIntervalMinutes,
 	FieldStatus,
 	FieldLastSyncedAt,
@@ -141,12 +131,20 @@ var (
 	NameValidator func(string) error
 	// EmailAddressValidator is a validator for the "email_address" field. It is called by the builders before save.
 	EmailAddressValidator func(string) error
+	// ProtocolValidator is a validator for the "protocol" field. It is called by the builders before save.
+	ProtocolValidator func(string) error
 	// HostValidator is a validator for the "host" field. It is called by the builders before save.
 	HostValidator func(string) error
 	// DefaultUseSsl holds the default value on creation for the "use_ssl" field.
 	DefaultUseSsl bool
 	// FolderValidator is a validator for the "folder" field. It is called by the builders before save.
 	FolderValidator func(string) error
+	// DefaultAuthType holds the default value on creation for the "auth_type" field.
+	DefaultAuthType string
+	// AuthTypeValidator is a validator for the "auth_type" field. It is called by the builders before save.
+	AuthTypeValidator func(string) error
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
 	// DefaultRetryCount holds the default value on creation for the "retry_count" field.
 	DefaultRetryCount int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -158,81 +156,6 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
-
-// Protocol defines the type for the "protocol" enum field.
-type Protocol string
-
-// Protocol values.
-const (
-	ProtocolImap Protocol = "imap"
-	ProtocolPop3 Protocol = "pop3"
-)
-
-func (pr Protocol) String() string {
-	return string(pr)
-}
-
-// ProtocolValidator is a validator for the "protocol" field enum values. It is called by the builders before save.
-func ProtocolValidator(pr Protocol) error {
-	switch pr {
-	case ProtocolImap, ProtocolPop3:
-		return nil
-	default:
-		return fmt.Errorf("resumemailboxsetting: invalid enum value for protocol field: %q", pr)
-	}
-}
-
-// AuthType defines the type for the "auth_type" enum field.
-type AuthType string
-
-// AuthTypePassword is the default value of the AuthType enum.
-const DefaultAuthType = AuthTypePassword
-
-// AuthType values.
-const (
-	AuthTypePassword AuthType = "password"
-	AuthTypeOauth    AuthType = "oauth"
-)
-
-func (at AuthType) String() string {
-	return string(at)
-}
-
-// AuthTypeValidator is a validator for the "auth_type" field enum values. It is called by the builders before save.
-func AuthTypeValidator(at AuthType) error {
-	switch at {
-	case AuthTypePassword, AuthTypeOauth:
-		return nil
-	default:
-		return fmt.Errorf("resumemailboxsetting: invalid enum value for auth_type field: %q", at)
-	}
-}
-
-// Status defines the type for the "status" enum field.
-type Status string
-
-// StatusEnabled is the default value of the Status enum.
-const DefaultStatus = StatusEnabled
-
-// Status values.
-const (
-	StatusEnabled  Status = "enabled"
-	StatusDisabled Status = "disabled"
-)
-
-func (s Status) String() string {
-	return string(s)
-}
-
-// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s Status) error {
-	switch s {
-	case StatusEnabled, StatusDisabled:
-		return nil
-	default:
-		return fmt.Errorf("resumemailboxsetting: invalid enum value for status field: %q", s)
-	}
-}
 
 // OrderOption defines the ordering options for the ResumeMailboxSetting queries.
 type OrderOption func(*sql.Selector)
@@ -292,11 +215,6 @@ func ByUploaderID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUploaderID, opts...).ToFunc()
 }
 
-// ByJobProfileID orders the results by the job_profile_id field.
-func ByJobProfileID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldJobProfileID, opts...).ToFunc()
-}
-
 // BySyncIntervalMinutes orders the results by the sync_interval_minutes field.
 func BySyncIntervalMinutes(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSyncIntervalMinutes, opts...).ToFunc()
@@ -339,13 +257,6 @@ func ByUploaderField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByJobProfileField orders the results by job_profile field.
-func ByJobProfileField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newJobProfileStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByCursorsCount orders the results by cursors count.
 func ByCursorsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -378,13 +289,6 @@ func newUploaderStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UploaderInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, false, UploaderTable, UploaderColumn),
-	)
-}
-func newJobProfileStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(JobProfileInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, JobProfileTable, JobProfileColumn),
 	)
 }
 func newCursorsStep() *sqlgraph.Step {

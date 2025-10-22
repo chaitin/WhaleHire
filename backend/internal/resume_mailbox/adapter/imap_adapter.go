@@ -87,6 +87,13 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 
 	firstSync := strings.TrimSpace(req.Cursor) == ""
 	currentCursor := a.parseCursor(req.Cursor)
+	a.logger.Info("开始执行IMAP同步请求",
+		slog.String("mailbox", config.EmailAddress),
+		slog.String("raw_cursor", strings.TrimSpace(req.Cursor)),
+		slog.Uint64("parsed_uid_validity", uint64(currentCursor.UIDValidity)),
+		slog.Uint64("parsed_last_uid", uint64(currentCursor.LastUID)),
+		slog.Bool("first_sync", firstSync),
+	)
 	if currentCursor.UIDValidity != 0 && currentCursor.UIDValidity != mailboxStatus.UidValidity {
 		// UIDVALIDITY 已变化，说明邮箱重置或被清空，需要重新同步
 		a.logger.Info("检测到UIDVALIDITY变化，重置IMAP游标",
@@ -101,15 +108,59 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 	if firstSync {
 		currentCursor.UIDValidity = mailboxStatus.UidValidity
 		if mailboxStatus.UidNext > 0 {
+			// 邮箱服务器支持 UidNext，使用 UidNext - 1 作为起点
 			currentCursor.LastUID = mailboxStatus.UidNext - 1
 		} else {
-			currentCursor.LastUID = 0
+			// 邮箱服务器不支持 UidNext，需要查找邮箱中的最大 UID
+			a.logger.Info("邮箱服务器不支持UidNext，查找最大UID作为首次同步起点",
+				slog.String("mailbox", config.EmailAddress),
+			)
+
+			// 搜索所有邮件的 UID
+			searchSet := new(imap.SeqSet)
+			searchSet.AddRange(1, imapMaxUID)
+			criteria := imap.NewSearchCriteria()
+			criteria.Uid = searchSet
+
+			uids, err := c.UidSearch(criteria)
+			if err != nil {
+				a.logger.Warn("搜索邮箱最大UID失败，使用0作为起点",
+					slog.String("mailbox", config.EmailAddress),
+					slog.String("error", err.Error()),
+				)
+				currentCursor.LastUID = 0
+			} else if len(uids) > 0 {
+				// 找到最大的 UID 作为起点
+				maxUID := uint32(0)
+				for _, uid := range uids {
+					if uid > maxUID {
+						maxUID = uid
+					}
+				}
+				currentCursor.LastUID = maxUID
+				a.logger.Info("找到邮箱最大UID，设置为首次同步起点",
+					slog.String("mailbox", config.EmailAddress),
+					slog.Uint64("max_uid", uint64(maxUID)),
+				)
+			} else {
+				// 邮箱为空
+				currentCursor.LastUID = 0
+				a.logger.Info("邮箱为空，设置起点为0",
+					slog.String("mailbox", config.EmailAddress),
+				)
+			}
 		}
 
 		nextCursor, errBuild := a.buildCursorString(currentCursor.UIDValidity, currentCursor.LastUID)
 		if errBuild != nil {
 			return nil, errBuild
 		}
+
+		a.logger.Info("首次同步完成，设置游标",
+			slog.String("mailbox", config.EmailAddress),
+			slog.Uint64("cursor_last_uid", uint64(currentCursor.LastUID)),
+			slog.Uint64("cursor_uid_validity", uint64(currentCursor.UIDValidity)),
+		)
 
 		return &domain.MailboxFetchResult{
 			Messages:      []*domain.MailboxEmail{},
@@ -118,12 +169,50 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 		}, nil
 	}
 
+	// 检查是否有新邮件需要同步
+	// 当 UidNext 为 0 时，说明邮箱服务器不支持该字段，需要通过搜索来判断
+	if mailboxStatus.UidNext > 0 && currentCursor.LastUID >= mailboxStatus.UidNext-1 {
+		// 当前游标已经是最新的，没有新邮件
+		a.logger.Info("没有新邮件需要同步",
+			slog.String("mailbox", config.EmailAddress),
+			slog.Uint64("current_last_uid", uint64(currentCursor.LastUID)),
+			slog.Uint64("mailbox_uid_next", uint64(mailboxStatus.UidNext)),
+		)
+		nextCursor, _ := a.buildCursorString(mailboxStatus.UidValidity, currentCursor.LastUID)
+		return &domain.MailboxFetchResult{
+			Messages:      []*domain.MailboxEmail{},
+			NextCursor:    nextCursor,
+			LastMessageID: "",
+		}, nil
+	}
+
+	a.logger.Info("检查邮箱同步状态",
+		slog.String("mailbox", config.EmailAddress),
+		slog.Uint64("current_last_uid", uint64(currentCursor.LastUID)),
+		slog.Uint64("mailbox_uid_next", uint64(mailboxStatus.UidNext)),
+		slog.Uint64("mailbox_uid_validity", uint64(mailboxStatus.UidValidity)),
+		slog.Bool("first_sync", firstSync),
+		slog.String("analysis", "UidNext为0表示邮箱服务器不支持该字段，将通过搜索判断新邮件"),
+	)
+
 	// 搜索新的UID列表
 	searchSet := new(imap.SeqSet)
 	if currentCursor.LastUID == 0 {
 		searchSet.AddRange(1, imapMaxUID)
 	} else {
-		searchSet.AddRange(currentCursor.LastUID+1, imapMaxUID)
+		// 确保搜索范围不超过邮箱的最大UID
+		startUID := currentCursor.LastUID + 1
+		endUID := imapMaxUID
+		if mailboxStatus.UidNext > 0 && startUID >= mailboxStatus.UidNext {
+			// 起始UID已经超过或等于邮箱的下一个UID，没有新邮件
+			nextCursor, _ := a.buildCursorString(mailboxStatus.UidValidity, currentCursor.LastUID)
+			return &domain.MailboxFetchResult{
+				Messages:      []*domain.MailboxEmail{},
+				NextCursor:    nextCursor,
+				LastMessageID: "",
+			}, nil
+		}
+		searchSet.AddRange(startUID, endUID)
 	}
 
 	criteria := imap.NewSearchCriteria()
@@ -134,8 +223,40 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 		return nil, fmt.Errorf("搜索IMAP邮件失败: %w", err)
 	}
 
+	a.logger.Info("IMAP搜索结果",
+		slog.String("mailbox", config.EmailAddress),
+		slog.Int("found_uids_count", len(uids)),
+		slog.Uint64("search_start_uid", uint64(currentCursor.LastUID+1)),
+		slog.String("uid_list", fmt.Sprintf("%v", uids)),
+	)
+
+	filteredUIDs := make([]uint32, 0, len(uids))
+	for _, uid := range uids {
+		if uid > currentCursor.LastUID {
+			filteredUIDs = append(filteredUIDs, uid)
+		}
+	}
+
+	if len(filteredUIDs) == 0 {
+		a.logger.Info("搜索结果只包含已同步邮件，忽略处理",
+			slog.String("mailbox", config.EmailAddress),
+			slog.Uint64("current_last_uid", uint64(currentCursor.LastUID)),
+		)
+		nextCursor, _ := a.buildCursorString(mailboxStatus.UidValidity, currentCursor.LastUID)
+		return &domain.MailboxFetchResult{
+			Messages:      []*domain.MailboxEmail{},
+			NextCursor:    nextCursor,
+			LastMessageID: "",
+		}, nil
+	}
+
+	uids = filteredUIDs
+
 	if len(uids) == 0 {
 		// 没有新邮件
+		a.logger.Info("搜索结果为空，没有新邮件",
+			slog.String("mailbox", config.EmailAddress),
+		)
 		nextCursor, _ := a.buildCursorString(mailboxStatus.UidValidity, currentCursor.LastUID)
 		return &domain.MailboxFetchResult{
 			Messages:      []*domain.MailboxEmail{},
@@ -149,10 +270,20 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 		uids = uids[len(uids)-req.Limit:]
 	}
 
+	a.logger.Info("准备拉取IMAP邮件",
+		slog.String("mailbox", config.EmailAddress),
+		slog.Int("fetch_uid_count", len(uids)),
+		slog.String("fetch_uids", fmt.Sprintf("%v", uids)),
+	)
+
 	fetchSet := new(imap.SeqSet)
 	for _, uid := range uids {
 		fetchSet.AddNum(uid)
 	}
+	a.logger.Info("IMAP Fetch参数",
+		slog.String("mailbox", config.EmailAddress),
+		slog.String("fetch_set", fetchSet.String()),
+	)
 
 	section := &imap.BodySectionName{}
 	items := []imap.FetchItem{
@@ -186,8 +317,24 @@ loop:
 				break loop
 			}
 
+			if msg != nil {
+				a.logger.Info("读取到IMAP邮件",
+					slog.String("mailbox", config.EmailAddress),
+					slog.Uint64("uid", uint64(msg.Uid)),
+					slog.Int("seq_num", int(msg.SeqNum)),
+				)
+			}
+
 			if msg == nil {
 				continue
+			}
+			if msg.Uid <= currentCursor.LastUID {
+				a.logger.Warn("收到旧的IMAP邮件UID，游标不会前进",
+					slog.String("mailbox", config.EmailAddress),
+					slog.Uint64("current_last_uid", uint64(currentCursor.LastUID)),
+					slog.Uint64("received_uid", uint64(msg.Uid)),
+					slog.Int("seq_num", int(msg.SeqNum)),
+				)
 			}
 			if msg.Uid > maxUID {
 				maxUID = msg.Uid
@@ -309,6 +456,14 @@ loop:
 
 	result.NextCursor = nextCursor
 	result.LastMessageID = lastMessageID
+	a.logger.Info("IMAP同步完成，准备返回游标",
+		slog.String("mailbox", config.EmailAddress),
+		slog.Int("message_count", len(result.Messages)),
+		slog.Uint64("max_uid", uint64(maxUID)),
+		slog.Uint64("next_uid_validity", uint64(mailboxStatus.UidValidity)),
+		slog.String("next_cursor", nextCursor),
+		slog.String("last_message_id", lastMessageID),
+	)
 
 	return result, nil
 }

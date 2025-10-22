@@ -12,9 +12,11 @@ import (
 
 // ResumeMailboxSettingUsecase 邮箱设置用例实现
 type ResumeMailboxSettingUsecase struct {
-	repo            domain.ResumeMailboxSettingRepo
-	credentialVault domain.CredentialVault
-	adapterFactory  domain.MailboxAdapterFactory
+	repo              domain.ResumeMailboxSettingRepo
+	credentialVault   domain.CredentialVault
+	adapterFactory    domain.MailboxAdapterFactory
+	scheduler         domain.ResumeMailboxScheduler
+	jobProfileUsecase domain.JobProfileUsecase
 }
 
 // NewResumeMailboxSettingUsecase 创建邮箱设置用例实例
@@ -22,11 +24,15 @@ func NewResumeMailboxSettingUsecase(
 	repo domain.ResumeMailboxSettingRepo,
 	credentialVault domain.CredentialVault,
 	adapterFactory domain.MailboxAdapterFactory,
+	scheduler domain.ResumeMailboxScheduler,
+	jobProfileUsecase domain.JobProfileUsecase,
 ) domain.ResumeMailboxSettingUsecase {
 	return &ResumeMailboxSettingUsecase{
-		repo:            repo,
-		credentialVault: credentialVault,
-		adapterFactory:  adapterFactory,
+		repo:              repo,
+		credentialVault:   credentialVault,
+		adapterFactory:    adapterFactory,
+		scheduler:         scheduler,
+		jobProfileUsecase: jobProfileUsecase,
 	}
 }
 
@@ -52,6 +58,12 @@ func (u *ResumeMailboxSettingUsecase) Create(ctx context.Context, req *domain.Cr
 	setting := &domain.ResumeMailboxSetting{}
 	setting.From(dbSetting)
 
+	if u.scheduler != nil {
+		if err := u.scheduler.Upsert(ctx, setting); err != nil {
+			return nil, fmt.Errorf("注册邮箱同步任务失败: %w", err)
+		}
+	}
+
 	return setting, nil
 }
 
@@ -65,6 +77,11 @@ func (u *ResumeMailboxSettingUsecase) GetByID(ctx context.Context, id uuid.UUID)
 	// 使用 From 方法转换为 domain 类型
 	setting := &domain.ResumeMailboxSetting{}
 	setting.From(dbSetting)
+
+	// 填充JobProfileNames
+	if err := u.fillJobProfileNames(ctx, setting); err != nil {
+		return nil, err
+	}
 
 	// 解密凭证信息（仅在需要时）
 	if len(setting.EncryptedCredential) > 0 {
@@ -81,6 +98,35 @@ func (u *ResumeMailboxSettingUsecase) GetByID(ctx context.Context, id uuid.UUID)
 	}
 
 	return setting, nil
+}
+
+// fillJobProfileNames 填充JobProfileNames字段
+func (u *ResumeMailboxSettingUsecase) fillJobProfileNames(ctx context.Context, setting *domain.ResumeMailboxSetting) error {
+	if len(setting.JobProfileIDs) == 0 {
+		setting.JobProfileNames = []string{}
+		return nil
+	}
+
+	// 将UUID转换为字符串
+	ids := make([]string, len(setting.JobProfileIDs))
+	for i, id := range setting.JobProfileIDs {
+		ids[i] = id.String()
+	}
+
+	// 批量获取JobProfile
+	profiles, err := u.jobProfileUsecase.GetByIDs(ctx, ids)
+	if err != nil {
+		return fmt.Errorf("failed to get job profiles: %w", err)
+	}
+
+	// 提取名称
+	names := make([]string, len(profiles))
+	for i, profile := range profiles {
+		names[i] = profile.Name
+	}
+
+	setting.JobProfileNames = names
+	return nil
 }
 
 // Update 更新邮箱设置
@@ -105,6 +151,12 @@ func (u *ResumeMailboxSettingUsecase) Update(ctx context.Context, id uuid.UUID, 
 	setting := &domain.ResumeMailboxSetting{}
 	setting.From(dbSetting)
 
+	if u.scheduler != nil {
+		if err := u.scheduler.Upsert(ctx, setting); err != nil {
+			return nil, fmt.Errorf("更新邮箱调度任务失败: %w", err)
+		}
+	}
+
 	return setting, nil
 }
 
@@ -113,6 +165,12 @@ func (u *ResumeMailboxSettingUsecase) Delete(ctx context.Context, id uuid.UUID) 
 	err := u.repo.Delete(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete resume mailbox setting: %w", err)
+	}
+
+	if u.scheduler != nil {
+		if err := u.scheduler.Remove(ctx, id); err != nil {
+			return fmt.Errorf("移除邮箱调度任务失败: %w", err)
+		}
 	}
 
 	return nil
@@ -138,6 +196,13 @@ func (u *ResumeMailboxSettingUsecase) List(ctx context.Context, req *domain.List
 	for i, dbSetting := range dbSettings {
 		setting := &domain.ResumeMailboxSetting{}
 		setting.From(dbSetting)
+
+		// 填充JobProfileNames
+		if err := u.fillJobProfileNames(ctx, setting); err != nil {
+			// 记录错误但不阻断返回，JobProfileNames将保持为空
+			_ = err // 明确忽略错误
+		}
+
 		items[i] = setting
 	}
 
@@ -216,9 +281,16 @@ func (u *ResumeMailboxSettingUsecase) UpdateStatus(ctx context.Context, id uuid.
 		Status: &status,
 	}
 
-	_, err := u.repo.Update(ctx, id, updateReq)
+	entity, err := u.repo.Update(ctx, id, updateReq)
 	if err != nil {
 		return fmt.Errorf("failed to update status: %w", err)
+	}
+
+	if u.scheduler != nil {
+		setting := (&domain.ResumeMailboxSetting{}).From(entity)
+		if err := u.scheduler.Upsert(ctx, setting); err != nil {
+			return fmt.Errorf("更新邮箱调度任务失败: %w", err)
+		}
 	}
 
 	return nil

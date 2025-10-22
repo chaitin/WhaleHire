@@ -85,6 +85,9 @@ other = "Notification setting not found"
 [err-resume-mailbox-setting-not-found]
 other = "Resume mailbox setting not found"
 
+[err-resume-mailbox-statistic-not-found]
+other = "Resume mailbox statistic not found"
+
 [err-invalid-credentials]
 other = "Invalid mailbox credentials"
 

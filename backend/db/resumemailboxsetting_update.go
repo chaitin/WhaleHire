@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxcursor"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
@@ -83,15 +83,15 @@ func (rmsu *ResumeMailboxSettingUpdate) SetNillableEmailAddress(s *string) *Resu
 }
 
 // SetProtocol sets the "protocol" field.
-func (rmsu *ResumeMailboxSettingUpdate) SetProtocol(r resumemailboxsetting.Protocol) *ResumeMailboxSettingUpdate {
-	rmsu.mutation.SetProtocol(r)
+func (rmsu *ResumeMailboxSettingUpdate) SetProtocol(s string) *ResumeMailboxSettingUpdate {
+	rmsu.mutation.SetProtocol(s)
 	return rmsu
 }
 
 // SetNillableProtocol sets the "protocol" field if the given value is not nil.
-func (rmsu *ResumeMailboxSettingUpdate) SetNillableProtocol(r *resumemailboxsetting.Protocol) *ResumeMailboxSettingUpdate {
-	if r != nil {
-		rmsu.SetProtocol(*r)
+func (rmsu *ResumeMailboxSettingUpdate) SetNillableProtocol(s *string) *ResumeMailboxSettingUpdate {
+	if s != nil {
+		rmsu.SetProtocol(*s)
 	}
 	return rmsu
 }
@@ -166,15 +166,15 @@ func (rmsu *ResumeMailboxSettingUpdate) ClearFolder() *ResumeMailboxSettingUpdat
 }
 
 // SetAuthType sets the "auth_type" field.
-func (rmsu *ResumeMailboxSettingUpdate) SetAuthType(rt resumemailboxsetting.AuthType) *ResumeMailboxSettingUpdate {
-	rmsu.mutation.SetAuthType(rt)
+func (rmsu *ResumeMailboxSettingUpdate) SetAuthType(s string) *ResumeMailboxSettingUpdate {
+	rmsu.mutation.SetAuthType(s)
 	return rmsu
 }
 
 // SetNillableAuthType sets the "auth_type" field if the given value is not nil.
-func (rmsu *ResumeMailboxSettingUpdate) SetNillableAuthType(rt *resumemailboxsetting.AuthType) *ResumeMailboxSettingUpdate {
-	if rt != nil {
-		rmsu.SetAuthType(*rt)
+func (rmsu *ResumeMailboxSettingUpdate) SetNillableAuthType(s *string) *ResumeMailboxSettingUpdate {
+	if s != nil {
+		rmsu.SetAuthType(*s)
 	}
 	return rmsu
 }
@@ -199,23 +199,21 @@ func (rmsu *ResumeMailboxSettingUpdate) SetNillableUploaderID(u *uuid.UUID) *Res
 	return rmsu
 }
 
-// SetJobProfileID sets the "job_profile_id" field.
-func (rmsu *ResumeMailboxSettingUpdate) SetJobProfileID(u uuid.UUID) *ResumeMailboxSettingUpdate {
-	rmsu.mutation.SetJobProfileID(u)
+// SetJobProfileIds sets the "job_profile_ids" field.
+func (rmsu *ResumeMailboxSettingUpdate) SetJobProfileIds(u []uuid.UUID) *ResumeMailboxSettingUpdate {
+	rmsu.mutation.SetJobProfileIds(u)
 	return rmsu
 }
 
-// SetNillableJobProfileID sets the "job_profile_id" field if the given value is not nil.
-func (rmsu *ResumeMailboxSettingUpdate) SetNillableJobProfileID(u *uuid.UUID) *ResumeMailboxSettingUpdate {
-	if u != nil {
-		rmsu.SetJobProfileID(*u)
-	}
+// AppendJobProfileIds appends u to the "job_profile_ids" field.
+func (rmsu *ResumeMailboxSettingUpdate) AppendJobProfileIds(u []uuid.UUID) *ResumeMailboxSettingUpdate {
+	rmsu.mutation.AppendJobProfileIds(u)
 	return rmsu
 }
 
-// ClearJobProfileID clears the value of the "job_profile_id" field.
-func (rmsu *ResumeMailboxSettingUpdate) ClearJobProfileID() *ResumeMailboxSettingUpdate {
-	rmsu.mutation.ClearJobProfileID()
+// ClearJobProfileIds clears the value of the "job_profile_ids" field.
+func (rmsu *ResumeMailboxSettingUpdate) ClearJobProfileIds() *ResumeMailboxSettingUpdate {
+	rmsu.mutation.ClearJobProfileIds()
 	return rmsu
 }
 
@@ -247,15 +245,15 @@ func (rmsu *ResumeMailboxSettingUpdate) ClearSyncIntervalMinutes() *ResumeMailbo
 }
 
 // SetStatus sets the "status" field.
-func (rmsu *ResumeMailboxSettingUpdate) SetStatus(r resumemailboxsetting.Status) *ResumeMailboxSettingUpdate {
-	rmsu.mutation.SetStatus(r)
+func (rmsu *ResumeMailboxSettingUpdate) SetStatus(s string) *ResumeMailboxSettingUpdate {
+	rmsu.mutation.SetStatus(s)
 	return rmsu
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (rmsu *ResumeMailboxSettingUpdate) SetNillableStatus(r *resumemailboxsetting.Status) *ResumeMailboxSettingUpdate {
-	if r != nil {
-		rmsu.SetStatus(*r)
+func (rmsu *ResumeMailboxSettingUpdate) SetNillableStatus(s *string) *ResumeMailboxSettingUpdate {
+	if s != nil {
+		rmsu.SetStatus(*s)
 	}
 	return rmsu
 }
@@ -332,11 +330,6 @@ func (rmsu *ResumeMailboxSettingUpdate) SetUploader(u *User) *ResumeMailboxSetti
 	return rmsu.SetUploaderID(u.ID)
 }
 
-// SetJobProfile sets the "job_profile" edge to the JobPosition entity.
-func (rmsu *ResumeMailboxSettingUpdate) SetJobProfile(j *JobPosition) *ResumeMailboxSettingUpdate {
-	return rmsu.SetJobProfileID(j.ID)
-}
-
 // AddCursorIDs adds the "cursors" edge to the ResumeMailboxCursor entity by IDs.
 func (rmsu *ResumeMailboxSettingUpdate) AddCursorIDs(ids ...uuid.UUID) *ResumeMailboxSettingUpdate {
 	rmsu.mutation.AddCursorIDs(ids...)
@@ -375,12 +368,6 @@ func (rmsu *ResumeMailboxSettingUpdate) Mutation() *ResumeMailboxSettingMutation
 // ClearUploader clears the "uploader" edge to the User entity.
 func (rmsu *ResumeMailboxSettingUpdate) ClearUploader() *ResumeMailboxSettingUpdate {
 	rmsu.mutation.ClearUploader()
-	return rmsu
-}
-
-// ClearJobProfile clears the "job_profile" edge to the JobPosition entity.
-func (rmsu *ResumeMailboxSettingUpdate) ClearJobProfile() *ResumeMailboxSettingUpdate {
-	rmsu.mutation.ClearJobProfile()
 	return rmsu
 }
 
@@ -500,11 +487,6 @@ func (rmsu *ResumeMailboxSettingUpdate) check() error {
 			return &ValidationError{Name: "auth_type", err: fmt.Errorf(`db: validator failed for field "ResumeMailboxSetting.auth_type": %w`, err)}
 		}
 	}
-	if v, ok := rmsu.mutation.Status(); ok {
-		if err := resumemailboxsetting.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`db: validator failed for field "ResumeMailboxSetting.status": %w`, err)}
-		}
-	}
 	if rmsu.mutation.UploaderCleared() && len(rmsu.mutation.UploaderIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "ResumeMailboxSetting.uploader"`)
 	}
@@ -542,7 +524,7 @@ func (rmsu *ResumeMailboxSettingUpdate) sqlSave(ctx context.Context) (n int, err
 		_spec.SetField(resumemailboxsetting.FieldEmailAddress, field.TypeString, value)
 	}
 	if value, ok := rmsu.mutation.Protocol(); ok {
-		_spec.SetField(resumemailboxsetting.FieldProtocol, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldProtocol, field.TypeString, value)
 	}
 	if value, ok := rmsu.mutation.Host(); ok {
 		_spec.SetField(resumemailboxsetting.FieldHost, field.TypeString, value)
@@ -563,10 +545,21 @@ func (rmsu *ResumeMailboxSettingUpdate) sqlSave(ctx context.Context) (n int, err
 		_spec.ClearField(resumemailboxsetting.FieldFolder, field.TypeString)
 	}
 	if value, ok := rmsu.mutation.AuthType(); ok {
-		_spec.SetField(resumemailboxsetting.FieldAuthType, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldAuthType, field.TypeString, value)
 	}
 	if value, ok := rmsu.mutation.EncryptedCredential(); ok {
 		_spec.SetField(resumemailboxsetting.FieldEncryptedCredential, field.TypeJSON, value)
+	}
+	if value, ok := rmsu.mutation.JobProfileIds(); ok {
+		_spec.SetField(resumemailboxsetting.FieldJobProfileIds, field.TypeJSON, value)
+	}
+	if value, ok := rmsu.mutation.AppendedJobProfileIds(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, resumemailboxsetting.FieldJobProfileIds, value)
+		})
+	}
+	if rmsu.mutation.JobProfileIdsCleared() {
+		_spec.ClearField(resumemailboxsetting.FieldJobProfileIds, field.TypeJSON)
 	}
 	if value, ok := rmsu.mutation.SyncIntervalMinutes(); ok {
 		_spec.SetField(resumemailboxsetting.FieldSyncIntervalMinutes, field.TypeInt, value)
@@ -578,7 +571,7 @@ func (rmsu *ResumeMailboxSettingUpdate) sqlSave(ctx context.Context) (n int, err
 		_spec.ClearField(resumemailboxsetting.FieldSyncIntervalMinutes, field.TypeInt)
 	}
 	if value, ok := rmsu.mutation.Status(); ok {
-		_spec.SetField(resumemailboxsetting.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldStatus, field.TypeString, value)
 	}
 	if value, ok := rmsu.mutation.LastSyncedAt(); ok {
 		_spec.SetField(resumemailboxsetting.FieldLastSyncedAt, field.TypeTime, value)
@@ -623,35 +616,6 @@ func (rmsu *ResumeMailboxSettingUpdate) sqlSave(ctx context.Context) (n int, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if rmsu.mutation.JobProfileCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   resumemailboxsetting.JobProfileTable,
-			Columns: []string{resumemailboxsetting.JobProfileColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := rmsu.mutation.JobProfileIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   resumemailboxsetting.JobProfileTable,
-			Columns: []string{resumemailboxsetting.JobProfileColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -820,15 +784,15 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableEmailAddress(s *string) *
 }
 
 // SetProtocol sets the "protocol" field.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetProtocol(r resumemailboxsetting.Protocol) *ResumeMailboxSettingUpdateOne {
-	rmsuo.mutation.SetProtocol(r)
+func (rmsuo *ResumeMailboxSettingUpdateOne) SetProtocol(s string) *ResumeMailboxSettingUpdateOne {
+	rmsuo.mutation.SetProtocol(s)
 	return rmsuo
 }
 
 // SetNillableProtocol sets the "protocol" field if the given value is not nil.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableProtocol(r *resumemailboxsetting.Protocol) *ResumeMailboxSettingUpdateOne {
-	if r != nil {
-		rmsuo.SetProtocol(*r)
+func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableProtocol(s *string) *ResumeMailboxSettingUpdateOne {
+	if s != nil {
+		rmsuo.SetProtocol(*s)
 	}
 	return rmsuo
 }
@@ -903,15 +867,15 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) ClearFolder() *ResumeMailboxSettingU
 }
 
 // SetAuthType sets the "auth_type" field.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetAuthType(rt resumemailboxsetting.AuthType) *ResumeMailboxSettingUpdateOne {
-	rmsuo.mutation.SetAuthType(rt)
+func (rmsuo *ResumeMailboxSettingUpdateOne) SetAuthType(s string) *ResumeMailboxSettingUpdateOne {
+	rmsuo.mutation.SetAuthType(s)
 	return rmsuo
 }
 
 // SetNillableAuthType sets the "auth_type" field if the given value is not nil.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableAuthType(rt *resumemailboxsetting.AuthType) *ResumeMailboxSettingUpdateOne {
-	if rt != nil {
-		rmsuo.SetAuthType(*rt)
+func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableAuthType(s *string) *ResumeMailboxSettingUpdateOne {
+	if s != nil {
+		rmsuo.SetAuthType(*s)
 	}
 	return rmsuo
 }
@@ -936,23 +900,21 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableUploaderID(u *uuid.UUID) 
 	return rmsuo
 }
 
-// SetJobProfileID sets the "job_profile_id" field.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetJobProfileID(u uuid.UUID) *ResumeMailboxSettingUpdateOne {
-	rmsuo.mutation.SetJobProfileID(u)
+// SetJobProfileIds sets the "job_profile_ids" field.
+func (rmsuo *ResumeMailboxSettingUpdateOne) SetJobProfileIds(u []uuid.UUID) *ResumeMailboxSettingUpdateOne {
+	rmsuo.mutation.SetJobProfileIds(u)
 	return rmsuo
 }
 
-// SetNillableJobProfileID sets the "job_profile_id" field if the given value is not nil.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableJobProfileID(u *uuid.UUID) *ResumeMailboxSettingUpdateOne {
-	if u != nil {
-		rmsuo.SetJobProfileID(*u)
-	}
+// AppendJobProfileIds appends u to the "job_profile_ids" field.
+func (rmsuo *ResumeMailboxSettingUpdateOne) AppendJobProfileIds(u []uuid.UUID) *ResumeMailboxSettingUpdateOne {
+	rmsuo.mutation.AppendJobProfileIds(u)
 	return rmsuo
 }
 
-// ClearJobProfileID clears the value of the "job_profile_id" field.
-func (rmsuo *ResumeMailboxSettingUpdateOne) ClearJobProfileID() *ResumeMailboxSettingUpdateOne {
-	rmsuo.mutation.ClearJobProfileID()
+// ClearJobProfileIds clears the value of the "job_profile_ids" field.
+func (rmsuo *ResumeMailboxSettingUpdateOne) ClearJobProfileIds() *ResumeMailboxSettingUpdateOne {
+	rmsuo.mutation.ClearJobProfileIds()
 	return rmsuo
 }
 
@@ -984,15 +946,15 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) ClearSyncIntervalMinutes() *ResumeMa
 }
 
 // SetStatus sets the "status" field.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetStatus(r resumemailboxsetting.Status) *ResumeMailboxSettingUpdateOne {
-	rmsuo.mutation.SetStatus(r)
+func (rmsuo *ResumeMailboxSettingUpdateOne) SetStatus(s string) *ResumeMailboxSettingUpdateOne {
+	rmsuo.mutation.SetStatus(s)
 	return rmsuo
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableStatus(r *resumemailboxsetting.Status) *ResumeMailboxSettingUpdateOne {
-	if r != nil {
-		rmsuo.SetStatus(*r)
+func (rmsuo *ResumeMailboxSettingUpdateOne) SetNillableStatus(s *string) *ResumeMailboxSettingUpdateOne {
+	if s != nil {
+		rmsuo.SetStatus(*s)
 	}
 	return rmsuo
 }
@@ -1069,11 +1031,6 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) SetUploader(u *User) *ResumeMailboxS
 	return rmsuo.SetUploaderID(u.ID)
 }
 
-// SetJobProfile sets the "job_profile" edge to the JobPosition entity.
-func (rmsuo *ResumeMailboxSettingUpdateOne) SetJobProfile(j *JobPosition) *ResumeMailboxSettingUpdateOne {
-	return rmsuo.SetJobProfileID(j.ID)
-}
-
 // AddCursorIDs adds the "cursors" edge to the ResumeMailboxCursor entity by IDs.
 func (rmsuo *ResumeMailboxSettingUpdateOne) AddCursorIDs(ids ...uuid.UUID) *ResumeMailboxSettingUpdateOne {
 	rmsuo.mutation.AddCursorIDs(ids...)
@@ -1112,12 +1069,6 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) Mutation() *ResumeMailboxSettingMuta
 // ClearUploader clears the "uploader" edge to the User entity.
 func (rmsuo *ResumeMailboxSettingUpdateOne) ClearUploader() *ResumeMailboxSettingUpdateOne {
 	rmsuo.mutation.ClearUploader()
-	return rmsuo
-}
-
-// ClearJobProfile clears the "job_profile" edge to the JobPosition entity.
-func (rmsuo *ResumeMailboxSettingUpdateOne) ClearJobProfile() *ResumeMailboxSettingUpdateOne {
-	rmsuo.mutation.ClearJobProfile()
 	return rmsuo
 }
 
@@ -1250,11 +1201,6 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) check() error {
 			return &ValidationError{Name: "auth_type", err: fmt.Errorf(`db: validator failed for field "ResumeMailboxSetting.auth_type": %w`, err)}
 		}
 	}
-	if v, ok := rmsuo.mutation.Status(); ok {
-		if err := resumemailboxsetting.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`db: validator failed for field "ResumeMailboxSetting.status": %w`, err)}
-		}
-	}
 	if rmsuo.mutation.UploaderCleared() && len(rmsuo.mutation.UploaderIDs()) > 0 {
 		return errors.New(`db: clearing a required unique edge "ResumeMailboxSetting.uploader"`)
 	}
@@ -1309,7 +1255,7 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) sqlSave(ctx context.Context) (_node 
 		_spec.SetField(resumemailboxsetting.FieldEmailAddress, field.TypeString, value)
 	}
 	if value, ok := rmsuo.mutation.Protocol(); ok {
-		_spec.SetField(resumemailboxsetting.FieldProtocol, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldProtocol, field.TypeString, value)
 	}
 	if value, ok := rmsuo.mutation.Host(); ok {
 		_spec.SetField(resumemailboxsetting.FieldHost, field.TypeString, value)
@@ -1330,10 +1276,21 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) sqlSave(ctx context.Context) (_node 
 		_spec.ClearField(resumemailboxsetting.FieldFolder, field.TypeString)
 	}
 	if value, ok := rmsuo.mutation.AuthType(); ok {
-		_spec.SetField(resumemailboxsetting.FieldAuthType, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldAuthType, field.TypeString, value)
 	}
 	if value, ok := rmsuo.mutation.EncryptedCredential(); ok {
 		_spec.SetField(resumemailboxsetting.FieldEncryptedCredential, field.TypeJSON, value)
+	}
+	if value, ok := rmsuo.mutation.JobProfileIds(); ok {
+		_spec.SetField(resumemailboxsetting.FieldJobProfileIds, field.TypeJSON, value)
+	}
+	if value, ok := rmsuo.mutation.AppendedJobProfileIds(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, resumemailboxsetting.FieldJobProfileIds, value)
+		})
+	}
+	if rmsuo.mutation.JobProfileIdsCleared() {
+		_spec.ClearField(resumemailboxsetting.FieldJobProfileIds, field.TypeJSON)
 	}
 	if value, ok := rmsuo.mutation.SyncIntervalMinutes(); ok {
 		_spec.SetField(resumemailboxsetting.FieldSyncIntervalMinutes, field.TypeInt, value)
@@ -1345,7 +1302,7 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) sqlSave(ctx context.Context) (_node 
 		_spec.ClearField(resumemailboxsetting.FieldSyncIntervalMinutes, field.TypeInt)
 	}
 	if value, ok := rmsuo.mutation.Status(); ok {
-		_spec.SetField(resumemailboxsetting.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(resumemailboxsetting.FieldStatus, field.TypeString, value)
 	}
 	if value, ok := rmsuo.mutation.LastSyncedAt(); ok {
 		_spec.SetField(resumemailboxsetting.FieldLastSyncedAt, field.TypeTime, value)
@@ -1390,35 +1347,6 @@ func (rmsuo *ResumeMailboxSettingUpdateOne) sqlSave(ctx context.Context) (_node 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if rmsuo.mutation.JobProfileCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   resumemailboxsetting.JobProfileTable,
-			Columns: []string{resumemailboxsetting.JobProfileColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := rmsuo.mutation.JobProfileIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   resumemailboxsetting.JobProfileTable,
-			Columns: []string{resumemailboxsetting.JobProfileColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(jobposition.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
@@ -28,7 +27,7 @@ type ResumeMailboxSetting struct {
 	// 邮箱账号
 	EmailAddress string `json:"email_address,omitempty"`
 	// 邮箱协议
-	Protocol resumemailboxsetting.Protocol `json:"protocol,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
 	// 邮箱服务器地址
 	Host string `json:"host,omitempty"`
 	// 邮箱服务器端口
@@ -38,17 +37,17 @@ type ResumeMailboxSetting struct {
 	// IMAP专用文件夹，默认INBOX
 	Folder string `json:"folder,omitempty"`
 	// 认证类型
-	AuthType resumemailboxsetting.AuthType `json:"auth_type,omitempty"`
+	AuthType string `json:"auth_type,omitempty"`
 	// 加密后的凭证信息
 	EncryptedCredential map[string]interface{} `json:"encrypted_credential,omitempty"`
 	// 上传人用户ID
 	UploaderID uuid.UUID `json:"uploader_id,omitempty"`
-	// 岗位画像ID
-	JobProfileID *uuid.UUID `json:"job_profile_id,omitempty"`
+	// 岗位画像ID列表
+	JobProfileIds []uuid.UUID `json:"job_profile_ids,omitempty"`
 	// 自定义同步频率(分钟)，为空则使用平台默认
 	SyncIntervalMinutes *int `json:"sync_interval_minutes,omitempty"`
 	// 状态
-	Status resumemailboxsetting.Status `json:"status,omitempty"`
+	Status string `json:"status,omitempty"`
 	// 最后同步时间
 	LastSyncedAt *time.Time `json:"last_synced_at,omitempty"`
 	// 最后一次错误信息
@@ -69,15 +68,13 @@ type ResumeMailboxSetting struct {
 type ResumeMailboxSettingEdges struct {
 	// Uploader holds the value of the uploader edge.
 	Uploader *User `json:"uploader,omitempty"`
-	// JobProfile holds the value of the job_profile edge.
-	JobProfile *JobPosition `json:"job_profile,omitempty"`
 	// Cursors holds the value of the cursors edge.
 	Cursors []*ResumeMailboxCursor `json:"cursors,omitempty"`
 	// Statistics holds the value of the statistics edge.
 	Statistics []*ResumeMailboxStatistic `json:"statistics,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // UploaderOrErr returns the Uploader value or an error if the edge
@@ -91,21 +88,10 @@ func (e ResumeMailboxSettingEdges) UploaderOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "uploader"}
 }
 
-// JobProfileOrErr returns the JobProfile value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ResumeMailboxSettingEdges) JobProfileOrErr() (*JobPosition, error) {
-	if e.JobProfile != nil {
-		return e.JobProfile, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: jobposition.Label}
-	}
-	return nil, &NotLoadedError{edge: "job_profile"}
-}
-
 // CursorsOrErr returns the Cursors value or an error if the edge
 // was not loaded in eager-loading.
 func (e ResumeMailboxSettingEdges) CursorsOrErr() ([]*ResumeMailboxCursor, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.Cursors, nil
 	}
 	return nil, &NotLoadedError{edge: "cursors"}
@@ -114,7 +100,7 @@ func (e ResumeMailboxSettingEdges) CursorsOrErr() ([]*ResumeMailboxCursor, error
 // StatisticsOrErr returns the Statistics value or an error if the edge
 // was not loaded in eager-loading.
 func (e ResumeMailboxSettingEdges) StatisticsOrErr() ([]*ResumeMailboxStatistic, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Statistics, nil
 	}
 	return nil, &NotLoadedError{edge: "statistics"}
@@ -125,9 +111,7 @@ func (*ResumeMailboxSetting) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resumemailboxsetting.FieldJobProfileID:
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case resumemailboxsetting.FieldEncryptedCredential:
+		case resumemailboxsetting.FieldEncryptedCredential, resumemailboxsetting.FieldJobProfileIds:
 			values[i] = new([]byte)
 		case resumemailboxsetting.FieldUseSsl:
 			values[i] = new(sql.NullBool)
@@ -182,7 +166,7 @@ func (rms *ResumeMailboxSetting) assignValues(columns []string, values []any) er
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field protocol", values[i])
 			} else if value.Valid {
-				rms.Protocol = resumemailboxsetting.Protocol(value.String)
+				rms.Protocol = value.String
 			}
 		case resumemailboxsetting.FieldHost:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -212,7 +196,7 @@ func (rms *ResumeMailboxSetting) assignValues(columns []string, values []any) er
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field auth_type", values[i])
 			} else if value.Valid {
-				rms.AuthType = resumemailboxsetting.AuthType(value.String)
+				rms.AuthType = value.String
 			}
 		case resumemailboxsetting.FieldEncryptedCredential:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -228,12 +212,13 @@ func (rms *ResumeMailboxSetting) assignValues(columns []string, values []any) er
 			} else if value != nil {
 				rms.UploaderID = *value
 			}
-		case resumemailboxsetting.FieldJobProfileID:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field job_profile_id", values[i])
-			} else if value.Valid {
-				rms.JobProfileID = new(uuid.UUID)
-				*rms.JobProfileID = *value.S.(*uuid.UUID)
+		case resumemailboxsetting.FieldJobProfileIds:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field job_profile_ids", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &rms.JobProfileIds); err != nil {
+					return fmt.Errorf("unmarshal field job_profile_ids: %w", err)
+				}
 			}
 		case resumemailboxsetting.FieldSyncIntervalMinutes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -246,7 +231,7 @@ func (rms *ResumeMailboxSetting) assignValues(columns []string, values []any) er
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				rms.Status = resumemailboxsetting.Status(value.String)
+				rms.Status = value.String
 			}
 		case resumemailboxsetting.FieldLastSyncedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -297,11 +282,6 @@ func (rms *ResumeMailboxSetting) QueryUploader() *UserQuery {
 	return NewResumeMailboxSettingClient(rms.config).QueryUploader(rms)
 }
 
-// QueryJobProfile queries the "job_profile" edge of the ResumeMailboxSetting entity.
-func (rms *ResumeMailboxSetting) QueryJobProfile() *JobPositionQuery {
-	return NewResumeMailboxSettingClient(rms.config).QueryJobProfile(rms)
-}
-
 // QueryCursors queries the "cursors" edge of the ResumeMailboxSetting entity.
 func (rms *ResumeMailboxSetting) QueryCursors() *ResumeMailboxCursorQuery {
 	return NewResumeMailboxSettingClient(rms.config).QueryCursors(rms)
@@ -345,7 +325,7 @@ func (rms *ResumeMailboxSetting) String() string {
 	builder.WriteString(rms.EmailAddress)
 	builder.WriteString(", ")
 	builder.WriteString("protocol=")
-	builder.WriteString(fmt.Sprintf("%v", rms.Protocol))
+	builder.WriteString(rms.Protocol)
 	builder.WriteString(", ")
 	builder.WriteString("host=")
 	builder.WriteString(rms.Host)
@@ -360,7 +340,7 @@ func (rms *ResumeMailboxSetting) String() string {
 	builder.WriteString(rms.Folder)
 	builder.WriteString(", ")
 	builder.WriteString("auth_type=")
-	builder.WriteString(fmt.Sprintf("%v", rms.AuthType))
+	builder.WriteString(rms.AuthType)
 	builder.WriteString(", ")
 	builder.WriteString("encrypted_credential=")
 	builder.WriteString(fmt.Sprintf("%v", rms.EncryptedCredential))
@@ -368,10 +348,8 @@ func (rms *ResumeMailboxSetting) String() string {
 	builder.WriteString("uploader_id=")
 	builder.WriteString(fmt.Sprintf("%v", rms.UploaderID))
 	builder.WriteString(", ")
-	if v := rms.JobProfileID; v != nil {
-		builder.WriteString("job_profile_id=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
+	builder.WriteString("job_profile_ids=")
+	builder.WriteString(fmt.Sprintf("%v", rms.JobProfileIds))
 	builder.WriteString(", ")
 	if v := rms.SyncIntervalMinutes; v != nil {
 		builder.WriteString("sync_interval_minutes=")
@@ -379,7 +357,7 @@ func (rms *ResumeMailboxSetting) String() string {
 	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", rms.Status))
+	builder.WriteString(rms.Status)
 	builder.WriteString(", ")
 	if v := rms.LastSyncedAt; v != nil {
 		builder.WriteString("last_synced_at=")

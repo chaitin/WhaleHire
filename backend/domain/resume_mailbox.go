@@ -17,9 +17,10 @@ import (
 // =========================
 
 var (
-	ErrResumeMailboxSettingNotFound = errcode.ErrResumeMailboxSettingNotFound
-	ErrInvalidCredentials           = errcode.ErrInvalidCredentials
-	ErrMailboxConnectionFailed      = errcode.ErrMailboxConnectionFailed
+	ErrResumeMailboxSettingNotFound   = errcode.ErrResumeMailboxSettingNotFound
+	ErrResumeMailboxStatisticNotFound = errcode.ErrResumeMailboxStatisticNotFound
+	ErrInvalidCredentials             = errcode.ErrInvalidCredentials
+	ErrMailboxConnectionFailed        = errcode.ErrMailboxConnectionFailed
 )
 
 // =========================
@@ -100,6 +101,42 @@ type ResumeMailboxSyncUsecase interface {
 	SyncNow(ctx context.Context, mailboxID uuid.UUID) (*ResumeMailboxSyncResult, error)
 }
 
+// ResumeMailboxStatisticUsecase 邮箱统计用例接口
+type ResumeMailboxStatisticUsecase interface {
+	// 获取邮箱统计详情
+	GetByMailboxIDAndDate(ctx context.Context, mailboxID uuid.UUID, date time.Time) (*ResumeMailboxStatistic, error)
+	// 获取邮箱统计列表
+	List(ctx context.Context, req *ListResumeMailboxStatisticsRequest) (*ListResumeMailboxStatisticsResponse, error)
+	// 更新或创建统计记录
+	Upsert(ctx context.Context, req *UpsertResumeMailboxStatisticRequest) (*ResumeMailboxStatistic, error)
+	// 删除统计记录
+	Delete(ctx context.Context, mailboxID uuid.UUID, date time.Time) error
+	// 获取统计汇总
+	GetSummary(ctx context.Context, req *GetMailboxStatisticsSummaryRequest) (*MailboxStatisticsSummary, error)
+}
+
+// ResumeMailboxStatisticRepo 邮箱统计仓储接口
+type ResumeMailboxStatisticRepo interface {
+	// 根据邮箱ID和日期获取统计
+	GetByMailboxIDAndDate(ctx context.Context, mailboxID uuid.UUID, date time.Time) (*db.ResumeMailboxStatistic, error)
+	// 获取统计列表
+	List(ctx context.Context, req *ListResumeMailboxStatisticsRequest) ([]*db.ResumeMailboxStatistic, *db.PageInfo, error)
+	// 更新或创建统计记录
+	Upsert(ctx context.Context, req *UpsertResumeMailboxStatisticRequest) (*db.ResumeMailboxStatistic, error)
+	// 删除统计记录
+	Delete(ctx context.Context, mailboxID uuid.UUID, date time.Time) error
+	// 获取统计汇总数据
+	GetSummary(ctx context.Context, req *GetMailboxStatisticsSummaryRequest) (*MailboxStatisticsSummary, error)
+}
+
+// ResumeMailboxScheduler 邮箱同步调度器接口
+type ResumeMailboxScheduler interface {
+	// Upsert 注册或更新邮箱调度任务
+	Upsert(ctx context.Context, setting *ResumeMailboxSetting) error
+	// Remove 移除邮箱调度任务
+	Remove(ctx context.Context, mailboxID uuid.UUID) error
+}
+
 // =========================
 // 请求和响应结构体
 // =========================
@@ -116,7 +153,7 @@ type CreateResumeMailboxSettingRequest struct {
 	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"` // 认证类型：password或oauth
 	EncryptedCredential map[string]interface{} `json:"encrypted_credential" validate:"required"`
 	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`                                     // 上传者ID
-	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`                                            // 关联的职位档案ID，可选
+	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`                                           // 关联的职位档案ID列表，可选
 	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
 }
 
@@ -131,7 +168,7 @@ type UpdateResumeMailboxSettingRequest struct {
 	Folder              *string                 `json:"folder,omitempty"`                                                    // 邮箱文件夹，可选
 	AuthType            *string                 `json:"auth_type,omitempty" validate:"omitempty,oneof=password oauth"`       // 认证类型：password或oauth，可选
 	EncryptedCredential *map[string]interface{} `json:"encrypted_credential,omitempty"`                                      // 加密后的认证凭据，可选。password类型需要：username(可选,默认使用email_address)、password(必需)；oauth类型需要：username(可选,默认使用email_address)、access_token(必需)
-	JobProfileID        *uuid.UUID              `json:"job_profile_id,omitempty"`                                            // 关联的职位档案ID，可选
+	JobProfileIDs       []uuid.UUID             `json:"job_profile_ids,omitempty"`                                           // 关联的职位档案ID列表，可选
 	SyncIntervalMinutes *int                    `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5,max=1440"` // 同步间隔（分钟），可选，范围5-1440
 	Status              *string                 `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`        // 状态：enabled或disabled，可选
 }
@@ -141,10 +178,10 @@ type ListResumeMailboxSettingsRequest struct {
 	web.Pagination
 
 	// 过滤条件
-	UploaderID   *uuid.UUID `json:"uploader_id,omitempty" query:"uploader_id"`                                   // 上传者ID筛选，可选
-	JobProfileID *uuid.UUID `json:"job_profile_id,omitempty" query:"job_profile_id"`                             // 职位档案ID筛选，可选
-	Status       *string    `json:"status,omitempty" query:"status" validate:"omitempty,oneof=enabled disabled"` // 状态筛选：enabled或disabled，可选
-	Protocol     *string    `json:"protocol,omitempty" query:"protocol" validate:"omitempty,oneof=imap pop3"`    // 协议筛选：imap或pop3，可选
+	UploaderID    *uuid.UUID  `json:"uploader_id,omitempty" query:"uploader_id"`                                   // 上传者ID筛选，可选
+	JobProfileIDs []uuid.UUID `json:"job_profile_ids,omitempty" query:"job_profile_ids"`                           // 职位档案ID列表筛选，可选
+	Status        *string     `json:"status,omitempty" query:"status" validate:"omitempty,oneof=enabled disabled"` // 状态筛选：enabled或disabled，可选
+	Protocol      *string     `json:"protocol,omitempty" query:"protocol" validate:"omitempty,oneof=imap pop3"`    // 协议筛选：imap或pop3，可选
 }
 
 // ListResumeMailboxSettingsResponse 获取邮箱设置列表响应
@@ -210,8 +247,9 @@ type CreateResumeMailboxSettingReq struct {
 	AuthType            string                 `json:"auth_type" validate:"required,oneof=password oauth"`
 	Credential          map[string]interface{} `json:"credential" validate:"required"`
 	UploaderID          uuid.UUID              `json:"uploader_id" validate:"required"`
-	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`
+	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`
 	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5"`
+	Status              *string                `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`
 }
 
 // UpdateResumeMailboxSettingReq 更新邮箱设置请求
@@ -225,8 +263,9 @@ type UpdateResumeMailboxSettingReq struct {
 	AuthType            *string                `json:"auth_type,omitempty" validate:"omitempty,oneof=password oauth"`
 	Credential          map[string]interface{} `json:"credential,omitempty"`
 	UploaderID          *uuid.UUID             `json:"uploader_id,omitempty"`
-	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`
+	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`
 	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty" validate:"omitempty,min=5"`
+	Status              *string                `json:"status,omitempty" validate:"omitempty,oneof=enabled disabled"`
 }
 
 // ListResumeMailboxSettingReq 邮箱设置列表请求
@@ -258,6 +297,40 @@ type GetMailboxStatisticsResp struct {
 	Summary    *MailboxStatisticsSummary `json:"summary"`
 }
 
+// ListResumeMailboxStatisticsRequest 邮箱统计列表请求
+type ListResumeMailboxStatisticsRequest struct {
+	web.Pagination
+	MailboxID *uuid.UUID `json:"mailbox_id,omitempty" query:"mailbox_id"`                             // 邮箱ID筛选，可选
+	DateFrom  *time.Time `json:"date_from,omitempty" query:"date_from"`                               // 开始日期筛选，可选
+	DateTo    *time.Time `json:"date_to,omitempty" query:"date_to"`                                   // 结束日期筛选，可选
+	Range     *string    `json:"range,omitempty" query:"range" validate:"omitempty,oneof=7d 30d 90d"` // 时间范围筛选：7d、30d、90d，可选
+}
+
+// ListResumeMailboxStatisticsResponse 邮箱统计列表响应
+type ListResumeMailboxStatisticsResponse struct {
+	Items []*ResumeMailboxStatistic `json:"items"` // 邮箱统计列表
+	*db.PageInfo
+}
+
+// UpsertResumeMailboxStatisticRequest 更新或创建邮箱统计请求
+type UpsertResumeMailboxStatisticRequest struct {
+	MailboxID          uuid.UUID `json:"mailbox_id" validate:"required"`                             // 邮箱ID
+	Date               time.Time `json:"date" validate:"required"`                                   // 统计日期
+	SyncedEmails       *int      `json:"synced_emails,omitempty" validate:"omitempty,min=0"`         // 同步邮件数，可选
+	ParsedResumes      *int      `json:"parsed_resumes,omitempty" validate:"omitempty,min=0"`        // 解析简历数，可选
+	FailedResumes      *int      `json:"failed_resumes,omitempty" validate:"omitempty,min=0"`        // 失败简历数，可选
+	SkippedAttachments *int      `json:"skipped_attachments,omitempty" validate:"omitempty,min=0"`   // 跳过附件数，可选
+	LastSyncDurationMs *int      `json:"last_sync_duration_ms,omitempty" validate:"omitempty,min=0"` // 最后同步耗时，可选
+}
+
+// GetMailboxStatisticsSummaryRequest 获取邮箱统计汇总请求
+type GetMailboxStatisticsSummaryRequest struct {
+	MailboxID *uuid.UUID `json:"mailbox_id,omitempty" query:"mailbox_id"`                             // 邮箱ID筛选，可选
+	DateFrom  *time.Time `json:"date_from,omitempty" query:"date_from"`                               // 开始日期筛选，可选
+	DateTo    *time.Time `json:"date_to,omitempty" query:"date_to"`                                   // 结束日期筛选，可选
+	Range     *string    `json:"range,omitempty" query:"range" validate:"omitempty,oneof=7d 30d 90d"` // 时间范围筛选：7d、30d、90d，可选
+}
+
 // =========================
 // 数据模型
 // =========================
@@ -276,8 +349,8 @@ type ResumeMailboxSetting struct {
 	EncryptedCredential map[string]interface{} `json:"encrypted_credential"`
 	UploaderID          uuid.UUID              `json:"uploader_id"`
 	UploaderName        string                 `json:"uploader_name,omitempty"`
-	JobProfileID        *uuid.UUID             `json:"job_profile_id,omitempty"`
-	JobProfileName      string                 `json:"job_profile_name,omitempty"`
+	JobProfileIDs       []uuid.UUID            `json:"job_profile_ids,omitempty"`
+	JobProfileNames     []string               `json:"job_profile_names,omitempty"`
 	SyncIntervalMinutes *int                   `json:"sync_interval_minutes,omitempty"`
 	Status              string                 `json:"status"`
 	LastSyncedAt        *time.Time             `json:"last_synced_at,omitempty"`
@@ -304,7 +377,8 @@ func (s *ResumeMailboxSetting) From(entity *db.ResumeMailboxSetting) *ResumeMail
 	s.AuthType = string(entity.AuthType)
 	s.EncryptedCredential = entity.EncryptedCredential
 	s.UploaderID = entity.UploaderID
-	s.JobProfileID = entity.JobProfileID
+	// 使用多个JobProfileIDs
+	s.JobProfileIDs = entity.JobProfileIds
 	s.SyncIntervalMinutes = entity.SyncIntervalMinutes
 	s.Status = string(entity.Status)
 	s.LastSyncedAt = entity.LastSyncedAt
@@ -317,9 +391,7 @@ func (s *ResumeMailboxSetting) From(entity *db.ResumeMailboxSetting) *ResumeMail
 	if entity.Edges.Uploader != nil {
 		s.UploaderName = entity.Edges.Uploader.Username
 	}
-	if entity.Edges.JobProfile != nil {
-		s.JobProfileName = entity.Edges.JobProfile.Name
-	}
+	// JobProfileNames 由usecase层负责填充，这里不设置默认值
 
 	return s
 }

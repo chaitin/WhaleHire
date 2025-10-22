@@ -673,6 +673,10 @@ func init() {
 	resumemailboxsettingDescEmailAddress := resumemailboxsettingFields[2].Descriptor()
 	// resumemailboxsetting.EmailAddressValidator is a validator for the "email_address" field. It is called by the builders before save.
 	resumemailboxsetting.EmailAddressValidator = resumemailboxsettingDescEmailAddress.Validators[0].(func(string) error)
+	// resumemailboxsettingDescProtocol is the schema descriptor for protocol field.
+	resumemailboxsettingDescProtocol := resumemailboxsettingFields[3].Descriptor()
+	// resumemailboxsetting.ProtocolValidator is a validator for the "protocol" field. It is called by the builders before save.
+	resumemailboxsetting.ProtocolValidator = resumemailboxsettingDescProtocol.Validators[0].(func(string) error)
 	// resumemailboxsettingDescHost is the schema descriptor for host field.
 	resumemailboxsettingDescHost := resumemailboxsettingFields[4].Descriptor()
 	// resumemailboxsetting.HostValidator is a validator for the "host" field. It is called by the builders before save.
@@ -685,6 +689,16 @@ func init() {
 	resumemailboxsettingDescFolder := resumemailboxsettingFields[7].Descriptor()
 	// resumemailboxsetting.FolderValidator is a validator for the "folder" field. It is called by the builders before save.
 	resumemailboxsetting.FolderValidator = resumemailboxsettingDescFolder.Validators[0].(func(string) error)
+	// resumemailboxsettingDescAuthType is the schema descriptor for auth_type field.
+	resumemailboxsettingDescAuthType := resumemailboxsettingFields[8].Descriptor()
+	// resumemailboxsetting.DefaultAuthType holds the default value on creation for the auth_type field.
+	resumemailboxsetting.DefaultAuthType = resumemailboxsettingDescAuthType.Default.(string)
+	// resumemailboxsetting.AuthTypeValidator is a validator for the "auth_type" field. It is called by the builders before save.
+	resumemailboxsetting.AuthTypeValidator = resumemailboxsettingDescAuthType.Validators[0].(func(string) error)
+	// resumemailboxsettingDescStatus is the schema descriptor for status field.
+	resumemailboxsettingDescStatus := resumemailboxsettingFields[13].Descriptor()
+	// resumemailboxsetting.DefaultStatus holds the default value on creation for the status field.
+	resumemailboxsetting.DefaultStatus = resumemailboxsettingDescStatus.Default.(string)
 	// resumemailboxsettingDescRetryCount is the schema descriptor for retry_count field.
 	resumemailboxsettingDescRetryCount := resumemailboxsettingFields[16].Descriptor()
 	// resumemailboxsetting.DefaultRetryCount holds the default value on creation for the retry_count field.

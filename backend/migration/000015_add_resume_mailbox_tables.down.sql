@@ -14,7 +14,6 @@ DROP INDEX IF EXISTS "idx_resume_mailbox_cursors_mailbox_id";
 
 -- Drop indexes for resume_mailbox_settings
 DROP INDEX IF EXISTS "idx_resume_mailbox_settings_last_synced_at";
-DROP INDEX IF EXISTS "idx_resume_mailbox_settings_job_profile_id";
 DROP INDEX IF EXISTS "idx_resume_mailbox_settings_uploader_id";
 DROP INDEX IF EXISTS "idx_resume_mailbox_settings_status";
 DROP INDEX IF EXISTS "idx_resume_mailbox_settings_protocol_email";
@@ -22,7 +21,6 @@ DROP INDEX IF EXISTS "idx_resume_mailbox_settings_protocol_email";
 -- Drop foreign key constraints
 ALTER TABLE "resume_mailbox_statistics" DROP CONSTRAINT IF EXISTS "fk_resume_mailbox_statistics_mailbox";
 ALTER TABLE "resume_mailbox_cursors" DROP CONSTRAINT IF EXISTS "fk_resume_mailbox_cursors_mailbox";
-ALTER TABLE "resume_mailbox_settings" DROP CONSTRAINT IF EXISTS "fk_resume_mailbox_settings_job_profile";
 ALTER TABLE "resume_mailbox_settings" DROP CONSTRAINT IF EXISTS "fk_resume_mailbox_settings_uploader";
 
 -- Drop tables in reverse order of creation

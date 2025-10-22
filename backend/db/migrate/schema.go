@@ -833,22 +833,22 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString, Size: 256},
 		{Name: "email_address", Type: field.TypeString, Size: 256},
-		{Name: "protocol", Type: field.TypeEnum, Enums: []string{"imap", "pop3"}},
+		{Name: "protocol", Type: field.TypeString, Size: 32},
 		{Name: "host", Type: field.TypeString, Size: 256},
 		{Name: "port", Type: field.TypeInt},
 		{Name: "use_ssl", Type: field.TypeBool, Default: true},
 		{Name: "folder", Type: field.TypeString, Nullable: true, Size: 256},
-		{Name: "auth_type", Type: field.TypeEnum, Enums: []string{"password", "oauth"}, Default: "password"},
+		{Name: "auth_type", Type: field.TypeString, Size: 32, Default: "password"},
 		{Name: "encrypted_credential", Type: field.TypeJSON},
+		{Name: "job_profile_ids", Type: field.TypeJSON, Nullable: true},
 		{Name: "sync_interval_minutes", Type: field.TypeInt, Nullable: true},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled"}, Default: "enabled"},
+		{Name: "status", Type: field.TypeString, Default: "enabled"},
 		{Name: "last_synced_at", Type: field.TypeTime, Nullable: true},
 		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "retry_count", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "uploader_id", Type: field.TypeUUID},
-		{Name: "job_profile_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// ResumeMailboxSettingsTable holds the schema information for the "resume_mailbox_settings" table.
 	ResumeMailboxSettingsTable = &schema.Table{
@@ -858,15 +858,9 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "resume_mailbox_settings_users_uploader",
-				Columns:    []*schema.Column{ResumeMailboxSettingsColumns[18]},
+				Columns:    []*schema.Column{ResumeMailboxSettingsColumns[19]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "resume_mailbox_settings_job_position_job_profile",
-				Columns:    []*schema.Column{ResumeMailboxSettingsColumns[19]},
-				RefColumns: []*schema.Column{JobPositionColumns[0]},
-				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -878,22 +872,17 @@ var (
 			{
 				Name:    "resumemailboxsetting_status",
 				Unique:  false,
-				Columns: []*schema.Column{ResumeMailboxSettingsColumns[12]},
+				Columns: []*schema.Column{ResumeMailboxSettingsColumns[13]},
 			},
 			{
 				Name:    "resumemailboxsetting_uploader_id",
-				Unique:  false,
-				Columns: []*schema.Column{ResumeMailboxSettingsColumns[18]},
-			},
-			{
-				Name:    "resumemailboxsetting_job_profile_id",
 				Unique:  false,
 				Columns: []*schema.Column{ResumeMailboxSettingsColumns[19]},
 			},
 			{
 				Name:    "resumemailboxsetting_last_synced_at",
 				Unique:  false,
-				Columns: []*schema.Column{ResumeMailboxSettingsColumns[13]},
+				Columns: []*schema.Column{ResumeMailboxSettingsColumns[14]},
 			},
 		},
 	}
@@ -1596,7 +1585,6 @@ func init() {
 		Table: "resume_mailbox_cursors",
 	}
 	ResumeMailboxSettingsTable.ForeignKeys[0].RefTable = UsersTable
-	ResumeMailboxSettingsTable.ForeignKeys[1].RefTable = JobPositionTable
 	ResumeMailboxSettingsTable.Annotation = &entsql.Annotation{
 		Table: "resume_mailbox_settings",
 	}

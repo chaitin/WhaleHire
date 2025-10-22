@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/chaitin/WhaleHire/backend/db/jobposition"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxcursor"
 	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
@@ -30,7 +29,6 @@ type ResumeMailboxSettingQuery struct {
 	inters         []Interceptor
 	predicates     []predicate.ResumeMailboxSetting
 	withUploader   *UserQuery
-	withJobProfile *JobPositionQuery
 	withCursors    *ResumeMailboxCursorQuery
 	withStatistics *ResumeMailboxStatisticQuery
 	modifiers      []func(*sql.Selector)
@@ -85,28 +83,6 @@ func (rmsq *ResumeMailboxSettingQuery) QueryUploader() *UserQuery {
 			sqlgraph.From(resumemailboxsetting.Table, resumemailboxsetting.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, resumemailboxsetting.UploaderTable, resumemailboxsetting.UploaderColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(rmsq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryJobProfile chains the current query on the "job_profile" edge.
-func (rmsq *ResumeMailboxSettingQuery) QueryJobProfile() *JobPositionQuery {
-	query := (&JobPositionClient{config: rmsq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := rmsq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := rmsq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(resumemailboxsetting.Table, resumemailboxsetting.FieldID, selector),
-			sqlgraph.To(jobposition.Table, jobposition.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, resumemailboxsetting.JobProfileTable, resumemailboxsetting.JobProfileColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rmsq.driver.Dialect(), step)
 		return fromU, nil
@@ -351,7 +327,6 @@ func (rmsq *ResumeMailboxSettingQuery) Clone() *ResumeMailboxSettingQuery {
 		inters:         append([]Interceptor{}, rmsq.inters...),
 		predicates:     append([]predicate.ResumeMailboxSetting{}, rmsq.predicates...),
 		withUploader:   rmsq.withUploader.Clone(),
-		withJobProfile: rmsq.withJobProfile.Clone(),
 		withCursors:    rmsq.withCursors.Clone(),
 		withStatistics: rmsq.withStatistics.Clone(),
 		// clone intermediate query.
@@ -369,17 +344,6 @@ func (rmsq *ResumeMailboxSettingQuery) WithUploader(opts ...func(*UserQuery)) *R
 		opt(query)
 	}
 	rmsq.withUploader = query
-	return rmsq
-}
-
-// WithJobProfile tells the query-builder to eager-load the nodes that are connected to
-// the "job_profile" edge. The optional arguments are used to configure the query builder of the edge.
-func (rmsq *ResumeMailboxSettingQuery) WithJobProfile(opts ...func(*JobPositionQuery)) *ResumeMailboxSettingQuery {
-	query := (&JobPositionClient{config: rmsq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	rmsq.withJobProfile = query
 	return rmsq
 }
 
@@ -483,9 +447,8 @@ func (rmsq *ResumeMailboxSettingQuery) sqlAll(ctx context.Context, hooks ...quer
 	var (
 		nodes       = []*ResumeMailboxSetting{}
 		_spec       = rmsq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [3]bool{
 			rmsq.withUploader != nil,
-			rmsq.withJobProfile != nil,
 			rmsq.withCursors != nil,
 			rmsq.withStatistics != nil,
 		}
@@ -514,12 +477,6 @@ func (rmsq *ResumeMailboxSettingQuery) sqlAll(ctx context.Context, hooks ...quer
 	if query := rmsq.withUploader; query != nil {
 		if err := rmsq.loadUploader(ctx, query, nodes, nil,
 			func(n *ResumeMailboxSetting, e *User) { n.Edges.Uploader = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := rmsq.withJobProfile; query != nil {
-		if err := rmsq.loadJobProfile(ctx, query, nodes, nil,
-			func(n *ResumeMailboxSetting, e *JobPosition) { n.Edges.JobProfile = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -564,38 +521,6 @@ func (rmsq *ResumeMailboxSettingQuery) loadUploader(ctx context.Context, query *
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "uploader_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (rmsq *ResumeMailboxSettingQuery) loadJobProfile(ctx context.Context, query *JobPositionQuery, nodes []*ResumeMailboxSetting, init func(*ResumeMailboxSetting), assign func(*ResumeMailboxSetting, *JobPosition)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*ResumeMailboxSetting)
-	for i := range nodes {
-		if nodes[i].JobProfileID == nil {
-			continue
-		}
-		fk := *nodes[i].JobProfileID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(jobposition.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "job_profile_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -694,9 +619,6 @@ func (rmsq *ResumeMailboxSettingQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if rmsq.withUploader != nil {
 			_spec.Node.AddColumnOnce(resumemailboxsetting.FieldUploaderID)
-		}
-		if rmsq.withJobProfile != nil {
-			_spec.Node.AddColumnOnce(resumemailboxsetting.FieldJobProfileID)
 		}
 	}
 	if ps := rmsq.predicates; len(ps) > 0 {

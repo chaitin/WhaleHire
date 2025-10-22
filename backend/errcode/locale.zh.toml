@@ -85,6 +85,9 @@ other = "通知设置不存在: {{.message}}"
 [err-resume-mailbox-setting-not-found]
 other = "简历邮箱设置不存在"
 
+[err-resume-mailbox-statistic-not-found]
+other = "简历邮箱统计数据不存在"
+
 [err-invalid-credentials]
 other = "邮箱凭据无效"
 
