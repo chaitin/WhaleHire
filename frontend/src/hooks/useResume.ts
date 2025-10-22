@@ -433,7 +433,7 @@ export const useResumeUpload = () => {
 
   // 开始轮询上传状态
   const startPolling = useCallback(
-    (taskIdToPoll: string, pollingInterval = 1000) => {
+    (taskIdToPoll: string, pollingInterval = 5000) => {
       stopPolling();
 
       console.log('🔄 开始轮询上传状态，任务ID:', taskIdToPoll);
