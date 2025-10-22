@@ -820,7 +820,7 @@ function AddEmailConfigModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b">
           <DialogTitle className="text-lg font-medium text-gray-900">
             添加邮箱配置

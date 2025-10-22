@@ -183,6 +183,30 @@ export function ResumeTable({
     );
   };
 
+  // 渲染来源单元格
+  const renderSourceCell = (resume: Resume) => {
+    const jobPositions = resume.job_positions || [];
+
+    if (jobPositions.length === 0) {
+      return <span className="text-gray-400">-</span>;
+    }
+
+    // 获取第一个岗位的来源
+    const source = jobPositions[0].source || 'manual';
+
+    // 来源标签映射
+    const sourceLabels: Record<string, string> = {
+      manual: '手动上传',
+      email: '邮件收集',
+      api: 'API导入',
+      import: '批量导入',
+    };
+
+    const displaySource = sourceLabels[source] || source || '手动上传';
+
+    return <span className="text-sm text-gray-500">{displaySource}</span>;
+  };
+
   return (
     <div className={cn('', className)}>
       {/* 表格标题 */}
@@ -204,6 +228,9 @@ export function ResumeTable({
                 岗位名称
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                来源
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 上传时间
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -220,7 +247,7 @@ export function ResumeTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {resumes && resumes.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-16">
+                <td colSpan={7} className="px-6 py-16">
                   <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="text-gray-400">
                       <svg
@@ -266,6 +293,9 @@ export function ResumeTable({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {renderJobPositionsCell(resume)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {renderSourceCell(resume)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(resume.created_at, 'datetime')}

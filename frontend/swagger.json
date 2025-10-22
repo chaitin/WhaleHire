@@ -2855,6 +2855,848 @@
                 }
             }
         },
+        "/api/v1/resume-mailbox-settings": {
+            "get": {
+                "description": "分页获取当前用户的简历邮箱设置列表，支持按状态筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox"
+                ],
+                "summary": "获取简历邮箱设置列表",
+                "operationId": "list-resume-mailbox-settings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认为1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认为10",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选：active(激活)、inactive(未激活)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListResumeMailboxSettingsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的简历邮箱设置，用于配置邮箱连接信息和同步参数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox"
+                ],
+                "summary": "创建简历邮箱设置",
+                "operationId": "create-resume-mailbox-setting",
+                "parameters": [
+                    {
+                        "description": "邮箱设置参数",
+                        "name": "setting",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateResumeMailboxSettingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeMailboxSetting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume-mailbox-settings/{id}": {
+            "get": {
+                "description": "根据设置ID获取指定的简历邮箱设置详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox"
+                ],
+                "summary": "获取简历邮箱设置详情",
+                "operationId": "get-resume-mailbox-setting",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeMailboxSetting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新指定ID的简历邮箱设置信息，包括邮箱连接参数和同步配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox"
+                ],
+                "summary": "更新简历邮箱设置",
+                "operationId": "update-resume-mailbox-setting",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新的邮箱设置参数",
+                        "name": "setting",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateResumeMailboxSettingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeMailboxSetting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据设置ID删除指定的简历邮箱设置，删除后将停止该邮箱的简历同步",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox"
+                ],
+                "summary": "删除简历邮箱设置",
+                "operationId": "delete-resume-mailbox-setting",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume-mailbox-settings/{id}/sync-now": {
+            "post": {
+                "description": "手动执行一次邮箱同步任务，拉取新邮件并解析简历附件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox"
+                ],
+                "summary": "手动触发邮箱简历同步",
+                "operationId": "sync-resume-mailbox-now",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeMailboxSyncResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "同步失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume-mailbox-settings/{id}/test-connection": {
+            "post": {
+                "description": "测试指定邮箱设置的连接状态，验证邮箱服务器配置是否正确",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox"
+                ],
+                "summary": "测试简历邮箱连接",
+                "operationId": "test-resume-mailbox-connection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.TestConnectionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "连接测试失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume-mailbox-statistics": {
+            "get": {
+                "description": "分页获取简历邮箱同步统计数据，支持按邮箱ID、日期范围等条件筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox Statistics"
+                ],
+                "summary": "获取简历邮箱统计列表",
+                "operationId": "list-resume-mailbox-statistics",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认为1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认为20",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "mailbox_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "开始日期，格式：2006-01-02",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束日期，格式：2006-01-02",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "预设时间范围：7d、30d、90d",
+                        "name": "range",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListResumeMailboxStatisticsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "更新或创建简历邮箱同步统计数据，如果指定日期的记录存在则更新，否则创建新记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox Statistics"
+                ],
+                "summary": "更新或创建统计记录",
+                "operationId": "upsert-resume-mailbox-statistic",
+                "parameters": [
+                    {
+                        "description": "统计数据参数",
+                        "name": "statistic",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpsertResumeMailboxStatisticRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeMailboxStatistic"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume-mailbox-statistics/summary": {
+            "get": {
+                "description": "获取简历邮箱同步统计的汇总数据，包括总计数据和成功率等指标",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox Statistics"
+                ],
+                "summary": "获取统计汇总数据",
+                "operationId": "get-resume-mailbox-statistics-summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "mailbox_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "开始日期，格式：2006-01-02",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束日期，格式：2006-01-02",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "预设时间范围：7d、30d、90d",
+                        "name": "range",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.MailboxStatisticsSummary"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/resume-mailbox-statistics/{mailbox_id}/{date}": {
+            "get": {
+                "description": "根据邮箱ID和日期获取指定的简历邮箱同步统计数据",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox Statistics"
+                ],
+                "summary": "获取指定邮箱和日期的统计数据",
+                "operationId": "get-resume-mailbox-statistic",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "mailbox_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "日期，格式：2006-01-02",
+                        "name": "date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ResumeMailboxStatistic"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "统计数据不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据邮箱ID和日期删除指定的简历邮箱同步统计数据",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resume Mailbox Statistics"
+                ],
+                "summary": "删除统计记录",
+                "operationId": "delete-resume-mailbox-statistic",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "邮箱设置ID",
+                        "name": "mailbox_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "日期，格式：2006-01-02",
+                        "name": "date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "统计数据不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/resume/batch-upload": {
             "post": {
                 "description": "批量上传简历文件并进行解析，支持选择多个岗位",
@@ -5647,6 +6489,96 @@
                 }
             }
         },
+        "domain.CreateResumeMailboxSettingRequest": {
+            "type": "object",
+            "required": [
+                "auth_type",
+                "email_address",
+                "encrypted_credential",
+                "host",
+                "name",
+                "port",
+                "protocol",
+                "uploader_id"
+            ],
+            "properties": {
+                "auth_type": {
+                    "description": "认证类型：password或oauth",
+                    "type": "string",
+                    "enum": [
+                        "password",
+                        "oauth"
+                    ]
+                },
+                "email_address": {
+                    "description": "邮箱地址",
+                    "type": "string"
+                },
+                "encrypted_credential": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "folder": {
+                    "description": "邮箱文件夹，可选",
+                    "type": "string"
+                },
+                "host": {
+                    "description": "邮箱服务器地址",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "job_profile_ids": {
+                    "description": "关联的职位档案ID列表，可选",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "description": "邮箱设置名称",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "port": {
+                    "description": "邮箱服务器端口",
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "protocol": {
+                    "description": "邮箱协议：imap或pop3",
+                    "type": "string",
+                    "enum": [
+                        "imap",
+                        "pop3"
+                    ]
+                },
+                "status": {
+                    "description": "状态：enabled或disabled，可选",
+                    "type": "string",
+                    "enum": [
+                        "enabled",
+                        "disabled"
+                    ]
+                },
+                "sync_interval_minutes": {
+                    "description": "同步间隔（分钟），可选，范围5-1440",
+                    "type": "integer",
+                    "maximum": 1440,
+                    "minimum": 5
+                },
+                "uploader_id": {
+                    "description": "上传者ID",
+                    "type": "string"
+                },
+                "use_ssl": {
+                    "description": "是否使用SSL连接",
+                    "type": "boolean"
+                }
+            }
+        },
         "domain.CreateScreeningTaskReq": {
             "type": "object",
             "required": [
@@ -6983,6 +7915,48 @@
                 }
             }
         },
+        "domain.ListResumeMailboxSettingsResponse": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "items": {
+                    "description": "邮箱设置列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ResumeMailboxSetting"
+                    }
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ListResumeMailboxStatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "items": {
+                    "description": "邮箱统计列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ResumeMailboxStatistic"
+                    }
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.ListResumeResp": {
             "type": "object",
             "properties": {
@@ -7142,6 +8116,29 @@
                             "$ref": "#/definitions/domain.User"
                         }
                     ]
+                }
+            }
+        },
+        "domain.MailboxStatisticsSummary": {
+            "type": "object",
+            "properties": {
+                "avg_sync_duration_ms": {
+                    "type": "number"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "total_failed_resumes": {
+                    "type": "integer"
+                },
+                "total_parsed_resumes": {
+                    "type": "integer"
+                },
+                "total_skipped_attachments": {
+                    "type": "integer"
+                },
+                "total_synced_emails": {
+                    "type": "integer"
                 }
             }
         },
@@ -7790,6 +8787,148 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ResumeMailboxSetting": {
+            "type": "object",
+            "properties": {
+                "auth_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "encrypted_credential": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "folder": {
+                    "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "job_profile_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "job_profile_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "last_error": {
+                    "type": "string"
+                },
+                "last_synced_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "retry_count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "sync_interval_minutes": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "uploader_id": {
+                    "type": "string"
+                },
+                "uploader_name": {
+                    "type": "string"
+                },
+                "use_ssl": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "domain.ResumeMailboxStatistic": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "failed_resumes": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_sync_duration_ms": {
+                    "type": "integer"
+                },
+                "mailbox_id": {
+                    "type": "string"
+                },
+                "parsed_resumes": {
+                    "type": "integer"
+                },
+                "skipped_attachments": {
+                    "type": "integer"
+                },
+                "synced_emails": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ResumeMailboxSyncResult": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "$ref": "#/definitions/time.Duration"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failed_attachments": {
+                    "type": "integer"
+                },
+                "last_message_id": {
+                    "type": "string"
+                },
+                "mailbox_id": {
+                    "type": "string"
+                },
+                "processed_emails": {
+                    "type": "integer"
+                },
+                "skipped_attachments": {
+                    "type": "integer"
+                },
+                "success_attachments": {
                     "type": "integer"
                 }
             }
@@ -8660,6 +9799,19 @@
                 }
             }
         },
+        "domain.TestConnectionResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "连接结果消息",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "连接是否成功",
+                    "type": "boolean"
+                }
+            }
+        },
         "domain.UpdateDepartmentReq": {
             "type": "object",
             "required": [
@@ -8860,6 +10012,83 @@
                 "title": {
                     "description": "担任岗位",
                     "type": "string"
+                }
+            }
+        },
+        "domain.UpdateResumeMailboxSettingRequest": {
+            "type": "object",
+            "properties": {
+                "auth_type": {
+                    "description": "认证类型：password或oauth，可选",
+                    "type": "string",
+                    "enum": [
+                        "password",
+                        "oauth"
+                    ]
+                },
+                "email_address": {
+                    "description": "邮箱地址，可选",
+                    "type": "string"
+                },
+                "encrypted_credential": {
+                    "description": "加密后的认证凭据，可选。password类型需要：username(可选,默认使用email_address)、password(必需)；oauth类型需要：username(可选,默认使用email_address)、access_token(必需)",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "folder": {
+                    "description": "邮箱文件夹，可选",
+                    "type": "string"
+                },
+                "host": {
+                    "description": "邮箱服务器地址，可选",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "job_profile_ids": {
+                    "description": "关联的职位档案ID列表，可选",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "description": "邮箱设置名称，可选",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "port": {
+                    "description": "邮箱服务器端口，可选",
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "protocol": {
+                    "description": "邮箱协议：imap或pop3，可选",
+                    "type": "string",
+                    "enum": [
+                        "imap",
+                        "pop3"
+                    ]
+                },
+                "status": {
+                    "description": "状态：enabled或disabled，可选",
+                    "type": "string",
+                    "enum": [
+                        "enabled",
+                        "disabled"
+                    ]
+                },
+                "sync_interval_minutes": {
+                    "description": "同步间隔（分钟），可选，范围5-1440",
+                    "type": "integer",
+                    "maximum": 1440,
+                    "minimum": 5
+                },
+                "use_ssl": {
+                    "description": "是否使用SSL连接，可选",
+                    "type": "boolean"
                 }
             }
         },
@@ -9115,6 +10344,48 @@
                 }
             }
         },
+        "domain.UpsertResumeMailboxStatisticRequest": {
+            "type": "object",
+            "required": [
+                "date",
+                "mailbox_id"
+            ],
+            "properties": {
+                "date": {
+                    "description": "统计日期",
+                    "type": "string"
+                },
+                "failed_resumes": {
+                    "description": "失败简历数，可选",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "last_sync_duration_ms": {
+                    "description": "最后同步耗时，可选",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "mailbox_id": {
+                    "description": "邮箱ID",
+                    "type": "string"
+                },
+                "parsed_resumes": {
+                    "description": "解析简历数，可选",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "skipped_attachments": {
+                    "description": "跳过附件数，可选",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "synced_emails": {
+                    "description": "同步邮件数，可选",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
         "domain.User": {
             "type": "object",
             "properties": {
@@ -9225,6 +10496,45 @@
                     "type": "string"
                 }
             }
+        },
+        "time.Duration": {
+            "type": "integer",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
+            ],
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
         }
     }
 }
