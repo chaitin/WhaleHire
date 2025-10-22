@@ -414,7 +414,7 @@ func (d *DingTalkAdapter) sendScreeningTaskCompletedNotification(ctx context.Con
 		UserName:    payload.UserName,
 		TotalCount:  payload.TotalCount,
 		PassedCount: payload.PassedCount,
-		CompletedAt: payload.CompletedAt.In(time.Local).Format("2006-01-02 15:04:05"),
+		CompletedAt: payload.CompletedAt.Format("2006-01-02 15:04:05"),
 	}
 
 	content, err := d.renderTemplate("screening_task_completed", templateData)

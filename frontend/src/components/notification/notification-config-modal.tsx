@@ -10,7 +10,8 @@ import {
 
 export interface NotificationConfig {
   id: string;
-  description: string; // 通知名称
+  name: string; // 通知名称
+  description?: string; // 通知描述（可选）
   channel: 'dingtalk' | 'email'; // 通知方式
   dingtalk_config?: {
     webhook_url: string;
@@ -202,7 +203,7 @@ export function NotificationConfigModal({
                     >
                       <div className="flex items-center w-48 pr-4">
                         <span className="text-sm text-gray-900 truncate">
-                          {notification.description}
+                          {notification.name}
                         </span>
                       </div>
                       <div className="flex items-center w-32 pr-4">

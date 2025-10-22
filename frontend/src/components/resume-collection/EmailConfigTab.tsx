@@ -621,7 +621,7 @@ export function EmailConfigTab() {
                     className={cn(
                       'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                       page === currentPage &&
-                        'border-[#36CFC9] bg-[#36CFC9] text-white'
+                        'border-[#7bb8ff] bg-[#7bb8ff] text-white'
                     )}
                   >
                     {page}

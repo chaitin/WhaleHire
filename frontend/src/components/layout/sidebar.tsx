@@ -162,7 +162,7 @@ export function Sidebar({
       {/* Logo */}
       <div className="flex h-16 items-center justify-between gap-2 border-b px-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#36CFC9]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7bb8ff]">
             <svg
               width="18"
               height="18"
@@ -183,7 +183,7 @@ export function Sidebar({
                 strokeLinejoin="round"
                 opacity="0.9"
               />
-              <circle cx="12" cy="17" r="1.3" fill="#36CFC9" />
+              <circle cx="12" cy="17" r="1.3" fill="#7bb8ff" />
               <circle cx="21" cy="12" r="0.8" fill="white" opacity="0.8" />
               <circle cx="22.5" cy="11" r="0.6" fill="white" opacity="0.6" />
               <circle cx="19.8" cy="11.5" r="0.5" fill="white" opacity="0.5" />
@@ -281,9 +281,9 @@ export function Sidebar({
 
         {/* Upgrade Section */}
         <div className="border-t px-4 pt-4 pb-4">
-          <div className="rounded-lg bg-gradient-to-r from-cyan-50 to-cyan-100 border border-[#36CFC9] p-4 opacity-60 cursor-not-allowed">
+          <div className="rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 border border-[#7bb8ff] p-4 opacity-60 cursor-not-allowed">
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#36CFC9]">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7bb8ff]">
                 <Rocket className="h-3 w-3 text-white" />
               </div>
               <span className="text-sm font-medium text-gray-700">
@@ -295,7 +295,7 @@ export function Sidebar({
             </p>
             <button
               disabled
-              className="w-full rounded-md bg-[#36CFC9] px-3 py-2 text-xs font-medium text-white cursor-not-allowed opacity-70"
+              className="w-full rounded-md bg-[#7bb8ff] px-3 py-2 text-xs font-medium text-white cursor-not-allowed opacity-70"
             >
               立即升级
             </button>

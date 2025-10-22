@@ -31,7 +31,7 @@ export function AddNotificationModal({
   onShowMessage,
   editingNotification,
 }: AddNotificationModalProps) {
-  const [description, setDescription] = useState(''); // 通知名称
+  const [name, setName] = useState(''); // 通知名称
   const [channel, setChannel] = useState<'dingtalk' | 'email'>('dingtalk'); // 通知方式
   const [webhookUrl, setWebhookUrl] = useState(''); // 钉钉Webhook URL
   const [secret, setSecret] = useState(''); // 加签密钥
@@ -42,7 +42,7 @@ export function AddNotificationModal({
   // 编辑模式：填充表单
   useEffect(() => {
     if (editingNotification) {
-      setDescription(editingNotification.description);
+      setName(editingNotification.name);
       setChannel(editingNotification.channel);
       setWebhookUrl(editingNotification.dingtalk_config?.webhook_url || '');
       setSecret(editingNotification.dingtalk_config?.secret || '');
@@ -54,7 +54,7 @@ export function AddNotificationModal({
 
   // 重置表单
   const resetForm = () => {
-    setDescription('');
+    setName('');
     setChannel('dingtalk');
     setWebhookUrl('');
     setSecret('');
@@ -72,8 +72,8 @@ export function AddNotificationModal({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!description.trim()) {
-      newErrors.description = '请输入通知名称';
+    if (!name.trim()) {
+      newErrors.name = '请输入通知名称';
     }
 
     if (channel === 'dingtalk') {
@@ -101,7 +101,7 @@ export function AddNotificationModal({
     setSubmitting(true);
     try {
       const payload: {
-        description: string;
+        name: string;
         channel: 'dingtalk' | 'email';
         enabled: boolean;
         dingtalk_config?: {
@@ -110,7 +110,7 @@ export function AddNotificationModal({
           token?: string;
         };
       } = {
-        description: description.trim(),
+        name: name.trim(),
         channel,
         enabled,
       };
@@ -180,15 +180,13 @@ export function AddNotificationModal({
                 通知名称 <span className="text-red-500">*</span>
               </Label>
               <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="请输入通知名称"
-                className={errors.description ? 'border-red-500' : ''}
+                className={errors.name ? 'border-red-500' : ''}
               />
-              {errors.description && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.description}
-                </p>
+              {errors.name && (
+                <p className="text-xs text-red-500 mt-1">{errors.name}</p>
               )}
             </div>
 

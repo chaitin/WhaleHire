@@ -198,7 +198,7 @@ export function ReportDetailModal({
 
     // 获取分数颜色
     const getScoreColor = (score: number) => {
-      if (score >= 85) return '#36CFC9'; // 青色
+      if (score >= 85) return '#7bb8ff'; // 蓝色
       if (score >= 70) return '#52c41a'; // 绿色
       return '#faad14'; // 黄色
     };
@@ -540,7 +540,7 @@ export function ReportDetailModal({
               style={{
                 fontSize: '20px',
                 lineHeight: '28px',
-                color: '#36CFC9',
+                color: '#7bb8ff',
                 fontFamily: 'Inter',
                 fontWeight: 700,
               }}
@@ -747,7 +747,7 @@ export function ReportDetailModal({
               style={{
                 fontSize: '20px',
                 lineHeight: '28px',
-                color: '#36CFC9',
+                color: '#7bb8ff',
                 fontFamily: 'Inter',
                 fontWeight: 700,
               }}
@@ -791,7 +791,7 @@ export function ReportDetailModal({
                     key={edu.id}
                     style={{
                       borderLeft: isMatched
-                        ? '2px solid #36CFC9'
+                        ? '2px solid #7bb8ff'
                         : '2px solid #e5e7eb',
                       paddingLeft: '18px',
                     }}
@@ -1119,7 +1119,7 @@ export function ReportDetailModal({
                         style={{
                           fontSize: '14px',
                           lineHeight: '20px',
-                          color: '#36CFC9',
+                          color: '#7bb8ff',
                           fontFamily: 'PingFang SC',
                           fontWeight: 400,
                         }}
@@ -1154,7 +1154,7 @@ export function ReportDetailModal({
                           className="px-2 rounded text-xs"
                           style={{
                             backgroundColor: '#e8f3ff',
-                            color: '#36CFC9',
+                            color: '#7bb8ff',
                             fontSize: '12px',
                             lineHeight: '16px',
                             fontFamily: skill.match(/[\u4e00-\u9fa5]/)
@@ -1371,7 +1371,7 @@ export function ReportDetailModal({
 
     // 计算进度条颜色（根据相关性）
     const getProgressColor = (relevance: number) => {
-      if (relevance >= 0.5) return '#36CFC9'; // 青色
+      if (relevance >= 0.5) return '#7bb8ff'; // 蓝色
       if (relevance >= 0.3) return '#FAAD14'; // 黄色
       return '#52C41A'; // 绿色
     };
@@ -1680,7 +1680,7 @@ export function ReportDetailModal({
               style={{
                 fontSize: '20px',
                 lineHeight: '28px',
-                color: '#36CFC9',
+                color: '#7bb8ff',
                 fontFamily: 'Inter',
                 fontWeight: 700,
               }}
@@ -1930,7 +1930,7 @@ export function ReportDetailModal({
               style={{
                 fontSize: '20px',
                 lineHeight: '28px',
-                color: '#36CFC9',
+                color: '#7bb8ff',
                 fontFamily: 'Inter',
                 fontWeight: 700,
               }}
@@ -2135,7 +2135,7 @@ export function ReportDetailModal({
   const renderHeader = () => (
     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-[#36CFC9] rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 bg-[#7bb8ff] rounded-full flex items-center justify-center">
           <BarChart3 className="w-4 h-4 text-white" />
         </div>
         <h2 className="text-xl font-semibold text-gray-900">报告详情</h2>
@@ -2172,7 +2172,7 @@ export function ReportDetailModal({
   const renderBasicInfo = () => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center gap-2 mb-6">
-        <UserCircle className="w-5 h-5 text-[#36CFC9]" />
+        <UserCircle className="w-5 h-5 text-[#7bb8ff]" />
         <h3 className="text-lg font-semibold text-gray-900">基本信息</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -2244,7 +2244,7 @@ export function ReportDetailModal({
       >
         {/* 标题 */}
         <div className="flex items-center gap-2 mb-6">
-          <Award className="w-5 h-5 text-[#36CFC9]" />
+          <Award className="w-5 h-5 text-[#7bb8ff]" />
           <h3
             style={{
               fontSize: '18px',
@@ -2323,7 +2323,7 @@ export function ReportDetailModal({
                       fontSize: '36px',
                       lineHeight: '40px',
                       fontWeight: 700,
-                      color: '#36CFC9',
+                      color: '#7bb8ff',
                       fontFamily: 'Inter',
                     }}
                   >
@@ -2442,7 +2442,7 @@ export function ReportDetailModal({
   const renderRecommendationsSection = () => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center gap-2 mb-6">
-        <Lightbulb className="w-5 h-5 text-[#36CFC9]" />
+        <Lightbulb className="w-5 h-5 text-[#7bb8ff]" />
         <h3 className="text-lg font-semibold text-gray-900">简历推荐建议</h3>
       </div>
       {renderRecommendations()}
@@ -2485,9 +2485,9 @@ export function ReportDetailModal({
                 lineHeight: '24px',
                 fontFamily: 'PingFang SC',
                 fontWeight: 500,
-                color: detailActiveTab === tab.key ? '#36CFC9' : '#6b7280',
+                color: detailActiveTab === tab.key ? '#7bb8ff' : '#6b7280',
                 borderBottom:
-                  detailActiveTab === tab.key ? '2px solid #36CFC9' : 'none',
+                  detailActiveTab === tab.key ? '2px solid #7bb8ff' : 'none',
                 backgroundColor: 'transparent',
                 textAlign: 'center',
                 width: '112px',

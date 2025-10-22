@@ -2288,6 +2288,573 @@
                 }
             }
         },
+        "/api/v1/notification-settings": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "分页获取通知设置列表，支持按渠道、启用状态和关键词过滤",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "获取通知设置列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认为1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小，默认为20",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "dingtalk",
+                            "webhook",
+                            "email"
+                        ],
+                        "type": "string",
+                        "description": "通知渠道过滤",
+                        "name": "channel",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "启用状态过滤",
+                        "name": "enabled",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词搜索（名称或描述）",
+                        "name": "keyword",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListSettingsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "获取通知设置列表失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "创建新的通知设置配置，支持钉钉等多种通知渠道",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "创建通知设置",
+                "parameters": [
+                    {
+                        "description": "创建通知设置请求参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateSettingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.NotificationSetting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "创建通知设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notification-settings/by-channel/{channel}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据通道类型获取该类型下的所有通知设置列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "根据通道类型获取所有通知设置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "通道类型",
+                        "name": "channel",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.GetSettingsByChannelResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "获取通知设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notification-settings/by-name/{name}/channel/{channel}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据配置名称和通道类型获取指定通知设置的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "根据名称和通道类型获取通知设置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "配置名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "通道类型",
+                        "name": "channel",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.NotificationSetting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "通知设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "获取通知设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notification-settings/enabled": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取所有已启用状态的通知设置列表，用于系统通知功能",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "获取启用的通知设置列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.GetEnabledSettingsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "获取启用通知设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notification-settings/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据ID获取指定通知设置的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "获取通知设置详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "通知设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.NotificationSetting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误或ID格式无效",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "通知设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "获取通知设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据ID更新指定通知设置的配置信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "更新通知设置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "通知设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新通知设置请求参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateSettingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.NotificationSetting"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误或ID格式无效",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "通知设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "更新通知设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据ID删除指定的通知设置配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NotificationSetting"
+                ],
+                "summary": "删除通知设置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "通知设置ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误或ID格式无效",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "404": {
+                        "description": "通知设置不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "删除通知设置失败",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/resume/batch-upload": {
             "post": {
                 "description": "批量上传简历文件并进行解析，支持选择多个岗位",
@@ -4086,6 +4653,19 @@
                 "MatchLevelNoMatch"
             ]
         },
+        "consts.NotificationChannel": {
+            "type": "string",
+            "enum": [
+                "dingtalk",
+                "webhook",
+                "email"
+            ],
+            "x-enum-varnames": [
+                "NotificationChannelDingTalk",
+                "NotificationChannelWebhook",
+                "NotificationChannelEmail"
+            ]
+        },
         "consts.OperationType": {
             "type": "string",
             "enum": [
@@ -4471,7 +5051,7 @@
                     "type": "string"
                 },
                 "operation_type": {
-                    "description": "操作类型",
+                    "description": "操作类型: create创建、update更新、delete删除、view查看（敏感数据）、login登录、logout登出",
                     "allOf": [
                         {
                             "$ref": "#/definitions/consts.OperationType"
@@ -4527,7 +5107,7 @@
                     "type": "string"
                 },
                 "resource_type": {
-                    "description": "资源类型",
+                    "description": "资源类型: user用户、admin管理员、role角色、department部门、job_position职位、resume简历、screening筛选任务、setting系统设置、attachment附件、conversation对话、message消息",
                     "allOf": [
                         {
                             "$ref": "#/definitions/consts.ResourceType"
@@ -5121,6 +5701,44 @@
                 }
             }
         },
+        "domain.CreateSettingRequest": {
+            "type": "object",
+            "required": [
+                "channel",
+                "name"
+            ],
+            "properties": {
+                "channel": {
+                    "$ref": "#/definitions/consts.NotificationChannel"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "dingtalk_config": {
+                    "$ref": "#/definitions/domain.NotificationDingTalkConfig"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "max_retry": {
+                    "type": "integer",
+                    "default": 3,
+                    "maximum": 10,
+                    "minimum": 0
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "timeout": {
+                    "type": "integer",
+                    "default": 300,
+                    "maximum": 300,
+                    "minimum": 1
+                }
+            }
+        },
         "domain.CreateSkillMetaReq": {
             "type": "object",
             "required": [
@@ -5454,6 +6072,17 @@
                 }
             }
         },
+        "domain.GetEnabledSettingsResponse": {
+            "type": "object",
+            "properties": {
+                "settings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.NotificationSetting"
+                    }
+                }
+            }
+        },
         "domain.GetNodeRunsResp": {
             "type": "object",
             "properties": {
@@ -5578,6 +6207,17 @@
                             "$ref": "#/definitions/domain.ScreeningTask"
                         }
                     ]
+                }
+            }
+        },
+        "domain.GetSettingsByChannelResponse": {
+            "type": "object",
+            "properties": {
+                "settings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.NotificationSetting"
+                    }
                 }
             }
         },
@@ -6405,6 +7045,26 @@
                 }
             }
         },
+        "domain.ListSettingsResponse": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.NotificationSetting"
+                    }
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.ListSkillMetaResp": {
             "type": "object",
             "properties": {
@@ -6633,6 +7293,62 @@
                 "type": {
                     "description": "\"text\", \"image\", \"audio\", \"video\", \"file\"",
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.NotificationDingTalkConfig": {
+            "type": "object",
+            "properties": {
+                "keywords": {
+                    "description": "关键词列表，用于 DingDing验证通知",
+                    "type": "string"
+                },
+                "secret": {
+                    "description": "钉钉机器人Secret",
+                    "type": "string"
+                },
+                "token": {
+                    "description": "钉钉机器人Token",
+                    "type": "string"
+                },
+                "webhook_url": {
+                    "description": "钉钉机器人Webhook URL https://oapi.dingtalk.com/robot/send?access_token=XXX",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.NotificationSetting": {
+            "type": "object",
+            "properties": {
+                "channel": {
+                    "$ref": "#/definitions/consts.NotificationChannel"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "dingtalk_config": {
+                    "$ref": "#/definitions/domain.NotificationDingTalkConfig"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "max_retry": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -8334,6 +9050,44 @@
                 "force_two_factor_auth": {
                     "description": "是否强制两步验证",
                     "type": "boolean"
+                }
+            }
+        },
+        "domain.UpdateSettingRequest": {
+            "type": "object",
+            "required": [
+                "channel",
+                "name"
+            ],
+            "properties": {
+                "channel": {
+                    "$ref": "#/definitions/consts.NotificationChannel"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "dingtalk_config": {
+                    "$ref": "#/definitions/domain.NotificationDingTalkConfig"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "max_retry": {
+                    "type": "integer",
+                    "default": 3,
+                    "maximum": 10,
+                    "minimum": 0
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "timeout": {
+                    "type": "integer",
+                    "default": 300,
+                    "maximum": 300,
+                    "minimum": 1
                 }
             }
         },

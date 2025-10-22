@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { listAuditLogs } from '@/services/audit-log';
 import type { AuditLog, OperationType } from '@/types/audit-log';
-import { OperationTypeLabels, OperationTypeColors } from '@/types/audit-log';
+import { OperationTypeLabels } from '@/types/audit-log';
 
 /**
  * 操作日志页面组件
@@ -337,23 +337,13 @@ export default function AuditLogPage() {
                       {/* 操作人 */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {log.resource_name || '-'}
+                          {log.operator_name || '-'}
                         </div>
                       </td>
 
                       {/* 操作类型 */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                          style={{
-                            backgroundColor:
-                              OperationTypeColors[log.operation_type]?.bg ||
-                              '#F7F8FA',
-                            color:
-                              OperationTypeColors[log.operation_type]?.text ||
-                              '#6B7280',
-                          }}
-                        >
+                        <span className="text-sm text-gray-500">
                           {OperationTypeLabels[log.operation_type] ||
                             log.operation_type ||
                             '未知操作'}
@@ -423,7 +413,7 @@ export default function AuditLogPage() {
                       className={cn(
                         'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                         page === currentPage &&
-                          'border-[#36CFC9] bg-[#36CFC9] text-white'
+                          'border-[#7bb8ff] bg-[#7bb8ff] text-white'
                       )}
                     >
                       {page}
