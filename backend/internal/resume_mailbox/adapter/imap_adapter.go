@@ -23,6 +23,7 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/pkg/netutil"
 )
 
 const (
@@ -566,22 +567,20 @@ func (a *IMAPAdapter) openMailbox(ctx context.Context, config *domain.MailboxCon
 		dialTimeout = defaultIMAPTimeout
 	}
 
-	dialer := &net.Dialer{
-		Timeout:   dialTimeout,
-		KeepAlive: 30 * time.Second,
-	}
+	// 使用支持代理的拨号器
+	proxyDialer := netutil.NewProxyDialer(dialTimeout, 30*time.Second)
 
 	if config.UseSSL {
 		tlsConfig := &tls.Config{
 			ServerName: config.Host,
 		}
-		conn, dialErr := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
+		conn, dialErr := proxyDialer.DialTLSContext(ctx, "tcp", addr, tlsConfig)
 		if dialErr != nil {
 			return nil, nil, fmt.Errorf("无法建立IMAP TLS连接: %w", dialErr)
 		}
 		c, err = client.New(conn)
 	} else {
-		netConn, dialErr := dialer.DialContext(ctx, "tcp", addr)
+		netConn, dialErr := proxyDialer.DialContext(ctx, "tcp", addr)
 		if dialErr != nil {
 			return nil, nil, fmt.Errorf("无法连接IMAP服务器: %w", dialErr)
 		}
