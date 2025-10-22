@@ -238,27 +238,40 @@ func (h *ResumeMailboxSettingHandler) DeleteSetting(ctx *web.Context) error {
 //	@Failure		500			{object}	web.Resp{}	"服务器错误"
 //	@Router			/api/v1/resume-mailbox-settings [get]
 func (h *ResumeMailboxSettingHandler) ListSettings(ctx *web.Context) error {
-	// 获取当前用户
-	user := middleware.GetUser(ctx)
-	if user == nil {
-		h.logger.ErrorContext(ctx.Request().Context(), "Failed to get user")
-		return errcode.ErrPermission
-	}
+	req := &domain.ListResumeMailboxSettingReq{}
 
-	userID, err := uuid.Parse(user.ID)
-	if err != nil {
-		h.logger.ErrorContext(ctx.Request().Context(), "Invalid user ID format",
-			slog.String("user_id", user.ID),
+	// 绑定查询参数和分页参数
+	if err := ctx.Bind(req); err != nil {
+		h.logger.ErrorContext(ctx.Request().Context(), "Failed to bind request parameters",
+			slog.String("error", err.Error()),
 		)
-		return errcode.ErrInvalidParam.WithData("message", "Invalid user ID format")
+		return errcode.ErrInvalidParam.WithData("message", "Invalid request parameters")
 	}
 
-	req := &domain.ListResumeMailboxSettingsRequest{
-		Pagination: *ctx.Page(),
-		UploaderID: &userID,
+	// 转换为内部请求结构
+	internalReq := &domain.ListResumeMailboxSettingsRequest{
+		Pagination: req.Pagination,
 	}
 
-	settings, err := h.usecase.List(ctx.Request().Context(), req)
+	// 设置过滤条件
+	if req.Status != nil {
+		internalReq.Status = req.Status
+	}
+	if req.Protocol != nil {
+		internalReq.Protocol = req.Protocol
+	}
+	if req.UploaderID != nil {
+		uploaderUUID, err := uuid.Parse(*req.UploaderID)
+		if err != nil {
+			h.logger.ErrorContext(ctx.Request().Context(), "Invalid uploader_id format",
+				slog.String("uploader_id", *req.UploaderID),
+			)
+			return errcode.ErrInvalidParam.WithData("message", "Invalid uploader_id format")
+		}
+		internalReq.UploaderID = &uploaderUUID
+	}
+
+	settings, err := h.usecase.List(ctx.Request().Context(), internalReq)
 	if err != nil {
 		h.logger.ErrorContext(ctx.Request().Context(), "Failed to list mailbox settings",
 			slog.String("error", err.Error()),
