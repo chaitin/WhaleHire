@@ -280,12 +280,6 @@ func (h *ResumeMailboxStatisticHandler) DeleteStatistic(ctx *web.Context) error 
 //	@Failure		500			{object}	web.Resp{}	"服务器错误"
 //	@Router			/api/v1/resume-mailbox-statistics/summary [get]
 func (h *ResumeMailboxStatisticHandler) GetSummary(ctx *web.Context) error {
-	// 获取当前用户
-	user := middleware.GetUser(ctx)
-	if user == nil {
-		h.logger.ErrorContext(ctx.Request().Context(), "Failed to get user")
-		return errcode.ErrPermission
-	}
 
 	req := &domain.GetMailboxStatisticsSummaryRequest{}
 

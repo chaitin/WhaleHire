@@ -320,6 +320,7 @@ type ResumeMailboxSetting struct {
 	LastSyncedAt        *time.Time             `json:"last_synced_at,omitempty"`
 	LastError           string                 `json:"last_error"`
 	RetryCount          int                    `json:"retry_count"`
+	TotalResumes        int                    `json:"total_resumes"` // 该配置总解析简历数（成功+失败）
 	CreatedAt           time.Time              `json:"created_at"`
 	UpdatedAt           time.Time              `json:"updated_at"`
 }
@@ -447,6 +448,7 @@ type ResumeMailboxStatistic struct {
 	MailboxID          uuid.UUID `json:"mailbox_id"`
 	Date               time.Time `json:"date"`
 	SyncedEmails       int       `json:"synced_emails"`
+	TotalParsedResumes int       `json:"total_parsed_resumes"` // 解析简历总数（成功+失败）
 	ParsedResumes      int       `json:"parsed_resumes"`
 	FailedResumes      int       `json:"failed_resumes"`
 	SkippedAttachments int       `json:"skipped_attachments"`
@@ -467,6 +469,7 @@ func (s *ResumeMailboxStatistic) From(entity *db.ResumeMailboxStatistic) *Resume
 	s.SyncedEmails = entity.SyncedEmails
 	s.ParsedResumes = entity.ParsedResumes
 	s.FailedResumes = entity.FailedResumes
+	s.TotalParsedResumes = entity.ParsedResumes + entity.FailedResumes // 解析简历总数（成功+失败）
 	s.SkippedAttachments = entity.SkippedAttachments
 	s.LastSyncDurationMs = entity.LastSyncDurationMs
 	s.CreatedAt = entity.CreatedAt
@@ -478,6 +481,7 @@ func (s *ResumeMailboxStatistic) From(entity *db.ResumeMailboxStatistic) *Resume
 // MailboxStatisticsSummary 邮箱统计汇总
 type MailboxStatisticsSummary struct {
 	TotalSyncedEmails       int     `json:"total_synced_emails"`
+	TotalResumes            int     `json:"total_resumes"` // 所有解析的简历总数（成功+失败）
 	TotalParsedResumes      int     `json:"total_parsed_resumes"`
 	TotalFailedResumes      int     `json:"total_failed_resumes"`
 	TotalSkippedAttachments int     `json:"total_skipped_attachments"`

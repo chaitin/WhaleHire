@@ -144,9 +144,9 @@ func newServer() (*Server, error) {
 	resumeMailboxSyncUsecase := usecase11.NewResumeMailboxSyncUsecase(resumeMailboxSettingRepo, resumeMailboxCursorRepo, resumeMailboxStatisticRepo, credentialVault, mailboxAdapterFactory, resumeUsecase, jobApplicationUsecase, slogLogger)
 	schedulerScheduler := scheduler.NewScheduler(resumeMailboxSettingRepo, resumeMailboxSyncUsecase, slogLogger)
 	resumeMailboxScheduler := internal.NewResumeMailboxScheduler(schedulerScheduler)
-	resumeMailboxSettingUsecase := usecase11.NewResumeMailboxSettingUsecase(resumeMailboxSettingRepo, credentialVault, mailboxAdapterFactory, resumeMailboxScheduler, jobProfileUsecase)
-	resumeMailboxSettingHandler := v1_11.NewResumeMailboxSettingHandler(web, resumeMailboxSettingUsecase, resumeMailboxSyncUsecase, slogLogger, authMiddleware)
 	resumeMailboxStatisticUsecase := usecase11.NewResumeMailboxStatisticUsecase(resumeMailboxStatisticRepo)
+	resumeMailboxSettingUsecase := usecase11.NewResumeMailboxSettingUsecase(resumeMailboxSettingRepo, credentialVault, mailboxAdapterFactory, resumeMailboxScheduler, jobProfileUsecase, resumeMailboxStatisticUsecase)
+	resumeMailboxSettingHandler := v1_11.NewResumeMailboxSettingHandler(web, resumeMailboxSettingUsecase, resumeMailboxSyncUsecase, slogLogger, authMiddleware)
 	resumeMailboxStatisticHandler := v1_11.NewResumeMailboxStatisticHandler(web, resumeMailboxStatisticUsecase, slogLogger, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{

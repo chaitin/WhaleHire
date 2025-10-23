@@ -8,6 +8,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/google/uuid"
+	"github.com/labstack/gommon/log"
 )
 
 // ResumeMailboxSettingUsecase 邮箱设置用例实现
@@ -17,6 +18,7 @@ type ResumeMailboxSettingUsecase struct {
 	adapterFactory    domain.MailboxAdapterFactory
 	scheduler         domain.ResumeMailboxScheduler
 	jobProfileUsecase domain.JobProfileUsecase
+	statisticUsecase  domain.ResumeMailboxStatisticUsecase
 }
 
 // NewResumeMailboxSettingUsecase 创建邮箱设置用例实例
@@ -26,6 +28,7 @@ func NewResumeMailboxSettingUsecase(
 	adapterFactory domain.MailboxAdapterFactory,
 	scheduler domain.ResumeMailboxScheduler,
 	jobProfileUsecase domain.JobProfileUsecase,
+	statisticUsecase domain.ResumeMailboxStatisticUsecase,
 ) domain.ResumeMailboxSettingUsecase {
 	return &ResumeMailboxSettingUsecase{
 		repo:              repo,
@@ -33,6 +36,7 @@ func NewResumeMailboxSettingUsecase(
 		adapterFactory:    adapterFactory,
 		scheduler:         scheduler,
 		jobProfileUsecase: jobProfileUsecase,
+		statisticUsecase:  statisticUsecase,
 	}
 }
 
@@ -81,6 +85,20 @@ func (u *ResumeMailboxSettingUsecase) GetByID(ctx context.Context, id uuid.UUID)
 	// 填充JobProfileNames
 	if err := u.fillJobProfileNames(ctx, setting); err != nil {
 		return nil, err
+	}
+
+	// 计算TotalResumes - 从统计数据中获取
+	if u.statisticUsecase != nil {
+		summaryReq := &domain.GetMailboxStatisticsSummaryRequest{
+			MailboxID: &id,
+		}
+		summary, err := u.statisticUsecase.GetSummary(ctx, summaryReq)
+		if err != nil {
+			// 如果获取统计失败，记录错误但不阻断返回，TotalResumes保持为0
+			_ = err // 明确忽略错误
+		} else {
+			setting.TotalResumes = summary.TotalResumes
+		}
 	}
 
 	// 解密凭证信息（仅在需要时）
@@ -200,7 +218,23 @@ func (u *ResumeMailboxSettingUsecase) List(ctx context.Context, req *domain.List
 		// 填充JobProfileNames
 		if err := u.fillJobProfileNames(ctx, setting); err != nil {
 			// 记录错误但不阻断返回，JobProfileNames将保持为空
+			log.Error(ctx, "failed to fill job profile names: %v", err)
 			_ = err // 明确忽略错误
+		}
+
+		// 计算TotalResumes - 从统计数据中获取
+		if u.statisticUsecase != nil {
+			summaryReq := &domain.GetMailboxStatisticsSummaryRequest{
+				MailboxID: &setting.ID,
+			}
+			summary, err := u.statisticUsecase.GetSummary(ctx, summaryReq)
+			if err != nil {
+				// 如果获取统计失败，记录错误但不阻断返回，TotalResumes保持为0
+				log.Error(ctx, "failed to get mailbox statistics summary: %v", err)
+				_ = err // 明确忽略错误
+			} else {
+				setting.TotalResumes = summary.TotalResumes
+			}
 		}
 
 		items[i] = setting
