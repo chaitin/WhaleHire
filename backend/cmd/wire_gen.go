@@ -39,6 +39,11 @@ import (
 	repo3 "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	usecase4 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	adapter2 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/adapter"
+	v1_11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
+	repo10 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/repo"
+	"github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/scheduler"
+	usecase11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/usecase"
 	v1_7 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	repo9 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	service2 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
@@ -47,6 +52,7 @@ import (
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
+	"github.com/chaitin/WhaleHire/backend/pkg/credential"
 	"github.com/chaitin/WhaleHire/backend/pkg/ipdb"
 	"github.com/chaitin/WhaleHire/backend/pkg/logger"
 	"github.com/chaitin/WhaleHire/backend/pkg/session"
@@ -127,24 +133,42 @@ func newServer() (*Server, error) {
 	dingTalkAdapter := adapter.NewDingTalkAdapter(notificationSettingUsecase, slogLogger)
 	notificationWorker := worker.NewNotificationWorker(consumer, notificationEventRepo, dingTalkAdapter, slogLogger)
 	notificationSettingHandler := v1_10.NewNotificationSettingHandler(web, notificationSettingUsecase, slogLogger, authMiddleware)
+	resumeMailboxSettingRepo := repo10.NewResumeMailboxSettingRepo(client)
+	resumeMailboxCursorRepo := repo10.NewResumeMailboxCursorRepo(client)
+	resumeMailboxStatisticRepo := repo10.NewResumeMailboxStatisticRepo(client)
+	credentialVault, err := credential.NewCredentialVault(configConfig)
+	if err != nil {
+		return nil, err
+	}
+	mailboxAdapterFactory := adapter2.NewAdapterFactory(slogLogger)
+	resumeMailboxSyncUsecase := usecase11.NewResumeMailboxSyncUsecase(resumeMailboxSettingRepo, resumeMailboxCursorRepo, resumeMailboxStatisticRepo, credentialVault, mailboxAdapterFactory, resumeUsecase, jobApplicationUsecase, slogLogger)
+	schedulerScheduler := scheduler.NewScheduler(resumeMailboxSettingRepo, resumeMailboxSyncUsecase, slogLogger)
+	resumeMailboxScheduler := internal.NewResumeMailboxScheduler(schedulerScheduler)
+	resumeMailboxSettingUsecase := usecase11.NewResumeMailboxSettingUsecase(resumeMailboxSettingRepo, credentialVault, mailboxAdapterFactory, resumeMailboxScheduler, jobProfileUsecase)
+	resumeMailboxSettingHandler := v1_11.NewResumeMailboxSettingHandler(web, resumeMailboxSettingUsecase, resumeMailboxSyncUsecase, slogLogger, authMiddleware)
+	resumeMailboxStatisticUsecase := usecase11.NewResumeMailboxStatisticUsecase(resumeMailboxStatisticRepo)
+	resumeMailboxStatisticHandler := v1_11.NewResumeMailboxStatisticHandler(web, resumeMailboxStatisticUsecase, slogLogger, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
-		config:             configConfig,
-		web:                web,
-		ent:                client,
-		logger:             slogLogger,
-		userV1:             userHandler,
-		resumeV1:           resumeHandler,
-		generalagentV1:     generalAgentHandler,
-		jobprofileV1:       jobProfileHandler,
-		departmentV1:       departmentHandler,
-		jobapplicationV1:   jobApplicationHandler,
-		screeningV1:        screeningHandler,
-		auditV1:            auditHandler,
-		fileV1:             fileHandler,
-		notificationWorker: notificationWorker,
-		notificationV1:     notificationSettingHandler,
-		version:            versionInfo,
+		config:                   configConfig,
+		web:                      web,
+		ent:                      client,
+		logger:                   slogLogger,
+		userV1:                   userHandler,
+		resumeV1:                 resumeHandler,
+		generalagentV1:           generalAgentHandler,
+		jobprofileV1:             jobProfileHandler,
+		departmentV1:             departmentHandler,
+		jobapplicationV1:         jobApplicationHandler,
+		screeningV1:              screeningHandler,
+		auditV1:                  auditHandler,
+		fileV1:                   fileHandler,
+		notificationWorker:       notificationWorker,
+		notificationV1:           notificationSettingHandler,
+		resumeMailboxScheduler:   schedulerScheduler,
+		resumeMailboxSettingV1:   resumeMailboxSettingHandler,
+		resumeMailboxStatisticV1: resumeMailboxStatisticHandler,
+		version:                  versionInfo,
 	}
 	return server, nil
 }
@@ -152,20 +176,23 @@ func newServer() (*Server, error) {
 // wire.go:
 
 type Server struct {
-	config             *config.Config
-	web                *web.Web
-	ent                *db.Client
-	logger             *slog.Logger
-	userV1             *v1.UserHandler
-	resumeV1           *v1_2.ResumeHandler
-	generalagentV1     *v1_3.GeneralAgentHandler
-	jobprofileV1       *v1_4.JobProfileHandler
-	departmentV1       *v1_5.DepartmentHandler
-	jobapplicationV1   *v1_6.JobApplicationHandler
-	screeningV1        *v1_7.ScreeningHandler
-	auditV1            *v1_8.AuditHandler
-	fileV1             *v1_9.FileHandler
-	notificationWorker *worker.NotificationWorker
-	notificationV1     *v1_10.NotificationSettingHandler
-	version            *version.VersionInfo
+	config                   *config.Config
+	web                      *web.Web
+	ent                      *db.Client
+	logger                   *slog.Logger
+	userV1                   *v1.UserHandler
+	resumeV1                 *v1_2.ResumeHandler
+	generalagentV1           *v1_3.GeneralAgentHandler
+	jobprofileV1             *v1_4.JobProfileHandler
+	departmentV1             *v1_5.DepartmentHandler
+	jobapplicationV1         *v1_6.JobApplicationHandler
+	screeningV1              *v1_7.ScreeningHandler
+	auditV1                  *v1_8.AuditHandler
+	fileV1                   *v1_9.FileHandler
+	notificationWorker       *worker.NotificationWorker
+	notificationV1           *v1_10.NotificationSettingHandler
+	resumeMailboxScheduler   *scheduler.Scheduler
+	resumeMailboxSettingV1   *v1_11.ResumeMailboxSettingHandler
+	resumeMailboxStatisticV1 *v1_11.ResumeMailboxStatisticHandler
+	version                  *version.VersionInfo
 }

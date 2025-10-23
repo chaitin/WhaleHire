@@ -60,6 +60,12 @@ type Tx struct {
 	ResumeJobApplication *ResumeJobApplicationClient
 	// ResumeLog is the client for interacting with the ResumeLog builders.
 	ResumeLog *ResumeLogClient
+	// ResumeMailboxCursor is the client for interacting with the ResumeMailboxCursor builders.
+	ResumeMailboxCursor *ResumeMailboxCursorClient
+	// ResumeMailboxSetting is the client for interacting with the ResumeMailboxSetting builders.
+	ResumeMailboxSetting *ResumeMailboxSettingClient
+	// ResumeMailboxStatistic is the client for interacting with the ResumeMailboxStatistic builders.
+	ResumeMailboxStatistic *ResumeMailboxStatisticClient
 	// ResumeProject is the client for interacting with the ResumeProject builders.
 	ResumeProject *ResumeProjectClient
 	// ResumeSkill is the client for interacting with the ResumeSkill builders.
@@ -238,6 +244,9 @@ func (tx *Tx) init() {
 	tx.ResumeExperience = NewResumeExperienceClient(tx.config)
 	tx.ResumeJobApplication = NewResumeJobApplicationClient(tx.config)
 	tx.ResumeLog = NewResumeLogClient(tx.config)
+	tx.ResumeMailboxCursor = NewResumeMailboxCursorClient(tx.config)
+	tx.ResumeMailboxSetting = NewResumeMailboxSettingClient(tx.config)
+	tx.ResumeMailboxStatistic = NewResumeMailboxStatisticClient(tx.config)
 	tx.ResumeProject = NewResumeProjectClient(tx.config)
 	tx.ResumeSkill = NewResumeSkillClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)

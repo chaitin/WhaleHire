@@ -34,6 +34,38 @@ const calcMatchLevel = (score: number) => {
   return 'poor';
 };
 
+// 获取匹配等级颜色（用户要求的颜色）
+const getMatchLevelColor = (level: string) => {
+  switch (level) {
+    case 'excellent':
+      return 'bg-[#FDE7E9] text-[#EF4444]'; // 浅红色
+    case 'good':
+      return 'bg-[#FFF3E6] text-[#F59E0B]'; // 浅橙色
+    case 'fair':
+      return 'bg-[#FEF3C7] text-[#F59E0B]'; // 浅黄色
+    case 'poor':
+      return 'bg-[#F3F4F6] text-[#6B7280]'; // 灰色
+    default:
+      return 'bg-[#F3F4F6] text-[#6B7280]';
+  }
+};
+
+// 获取匹配等级标签
+const getLevelLabel = (level: string) => {
+  switch (level) {
+    case 'excellent':
+      return '非常匹配';
+    case 'good':
+      return '高匹配';
+    case 'fair':
+      return '一般匹配';
+    case 'poor':
+      return '低匹配';
+    default:
+      return '低匹配';
+  }
+};
+
 export function MatchingDetailDrawer({
   open,
   onOpenChange,
@@ -403,73 +435,89 @@ export function MatchingDetailDrawer({
                       <Award className="h-4 w-4 text-[#4E5969]" />
                     </div>
                   </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-[#4E5969]">
+                    匹配等级
+                  </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider text-[#4E5969]">
                     操作
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E5E6EB] bg-white">
-                {taskDetail.results.map((result) => (
-                  <tr key={result.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E8E8E8]">
-                          <User className="h-5 w-5 text-[#666666]" />
+                {taskDetail.results.map((result) => {
+                  const matchLevel = calcMatchLevel(result.matchScore);
+                  return (
+                    <tr key={result.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E8E8E8]">
+                            <User className="h-5 w-5 text-[#666666]" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-[#1D2129]">
+                              {result.resume.name}
+                            </div>
+                            <div className="text-sm text-[#4E5969]">
+                              {result.resume.education} ·{' '}
+                              {result.resume.experience}
+                            </div>
+                          </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-medium text-[#1D2129]">
-                            {result.resume.name}
-                          </div>
-                          <div className="text-sm text-[#4E5969]">
-                            {result.resume.education} ·{' '}
-                            {result.resume.experience}
+                          <div className="text-sm font-medium text-[#1D2129] mb-1">
+                            {result.job.title}
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-[#1D2129] mb-1">
-                          {result.job.title}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Award className="h-4 w-4 text-[#7bb8ff]" />
+                          <span className="text-sm font-medium text-[#1D2129]">
+                            {result.matchScore}分
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-[#7bb8ff]" />
-                        <span className="text-sm font-medium text-[#1D2129]">
-                          {result.matchScore}分
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={cn(
+                            'inline-flex rounded-full px-2.5 py-1 text-xs font-medium',
+                            getMatchLevelColor(matchLevel)
+                          )}
+                        >
+                          {getLevelLabel(matchLevel)}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
-                          onClick={() => {
-                            setSelectedResumeId(result.id);
-                            setSelectedResumeName(result.resume.name);
-                            setIsReportModalOpen(true);
-                          }}
-                          title="查看报告"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-gray-300 cursor-not-allowed"
-                          disabled
-                          title="下载功能暂不可用"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                            onClick={() => {
+                              setSelectedResumeId(result.id);
+                              setSelectedResumeName(result.resume.name);
+                              setIsReportModalOpen(true);
+                            }}
+                            title="查看报告"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-gray-300 cursor-not-allowed"
+                            disabled
+                            title="下载功能暂不可用"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

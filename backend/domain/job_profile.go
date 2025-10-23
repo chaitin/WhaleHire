@@ -24,6 +24,7 @@ type JobProfileUsecase interface {
 	Update(ctx context.Context, req *UpdateJobProfileReq) (*JobProfileDetail, error)
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*JobProfileDetail, error)
+	GetByIDs(ctx context.Context, ids []string) ([]*JobProfile, error)
 	List(ctx context.Context, req *ListJobProfileReq) (*ListJobProfileResp, error)
 	Search(ctx context.Context, req *SearchJobProfileReq) (*SearchJobProfileResp, error)
 
@@ -38,6 +39,7 @@ type JobProfileRepo interface {
 	Update(ctx context.Context, id string, fn func(tx *db.Tx, current *db.JobPosition, updater *db.JobPositionUpdateOne) error) (*db.JobPosition, error)
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*db.JobPosition, error)
+	GetByIDs(ctx context.Context, ids []string) ([]*db.JobPosition, error)
 	List(ctx context.Context, req *ListJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error)
 	Search(ctx context.Context, req *SearchJobProfileRepoReq) ([]*db.JobPosition, *db.PageInfo, error)
 	HasRelatedResumes(ctx context.Context, id string) (bool, error)

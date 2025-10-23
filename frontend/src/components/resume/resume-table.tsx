@@ -28,7 +28,7 @@ import { formatDate, formatPhone, cn } from '@/lib/utils';
 const statusLabels: Record<string, string> = {
   [ResumeStatus.PENDING]: '待解析',
   [ResumeStatus.PROCESSING]: '解析中',
-  [ResumeStatus.COMPLETED]: '待筛选', // 解析成功翻译为待筛选
+  [ResumeStatus.COMPLETED]: '解析完成',
   [ResumeStatus.FAILED]: '解析失败',
   [ResumeStatus.ARCHIVED]: '已归档',
 };
@@ -183,6 +183,30 @@ export function ResumeTable({
     );
   };
 
+  // 渲染来源单元格
+  const renderSourceCell = (resume: Resume) => {
+    const jobPositions = resume.job_positions || [];
+
+    if (jobPositions.length === 0) {
+      return <span className="text-gray-400">-</span>;
+    }
+
+    // 获取第一个岗位的来源
+    const source = jobPositions[0].source || 'manual';
+
+    // 来源标签映射
+    const sourceLabels: Record<string, string> = {
+      manual: '手动上传',
+      email: '邮件收集',
+      api: 'API导入',
+      import: '批量导入',
+    };
+
+    const displaySource = sourceLabels[source] || source || '手动上传';
+
+    return <span className="text-sm text-gray-500">{displaySource}</span>;
+  };
+
   return (
     <div className={cn('', className)}>
       {/* 表格标题 */}
@@ -204,6 +228,9 @@ export function ResumeTable({
                 岗位名称
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                来源
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 上传时间
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -220,7 +247,7 @@ export function ResumeTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {resumes && resumes.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-16">
+                <td colSpan={7} className="px-6 py-16">
                   <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="text-gray-400">
                       <svg
@@ -266,6 +293,9 @@ export function ResumeTable({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {renderJobPositionsCell(resume)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {renderSourceCell(resume)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(resume.created_at, 'datetime')}
@@ -452,32 +482,38 @@ export function ResumeTable({
   );
 
   function getStatusBadge(status: Resume['status'], resumeId?: string) {
-    const statusConfig: Record<
-      ResumeStatus | 'interview' | 'rejected' | 'hired',
-      string
-    > = {
-      [ResumeStatus.PENDING]: 'status-badge pending',
-      [ResumeStatus.PROCESSING]: 'status-badge processing',
-      [ResumeStatus.COMPLETED]: 'status-badge pending', // 解析成功（待筛选）使用待处理样式
-      [ResumeStatus.FAILED]: 'status-badge rejected',
-      [ResumeStatus.ARCHIVED]: 'status-badge archived',
-      interview: 'status-badge approved',
-      rejected: 'status-badge rejected',
-      hired: 'status-badge used',
-    };
-
-    // 对于处理中的简历，显示进度组件
+    // 对于处理中的简历，显示进度组件（但仍使用统一的徽章样式）
     if (status === ResumeStatus.PROCESSING && resumeId) {
       return <ResumeProgressCell resumeId={resumeId} />;
     }
 
     const label = statusLabels[status as keyof typeof statusLabels] || status;
 
-    return (
-      <span className={statusConfig[status] ?? 'status-badge pending'}>
-        {label}
-      </span>
-    );
+    // 统一使用带边框的圆角徽章样式（与岗位画像"发布"状态一致）
+    // 根据状态类型使用不同颜色
+    const getStatusStyle = (statusType: Resume['status']) => {
+      switch (statusType) {
+        case ResumeStatus.COMPLETED:
+          // 解析完成：绿色
+          return 'inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 border border-green-200';
+        case ResumeStatus.PROCESSING:
+          // 解析中：浅黄色
+          return 'inline-flex items-center rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 border border-yellow-200';
+        case ResumeStatus.FAILED:
+          // 解析失败：浅红色
+          return 'inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 border border-red-200';
+        case ResumeStatus.PENDING:
+          // 待解析：浅蓝色
+          return 'inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 border border-blue-200';
+        case ResumeStatus.ARCHIVED:
+          // 已归档：灰色
+          return 'inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 border border-gray-200';
+        default:
+          return 'inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 border border-gray-200';
+      }
+    };
+
+    return <span className={getStatusStyle(status)}>{label}</span>;
   }
 
   // 简历进度单元格组件

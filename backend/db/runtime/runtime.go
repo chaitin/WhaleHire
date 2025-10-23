@@ -28,6 +28,9 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/chaitin/WhaleHire/backend/db/resumejobapplication"
 	"github.com/chaitin/WhaleHire/backend/db/resumelog"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxcursor"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxsetting"
+	"github.com/chaitin/WhaleHire/backend/db/resumemailboxstatistic"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/chaitin/WhaleHire/backend/db/resumeskill"
 	"github.com/chaitin/WhaleHire/backend/db/role"
@@ -630,6 +633,131 @@ func init() {
 	resumelogDescID := resumelogFields[0].Descriptor()
 	// resumelog.DefaultID holds the default value on creation for the id field.
 	resumelog.DefaultID = resumelogDescID.Default.(func() uuid.UUID)
+	resumemailboxcursorMixin := schema.ResumeMailboxCursor{}.Mixin()
+	resumemailboxcursorMixinHooks0 := resumemailboxcursorMixin[0].Hooks()
+	resumemailboxcursor.Hooks[0] = resumemailboxcursorMixinHooks0[0]
+	resumemailboxcursorMixinInters0 := resumemailboxcursorMixin[0].Interceptors()
+	resumemailboxcursor.Interceptors[0] = resumemailboxcursorMixinInters0[0]
+	resumemailboxcursorFields := schema.ResumeMailboxCursor{}.Fields()
+	_ = resumemailboxcursorFields
+	// resumemailboxcursorDescLastMessageID is the schema descriptor for last_message_id field.
+	resumemailboxcursorDescLastMessageID := resumemailboxcursorFields[3].Descriptor()
+	// resumemailboxcursor.LastMessageIDValidator is a validator for the "last_message_id" field. It is called by the builders before save.
+	resumemailboxcursor.LastMessageIDValidator = resumemailboxcursorDescLastMessageID.Validators[0].(func(string) error)
+	// resumemailboxcursorDescCreatedAt is the schema descriptor for created_at field.
+	resumemailboxcursorDescCreatedAt := resumemailboxcursorFields[4].Descriptor()
+	// resumemailboxcursor.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumemailboxcursor.DefaultCreatedAt = resumemailboxcursorDescCreatedAt.Default.(func() time.Time)
+	// resumemailboxcursorDescUpdatedAt is the schema descriptor for updated_at field.
+	resumemailboxcursorDescUpdatedAt := resumemailboxcursorFields[5].Descriptor()
+	// resumemailboxcursor.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumemailboxcursor.DefaultUpdatedAt = resumemailboxcursorDescUpdatedAt.Default.(func() time.Time)
+	// resumemailboxcursor.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumemailboxcursor.UpdateDefaultUpdatedAt = resumemailboxcursorDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumemailboxcursorDescID is the schema descriptor for id field.
+	resumemailboxcursorDescID := resumemailboxcursorFields[0].Descriptor()
+	// resumemailboxcursor.DefaultID holds the default value on creation for the id field.
+	resumemailboxcursor.DefaultID = resumemailboxcursorDescID.Default.(func() uuid.UUID)
+	resumemailboxsettingMixin := schema.ResumeMailboxSetting{}.Mixin()
+	resumemailboxsettingMixinHooks0 := resumemailboxsettingMixin[0].Hooks()
+	resumemailboxsetting.Hooks[0] = resumemailboxsettingMixinHooks0[0]
+	resumemailboxsettingMixinInters0 := resumemailboxsettingMixin[0].Interceptors()
+	resumemailboxsetting.Interceptors[0] = resumemailboxsettingMixinInters0[0]
+	resumemailboxsettingFields := schema.ResumeMailboxSetting{}.Fields()
+	_ = resumemailboxsettingFields
+	// resumemailboxsettingDescName is the schema descriptor for name field.
+	resumemailboxsettingDescName := resumemailboxsettingFields[1].Descriptor()
+	// resumemailboxsetting.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	resumemailboxsetting.NameValidator = resumemailboxsettingDescName.Validators[0].(func(string) error)
+	// resumemailboxsettingDescEmailAddress is the schema descriptor for email_address field.
+	resumemailboxsettingDescEmailAddress := resumemailboxsettingFields[2].Descriptor()
+	// resumemailboxsetting.EmailAddressValidator is a validator for the "email_address" field. It is called by the builders before save.
+	resumemailboxsetting.EmailAddressValidator = resumemailboxsettingDescEmailAddress.Validators[0].(func(string) error)
+	// resumemailboxsettingDescProtocol is the schema descriptor for protocol field.
+	resumemailboxsettingDescProtocol := resumemailboxsettingFields[3].Descriptor()
+	// resumemailboxsetting.ProtocolValidator is a validator for the "protocol" field. It is called by the builders before save.
+	resumemailboxsetting.ProtocolValidator = resumemailboxsettingDescProtocol.Validators[0].(func(string) error)
+	// resumemailboxsettingDescHost is the schema descriptor for host field.
+	resumemailboxsettingDescHost := resumemailboxsettingFields[4].Descriptor()
+	// resumemailboxsetting.HostValidator is a validator for the "host" field. It is called by the builders before save.
+	resumemailboxsetting.HostValidator = resumemailboxsettingDescHost.Validators[0].(func(string) error)
+	// resumemailboxsettingDescUseSsl is the schema descriptor for use_ssl field.
+	resumemailboxsettingDescUseSsl := resumemailboxsettingFields[6].Descriptor()
+	// resumemailboxsetting.DefaultUseSsl holds the default value on creation for the use_ssl field.
+	resumemailboxsetting.DefaultUseSsl = resumemailboxsettingDescUseSsl.Default.(bool)
+	// resumemailboxsettingDescFolder is the schema descriptor for folder field.
+	resumemailboxsettingDescFolder := resumemailboxsettingFields[7].Descriptor()
+	// resumemailboxsetting.FolderValidator is a validator for the "folder" field. It is called by the builders before save.
+	resumemailboxsetting.FolderValidator = resumemailboxsettingDescFolder.Validators[0].(func(string) error)
+	// resumemailboxsettingDescAuthType is the schema descriptor for auth_type field.
+	resumemailboxsettingDescAuthType := resumemailboxsettingFields[8].Descriptor()
+	// resumemailboxsetting.DefaultAuthType holds the default value on creation for the auth_type field.
+	resumemailboxsetting.DefaultAuthType = resumemailboxsettingDescAuthType.Default.(string)
+	// resumemailboxsetting.AuthTypeValidator is a validator for the "auth_type" field. It is called by the builders before save.
+	resumemailboxsetting.AuthTypeValidator = resumemailboxsettingDescAuthType.Validators[0].(func(string) error)
+	// resumemailboxsettingDescStatus is the schema descriptor for status field.
+	resumemailboxsettingDescStatus := resumemailboxsettingFields[13].Descriptor()
+	// resumemailboxsetting.DefaultStatus holds the default value on creation for the status field.
+	resumemailboxsetting.DefaultStatus = resumemailboxsettingDescStatus.Default.(string)
+	// resumemailboxsettingDescRetryCount is the schema descriptor for retry_count field.
+	resumemailboxsettingDescRetryCount := resumemailboxsettingFields[16].Descriptor()
+	// resumemailboxsetting.DefaultRetryCount holds the default value on creation for the retry_count field.
+	resumemailboxsetting.DefaultRetryCount = resumemailboxsettingDescRetryCount.Default.(int)
+	// resumemailboxsettingDescCreatedAt is the schema descriptor for created_at field.
+	resumemailboxsettingDescCreatedAt := resumemailboxsettingFields[17].Descriptor()
+	// resumemailboxsetting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumemailboxsetting.DefaultCreatedAt = resumemailboxsettingDescCreatedAt.Default.(func() time.Time)
+	// resumemailboxsettingDescUpdatedAt is the schema descriptor for updated_at field.
+	resumemailboxsettingDescUpdatedAt := resumemailboxsettingFields[18].Descriptor()
+	// resumemailboxsetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumemailboxsetting.DefaultUpdatedAt = resumemailboxsettingDescUpdatedAt.Default.(func() time.Time)
+	// resumemailboxsetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumemailboxsetting.UpdateDefaultUpdatedAt = resumemailboxsettingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumemailboxsettingDescID is the schema descriptor for id field.
+	resumemailboxsettingDescID := resumemailboxsettingFields[0].Descriptor()
+	// resumemailboxsetting.DefaultID holds the default value on creation for the id field.
+	resumemailboxsetting.DefaultID = resumemailboxsettingDescID.Default.(func() uuid.UUID)
+	resumemailboxstatisticMixin := schema.ResumeMailboxStatistic{}.Mixin()
+	resumemailboxstatisticMixinHooks0 := resumemailboxstatisticMixin[0].Hooks()
+	resumemailboxstatistic.Hooks[0] = resumemailboxstatisticMixinHooks0[0]
+	resumemailboxstatisticMixinInters0 := resumemailboxstatisticMixin[0].Interceptors()
+	resumemailboxstatistic.Interceptors[0] = resumemailboxstatisticMixinInters0[0]
+	resumemailboxstatisticFields := schema.ResumeMailboxStatistic{}.Fields()
+	_ = resumemailboxstatisticFields
+	// resumemailboxstatisticDescSyncedEmails is the schema descriptor for synced_emails field.
+	resumemailboxstatisticDescSyncedEmails := resumemailboxstatisticFields[3].Descriptor()
+	// resumemailboxstatistic.DefaultSyncedEmails holds the default value on creation for the synced_emails field.
+	resumemailboxstatistic.DefaultSyncedEmails = resumemailboxstatisticDescSyncedEmails.Default.(int)
+	// resumemailboxstatisticDescParsedResumes is the schema descriptor for parsed_resumes field.
+	resumemailboxstatisticDescParsedResumes := resumemailboxstatisticFields[4].Descriptor()
+	// resumemailboxstatistic.DefaultParsedResumes holds the default value on creation for the parsed_resumes field.
+	resumemailboxstatistic.DefaultParsedResumes = resumemailboxstatisticDescParsedResumes.Default.(int)
+	// resumemailboxstatisticDescFailedResumes is the schema descriptor for failed_resumes field.
+	resumemailboxstatisticDescFailedResumes := resumemailboxstatisticFields[5].Descriptor()
+	// resumemailboxstatistic.DefaultFailedResumes holds the default value on creation for the failed_resumes field.
+	resumemailboxstatistic.DefaultFailedResumes = resumemailboxstatisticDescFailedResumes.Default.(int)
+	// resumemailboxstatisticDescSkippedAttachments is the schema descriptor for skipped_attachments field.
+	resumemailboxstatisticDescSkippedAttachments := resumemailboxstatisticFields[6].Descriptor()
+	// resumemailboxstatistic.DefaultSkippedAttachments holds the default value on creation for the skipped_attachments field.
+	resumemailboxstatistic.DefaultSkippedAttachments = resumemailboxstatisticDescSkippedAttachments.Default.(int)
+	// resumemailboxstatisticDescLastSyncDurationMs is the schema descriptor for last_sync_duration_ms field.
+	resumemailboxstatisticDescLastSyncDurationMs := resumemailboxstatisticFields[7].Descriptor()
+	// resumemailboxstatistic.DefaultLastSyncDurationMs holds the default value on creation for the last_sync_duration_ms field.
+	resumemailboxstatistic.DefaultLastSyncDurationMs = resumemailboxstatisticDescLastSyncDurationMs.Default.(int)
+	// resumemailboxstatisticDescCreatedAt is the schema descriptor for created_at field.
+	resumemailboxstatisticDescCreatedAt := resumemailboxstatisticFields[8].Descriptor()
+	// resumemailboxstatistic.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resumemailboxstatistic.DefaultCreatedAt = resumemailboxstatisticDescCreatedAt.Default.(func() time.Time)
+	// resumemailboxstatisticDescUpdatedAt is the schema descriptor for updated_at field.
+	resumemailboxstatisticDescUpdatedAt := resumemailboxstatisticFields[9].Descriptor()
+	// resumemailboxstatistic.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resumemailboxstatistic.DefaultUpdatedAt = resumemailboxstatisticDescUpdatedAt.Default.(func() time.Time)
+	// resumemailboxstatistic.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	resumemailboxstatistic.UpdateDefaultUpdatedAt = resumemailboxstatisticDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// resumemailboxstatisticDescID is the schema descriptor for id field.
+	resumemailboxstatisticDescID := resumemailboxstatisticFields[0].Descriptor()
+	// resumemailboxstatistic.DefaultID holds the default value on creation for the id field.
+	resumemailboxstatistic.DefaultID = resumemailboxstatisticDescID.Default.(func() uuid.UUID)
 	resumeprojectMixin := schema.ResumeProject{}.Mixin()
 	resumeprojectMixinHooks0 := resumeprojectMixin[0].Hooks()
 	resumeproject.Hooks[0] = resumeprojectMixinHooks0[0]

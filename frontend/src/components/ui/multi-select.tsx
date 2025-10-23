@@ -240,7 +240,7 @@ export function MultiSelect({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-[var(--radix-dropdown-menu-trigger-width)] p-0"
+        className="w-[var(--radix-dropdown-menu-trigger-width)] p-0 z-[1100]"
         align="start"
         style={{ maxHeight }}
       >

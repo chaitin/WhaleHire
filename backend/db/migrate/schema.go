@@ -791,6 +791,151 @@ var (
 			},
 		},
 	}
+	// ResumeMailboxCursorsColumns holds the columns for the "resume_mailbox_cursors" table.
+	ResumeMailboxCursorsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "protocol_cursor", Type: field.TypeString, Size: 2147483647},
+		{Name: "last_message_id", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "mailbox_id", Type: field.TypeUUID},
+	}
+	// ResumeMailboxCursorsTable holds the schema information for the "resume_mailbox_cursors" table.
+	ResumeMailboxCursorsTable = &schema.Table{
+		Name:       "resume_mailbox_cursors",
+		Columns:    ResumeMailboxCursorsColumns,
+		PrimaryKey: []*schema.Column{ResumeMailboxCursorsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_mailbox_cursors_resume_mailbox_settings_cursors",
+				Columns:    []*schema.Column{ResumeMailboxCursorsColumns[6]},
+				RefColumns: []*schema.Column{ResumeMailboxSettingsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "resumemailboxcursor_mailbox_id",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxCursorsColumns[6]},
+			},
+			{
+				Name:    "resumemailboxcursor_updated_at",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxCursorsColumns[5]},
+			},
+		},
+	}
+	// ResumeMailboxSettingsColumns holds the columns for the "resume_mailbox_settings" table.
+	ResumeMailboxSettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Size: 256},
+		{Name: "email_address", Type: field.TypeString, Size: 256},
+		{Name: "protocol", Type: field.TypeString, Size: 32},
+		{Name: "host", Type: field.TypeString, Size: 256},
+		{Name: "port", Type: field.TypeInt},
+		{Name: "use_ssl", Type: field.TypeBool, Default: true},
+		{Name: "folder", Type: field.TypeString, Nullable: true, Size: 256},
+		{Name: "auth_type", Type: field.TypeString, Size: 32, Default: "password"},
+		{Name: "encrypted_credential", Type: field.TypeJSON},
+		{Name: "job_profile_ids", Type: field.TypeJSON, Nullable: true},
+		{Name: "sync_interval_minutes", Type: field.TypeInt, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "enabled"},
+		{Name: "last_synced_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "retry_count", Type: field.TypeInt, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "uploader_id", Type: field.TypeUUID},
+	}
+	// ResumeMailboxSettingsTable holds the schema information for the "resume_mailbox_settings" table.
+	ResumeMailboxSettingsTable = &schema.Table{
+		Name:       "resume_mailbox_settings",
+		Columns:    ResumeMailboxSettingsColumns,
+		PrimaryKey: []*schema.Column{ResumeMailboxSettingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_mailbox_settings_users_uploader",
+				Columns:    []*schema.Column{ResumeMailboxSettingsColumns[19]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "resumemailboxsetting_protocol_email_address",
+				Unique:  true,
+				Columns: []*schema.Column{ResumeMailboxSettingsColumns[4], ResumeMailboxSettingsColumns[3]},
+			},
+			{
+				Name:    "resumemailboxsetting_status",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxSettingsColumns[13]},
+			},
+			{
+				Name:    "resumemailboxsetting_uploader_id",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxSettingsColumns[19]},
+			},
+			{
+				Name:    "resumemailboxsetting_last_synced_at",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxSettingsColumns[14]},
+			},
+		},
+	}
+	// ResumeMailboxStatisticsColumns holds the columns for the "resume_mailbox_statistics" table.
+	ResumeMailboxStatisticsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "date", Type: field.TypeTime},
+		{Name: "synced_emails", Type: field.TypeInt, Default: 0},
+		{Name: "parsed_resumes", Type: field.TypeInt, Default: 0},
+		{Name: "failed_resumes", Type: field.TypeInt, Default: 0},
+		{Name: "skipped_attachments", Type: field.TypeInt, Default: 0},
+		{Name: "last_sync_duration_ms", Type: field.TypeInt, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "mailbox_id", Type: field.TypeUUID},
+	}
+	// ResumeMailboxStatisticsTable holds the schema information for the "resume_mailbox_statistics" table.
+	ResumeMailboxStatisticsTable = &schema.Table{
+		Name:       "resume_mailbox_statistics",
+		Columns:    ResumeMailboxStatisticsColumns,
+		PrimaryKey: []*schema.Column{ResumeMailboxStatisticsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "resume_mailbox_statistics_resume_mailbox_settings_statistics",
+				Columns:    []*schema.Column{ResumeMailboxStatisticsColumns[10]},
+				RefColumns: []*schema.Column{ResumeMailboxSettingsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "resumemailboxstatistic_mailbox_id_date",
+				Unique:  true,
+				Columns: []*schema.Column{ResumeMailboxStatisticsColumns[10], ResumeMailboxStatisticsColumns[2]},
+			},
+			{
+				Name:    "resumemailboxstatistic_mailbox_id",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxStatisticsColumns[10]},
+			},
+			{
+				Name:    "resumemailboxstatistic_date",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxStatisticsColumns[2]},
+			},
+			{
+				Name:    "resumemailboxstatistic_updated_at",
+				Unique:  false,
+				Columns: []*schema.Column{ResumeMailboxStatisticsColumns[9]},
+			},
+		},
+	}
 	// ResumeProjectsColumns holds the columns for the "resume_projects" table.
 	ResumeProjectsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1326,6 +1471,9 @@ var (
 		ResumeExperiencesTable,
 		ResumeJobApplicationsTable,
 		ResumeLogsTable,
+		ResumeMailboxCursorsTable,
+		ResumeMailboxSettingsTable,
+		ResumeMailboxStatisticsTable,
 		ResumeProjectsTable,
 		ResumeSkillsTable,
 		RolesTable,
@@ -1431,6 +1579,18 @@ func init() {
 	ResumeLogsTable.ForeignKeys[0].RefTable = ResumesTable
 	ResumeLogsTable.Annotation = &entsql.Annotation{
 		Table: "resume_logs",
+	}
+	ResumeMailboxCursorsTable.ForeignKeys[0].RefTable = ResumeMailboxSettingsTable
+	ResumeMailboxCursorsTable.Annotation = &entsql.Annotation{
+		Table: "resume_mailbox_cursors",
+	}
+	ResumeMailboxSettingsTable.ForeignKeys[0].RefTable = UsersTable
+	ResumeMailboxSettingsTable.Annotation = &entsql.Annotation{
+		Table: "resume_mailbox_settings",
+	}
+	ResumeMailboxStatisticsTable.ForeignKeys[0].RefTable = ResumeMailboxSettingsTable
+	ResumeMailboxStatisticsTable.Annotation = &entsql.Annotation{
+		Table: "resume_mailbox_statistics",
 	}
 	ResumeProjectsTable.ForeignKeys[0].RefTable = ResumesTable
 	ResumeProjectsTable.Annotation = &entsql.Annotation{

@@ -15,3 +15,5 @@ redis:
   pass: { { .REDIS_PASSWORD } }
   db: 0
   idle_conn: 10
+credential:
+  encryption_key: { { .CREDENTIAL_ENCRYPTION_KEY } }

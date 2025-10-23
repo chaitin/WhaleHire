@@ -106,6 +106,10 @@ func newInputLambda(ctx context.Context, input map[string]any, opts ...any) (map
 	if taskMetaData, ok := input[domain.TaskMetaDataNode]; ok {
 		if metaData, ok := taskMetaData.(*domain.TaskMetaData); ok {
 			aggregatorInput.TaskMetaData = metaData
+			// 优先使用 TaskMetaData 中的权重（来自请求）
+			if metaData.DimensionWeights != nil {
+				aggregatorInput.Weights = metaData.DimensionWeights
+			}
 		}
 	}
 

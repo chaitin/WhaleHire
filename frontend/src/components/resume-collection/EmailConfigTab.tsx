@@ -8,13 +8,27 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  RefreshCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { cn } from '@/lib/utils';
 import { getCurrentUser } from '@/services/auth';
 import { listJobProfiles } from '@/services/job-profile';
-import type { JobProfileDetail } from '@/types/job-profile';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  getResumeMailboxSettings,
+  getResumeMailboxSetting,
+  createResumeMailboxSetting,
+  updateResumeMailboxSetting,
+  deleteResumeMailboxSetting,
+  syncResumeMailboxNow,
+  type ResumeMailboxSetting,
+  type CreateResumeMailboxSettingReq,
+} from '@/services/resume-mailbox';
 
 // 邮箱配置类型定义
 interface EmailConfigFormData {
@@ -25,30 +39,20 @@ interface EmailConfigFormData {
   imap_server: string;
   imap_port: number;
   use_ssl: boolean;
+  sync_frequency: string;
   status: 'enabled' | 'disabled';
   resume_uploader: string;
   uploader_id: string;
-  job_profile_id: string;
+  job_profile_ids: string[]; // 改为数组支持多选
 }
 
-interface EmailConfig {
-  id: string;
-  task_name: string;
-  email_address: string;
-  status: 'enabled' | 'disabled';
-  last_sync_time: number;
-  synced_count: number;
-  resume_uploader: string;
-  job_profile_name: string;
-  server_type: string;
-  imap_server: string;
-  imap_port: number;
-  use_ssl: boolean;
-  auth_code: string;
-  created_at: number;
-}
+// 使用从服务导入的类型
+type EmailConfig = ResumeMailboxSetting;
 
 export function EmailConfigTab() {
+  // 获取当前用户信息
+  const { user } = useAuth();
+
   // 邮箱配置列表数据
   const [emailConfigs, setEmailConfigs] = useState<EmailConfig[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,27 +62,29 @@ export function EmailConfigTab() {
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(7);
 
-  // 添加邮箱配置弹窗状态
+  // 添加/编辑邮箱配置弹窗状态
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
 
   // 表单数据
   const [formData, setFormData] = useState<EmailConfigFormData>({
     task_name: '',
     email_address: '',
     auth_code: '',
-    server_type: 'IMAP',
+    server_type: 'imap',
     imap_server: '',
     imap_port: 993,
     use_ssl: true,
+    sync_frequency: '15',
     status: 'enabled',
     resume_uploader: '',
     uploader_id: '',
-    job_profile_id: '',
+    job_profile_ids: [], // 改为空数组
   });
 
   // 岗位画像列表
-  const [jobProfiles, setJobProfiles] = useState<JobProfileDetail[]>([]);
   const [loadingJobProfiles, setLoadingJobProfiles] = useState(false);
+  const [jobOptions, setJobOptions] = useState<Option[]>([]);
 
   // 删除确认弹窗状态
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -90,8 +96,9 @@ export function EmailConfigTab() {
   // 操作状态
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
 
-  // Mock数据 - 获取邮箱配置列表
+  // 获取邮箱配置列表
   const fetchEmailConfigs = useCallback(
     async (page?: number) => {
       try {
@@ -99,50 +106,14 @@ export function EmailConfigTab() {
         setError(null);
         const targetPage = page || currentPage;
 
-        // 模拟API延迟
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        // 调用真实API
+        const data = await getResumeMailboxSettings();
 
-        // Mock数据
-        const mockData: EmailConfig[] = [
-          {
-            id: '1',
-            task_name: '公司招聘邮箱收集',
-            email_address: 'hr@company.com',
-            status: 'enabled',
-            last_sync_time: Date.now() / 1000 - 3600, // 1小时前
-            synced_count: 156,
-            resume_uploader: '张三',
-            job_profile_name: '高级前端工程师',
-            server_type: 'IMAP',
-            imap_server: 'imap.company.com',
-            imap_port: 993,
-            use_ssl: true,
-            auth_code: '****',
-            created_at: Date.now() / 1000 - 86400 * 30, // 30天前
-          },
-          {
-            id: '2',
-            task_name: '备用招聘邮箱',
-            email_address: 'recruitment@company.com',
-            status: 'disabled',
-            last_sync_time: Date.now() / 1000 - 86400, // 1天前
-            synced_count: 89,
-            resume_uploader: '李四',
-            job_profile_name: 'Java开发工程师',
-            server_type: 'IMAP',
-            imap_server: 'imap.company.com',
-            imap_port: 993,
-            use_ssl: true,
-            auth_code: '****',
-            created_at: Date.now() / 1000 - 86400 * 15, // 15天前
-          },
-        ];
-
-        const total = mockData.length;
+        const total = data.length;
         const newTotalPages = Math.ceil(total / pageSize);
         const startIndex = (targetPage - 1) * pageSize;
         const endIndex = startIndex + pageSize;
-        const paginatedData = mockData.slice(startIndex, endIndex);
+        const paginatedData = data.slice(startIndex, endIndex);
 
         setEmailConfigs(paginatedData);
         setTotalCount(total);
@@ -185,10 +156,17 @@ export function EmailConfigTab() {
     try {
       setLoadingJobProfiles(true);
       const response = await listJobProfiles({ page: 1, page_size: 100 });
-      setJobProfiles(response.items || []);
+      const profiles = response.items || [];
+
+      // 转换为 MultiSelect 所需的 Option 格式
+      const options: Option[] = profiles.map((profile) => ({
+        value: profile.id,
+        label: profile.name,
+      }));
+      setJobOptions(options);
     } catch (err) {
       console.error('获取岗位画像列表失败:', err);
-      setJobProfiles([]);
+      setJobOptions([]);
     } finally {
       setLoadingJobProfiles(false);
     }
@@ -204,20 +182,53 @@ export function EmailConfigTab() {
   // 关闭添加弹窗
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
+    setEditingConfigId(null);
     // 重置表单
     setFormData({
       task_name: '',
       email_address: '',
       auth_code: '',
-      server_type: 'IMAP',
+      server_type: 'imap',
       imap_server: '',
       imap_port: 993,
       use_ssl: true,
+      sync_frequency: '15',
       status: 'enabled',
       resume_uploader: '',
       uploader_id: '',
-      job_profile_id: '',
+      job_profile_ids: [], // 改为空数组
     });
+  };
+
+  // 编辑邮箱配置
+  const handleEditConfig = async (configId: string) => {
+    try {
+      setError(null);
+      // 调用API获取配置详情
+      const config = await getResumeMailboxSetting(configId);
+
+      // 填充表单数据（映射后端字段到表单字段）
+      setFormData({
+        task_name: config.name,
+        email_address: config.email_address,
+        auth_code: config.encrypted_credential?.password || '', // 从对象中提取password
+        server_type: config.protocol,
+        imap_server: config.host,
+        imap_port: config.port,
+        use_ssl: config.use_ssl,
+        sync_frequency: String(config.sync_interval_minutes || 15),
+        status: config.status,
+        resume_uploader: config.uploader_name || '',
+        uploader_id: config.uploader_id,
+        job_profile_ids: config.job_profile_ids || [],
+      });
+
+      setEditingConfigId(configId);
+      setIsAddModalOpen(true);
+    } catch (err) {
+      setError('获取配置详情失败，请重试');
+      console.error('获取配置详情失败:', err);
+    }
   };
 
   // 表单输入变化
@@ -253,8 +264,15 @@ export function EmailConfigTab() {
       return;
     }
 
-    if (!formData.job_profile_id) {
+    if (!formData.job_profile_ids || formData.job_profile_ids.length === 0) {
       setError('请选择岗位画像');
+      return;
+    }
+
+    // 验证同步频率是否为有效数字
+    const syncFreq = parseInt(formData.sync_frequency);
+    if (isNaN(syncFreq) || syncFreq < 5 || syncFreq > 1440) {
+      setError('同步频率必须是5-1440之间的数字');
       return;
     }
 
@@ -262,16 +280,81 @@ export function EmailConfigTab() {
       setSubmitting(true);
       setError(null);
 
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const authType = 'password';
+      // 构建 encrypted_credential 为 JSON 字符串格式
+      const encryptedCredential = JSON.stringify({
+        [authType]: formData.auth_code,
+      });
 
-      console.log('保存邮箱配置:', formData);
+      console.log('表单数据:', formData);
+      console.log('加密凭证:', encryptedCredential);
+
+      if (editingConfigId) {
+        // 编辑模式：调用更新API
+        const updateData = {
+          name: formData.task_name,
+          email_address: formData.email_address,
+          auth_type: authType,
+          encrypted_credential: { [authType]: formData.auth_code }, // 发送对象而不是字符串
+          protocol: formData.server_type,
+          host: formData.imap_server,
+          port: formData.imap_port,
+          use_ssl: true,
+          sync_interval_minutes: parseInt(formData.sync_frequency), // 修正字段名
+          job_profile_ids: formData.job_profile_ids, // 发送数组
+          status: formData.status, // 添加状态字段
+        };
+
+        console.log('更新的请求数据:', updateData);
+        await updateResumeMailboxSetting(editingConfigId, updateData);
+      } else {
+        // 验证用户ID
+        if (!user?.id) {
+          setError('用户未登录，无法创建邮箱配置');
+          return;
+        }
+
+        // 新增模式：调用创建API
+        const requestData: CreateResumeMailboxSettingReq = {
+          name: formData.task_name,
+          email_address: formData.email_address,
+          auth_type: authType,
+          encrypted_credential: { [authType]: formData.auth_code }, // 发送对象而不是字符串
+          protocol: formData.server_type,
+          host: formData.imap_server,
+          port: formData.imap_port,
+          use_ssl: true,
+          sync_interval_minutes: parseInt(formData.sync_frequency), // 修正字段名
+          job_profile_ids: formData.job_profile_ids, // 发送数组
+          uploader_id: user.id, // 添加必需的用户ID
+          status: formData.status, // 添加状态字段
+        };
+
+        console.log('===== 调试信息 =====');
+        console.log('发送的请求数据:', requestData);
+        console.log(
+          'encrypted_credential 类型:',
+          typeof requestData.encrypted_credential
+        );
+        console.log(
+          'encrypted_credential 值:',
+          requestData.encrypted_credential
+        );
+        console.log('JSON.stringify 后:', JSON.stringify(requestData, null, 2));
+        console.log('==================');
+
+        await createResumeMailboxSetting(requestData);
+      }
 
       handleCloseAddModal();
       setCurrentPage(1);
       await fetchEmailConfigs(1);
     } catch (err) {
-      setError('保存邮箱配置失败，请重试');
+      setError(
+        editingConfigId
+          ? '更新邮箱配置失败，请重试'
+          : '保存邮箱配置失败，请重试'
+      );
       console.error('保存邮箱配置失败:', err);
     } finally {
       setSubmitting(false);
@@ -292,10 +375,8 @@ export function EmailConfigTab() {
       setDeletingId(configToDelete.id);
       setError(null);
 
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      console.log(`删除邮箱配置: ${configToDelete.id}`);
+      // 调用真实API
+      await deleteResumeMailboxSetting(configToDelete.id);
 
       setIsDeleteConfirmOpen(false);
       setConfigToDelete(null);
@@ -305,6 +386,27 @@ export function EmailConfigTab() {
       console.error('删除失败:', err);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // 手动触发同步
+  const handleManualSync = async (configId: string) => {
+    try {
+      setSyncingId(configId);
+      setError(null);
+
+      // 调用真实API
+      await syncResumeMailboxNow(configId);
+
+      console.log(`手动触发同步邮箱简历: ${configId}`);
+
+      // 刷新列表
+      await fetchEmailConfigs(currentPage);
+    } catch (err) {
+      setError('同步失败，请重试');
+      console.error('同步失败:', err);
+    } finally {
+      setSyncingId(null);
     }
   };
 
@@ -347,16 +449,25 @@ export function EmailConfigTab() {
   };
 
   // 格式化日期时间
-  const formatDateTime = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
+  // 格式化日期时间为年月日时分秒
+  const formatDateTime = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Invalid Date';
+
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
   // 截断邮箱地址,只显示前10位
@@ -365,6 +476,13 @@ export function EmailConfigTab() {
       return email;
     }
     return email.substring(0, 10) + '...';
+  };
+
+  // 格式化岗位名称显示
+  const formatJobProfileNames = (names: string[] | undefined) => {
+    if (!names || names.length === 0) return '-';
+    if (names.length === 1) return names[0];
+    return `${names[0]}等${names.length}个岗位`;
   };
 
   // 获取状态显示
@@ -448,6 +566,11 @@ export function EmailConfigTab() {
               </div>
               <div className="flex items-center w-24 pr-4">
                 <span className="text-sm font-medium text-gray-700">
+                  同步频率
+                </span>
+              </div>
+              <div className="flex items-center w-24 pr-4">
+                <span className="text-sm font-medium text-gray-700">
                   已同步数
                 </span>
               </div>
@@ -489,7 +612,7 @@ export function EmailConfigTab() {
                     {/* 任务名称 */}
                     <div className="flex items-center w-40 pr-4">
                       <span className="text-sm text-gray-900 truncate">
-                        {config.task_name}
+                        {config.name}
                       </span>
                     </div>
 
@@ -519,36 +642,62 @@ export function EmailConfigTab() {
                     {/* 最后同步时间 */}
                     <div className="flex items-center w-40 pr-4">
                       <span className="text-xs text-gray-500">
-                        {formatDateTime(config.last_sync_time)}
+                        {formatDateTime(config.last_synced_at)}
+                      </span>
+                    </div>
+
+                    {/* 同步频率 */}
+                    <div className="flex items-center w-24 pr-4">
+                      <span className="text-sm text-gray-500">
+                        {config.sync_interval_minutes
+                          ? `${config.sync_interval_minutes}分钟`
+                          : '15分钟'}
                       </span>
                     </div>
 
                     {/* 已同步数 */}
                     <div className="flex items-center w-24 pr-4">
                       <span className="text-sm text-gray-900">
-                        {config.synced_count}
+                        {config.synced_count || 0}
                       </span>
                     </div>
 
                     {/* 简历上传人 */}
                     <div className="flex items-center w-32 pr-4">
                       <span className="text-sm text-gray-500 truncate">
-                        {config.resume_uploader}
+                        {config.uploader_name || '-'}
                       </span>
                     </div>
 
                     {/* 岗位名称 */}
                     <div className="flex items-center w-40 pr-4">
-                      <span className="text-sm text-gray-500 truncate">
-                        {config.job_profile_name}
+                      <span
+                        className="text-sm text-gray-500 truncate cursor-default"
+                        title={config.job_profile_names?.join('、') || '-'}
+                      >
+                        {formatJobProfileNames(config.job_profile_names)}
                       </span>
                     </div>
 
                     {/* 操作 */}
                     <div className="flex items-center justify-center gap-2 w-24">
                       <button
+                        className="text-gray-500 hover:text-green-500 transition-colors disabled:opacity-50"
+                        title="手动同步"
+                        onClick={() => handleManualSync(config.id)}
+                        disabled={syncingId === config.id || submitting}
+                      >
+                        {syncingId === config.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4" />
+                        )}
+                      </button>
+
+                      <button
                         className="text-gray-500 hover:text-blue-500 transition-colors"
                         title="编辑"
+                        onClick={() => handleEditConfig(config.id)}
                         disabled={submitting}
                       >
                         <Edit className="w-4 h-4" />
@@ -558,7 +707,7 @@ export function EmailConfigTab() {
                         className="text-gray-500 hover:text-red-500 transition-colors"
                         title="删除"
                         onClick={() =>
-                          handleDeleteConfig(config.id, config.task_name)
+                          handleDeleteConfig(config.id, config.name)
                         }
                         disabled={submitting || deletingId === config.id}
                       >
@@ -656,8 +805,8 @@ export function EmailConfigTab() {
           onSave={handleSaveEmailConfig}
           submitting={submitting}
           error={error}
-          jobProfiles={jobProfiles}
           loadingJobProfiles={loadingJobProfiles}
+          jobOptions={jobOptions}
         />
       )}
 
@@ -699,8 +848,8 @@ interface AddEmailConfigModalProps {
   onSave: () => void;
   submitting: boolean;
   error: string | null;
-  jobProfiles: JobProfileDetail[];
   loadingJobProfiles: boolean;
+  jobOptions: Option[];
 }
 
 function AddEmailConfigModal({
@@ -711,20 +860,17 @@ function AddEmailConfigModal({
   onSave,
   submitting,
   error: _error,
-  jobProfiles,
   loadingJobProfiles,
+  jobOptions,
 }: AddEmailConfigModalProps) {
+  // 控制授权码显示/隐藏
+  const [showAuthCode, setShowAuthCode] = useState(false);
+
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1001]"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-lg shadow-xl w-[700px] max-h-[90vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1001]">
+      <div className="bg-white rounded-lg shadow-xl w-[700px] max-h-[90vh] overflow-hidden">
         {/* 弹窗头部 */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">添加邮箱配置</h2>
@@ -771,15 +917,45 @@ function AddEmailConfigModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               邮箱授权码 <span className="text-red-500">*</span>
             </label>
-            <input
-              type="password"
-              value={formData.auth_code}
-              onChange={(e) => onFormChange('auth_code', e.target.value)}
-              placeholder="请输入邮箱授权码"
-              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <input
+                type={showAuthCode ? 'text' : 'password'}
+                value={formData.auth_code}
+                onChange={(e) => onFormChange('auth_code', e.target.value)}
+                placeholder="请输入邮箱授权码"
+                className="w-full h-10 px-3 py-2 pr-10 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => setShowAuthCode(!showAuthCode)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showAuthCode ? (
+                  <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
+                )}
+              </button>
+            </div>
             <p className="mt-1 text-xs text-gray-500">
               请到邮箱设置中开启IMAP服务并获取授权码
+            </p>
+          </div>
+
+          {/* 同步频率 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              同步频率 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.sync_frequency}
+              onChange={(e) => onFormChange('sync_frequency', e.target.value)}
+              placeholder="请输入同步频率，最小5分钟，最大1440分钟"
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder:text-gray-400"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              设置邮箱自动同步简历的频率（5-1440分钟）
             </p>
           </div>
 
@@ -788,13 +964,12 @@ function AddEmailConfigModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               服务器类型 <span className="text-red-500">*</span>
             </label>
-            <select
-              value={formData.server_type}
-              onChange={(e) => onFormChange('server_type', e.target.value)}
-              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            >
-              <option value="IMAP">IMAP</option>
-            </select>
+            <input
+              type="text"
+              value="imap"
+              disabled
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+            />
           </div>
 
           {/* 服务器地址、端口 */}
@@ -887,9 +1062,9 @@ function AddEmailConfigModal({
             <input
               type="text"
               value={formData.resume_uploader}
-              onChange={(e) => onFormChange('resume_uploader', e.target.value)}
+              disabled
               placeholder="默认为当前登录人"
-              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
             />
           </div>
 
@@ -898,21 +1073,20 @@ function AddEmailConfigModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               岗位画像 <span className="text-red-500">*</span>
             </label>
-            <select
-              value={formData.job_profile_id}
-              onChange={(e) => onFormChange('job_profile_id', e.target.value)}
+            <MultiSelect
+              options={jobOptions}
+              selected={formData.job_profile_ids}
+              onChange={(selectedIds) => {
+                onFormChange('job_profile_ids', selectedIds);
+              }}
+              placeholder={
+                loadingJobProfiles ? '加载岗位中...' : '请选择岗位画像'
+              }
+              multiple={true}
+              searchPlaceholder="搜索岗位名称..."
               disabled={loadingJobProfiles}
-              className="w-full h-10 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            >
-              <option value="">
-                {loadingJobProfiles ? '加载岗位中...' : '请选择岗位画像'}
-              </option>
-              {jobProfiles.map((job) => (
-                <option key={job.id} value={job.id}>
-                  {job.name}
-                </option>
-              ))}
-            </select>
+              selectCountLabel="岗位"
+            />
           </div>
         </div>
 

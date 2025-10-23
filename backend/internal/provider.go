@@ -3,6 +3,7 @@ package internal
 import (
 	"github.com/google/wire"
 
+	"github.com/chaitin/WhaleHire/backend/domain"
 	auditV1 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
 	auditrepo "github.com/chaitin/WhaleHire/backend/internal/audit/repo"
 	auditusecase "github.com/chaitin/WhaleHire/backend/internal/audit/usecase"
@@ -30,6 +31,11 @@ import (
 	resumerepo "github.com/chaitin/WhaleHire/backend/internal/resume/repo"
 	resumeservice "github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	resumeusecase "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
+	resumemailboxadapter "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/adapter"
+	resumemailV1 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
+	resumemailboxsettingrepo "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/repo"
+	resumemailboxscheduler "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/scheduler"
+	resumemailboxsettingusecase "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/usecase"
 	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	screeningrepo "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	screeningservice "github.com/chaitin/WhaleHire/backend/internal/screening/service"
@@ -107,5 +113,21 @@ var Provider = wire.NewSet(
 	notificationusecase.NewNotificationSettingUsecase,
 	notificationadapter.NewDingTalkAdapter,
 	notificationworker.NewNotificationWorker,
+	resumemailboxadapter.NewAdapterFactory,
+	resumemailboxsettingrepo.NewResumeMailboxSettingRepo,
+	resumemailboxsettingrepo.NewResumeMailboxCursorRepo,
+	resumemailboxsettingrepo.NewResumeMailboxStatisticRepo,
+	resumemailboxscheduler.NewScheduler,
+	NewResumeMailboxScheduler,
+	resumemailboxsettingusecase.NewResumeMailboxSettingUsecase,
+	resumemailboxsettingusecase.NewResumeMailboxSyncUsecase,
+	resumemailboxsettingusecase.NewResumeMailboxStatisticUsecase,
+	resumemailV1.NewResumeMailboxSettingHandler,
+	resumemailV1.NewResumeMailboxStatisticHandler,
 	NewAPIHandlers,
 )
+
+// NewResumeMailboxScheduler 创建ResumeMailboxScheduler接口实现
+func NewResumeMailboxScheduler(scheduler *resumemailboxscheduler.Scheduler) domain.ResumeMailboxScheduler {
+	return scheduler
+}

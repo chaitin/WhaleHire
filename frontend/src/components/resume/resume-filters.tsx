@@ -16,7 +16,8 @@ import { ResumeFilters } from '@/types/resume';
 const statusOptions = [
   { value: 'all', label: '所有状态' },
   { value: ResumeStatus.PROCESSING, label: '解析中' },
-  { value: ResumeStatus.COMPLETED, label: '待筛选' }, // 解析成功翻译为待筛选
+  { value: ResumeStatus.COMPLETED, label: '解析完成' },
+  { value: ResumeStatus.FAILED, label: '解析失败' },
 ];
 
 interface ResumeFiltersProps {
