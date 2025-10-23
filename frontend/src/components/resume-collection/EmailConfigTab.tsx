@@ -26,7 +26,6 @@ import {
   updateResumeMailboxSetting,
   deleteResumeMailboxSetting,
   syncResumeMailboxNow,
-  getMailboxStatistics,
   type ResumeMailboxSetting,
   type CreateResumeMailboxSettingReq,
 } from '@/services/resume-mailbox';
@@ -110,32 +109,11 @@ export function EmailConfigTab() {
         // 调用真实API
         const data = await getResumeMailboxSettings();
 
-        // 为每个邮箱配置获取统计数据
-        const dataWithStats = await Promise.all(
-          data.map(async (config) => {
-            try {
-              const statsResponse = await getMailboxStatistics(config.id);
-              // 计算所有统计项的 parsed_resumes 总和
-              const totalParsedResumes = statsResponse.items.reduce(
-                (sum, item) => sum + item.parsed_resumes,
-                0
-              );
-              return {
-                ...config,
-                synced_count: totalParsedResumes, // 使用所有统计项的已解析简历总数
-              };
-            } catch (error) {
-              console.error(`获取邮箱 ${config.id} 统计数据失败:`, error);
-              return config; // 如果获取统计失败，返回原始数据
-            }
-          })
-        );
-
-        const total = dataWithStats.length;
+        const total = data.length;
         const newTotalPages = Math.ceil(total / pageSize);
         const startIndex = (targetPage - 1) * pageSize;
         const endIndex = startIndex + pageSize;
-        const paginatedData = dataWithStats.slice(startIndex, endIndex);
+        const paginatedData = data.slice(startIndex, endIndex);
 
         setEmailConfigs(paginatedData);
         setTotalCount(total);
@@ -534,7 +512,8 @@ export function EmailConfigTab() {
   // 页面切换时获取数据
   useEffect(() => {
     fetchEmailConfigs();
-  }, [currentPage, fetchEmailConfigs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
   return (
     <>
@@ -680,7 +659,7 @@ export function EmailConfigTab() {
                     {/* 已同步数 */}
                     <div className="flex items-center w-24 pr-4">
                       <span className="text-sm text-gray-900">
-                        {config.synced_count || 0}
+                        {config.total_resumes || 0}
                       </span>
                     </div>
 

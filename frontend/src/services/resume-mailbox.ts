@@ -26,7 +26,7 @@ export interface ResumeMailboxSetting {
   // 关联数据（通过后端join或额外查询获取）
   uploader_name?: string; // 上传人姓名
   job_profile_names?: string[]; // 岗位名称列表
-  synced_count?: number; // 已同步数量（来自statistics表）
+  total_resumes?: number; // 已同步简历总数
 }
 
 /**
