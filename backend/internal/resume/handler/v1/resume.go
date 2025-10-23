@@ -7,6 +7,7 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/pkg/web"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/errcode"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
@@ -65,7 +66,7 @@ func NewResumeHandler(
 //	@Produce		json
 //	@Param			file				formData	file	true	"简历文件"
 //	@Param			job_position_ids	formData	string	false	"岗位ID列表，多个ID用逗号分隔"
-//	@Param			source				formData	string	false	"申请来源"
+//	@Param			source				formData	string	true	"申请来源类型，必需参数，可选值：email（邮箱采集）、manual（手动上传）"
 //	@Param			notes				formData	string	false	"备注信息"
 //	@Success		200					{object}	web.Resp{data=domain.Resume}
 //	@Router			/api/v1/resume/upload [post]
@@ -98,11 +99,20 @@ func (h *ResumeHandler) Upload(c *web.Context) error {
 		jobPositionIDs = cleanIDs
 	}
 
-	// 获取其他可选参数
-	var source, notes *string
-	if sourceStr := c.Request().FormValue("source"); sourceStr != "" {
-		source = &sourceStr
+	// 获取并校验必需的 source 参数
+	sourceStr := c.Request().FormValue("source")
+	if sourceStr == "" {
+		return errcode.ErrInvalidParam.WithData("message", fmt.Errorf("source parameter is required"))
 	}
+
+	// 校验 source 参数的有效性
+	sourceType := consts.ResumeSourceType(sourceStr)
+	if !sourceType.IsValid() {
+		return errcode.ErrInvalidParam.WithData("message", fmt.Errorf("invalid source type: %s, valid values are: %v", sourceStr, consts.ResumeSourceType("").Values()))
+	}
+
+	// 获取其他可选参数
+	var notes *string
 	if notesStr := c.Request().FormValue("notes"); notesStr != "" {
 		notes = &notesStr
 	}
@@ -113,7 +123,7 @@ func (h *ResumeHandler) Upload(c *web.Context) error {
 		File:           file,
 		Filename:       header.Filename,
 		JobPositionIDs: jobPositionIDs,
-		Source:         source,
+		Source:         &sourceStr,
 		Notes:          notes,
 	}
 
@@ -129,7 +139,7 @@ func (h *ResumeHandler) Upload(c *web.Context) error {
 		jobAppReq := &domain.CreateJobApplicationsReq{
 			ResumeID:       resume.ID,
 			JobPositionIDs: jobPositionIDs,
-			Source:         source,
+			Source:         &sourceStr,
 			Notes:          notes,
 		}
 
@@ -369,7 +379,7 @@ func (h *ResumeHandler) GetParseProgress(c *web.Context) error {
 //	@Produce		json
 //	@Param			files				formData	file	true	"简历文件列表"
 //	@Param			job_position_ids	formData	string	false	"岗位ID列表，多个ID用逗号分隔"
-//	@Param			source				formData	string	false	"申请来源"
+//	@Param			source				formData	string	true	"申请来源类型，必需参数，可选值：email（邮箱采集）、manual（手动上传）"
 //	@Param			notes				formData	string	false	"备注信息"
 //	@Success		200					{object}	web.Resp{data=domain.BatchUploadTask}
 //	@Router			/api/v1/resume/batch-upload [post]
@@ -407,11 +417,20 @@ func (h *ResumeHandler) BatchUpload(c *web.Context) error {
 		jobPositionIDs = cleanIDs
 	}
 
-	// 获取其他可选参数
-	var source, notes *string
-	if sourceStr := c.Request().FormValue("source"); sourceStr != "" {
-		source = &sourceStr
+	// 获取并校验必需的 source 参数
+	sourceStr := c.Request().FormValue("source")
+	if sourceStr == "" {
+		return errcode.ErrInvalidParam.WithData("message", fmt.Errorf("source parameter is required"))
 	}
+
+	// 校验 source 参数的有效性
+	sourceType := consts.ResumeSourceType(sourceStr)
+	if !sourceType.IsValid() {
+		return errcode.ErrInvalidParam.WithData("message", fmt.Errorf("invalid source type: %s, valid values are: %v", sourceStr, consts.ResumeSourceType("").Values()))
+	}
+
+	// 获取其他可选参数
+	var notes *string
 	if notesStr := c.Request().FormValue("notes"); notesStr != "" {
 		notes = &notesStr
 	}
@@ -435,7 +454,7 @@ func (h *ResumeHandler) BatchUpload(c *web.Context) error {
 		UploaderID:     user.ID,
 		Files:          fileInfos,
 		JobPositionIDs: jobPositionIDs,
-		Source:         source,
+		Source:         &sourceStr,
 		Notes:          notes,
 	}
 

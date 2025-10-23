@@ -125,7 +125,7 @@ func (d *ProxyDialer) dialThroughProxy(ctx context.Context, network, address str
 
 	// 发送CONNECT请求
 	connectReq := fmt.Sprintf("CONNECT %s HTTP/1.1\r\nHost: %s\r\n", address, address)
-	
+
 	// 如果代理需要认证
 	if proxyURL.User != nil {
 		username := proxyURL.User.Username()
@@ -133,7 +133,7 @@ func (d *ProxyDialer) dialThroughProxy(ctx context.Context, network, address str
 		auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
 		connectReq += fmt.Sprintf("Proxy-Authorization: Basic %s\r\n", auth)
 	}
-	
+
 	connectReq += "\r\n"
 
 	// 发送CONNECT请求
