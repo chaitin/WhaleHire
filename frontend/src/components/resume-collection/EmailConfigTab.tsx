@@ -26,7 +26,7 @@ import {
   updateResumeMailboxSetting,
   deleteResumeMailboxSetting,
   syncResumeMailboxNow,
-  getMailboxStatisticsSummary,
+  getMailboxStatistics,
   type ResumeMailboxSetting,
   type CreateResumeMailboxSettingReq,
 } from '@/services/resume-mailbox';
@@ -114,10 +114,15 @@ export function EmailConfigTab() {
         const dataWithStats = await Promise.all(
           data.map(async (config) => {
             try {
-              const stats = await getMailboxStatisticsSummary(config.id);
+              const statsResponse = await getMailboxStatistics(config.id);
+              // 计算所有统计项的 parsed_resumes 总和
+              const totalParsedResumes = statsResponse.items.reduce(
+                (sum, item) => sum + item.parsed_resumes,
+                0
+              );
               return {
                 ...config,
-                synced_count: stats.total_synced_emails, // 使用统计接口的已同步邮件数
+                synced_count: totalParsedResumes, // 使用所有统计项的已解析简历总数
               };
             } catch (error) {
               console.error(`获取邮箱 ${config.id} 统计数据失败:`, error);

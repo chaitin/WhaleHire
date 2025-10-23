@@ -135,35 +135,53 @@ export const syncResumeMailboxNow = async (id: string): Promise<void> => {
 };
 
 /**
- * 邮箱统计汇总数据
+ * 邮箱统计单项数据
  */
-export interface MailboxStatisticsSummary {
-  total_synced_emails: number; // 总同步邮件数
-  total_parsed_resumes: number; // 总解析简历数
-  total_failed_resumes: number; // 总失败简历数
-  total_skipped_attachments: number; // 总跳过附件数
-  success_rate: number; // 成功率
-  avg_sync_duration_ms: number; // 平均同步时长（毫秒）
+export interface ResumeMailboxStatistic {
+  id: string;
+  mailbox_id: string;
+  date: string; // 日期
+  synced_emails: number; // 同步邮件数
+  parsed_resumes: number; // 解析简历数
+  failed_resumes: number; // 失败简历数
+  skipped_attachments: number; // 跳过附件数
+  last_sync_duration_ms: number; // 最后同步时长（毫秒）
+  created_at: string;
+  updated_at: string;
 }
 
 /**
- * 获取邮箱统计汇总数据
+ * 邮箱统计列表响应
  */
-export const getMailboxStatisticsSummary = async (
+export interface ListResumeMailboxStatisticsResponse {
+  items: ResumeMailboxStatistic[]; // 统计列表
+  total_count: number; // 总数
+  has_next_page: boolean; // 是否有下一页
+  next_token?: string; // 下一页token
+}
+
+/**
+ * 获取邮箱统计列表
+ */
+export const getMailboxStatistics = async (
   mailboxId?: string,
   dateFrom?: string,
-  dateTo?: string
-): Promise<MailboxStatisticsSummary> => {
+  dateTo?: string,
+  page?: number,
+  pageSize?: number
+): Promise<ListResumeMailboxStatisticsResponse> => {
   const queryParams = new URLSearchParams();
 
   if (mailboxId) queryParams.append('mailbox_id', mailboxId);
   if (dateFrom) queryParams.append('date_from', dateFrom);
   if (dateTo) queryParams.append('date_to', dateTo);
+  if (page) queryParams.append('page', page.toString());
+  if (pageSize) queryParams.append('page_size', pageSize.toString());
 
   const queryString = queryParams.toString();
   const url = queryString
-    ? `/v1/resume-mailbox-statistics/summary?${queryString}`
-    : '/v1/resume-mailbox-statistics/summary';
+    ? `/v1/resume-mailbox-statistics?${queryString}`
+    : '/v1/resume-mailbox-statistics';
 
-  return apiGet<MailboxStatisticsSummary>(url);
+  return apiGet<ListResumeMailboxStatisticsResponse>(url);
 };
