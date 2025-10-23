@@ -133,3 +133,37 @@ export const deleteResumeMailboxSetting = async (id: string): Promise<void> => {
 export const syncResumeMailboxNow = async (id: string): Promise<void> => {
   return apiPost<void>(`/v1/resume-mailbox-settings/${id}/sync-now`, {});
 };
+
+/**
+ * 邮箱统计汇总数据
+ */
+export interface MailboxStatisticsSummary {
+  total_synced_emails: number; // 总同步邮件数
+  total_parsed_resumes: number; // 总解析简历数
+  total_failed_resumes: number; // 总失败简历数
+  total_skipped_attachments: number; // 总跳过附件数
+  success_rate: number; // 成功率
+  avg_sync_duration_ms: number; // 平均同步时长（毫秒）
+}
+
+/**
+ * 获取邮箱统计汇总数据
+ */
+export const getMailboxStatisticsSummary = async (
+  mailboxId?: string,
+  dateFrom?: string,
+  dateTo?: string
+): Promise<MailboxStatisticsSummary> => {
+  const queryParams = new URLSearchParams();
+
+  if (mailboxId) queryParams.append('mailbox_id', mailboxId);
+  if (dateFrom) queryParams.append('date_from', dateFrom);
+  if (dateTo) queryParams.append('date_to', dateTo);
+
+  const queryString = queryParams.toString();
+  const url = queryString
+    ? `/v1/resume-mailbox-statistics/summary?${queryString}`
+    : '/v1/resume-mailbox-statistics/summary';
+
+  return apiGet<MailboxStatisticsSummary>(url);
+};

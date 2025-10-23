@@ -26,6 +26,7 @@ import {
   updateResumeMailboxSetting,
   deleteResumeMailboxSetting,
   syncResumeMailboxNow,
+  getMailboxStatisticsSummary,
   type ResumeMailboxSetting,
   type CreateResumeMailboxSettingReq,
 } from '@/services/resume-mailbox';
@@ -109,11 +110,27 @@ export function EmailConfigTab() {
         // 调用真实API
         const data = await getResumeMailboxSettings();
 
-        const total = data.length;
+        // 为每个邮箱配置获取统计数据
+        const dataWithStats = await Promise.all(
+          data.map(async (config) => {
+            try {
+              const stats = await getMailboxStatisticsSummary(config.id);
+              return {
+                ...config,
+                synced_count: stats.total_synced_emails, // 使用统计接口的已同步邮件数
+              };
+            } catch (error) {
+              console.error(`获取邮箱 ${config.id} 统计数据失败:`, error);
+              return config; // 如果获取统计失败，返回原始数据
+            }
+          })
+        );
+
+        const total = dataWithStats.length;
         const newTotalPages = Math.ceil(total / pageSize);
         const startIndex = (targetPage - 1) * pageSize;
         const endIndex = startIndex + pageSize;
-        const paginatedData = data.slice(startIndex, endIndex);
+        const paginatedData = dataWithStats.slice(startIndex, endIndex);
 
         setEmailConfigs(paginatedData);
         setTotalCount(total);

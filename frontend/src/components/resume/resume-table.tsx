@@ -185,24 +185,26 @@ export function ResumeTable({
 
   // 渲染来源单元格
   const renderSourceCell = (resume: Resume) => {
-    const jobPositions = resume.job_positions || [];
+    // 优先从简历的 source 字段获取，如果没有则从 job_positions 中获取
+    let source: string = resume.source || '';
 
-    if (jobPositions.length === 0) {
-      return <span className="text-gray-400">-</span>;
+    // 如果顶层没有 source，尝试从第一个 job_position 中获取
+    if (!source && resume.job_positions && resume.job_positions.length > 0) {
+      source = resume.job_positions[0].source || '';
     }
 
-    // 获取第一个岗位的来源
-    const source = jobPositions[0].source || 'manual';
+    // 默认为 manual
+    if (!source) {
+      source = 'manual';
+    }
 
     // 来源标签映射
     const sourceLabels: Record<string, string> = {
-      manual: '手动上传',
-      email: '邮件收集',
-      api: 'API导入',
-      import: '批量导入',
+      manual: '手动',
+      email: '邮件',
     };
 
-    const displaySource = sourceLabels[source] || source || '手动上传';
+    const displaySource = sourceLabels[source] || source;
 
     return <span className="text-sm text-gray-500">{displaySource}</span>;
   };

@@ -142,7 +142,8 @@ export interface BatchUploadStatus {
 export const batchUploadResume = async (
   files: File | File[],
   jobPositionIds?: string[],
-  position?: string
+  position?: string,
+  source: 'manual' | 'email' = 'manual' // 来源：manual(手动) 或 email(邮件)
 ): Promise<BatchUploadResponse> => {
   const formData = new FormData();
 
@@ -163,6 +164,9 @@ export const batchUploadResume = async (
   if (position) {
     formData.append('position', position);
   }
+
+  // 添加来源参数
+  formData.append('source', source);
 
   return apiPost<BatchUploadResponse>('/v1/resume/batch-upload', formData);
 };
