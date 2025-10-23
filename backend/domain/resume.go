@@ -109,9 +109,9 @@ type UploadResumeReq struct {
 	UploaderID     string    `json:"uploader_id" validate:"required"`
 	File           io.Reader `json:"-"`
 	Filename       string    `json:"filename" validate:"required"`
-	JobPositionIDs []string  `json:"job_position_ids,omitempty"` // 关联的岗位ID列表
-	Source         *string   `json:"source,omitempty"`           // 申请来源
-	Notes          *string   `json:"notes,omitempty"`            // 备注信息
+	JobPositionIDs []string  `json:"job_position_ids,omitempty"`  // 关联的岗位ID列表
+	Source         *string   `json:"source"  validate:"required"` // 申请来源，可选值：email（邮箱采集）、manual（手动上传）
+	Notes          *string   `json:"notes,omitempty"`             // 备注信息
 }
 
 // ListResumeReq 简历列表请求
@@ -556,9 +556,9 @@ type ResumeParseProgress struct {
 type BatchUploadResumeReq struct {
 	UploaderID     string                 `json:"uploader_id" validate:"required"`
 	Files          []*BatchUploadFileInfo `json:"files" validate:"required,min=1"`
-	JobPositionIDs []string               `json:"job_position_ids,omitempty"` // 关联的岗位ID列表
-	Source         *string                `json:"source,omitempty"`           // 申请来源
-	Notes          *string                `json:"notes,omitempty"`            // 备注信息
+	JobPositionIDs []string               `json:"job_position_ids,omitempty"`  // 关联的岗位ID列表
+	Source         *string                `json:"source"  validate:"required"` // 申请来源，可选值：email（邮箱采集）、manual（手动上传）
+	Notes          *string                `json:"notes,omitempty"`             // 备注信息
 }
 
 type BatchUploadFileInfo struct {

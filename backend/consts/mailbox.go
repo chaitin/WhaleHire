@@ -77,3 +77,29 @@ func (m MailboxStatus) IsValid() bool {
 	}
 	return false
 }
+
+// ResumeSourceType 简历来源类型
+type ResumeSourceType string
+
+const (
+	ResumeSourceTypeEmail  ResumeSourceType = "email"  // 邮箱采集
+	ResumeSourceTypeManual ResumeSourceType = "manual" // 手动上传
+)
+
+// Values 返回所有简历来源类型值
+func (ResumeSourceType) Values() []ResumeSourceType {
+	return []ResumeSourceType{
+		ResumeSourceTypeEmail,
+		ResumeSourceTypeManual,
+	}
+}
+
+// IsValid 检查简历来源类型是否有效
+func (r ResumeSourceType) IsValid() bool {
+	for _, v := range ResumeSourceType("").Values() {
+		if r == v {
+			return true
+		}
+	}
+	return false
+}
