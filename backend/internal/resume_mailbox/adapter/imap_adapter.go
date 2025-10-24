@@ -122,7 +122,8 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 			// 使用 1:* 兼容部分服务商（如阿里企业邮箱）不接受极大UID上限的情况
 			searchSet.AddRange(1, 0)
 			criteria := imap.NewSearchCriteria()
-			criteria.Uid = searchSet
+			// UidSearch 会自动使用UID进行匹配，这里传入 SeqNum 兼容部分服务器不接受嵌套 UID 关键字的情况
+			criteria.SeqNum = searchSet
 
 			uids, err := c.UidSearch(criteria)
 			if err != nil {
@@ -236,7 +237,8 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 	}
 
 	criteria := imap.NewSearchCriteria()
-	criteria.Uid = searchSet
+	// UidSearch 会自动使用UID进行匹配，这里传入 SeqNum 兼容部分服务器不接受嵌套 UID 关键字的情况
+	criteria.SeqNum = searchSet
 
 	uids, err := c.UidSearch(criteria)
 	if err != nil {
