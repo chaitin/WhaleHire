@@ -2,7 +2,6 @@ package resumeparser
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -44,11 +43,11 @@ func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*Re
 	if msg == nil || msg.Content == "" {
 		return nil, fmt.Errorf("empty model output")
 	}
-	var res ResumeParseResult
-	if err := json.Unmarshal([]byte(msg.Content), &res); err != nil {
+	res, err := decodeResumeParseResult([]byte(msg.Content))
+	if err != nil {
 		return nil, fmt.Errorf("failed to parse JSON output: %w; raw=%s", err, msg.Content)
 	}
-	return &res, nil
+	return res, nil
 }
 
 // NewResumeParserChain 构建简历解析工作流链
