@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
-import { ProtectedRoute } from '@/components/auth/protected-route';
+import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {

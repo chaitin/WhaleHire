@@ -26,7 +26,7 @@ export interface ResumeMailboxSetting {
   // 关联数据（通过后端join或额外查询获取）
   uploader_name?: string; // 上传人姓名
   job_profile_names?: string[]; // 岗位名称列表
-  synced_count?: number; // 已同步数量（来自statistics表）
+  total_resumes?: number; // 已同步简历总数
 }
 
 /**
@@ -132,4 +132,56 @@ export const deleteResumeMailboxSetting = async (id: string): Promise<void> => {
  */
 export const syncResumeMailboxNow = async (id: string): Promise<void> => {
   return apiPost<void>(`/v1/resume-mailbox-settings/${id}/sync-now`, {});
+};
+
+/**
+ * 邮箱统计单项数据
+ */
+export interface ResumeMailboxStatistic {
+  id: string;
+  mailbox_id: string;
+  date: string; // 日期
+  synced_emails: number; // 同步邮件数
+  parsed_resumes: number; // 解析简历数
+  failed_resumes: number; // 失败简历数
+  skipped_attachments: number; // 跳过附件数
+  last_sync_duration_ms: number; // 最后同步时长（毫秒）
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * 邮箱统计列表响应
+ */
+export interface ListResumeMailboxStatisticsResponse {
+  items: ResumeMailboxStatistic[]; // 统计列表
+  total_count: number; // 总数
+  has_next_page: boolean; // 是否有下一页
+  next_token?: string; // 下一页token
+}
+
+/**
+ * 获取邮箱统计列表
+ */
+export const getMailboxStatistics = async (
+  mailboxId?: string,
+  dateFrom?: string,
+  dateTo?: string,
+  page?: number,
+  pageSize?: number
+): Promise<ListResumeMailboxStatisticsResponse> => {
+  const queryParams = new URLSearchParams();
+
+  if (mailboxId) queryParams.append('mailbox_id', mailboxId);
+  if (dateFrom) queryParams.append('date_from', dateFrom);
+  if (dateTo) queryParams.append('date_to', dateTo);
+  if (page) queryParams.append('page', page.toString());
+  if (pageSize) queryParams.append('page_size', pageSize.toString());
+
+  const queryString = queryParams.toString();
+  const url = queryString
+    ? `/v1/resume-mailbox-statistics?${queryString}`
+    : '/v1/resume-mailbox-statistics';
+
+  return apiGet<ListResumeMailboxStatisticsResponse>(url);
 };

@@ -1,12 +1,12 @@
 import { Menu, Bell, ChevronDown, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {

@@ -122,21 +122,22 @@ func (r *ResumeMailboxStatisticRepo) Upsert(ctx context.Context, req *domain.Ups
 	}
 
 	if existing != nil {
-		// 更新现有记录
+		// 更新现有记录 - 使用累加逻辑
 		builder := r.client.ResumeMailboxStatistic.UpdateOneID(existing.ID)
 
 		if req.SyncedEmails != nil {
-			builder = builder.SetSyncedEmails(*req.SyncedEmails)
+			builder = builder.AddSyncedEmails(*req.SyncedEmails)
 		}
 		if req.ParsedResumes != nil {
-			builder = builder.SetParsedResumes(*req.ParsedResumes)
+			builder = builder.AddParsedResumes(*req.ParsedResumes)
 		}
 		if req.FailedResumes != nil {
-			builder = builder.SetFailedResumes(*req.FailedResumes)
+			builder = builder.AddFailedResumes(*req.FailedResumes)
 		}
 		if req.SkippedAttachments != nil {
-			builder = builder.SetSkippedAttachments(*req.SkippedAttachments)
+			builder = builder.AddSkippedAttachments(*req.SkippedAttachments)
 		}
+		// 最后同步耗时使用覆盖逻辑，因为这是最新的耗时记录
 		if req.LastSyncDurationMs != nil {
 			builder = builder.SetLastSyncDurationMs(*req.LastSyncDurationMs)
 		}
@@ -285,6 +286,9 @@ func (r *ResumeMailboxStatisticRepo) GetSummary(ctx context.Context, req *domain
 	if totalProcessed > 0 {
 		summary.SuccessRate = float64(summary.TotalParsedResumes) / float64(totalProcessed) * 100
 	}
+
+	// 计算所有解析的简历总数（成功+失败）
+	summary.TotalResumes = summary.TotalParsedResumes + summary.TotalFailedResumes
 
 	return summary, nil
 }

@@ -33,6 +33,7 @@ export interface Resume {
   job_ids?: string[]; // 关联的岗位ID列表
   job_names?: string[]; // 关联的岗位名称列表
   job_positions?: JobApplication[]; // 关联的岗位信息
+  source?: 'manual' | 'email'; // 来源：manual(手动) 或 email(邮件)
   created_at: number;
   updated_at: number;
 }

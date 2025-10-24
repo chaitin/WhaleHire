@@ -68,7 +68,6 @@ func (c *Context) Failed(code int, id ErrorID, err error) error {
 
 	// 处理BusinessErr类型
 	if e, ok := err.(*BusinessErr); ok {
-		fmt.Printf("BusinessErr: %v\n", e)
 		return c.businessFailed(e)
 	}
 

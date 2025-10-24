@@ -16,14 +16,13 @@ import (
 )
 
 var (
-	allowedResumeExtensions = map[string]struct{}{
+	supportedExtensions = map[string]struct{}{
 		".pdf":  {},
 		".doc":  {},
 		".docx": {},
 		".txt":  {},
 		".rtf":  {},
 	}
-	emailSourceLabel = "邮箱采集"
 )
 
 // ResumeMailboxSyncUsecase 邮箱同步用例实现
@@ -152,8 +151,8 @@ func (u *ResumeMailboxSyncUsecase) SyncNow(ctx context.Context, mailboxID uuid.U
 				Filename:       attachment.Filename,
 				JobPositionIDs: jobPositionIDs,
 			}
-			source := emailSourceLabel
-			req.Source = &source
+			sourceStr := string(consts.ResumeSourceTypeEmail)
+			req.Source = &sourceStr
 
 			resume, uploadErr := u.resumeUsecase.Upload(ctx, req)
 			if uploadErr != nil {
@@ -172,7 +171,7 @@ func (u *ResumeMailboxSyncUsecase) SyncNow(ctx context.Context, mailboxID uuid.U
 				jobReq := &domain.CreateJobApplicationsReq{
 					ResumeID:       resume.ID,
 					JobPositionIDs: jobPositionIDs,
-					Source:         &source,
+					Source:         &sourceStr,
 				}
 				if _, jobErr := u.jobApplicationUsecase.CreateJobApplications(ctx, jobReq); jobErr != nil {
 					result.Errors = append(result.Errors, fmt.Sprintf("创建岗位关联失败 %s: %s", resume.ID, jobErr.Error()))
@@ -242,7 +241,7 @@ func (u *ResumeMailboxSyncUsecase) SyncNow(ctx context.Context, mailboxID uuid.U
 
 func (u *ResumeMailboxSyncUsecase) isSupportedAttachment(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))
-	_, ok := allowedResumeExtensions[ext]
+	_, ok := supportedExtensions[ext]
 	return ok
 }
 
