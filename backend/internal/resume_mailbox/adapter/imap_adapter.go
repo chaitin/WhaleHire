@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net"
 	"sort"
 	"strconv"
@@ -29,7 +30,6 @@ import (
 const (
 	defaultIMAPTimeout = 30 * time.Second
 	defaultFetchLimit  = 50
-	imapMaxUID         = ^uint32(0)
 )
 
 type imapCursor struct {
@@ -119,7 +119,8 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 
 			// 搜索所有邮件的 UID
 			searchSet := new(imap.SeqSet)
-			searchSet.AddRange(1, imapMaxUID)
+			// 使用 1:* 兼容部分服务商（如阿里企业邮箱）不接受极大UID上限的情况
+			searchSet.AddRange(1, 0)
 			criteria := imap.NewSearchCriteria()
 			criteria.Uid = searchSet
 
@@ -187,23 +188,40 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 		}, nil
 	}
 
+	analysisMsg := "UidNext为0表示邮箱服务器不支持该字段，将通过搜索判断新邮件"
+	if mailboxStatus.UidNext > 0 {
+		analysisMsg = "UidNext存在，继续按游标后的UID范围执行搜索"
+	}
+
 	a.logger.Info("检查邮箱同步状态",
 		slog.String("mailbox", config.EmailAddress),
 		slog.Uint64("current_last_uid", uint64(currentCursor.LastUID)),
 		slog.Uint64("mailbox_uid_next", uint64(mailboxStatus.UidNext)),
 		slog.Uint64("mailbox_uid_validity", uint64(mailboxStatus.UidValidity)),
 		slog.Bool("first_sync", firstSync),
-		slog.String("analysis", "UidNext为0表示邮箱服务器不支持该字段，将通过搜索判断新邮件"),
+		slog.String("analysis", analysisMsg),
 	)
 
 	// 搜索新的UID列表
 	searchSet := new(imap.SeqSet)
 	if currentCursor.LastUID == 0 {
-		searchSet.AddRange(1, imapMaxUID)
+		// 使用 1:* 兼容部分服务商（如阿里企业邮箱）不接受极大UID上限的情况
+		searchSet.AddRange(1, 0)
 	} else {
 		// 确保搜索范围不超过邮箱的最大UID
+		if currentCursor.LastUID == math.MaxUint32 {
+			a.logger.Warn("IMAP游标已到达UID上限，视为无新邮件",
+				slog.String("mailbox", config.EmailAddress),
+			)
+			nextCursor, _ := a.buildCursorString(mailboxStatus.UidValidity, currentCursor.LastUID)
+			return &domain.MailboxFetchResult{
+				Messages:      []*domain.MailboxEmail{},
+				NextCursor:    nextCursor,
+				LastMessageID: "",
+			}, nil
+		}
+
 		startUID := currentCursor.LastUID + 1
-		endUID := imapMaxUID
 		if mailboxStatus.UidNext > 0 && startUID >= mailboxStatus.UidNext {
 			// 起始UID已经超过或等于邮箱的下一个UID，没有新邮件
 			nextCursor, _ := a.buildCursorString(mailboxStatus.UidValidity, currentCursor.LastUID)
@@ -213,7 +231,8 @@ func (a *IMAPAdapter) Fetch(ctx context.Context, config *domain.MailboxConnectio
 				LastMessageID: "",
 			}, nil
 		}
-		searchSet.AddRange(startUID, endUID)
+		// 通过 n:* 兼容不支持超大UID范围的服务器
+		searchSet.AddRange(startUID, 0)
 	}
 
 	criteria := imap.NewSearchCriteria()
