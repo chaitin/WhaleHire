@@ -3,7 +3,7 @@
 # 构建配置
 PLATFORM=linux/amd64
 REGISTRY=portus.in.chaitin.net/whalehire
-VERSION=v0.1.16
+VERSION=v0.1.17
 BUILD_TIME=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GIT_COMMIT=$(shell git rev-parse HEAD)
 
