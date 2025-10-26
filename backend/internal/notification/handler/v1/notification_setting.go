@@ -72,12 +72,13 @@ func (h *NotificationSettingHandler) CreateSetting(ctx *web.Context, req domain.
 		Description:    req.Description,
 	}
 
-	if err := h.usecase.CreateSetting(ctx.Request().Context(), setting); err != nil {
+	createdSetting, err := h.usecase.CreateSetting(ctx.Request().Context(), setting)
+	if err != nil {
 		h.logger.Error("create notification setting failed", "error", err)
 		return errcode.ErrNotificationSettingCreateFailed.WithData("message", err.Error())
 	}
 
-	return ctx.Success(setting)
+	return ctx.Success(createdSetting)
 }
 
 // GetSetting 获取通知设置

@@ -57,6 +57,9 @@ var (
 		"/api/v1/file",
 		"/api/v1/screening",
 		"/api/v1/general-agent",
+		"/api/v1/notification-settings",
+		"/api/v1/resume-mailbox-settings",
+		"/api/v1/resume-mailbox-statistics",
 	}
 )
 
@@ -178,8 +181,8 @@ func (m *AuditMiddleware) Audit() echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// 跳过 GET 请求（查看操作）
-			if c.Request().Method == "GET" {
+			// 跳过 GET 请求（查看操作），但保留OAuth登录相关的GET请求
+			if c.Request().Method == "GET" && !m.isOAuthLoginRequest(c.Request().URL.Path) {
 				return next(c)
 			}
 
@@ -492,6 +495,14 @@ func (m *AuditMiddleware) parseOperationType(method, path string) consts.Operati
 		}
 	}
 
+	// 处理OAuth登录相关的GET请求
+	if method == http.MethodGet {
+		switch {
+		case strings.HasSuffix(path, "/oauth/signup-or-in"):
+			return consts.OperationTypeLogin
+		}
+	}
+
 	switch method {
 	case http.MethodGet:
 		return consts.OperationTypeView
@@ -504,6 +515,11 @@ func (m *AuditMiddleware) parseOperationType(method, path string) consts.Operati
 	default:
 		return consts.OperationTypeView
 	}
+}
+
+// isOAuthLoginRequest 判断是否为OAuth登录相关的请求
+func (m *AuditMiddleware) isOAuthLoginRequest(path string) bool {
+	return strings.HasSuffix(path, "/oauth/signup-or-in")
 }
 
 // parseResourceInfo 解析资源信息
@@ -521,6 +537,11 @@ func (m *AuditMiddleware) parseResourceInfo(c echo.Context) (consts.ResourceType
 		return m.parseUserResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/users"):
 		return m.parseUserResource(c, path)
+	// 注意：将更具体的路径前缀放在更通用的路径前缀之前
+	case strings.HasPrefix(path, "/api/v1/resume-mailbox-settings"):
+		return m.parseResumeMailboxSettingResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/resume-mailbox-statistics"):
+		return m.parseResumeMailboxStatisticResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/resume"):
 		return m.parseResumeResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/departments"):
@@ -533,6 +554,8 @@ func (m *AuditMiddleware) parseResourceInfo(c echo.Context) (consts.ResourceType
 		return m.parseFileResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/screening"):
 		return m.parseScreeningResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/notification-settings"):
+		return m.parseNotificationSettingResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/general-agent/conversations"):
 		return m.parseGeneralAgentConversationResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/general-agent"):
@@ -654,6 +677,53 @@ func (m *AuditMiddleware) parseGeneralAgentConversationResource(c echo.Context, 
 // parseGeneralAgentResource 解析通用智能体消息资源
 func (m *AuditMiddleware) parseGeneralAgentResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
 	return consts.ResourceTypeMessage, nil, nil
+}
+
+// parseNotificationSettingResource 解析通知设置资源
+func (m *AuditMiddleware) parseNotificationSettingResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if id := c.Param("id"); id != "" {
+		idCopy := id
+		return consts.ResourceTypeNotificationSetting, &idCopy, nil
+	}
+	if name := c.Param("name"); name != "" {
+		nameCopy := name
+		return consts.ResourceTypeNotificationSetting, nil, &nameCopy
+	}
+	if channel := c.Param("channel"); channel != "" {
+		channelCopy := channel
+		return consts.ResourceTypeNotificationSetting, nil, &channelCopy
+	}
+	return consts.ResourceTypeNotificationSetting, nil, nil
+}
+
+// parseResumeMailboxSettingResource 解析简历邮箱设置资源
+func (m *AuditMiddleware) parseResumeMailboxSettingResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if id := c.Param("id"); id != "" {
+		idCopy := id
+		return consts.ResourceTypeResumeMailboxSetting, &idCopy, nil
+	}
+	if mailboxID := c.QueryParam("mailbox_id"); mailboxID != "" {
+		idCopy := mailboxID
+		return consts.ResourceTypeResumeMailboxSetting, &idCopy, nil
+	}
+	return consts.ResourceTypeResumeMailboxSetting, nil, nil
+}
+
+// parseResumeMailboxStatisticResource 解析简历邮箱统计资源
+func (m *AuditMiddleware) parseResumeMailboxStatisticResource(c echo.Context, path string) (consts.ResourceType, *string, *string) {
+	if mailboxID := c.Param("mailbox_id"); mailboxID != "" {
+		idCopy := mailboxID
+		if date := c.Param("date"); date != "" {
+			dateCopy := date
+			return consts.ResourceTypeResumeMailboxStatistic, &idCopy, &dateCopy
+		}
+		return consts.ResourceTypeResumeMailboxStatistic, &idCopy, nil
+	}
+	if mailboxID := c.QueryParam("mailbox_id"); mailboxID != "" {
+		idCopy := mailboxID
+		return consts.ResourceTypeResumeMailboxStatistic, &idCopy, nil
+	}
+	return consts.ResourceTypeResumeMailboxStatistic, nil, nil
 }
 
 // extractIDFromPath 从路径中提取ID

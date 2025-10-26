@@ -24,17 +24,20 @@ const (
 type ResourceType string
 
 const (
-	ResourceTypeUser         ResourceType = "user"         // 用户
-	ResourceTypeAdmin        ResourceType = "admin"        // 管理员
-	ResourceTypeRole         ResourceType = "role"         // 角色
-	ResourceTypeDepartment   ResourceType = "department"   // 部门
-	ResourceTypeJobPosition  ResourceType = "job_position" // 职位
-	ResourceTypeResume       ResourceType = "resume"       // 简历
-	ResourceTypeScreening    ResourceType = "screening"    // 筛选任务
-	ResourceTypeSetting      ResourceType = "setting"      // 系统设置
-	ResourceTypeAttachment   ResourceType = "attachment"   // 附件
-	ResourceTypeConversation ResourceType = "conversation" // 对话
-	ResourceTypeMessage      ResourceType = "message"      // 消息
+	ResourceTypeUser                   ResourceType = "user"                     // 用户
+	ResourceTypeAdmin                  ResourceType = "admin"                    // 管理员
+	ResourceTypeRole                   ResourceType = "role"                     // 角色
+	ResourceTypeDepartment             ResourceType = "department"               // 部门
+	ResourceTypeJobPosition            ResourceType = "job_position"             // 职位
+	ResourceTypeResume                 ResourceType = "resume"                   // 简历
+	ResourceTypeScreening              ResourceType = "screening"                // 筛选任务
+	ResourceTypeSetting                ResourceType = "setting"                  // 系统设置
+	ResourceTypeAttachment             ResourceType = "attachment"               // 附件
+	ResourceTypeConversation           ResourceType = "conversation"             // 对话
+	ResourceTypeMessage                ResourceType = "message"                  // 消息
+	ResourceTypeNotificationSetting    ResourceType = "notification_setting"     // 通知设置
+	ResourceTypeResumeMailboxSetting   ResourceType = "resume_mailbox_setting"   // 简历邮箱设置
+	ResourceTypeResumeMailboxStatistic ResourceType = "resume_mailbox_statistic" // 简历邮箱统计
 )
 
 // AuditLogStatus 审计日志状态

@@ -21,7 +21,7 @@ RUN --mount=type=bind,target=. \
     -o /out/main \
     cmd/main.go cmd/wire_gen.go
 
-FROM alpine:3.22.1 as binary
+FROM alpine:3.22.1 AS binary
 
 WORKDIR /app
 

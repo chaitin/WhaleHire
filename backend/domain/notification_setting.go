@@ -13,7 +13,7 @@ import (
 // NotificationSettingUsecase 通知设置业务逻辑接口
 type NotificationSettingUsecase interface {
 	// CreateSetting 创建通知设置
-	CreateSetting(ctx context.Context, setting *NotificationSetting) error
+	CreateSetting(ctx context.Context, setting *NotificationSetting) (*NotificationSetting, error)
 	// GetSetting 根据ID获取通知设置
 	GetSetting(ctx context.Context, id uuid.UUID) (*NotificationSetting, error)
 	// GetSettingByNameAndChannel 根据名称和通道类型获取通知设置

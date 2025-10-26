@@ -27,31 +27,32 @@ func NewNotificationSettingUsecase(
 	}
 }
 
-func (u *notificationSettingUsecase) CreateSetting(ctx context.Context, setting *domain.NotificationSetting) error {
+func (u *notificationSettingUsecase) CreateSetting(ctx context.Context, setting *domain.NotificationSetting) (*domain.NotificationSetting, error) {
 	// 验证配置
 	if err := u.ValidateConfig(ctx, setting); err != nil {
 		u.logger.Error("validate notification setting config failed", "error", err)
-		return fmt.Errorf("配置验证失败: %w", err)
+		return nil, fmt.Errorf("配置验证失败: %w", err)
 	}
 
 	// 检查同一名称和通道的配置是否已存在
 	existingEntity, err := u.repo.GetByNameAndChannel(ctx, setting.Name, setting.Channel)
 	if err == nil && existingEntity != nil {
-		return fmt.Errorf("名称为 %s 的 %s 通道配置已存在", setting.Name, setting.Channel)
+		return nil, fmt.Errorf("名称为 %s 的 %s 通道配置已存在", setting.Name, setting.Channel)
 	}
 
-	// 生成ID
-	setting.ID = uuid.New()
-
-	// 创建设置
-	_, err = u.repo.Create(ctx, setting)
+	// 创建设置，使用数据库生成的ID
+	createdEntity, err := u.repo.Create(ctx, setting)
 	if err != nil {
 		u.logger.Error("create notification setting failed", "error", err)
-		return fmt.Errorf("创建通知设置失败: %w", err)
+		return nil, fmt.Errorf("创建通知设置失败: %w", err)
 	}
 
-	u.logger.Info("notification setting created", "id", setting.ID.String(), "name", setting.Name, "channel", string(setting.Channel))
-	return nil
+	// 使用From方法将数据库实体转换为领域对象
+	result := &domain.NotificationSetting{}
+	result = result.From(createdEntity)
+
+	u.logger.Info("notification setting created", "id", result.ID.String(), "name", result.Name, "channel", string(result.Channel))
+	return result, nil
 }
 
 func (u *notificationSettingUsecase) GetSetting(ctx context.Context, id uuid.UUID) (*domain.NotificationSetting, error) {

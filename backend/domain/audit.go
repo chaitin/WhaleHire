@@ -89,14 +89,17 @@ type HourlyAuditStat struct {
 
 // AuditLog 审计日志
 type AuditLog struct {
-	ID             string                 `json:"id"`                      // 审计日志ID
-	RequestID      *string                `json:"request_id,omitempty"`    // 请求ID
-	SessionID      *string                `json:"session_id,omitempty"`    // 会话ID
-	OperatorType   consts.OperatorType    `json:"operator_type"`           // 操作者类型
-	OperatorID     *string                `json:"operator_id,omitempty"`   // 操作者ID
-	OperatorName   *string                `json:"operator_name,omitempty"` // 操作者名称
-	OperationType  consts.OperationType   `json:"operation_type"`          // 操作类型: create创建、update更新、delete删除、view查看（敏感数据）、login登录、logout登出
-	ResourceType   consts.ResourceType    `json:"resource_type"`           // 资源类型: user用户、admin管理员、role角色、department部门、job_position职位、resume简历、screening筛选任务、setting系统设置、attachment附件、conversation对话、message消息
+	ID            string               `json:"id"`                      // 审计日志ID
+	RequestID     *string              `json:"request_id,omitempty"`    // 请求ID
+	SessionID     *string              `json:"session_id,omitempty"`    // 会话ID
+	OperatorType  consts.OperatorType  `json:"operator_type"`           // 操作者类型
+	OperatorID    *string              `json:"operator_id,omitempty"`   // 操作者ID
+	OperatorName  *string              `json:"operator_name,omitempty"` // 操作者名称
+	OperationType consts.OperationType `json:"operation_type"`          // 操作类型: create创建、update更新、delete删除、view查看（敏感数据）、login登录、logout登出
+	// 资源类型: user用户、admin管理员、role角色、department部门、job_position职位、resume简历、
+	// screening筛选任务、setting系统设置、attachment附件、conversation对话、message消息、
+	// notification_setting通知设置、resume_mailbox_setting简历邮箱设置、resume_mailbox_statistic简历邮箱统计
+	ResourceType   consts.ResourceType    `json:"resource_type"`
 	ResourceID     *string                `json:"resource_id,omitempty"`   // 资源ID
 	ResourceName   *string                `json:"resource_name,omitempty"` // 资源名称
 	RequestMethod  string                 `json:"request_method"`          // 请求方法

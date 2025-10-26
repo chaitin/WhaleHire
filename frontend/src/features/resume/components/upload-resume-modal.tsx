@@ -229,8 +229,13 @@ export function UploadResumeModal({
         page_size: 100, // 获取足够多的岗位供选择
       });
 
+      // 只显示发布状态的岗位，过滤掉草稿
+      const publishedJobs = response.items.filter(
+        (job) => job.status === 'published'
+      );
+
       // 转换为 MultiSelect 所需的选项格式
-      const options: Option[] = response.items.map((job) => ({
+      const options: Option[] = publishedJobs.map((job) => ({
         value: job.id,
         label: job.name,
       }));

@@ -94,19 +94,18 @@ export interface OAuthUrlResponse {
 // 获取OAuth认证地址
 export const getOAuthUrl = async (): Promise<string> => {
   debugLog('🔐 获取OAuth认证地址...');
-  debugLog(
-    '🔐 使用固定OAuth回调地址:',
-    'https://hire.chaitin.net/resume-management'
-  );
+  // 根据当前访问域名动态生成回调地址，避免写死固定域名
+  const redirectUrl = `${window.location.origin}/resume-management`;
+  debugLog('🔐 使用OAuth回调地址:', redirectUrl);
 
   try {
-    // 传递固定的回调地址给后端
+    // 传递回调地址给后端
     const response = await apiGet<OAuthUrlResponse>(
       '/v1/user/oauth/signup-or-in',
       {
         platform: 'custom',
         source: 'browser',
-        redirect_url: 'https://hire.chaitin.net/resume-management',
+        redirect_url: redirectUrl,
       }
     );
     debugLog('🔐 OAuth认证地址获取成功:', response.url);
@@ -123,7 +122,8 @@ export const handleOAuthCallback = async (
   state: string
 ): Promise<LoginResponse> => {
   debugLog('🔐 处理OAuth回调...');
-  debugLog('🔐 OAuth回调地址:', 'https://hire.chaitin.net//resume-management');
+  const redirectUrl = `${window.location.origin}/resume-management`;
+  debugLog('🔐 OAuth回调地址:', redirectUrl);
 
   try {
     const response = await apiGet<LoginResponse>('/v1/user/oauth/callback', {
