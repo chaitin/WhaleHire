@@ -524,6 +524,11 @@ func (m *AuditMiddleware) parseResourceInfo(c echo.Context) (consts.ResourceType
 		return m.parseUserResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/users"):
 		return m.parseUserResource(c, path)
+	// 注意：将更具体的路径前缀放在更通用的路径前缀之前
+	case strings.HasPrefix(path, "/api/v1/resume-mailbox-settings"):
+		return m.parseResumeMailboxSettingResource(c, path)
+	case strings.HasPrefix(path, "/api/v1/resume-mailbox-statistics"):
+		return m.parseResumeMailboxStatisticResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/resume"):
 		return m.parseResumeResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/departments"):
@@ -538,10 +543,6 @@ func (m *AuditMiddleware) parseResourceInfo(c echo.Context) (consts.ResourceType
 		return m.parseScreeningResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/notification-settings"):
 		return m.parseNotificationSettingResource(c, path)
-	case strings.HasPrefix(path, "/api/v1/resume-mailbox-settings"):
-		return m.parseResumeMailboxSettingResource(c, path)
-	case strings.HasPrefix(path, "/api/v1/resume-mailbox-statistics"):
-		return m.parseResumeMailboxStatisticResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/general-agent/conversations"):
 		return m.parseGeneralAgentConversationResource(c, path)
 	case strings.HasPrefix(path, "/api/v1/general-agent"):
