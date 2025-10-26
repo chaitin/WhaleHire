@@ -13,43 +13,14 @@ interface AppConfig {
   enableDevtools: boolean;
 }
 
-// 检测当前运行环境
-const detectRuntime = () => {
-  // 检测是否为开发环境（vite dev）
-  const isDev = import.meta.env.DEV;
-
-  // 检测是否为预览模式（vite preview）
-  // 预览模式下 import.meta.env.PROD 为 true，但端口通常是 4173 或 4174
-  const isPreview =
-    import.meta.env.PROD &&
-    typeof window !== 'undefined' &&
-    (window.location.port === '4173' || window.location.port === '4174');
-
-  return {
-    isDev,
-    isPreview,
-    isProd: import.meta.env.PROD && !isPreview,
-  };
-};
-
 // 获取环境变量配置
 const getEnvConfig = (): AppConfig => {
   const env = import.meta.env;
-  const runtime = detectRuntime();
 
-  // API 基础 URL 逻辑：
-  // 1. 开发模式：使用 /api（通过 vite 代理）
-  // 2. 预览模式：使用完整的生产环境 URL
-  // 3. 生产环境：使用完整的生产环境 URL
-  let apiBaseUrl: string;
-
-  if (runtime.isDev) {
-    // 开发模式使用相对路径，通过 vite 代理
-    apiBaseUrl = '/api';
-  } else {
-    // 预览模式和生产环境都使用完整 URL
-    apiBaseUrl = env.VITE_API_BASE_URL || 'https://hire.chaitin.net/api';
-  }
+  // API 基础 URL 逻辑（简化版 - 适用于前后端同域部署）：
+  // 所有环境都使用相对路径 /api，通过 nginx 代理到后端服务
+  // 开发环境通过 vite 代理，生产环境通过 nginx 代理
+  const apiBaseUrl = '/api';
 
   return {
     apiBaseUrl,
@@ -72,13 +43,10 @@ export const API_BASE_URL = appConfig.apiBaseUrl;
 
 // 调试信息：在开发环境下输出当前配置
 if (appConfig.debug || import.meta.env.DEV) {
-  const runtime = detectRuntime();
-  console.log('[API Config] 运行环境检测:', {
-    isDev: runtime.isDev,
-    isPreview: runtime.isPreview,
-    isProd: runtime.isProd,
-    currentPort: typeof window !== 'undefined' ? window.location.port : 'N/A',
+  console.log('[API Config] 当前配置:', {
     apiBaseUrl: appConfig.apiBaseUrl,
+    appEnv: appConfig.appEnv,
+    debug: appConfig.debug,
     mode: import.meta.env.MODE,
     prod: import.meta.env.PROD,
     dev: import.meta.env.DEV,

@@ -13,6 +13,11 @@ export default defineConfig(({ mode }) => {
   const devServerHost = env.VITE_DEV_SERVER_HOST || 'localhost'
   const enableSourcemap = env.VITE_BUILD_SOURCEMAP !== 'false'
   const enableMinify = env.VITE_BUILD_MINIFY !== 'false'
+  // 支持多环境的 Host 允许列表，使用逗号分隔
+  const allowedHosts = (env.VITE_ALLOWED_HOSTS || 'hire.chaitin.net,hire-stg.chaitin.net')
+    .split(',')
+    .map((h) => h.trim())
+    .filter(Boolean)
 
   return {
     plugins: [react()],
@@ -24,7 +29,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: devServerPort,
       host: devServerHost === 'localhost' ? true : devServerHost,
-      allowedHosts: ['hire.chaitin.net'],
+      allowedHosts,
       proxy: {
         '/api': {
           target: backendHost,
@@ -48,7 +53,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     preview: {
-      allowedHosts: ['hire.chaitin.net'],
+      allowedHosts,
     },
     // 定义全局常量，可在代码中使用
     define: {
