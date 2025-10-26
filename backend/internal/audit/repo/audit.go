@@ -284,10 +284,20 @@ func (r *AuditRepo) GetStats(ctx context.Context, req *domain.AuditStatsReq) (*d
 	// 按资源类型统计
 	resourceStats := make(map[consts.ResourceType]int64)
 	for _, resourceType := range []consts.ResourceType{
-		consts.ResourceTypeUser, consts.ResourceTypeAdmin, consts.ResourceTypeRole,
-		consts.ResourceTypeDepartment, consts.ResourceTypeJobPosition, consts.ResourceTypeResume,
-		consts.ResourceTypeScreening, consts.ResourceTypeSetting, consts.ResourceTypeAttachment,
-		consts.ResourceTypeConversation, consts.ResourceTypeMessage,
+		consts.ResourceTypeUser,
+		consts.ResourceTypeAdmin,
+		consts.ResourceTypeRole,
+		consts.ResourceTypeDepartment,
+		consts.ResourceTypeJobPosition,
+		consts.ResourceTypeResume,
+		consts.ResourceTypeScreening,
+		consts.ResourceTypeSetting,
+		consts.ResourceTypeAttachment,
+		consts.ResourceTypeConversation,
+		consts.ResourceTypeMessage,
+		consts.ResourceTypeNotificationSetting,
+		consts.ResourceTypeResumeMailboxSetting,
+		consts.ResourceTypeResumeMailboxStatistic,
 	} {
 		count, err := query.Where(auditlog.ResourceTypeEQ(resourceType)).Count(ctx)
 		if err != nil {
