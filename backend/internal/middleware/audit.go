@@ -181,8 +181,8 @@ func (m *AuditMiddleware) Audit() echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// 跳过 GET 请求（查看操作）
-			if c.Request().Method == "GET" {
+			// 跳过 GET 请求（查看操作），但保留OAuth登录相关的GET请求
+			if c.Request().Method == "GET" && !m.isOAuthLoginRequest(c.Request().URL.Path) {
 				return next(c)
 			}
 
@@ -495,6 +495,14 @@ func (m *AuditMiddleware) parseOperationType(method, path string) consts.Operati
 		}
 	}
 
+	// 处理OAuth登录相关的GET请求
+	if method == http.MethodGet {
+		switch {
+		case strings.HasSuffix(path, "/oauth/signup-or-in"):
+			return consts.OperationTypeLogin
+		}
+	}
+
 	switch method {
 	case http.MethodGet:
 		return consts.OperationTypeView
@@ -507,6 +515,11 @@ func (m *AuditMiddleware) parseOperationType(method, path string) consts.Operati
 	default:
 		return consts.OperationTypeView
 	}
+}
+
+// isOAuthLoginRequest 判断是否为OAuth登录相关的请求
+func (m *AuditMiddleware) isOAuthLoginRequest(path string) bool {
+	return strings.HasSuffix(path, "/oauth/signup-or-in")
 }
 
 // parseResourceInfo 解析资源信息

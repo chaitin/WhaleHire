@@ -163,7 +163,9 @@ func (d *ProxyDialer) dialThroughProxy(ctx context.Context, network, address str
 	if d.timeout > 0 {
 		deadline := time.Now().Add(d.timeout)
 		_ = proxyConn.SetDeadline(deadline)
-		defer proxyConn.SetDeadline(time.Time{})
+		defer func() {
+			_ = proxyConn.SetDeadline(time.Time{})
+		}()
 	}
 
 	req := &http.Request{
