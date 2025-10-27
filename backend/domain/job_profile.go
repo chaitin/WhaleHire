@@ -28,6 +28,15 @@ type JobProfileUsecase interface {
 	List(ctx context.Context, req *ListJobProfileReq) (*ListJobProfileResp, error)
 	Search(ctx context.Context, req *SearchJobProfileReq) (*SearchJobProfileResp, error)
 
+	// ParseJobProfile 解析岗位描述，返回结构化的岗位画像数据
+	ParseJobProfile(ctx context.Context, req *ParseJobProfileReq) (*ParseJobProfileResp, error)
+
+	// PolishPrompt AI 润色岗位需求描述
+	PolishPrompt(ctx context.Context, req *PolishJobPromptReq) (*PolishJobPromptResp, error)
+
+	// GenerateByPrompt 基于润色后的 Prompt 生成岗位画像
+	GenerateByPrompt(ctx context.Context, req *GenerateJobProfileReq) (*GenerateJobProfileResp, error)
+
 	CreateSkillMeta(ctx context.Context, req *CreateSkillMetaReq) (*JobSkillMeta, error)
 	ListSkillMeta(ctx context.Context, req *ListSkillMetaReq) (*ListSkillMetaResp, error)
 	DeleteSkillMeta(ctx context.Context, id string) error
@@ -311,9 +320,10 @@ type JobResponsibilityInput struct {
 
 // JobSkillInput is used for upserting skills.
 type JobSkillInput struct {
-	ID      *string `json:"id,omitempty"`
-	SkillID string  `json:"skill_id" validate:"required"`
-	Type    string  `json:"type" validate:"required" enums:"required,bonus"` // 技能类型: 必需技能/加分技能
+	ID        *string `json:"id,omitempty"`
+	SkillID   *string `json:"skill_id,omitempty"`                              // 技能ID，如果为空则根据SkillName自动创建新技能
+	SkillName string  `json:"skill_name" validate:"required"`                  // 技能名称，用于前端显示
+	Type      string  `json:"type" validate:"required" enums:"required,bonus"` // 技能类型: 必需技能/加分技能
 }
 
 // Validate validates the JobSkillInput fields against constants
@@ -443,3 +453,57 @@ type JobProfileRelatedEntities struct {
 func ptrString(v string) *string { return &v }
 
 func ptrFloat64(v float64) *float64 { return &v }
+
+// ParseJobProfileReq 解析岗位画像请求
+// @Description 岗位画像解析请求参数
+type ParseJobProfileReq struct {
+	Description string `json:"description" validate:"required" example:"我们正在寻找一名资深的Go后端开发工程师，负责微服务架构设计和开发..."` // 岗位描述文本，用于AI解析
+}
+
+// ParseJobProfileResp 解析岗位画像响应
+// @Description AI解析岗位描述后返回的结构化数据，包含岗位的基本信息和详细要求
+type ParseJobProfileResp struct {
+	// 基本信息
+	Name      string   `json:"name" example:"Go后端开发工程师"`                                                                   // 岗位名称，从描述中提取的职位标题
+	WorkType  *string  `json:"work_type,omitempty" example:"full_time" enums:"full_time,part_time,internship,outsourcing"` // 工作性质：全职/兼职/实习/外包
+	Location  *string  `json:"location,omitempty" example:"北京"`                                                            // 工作地点，可能包含多个城市
+	SalaryMin *float64 `json:"salary_min,omitempty" example:"15000"`                                                       // 最低薪资（月薪，单位：元）
+	SalaryMax *float64 `json:"salary_max,omitempty" example:"25000"`                                                       // 最高薪资（月薪，单位：元）
+
+	// 详细信息
+	Responsibilities       []*JobResponsibilityInput        `json:"responsibilities"`        // 岗位职责列表，描述具体的工作内容和责任
+	Skills                 []*JobSkillInput                 `json:"skills"`                  // 技能要求列表，包含必需技能和加分技能
+	EducationRequirements  []*JobEducationRequirementInput  `json:"education_requirements"`  // 学历要求列表，可能包含多个学历层次
+	ExperienceRequirements []*JobExperienceRequirementInput `json:"experience_requirements"` // 工作经验要求列表，包含年限和具体经验类型
+	IndustryRequirements   []*JobIndustryRequirementInput   `json:"industry_requirements"`   // 行业背景要求列表，可能指定特定行业或公司经验
+}
+
+// PolishJobPromptReq AI 润色岗位需求描述请求
+// @Description 用户输入的原始岗位需求，用于 AI 润色和结构化
+type PolishJobPromptReq struct {
+	Idea string `json:"idea" validate:"required" example:"我们需要招聘一名数据分析师"` // 用户原始想法或一句话描述
+}
+
+// PolishJobPromptResp AI 润色岗位需求描述响应
+// @Description AI 润色后返回的结构化 Prompt 和建议
+type PolishJobPromptResp struct {
+	PolishedPrompt     string   `json:"polished_prompt" example:"我们正在寻找一名经验丰富的数据分析师..."`          // 完整且可直接用于生成链的 Prompt
+	SuggestedTitle     string   `json:"suggested_title" example:"数据分析师"`                          // AI 推荐的岗位标题
+	ResponsibilityTips []string `json:"responsibility_tips" example:"[\"负责数据收集和清洗\",\"制作数据报表\"]"` // 岗位职责提示
+	RequirementTips    []string `json:"requirement_tips" example:"[\"熟练使用SQL\",\"具备统计学基础\"]"`     // 任职要求提示
+	BonusTips          []string `json:"bonus_tips" example:"[\"有机器学习经验\",\"熟悉Python\"]"`          // 加分项提示
+}
+
+// GenerateJobProfileReq 基于 Prompt 生成岗位画像请求
+// @Description 使用润色后的 Prompt 生成完整的岗位画像
+type GenerateJobProfileReq struct {
+	Prompt       string  `json:"prompt" validate:"required" example:"我们正在寻找一名经验丰富的数据分析师..."`             // 已润色的 Prompt
+	DepartmentID *string `json:"department_id,omitempty" example:"123e4567-e89b-12d3-a456-426614174000"` // 生成时可提前绑定部门
+}
+
+// GenerateJobProfileResp 基于 Prompt 生成岗位画像响应
+// @Description AI 生成的完整岗位画像，包含结构化数据和 Markdown 描述
+type GenerateJobProfileResp struct {
+	Profile             *ParseJobProfileResp `json:"profile"`              // 结构化岗位画像
+	DescriptionMarkdown string               `json:"description_markdown"` // Markdown 格式的岗位描述
+}

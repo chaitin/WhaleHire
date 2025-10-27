@@ -20,6 +20,7 @@ import (
 	jobapplicationusecase "github.com/chaitin/WhaleHire/backend/internal/job_application/usecase"
 	jobprofileV1 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
 	jobprofilerepo "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
+	jobprofileservice "github.com/chaitin/WhaleHire/backend/internal/jobprofile/service"
 	jobprofileusecase "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	middleware "github.com/chaitin/WhaleHire/backend/internal/middleware"
 	notificationadapter "github.com/chaitin/WhaleHire/backend/internal/notification/adapter"
@@ -92,6 +93,8 @@ var Provider = wire.NewSet(
 	jobprofileV1.NewJobProfileHandler,
 	jobprofilerepo.NewJobProfileRepo,
 	jobprofilerepo.NewJobSkillMetaRepo,
+	jobprofileservice.NewJobProfileParserService,
+	jobprofileservice.NewJobProfilePromptService,
 	jobprofileusecase.NewJobProfileUsecase,
 	jobapplicationV1.NewJobApplicationHandler,
 	jobapplicationrepo.NewJobApplicationRepo,
