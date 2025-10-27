@@ -94,6 +94,7 @@ var Provider = wire.NewSet(
 	jobprofilerepo.NewJobProfileRepo,
 	jobprofilerepo.NewJobSkillMetaRepo,
 	jobprofileservice.NewJobProfileParserService,
+	jobprofileservice.NewJobProfilePromptService,
 	jobprofileusecase.NewJobProfileUsecase,
 	jobapplicationV1.NewJobApplicationHandler,
 	jobapplicationrepo.NewJobApplicationRepo,

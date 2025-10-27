@@ -48,8 +48,8 @@ var systemPrompt = `
   "experience_requirements": [
     {
       "experience_type": "string (经验类型: unlimited/fresh_graduate/under_one_year/one_to_three_years/three_to_five_years/five_to_ten_years/over_ten_years)",
-      "min_years": "number (最少年限)",
-      "ideal_years": "number (理想年限)"
+      "min_years": "integer (最少年限，必须为整数，实习/应届默认为0，少于1年的情形请取0或1)",
+      "ideal_years": "integer (理想年限，必须为整数，且不得小于min_years)"
     }
   ],
   "industry_requirements": [
@@ -89,12 +89,14 @@ var systemPrompt = `
 
 ## 输出示例:
 {"name":"高级后端开发工程师","work_type":"full_time","location":"北京","salary_min":25000,"salary_max":40000,"responsibilities":[{"responsibility":"负责产品后端架构设计和开发"},{"responsibility":"参与技术方案评审和代码审查"},{"responsibility":"优化系统性能，保障服务稳定性"}],"skills":[{"skill":"Java","type":"required"},{"skill":"Spring Boot","type":"required"},{"skill":"MySQL","type":"required"},{"skill":"Redis","type":"bonus"},{"skill":"Kubernetes","type":"bonus"}],"education_requirements":[{"education_type":"bachelor"}],"experience_requirements":[{"experience_type":"three_to_five_years","min_years":3,"ideal_years":5}],"industry_requirements":[{"industry":"互联网","company_name":null},{"industry":"金融科技","company_name":null}]}
+{"name":"前端开发实习生","work_type":"internship","location":"上海","salary_min":null,"salary_max":null,"responsibilities":[{"responsibility":"协助完成组件开发与测试"}],"skills":[{"skill":"HTML","type":"required"},{"skill":"CSS","type":"required"},{"skill":"JavaScript","type":"required"}],"education_requirements":[{"education_type":"bachelor"}],"experience_requirements":[{"experience_type":"fresh_graduate","min_years":0,"ideal_years":0}],"industry_requirements":[]}
 
 ## 重要提醒:
 - 确保所有字段都有完整的键值对格式，如 "key":"value"
 - 字符串值必须用双引号包围
 - 数字值不需要引号
 - null值不需要引号
+- min_years 和 ideal_years 必须为整数；如描述出现“小于一年”或“几个月”，请四舍五入到0或1；ideal_years 不得小于 min_years
 - 每个对象的所有字段都必须完整，不能遗漏冒号或引号
 - 输出的JSON结构已经简化，不包含id、job_id、skill_id等系统字段
 - 专注于提取业务核心数据，系统字段由后端业务逻辑处理

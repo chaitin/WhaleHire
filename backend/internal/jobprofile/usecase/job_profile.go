@@ -25,6 +25,7 @@ type JobProfileUsecase struct {
 	repo          domain.JobProfileRepo
 	skillMetaRepo domain.JobSkillMetaRepo
 	parserService *service.JobProfileParserService
+	promptService *service.JobProfilePromptService
 	logger        *slog.Logger
 }
 
@@ -32,12 +33,14 @@ func NewJobProfileUsecase(
 	repo domain.JobProfileRepo,
 	skillMetaRepo domain.JobSkillMetaRepo,
 	parserService *service.JobProfileParserService,
+	promptService *service.JobProfilePromptService,
 	logger *slog.Logger,
 ) domain.JobProfileUsecase {
 	return &JobProfileUsecase{
 		repo:          repo,
 		skillMetaRepo: skillMetaRepo,
 		parserService: parserService,
+		promptService: promptService,
 		logger:        logger,
 	}
 }
@@ -1169,4 +1172,34 @@ func (u *JobProfileUsecase) ParseJobProfile(ctx context.Context, req *domain.Par
 
 	// 使用 parser service 进行解析
 	return u.parserService.ParseJobProfile(ctx, req)
+}
+
+// PolishPrompt AI 润色岗位需求描述
+func (u *JobProfileUsecase) PolishPrompt(ctx context.Context, req *domain.PolishJobPromptReq) (*domain.PolishJobPromptResp, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is required")
+	}
+
+	idea := strings.TrimSpace(req.Idea)
+	if idea == "" {
+		return nil, fmt.Errorf("idea is required")
+	}
+
+	// 使用 prompt service 进行润色
+	return u.promptService.PolishPrompt(ctx, req)
+}
+
+// GenerateByPrompt 基于润色后的 Prompt 生成岗位画像
+func (u *JobProfileUsecase) GenerateByPrompt(ctx context.Context, req *domain.GenerateJobProfileReq) (*domain.GenerateJobProfileResp, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is required")
+	}
+
+	prompt := strings.TrimSpace(req.Prompt)
+	if prompt == "" {
+		return nil, fmt.Errorf("prompt is required")
+	}
+
+	// 使用 prompt service 进行生成
+	return u.promptService.GenerateByPrompt(ctx, req)
 }

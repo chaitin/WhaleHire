@@ -34,7 +34,9 @@ func NewJobProfileHandler(
 	g.GET("/:id", web.BaseHandler(h.Get))
 	g.PUT("/:id", web.BindHandler(h.Update))
 	g.DELETE("/:id", web.BaseHandler(h.Delete))
-	g.POST("/parse", web.BindHandler(h.Parse)) // 新增解析接口
+	g.POST("/parse", web.BindHandler(h.Parse))                         // 新增解析接口
+	g.POST("/polish-prompt", web.BindHandler(h.PolishPrompt))          // AI 润色接口
+	g.POST("/generate-by-prompt", web.BindHandler(h.GenerateByPrompt)) // AI 生成接口
 
 	skillGroup := w.Group("/api/v1/job-skills/meta")
 	skillGroup.Use(auth.UserAuth())
@@ -152,6 +154,46 @@ func (h *JobProfileHandler) Parse(c *web.Context, req domain.ParseJobProfileReq)
 	result, err := h.usecase.ParseJobProfile(c.Request().Context(), &req)
 	if err != nil {
 		h.logger.Error("failed to parse job profile", "error", err, "description", req.Description)
+		return err
+	}
+
+	return c.Success(result)
+}
+
+// PolishPrompt AI 润色岗位需求描述
+//
+//	@Tags			JobProfile
+//	@Summary		AI 润色岗位需求描述
+//	@Description	根据输入的岗位需求想法，返回润色后的专业岗位描述
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		domain.PolishJobPromptReq	true	"润色请求"
+//	@Success		200		{object}	web.Resp{data=domain.PolishJobPromptResp}
+//	@Router			/api/v1/job-profiles/polish-prompt [post]
+func (h *JobProfileHandler) PolishPrompt(c *web.Context, req domain.PolishJobPromptReq) error {
+	result, err := h.usecase.PolishPrompt(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.Error("failed to polish job prompt", "error", err, "idea", req.Idea)
+		return err
+	}
+
+	return c.Success(result)
+}
+
+// GenerateByPrompt 基于润色后的 Prompt 生成岗位画像
+//
+//	@Tags			JobProfile
+//	@Summary		基于润色后的 Prompt 生成岗位画像
+//	@Description	根据输入的岗位描述 Prompt，返回生成的结构化岗位画像数据
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		domain.GenerateJobProfileReq	true	"生成请求"
+//	@Success		200		{object}	web.Resp{data=domain.GenerateJobProfileResp}
+//	@Router			/api/v1/job-profiles/generate-by-prompt [post]
+func (h *JobProfileHandler) GenerateByPrompt(c *web.Context, req domain.GenerateJobProfileReq) error {
+	result, err := h.usecase.GenerateByPrompt(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.Error("failed to generate job profile by prompt", "error", err, "prompt", req.Prompt)
 		return err
 	}
 
