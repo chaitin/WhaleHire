@@ -28,6 +28,9 @@ type JobProfileUsecase interface {
 	List(ctx context.Context, req *ListJobProfileReq) (*ListJobProfileResp, error)
 	Search(ctx context.Context, req *SearchJobProfileReq) (*SearchJobProfileResp, error)
 
+	// ParseJobProfile 解析岗位描述，返回结构化的岗位画像数据
+	ParseJobProfile(ctx context.Context, req *ParseJobProfileReq) (*ParseJobProfileResp, error)
+
 	CreateSkillMeta(ctx context.Context, req *CreateSkillMetaReq) (*JobSkillMeta, error)
 	ListSkillMeta(ctx context.Context, req *ListSkillMetaReq) (*ListSkillMetaResp, error)
 	DeleteSkillMeta(ctx context.Context, id string) error
@@ -311,9 +314,10 @@ type JobResponsibilityInput struct {
 
 // JobSkillInput is used for upserting skills.
 type JobSkillInput struct {
-	ID      *string `json:"id,omitempty"`
-	SkillID string  `json:"skill_id" validate:"required"`
-	Type    string  `json:"type" validate:"required" enums:"required,bonus"` // 技能类型: 必需技能/加分技能
+	ID        *string `json:"id,omitempty"`
+	SkillID   *string `json:"skill_id,omitempty"`                              // 技能ID，如果为空则根据SkillName自动创建新技能
+	SkillName string  `json:"skill_name" validate:"required"`                  // 技能名称，用于前端显示
+	Type      string  `json:"type" validate:"required" enums:"required,bonus"` // 技能类型: 必需技能/加分技能
 }
 
 // Validate validates the JobSkillInput fields against constants
@@ -443,3 +447,27 @@ type JobProfileRelatedEntities struct {
 func ptrString(v string) *string { return &v }
 
 func ptrFloat64(v float64) *float64 { return &v }
+
+// ParseJobProfileReq 解析岗位画像请求
+// @Description 岗位画像解析请求参数
+type ParseJobProfileReq struct {
+	Description string `json:"description" validate:"required" example:"我们正在寻找一名资深的Go后端开发工程师，负责微服务架构设计和开发..."` // 岗位描述文本，用于AI解析
+}
+
+// ParseJobProfileResp 解析岗位画像响应
+// @Description AI解析岗位描述后返回的结构化数据，包含岗位的基本信息和详细要求
+type ParseJobProfileResp struct {
+	// 基本信息
+	Name      string   `json:"name" example:"Go后端开发工程师"`                                                                   // 岗位名称，从描述中提取的职位标题
+	WorkType  *string  `json:"work_type,omitempty" example:"full_time" enums:"full_time,part_time,internship,outsourcing"` // 工作性质：全职/兼职/实习/外包
+	Location  *string  `json:"location,omitempty" example:"北京"`                                                            // 工作地点，可能包含多个城市
+	SalaryMin *float64 `json:"salary_min,omitempty" example:"15000"`                                                       // 最低薪资（月薪，单位：元）
+	SalaryMax *float64 `json:"salary_max,omitempty" example:"25000"`                                                       // 最高薪资（月薪，单位：元）
+
+	// 详细信息
+	Responsibilities       []*JobResponsibilityInput        `json:"responsibilities"`        // 岗位职责列表，描述具体的工作内容和责任
+	Skills                 []*JobSkillInput                 `json:"skills"`                  // 技能要求列表，包含必需技能和加分技能
+	EducationRequirements  []*JobEducationRequirementInput  `json:"education_requirements"`  // 学历要求列表，可能包含多个学历层次
+	ExperienceRequirements []*JobExperienceRequirementInput `json:"experience_requirements"` // 工作经验要求列表，包含年限和具体经验类型
+	IndustryRequirements   []*JobIndustryRequirementInput   `json:"industry_requirements"`   // 行业背景要求列表，可能指定特定行业或公司经验
+}

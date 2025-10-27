@@ -18,22 +18,26 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/jobskill"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/errcode"
+	"github.com/chaitin/WhaleHire/backend/internal/jobprofile/service"
 )
 
 type JobProfileUsecase struct {
 	repo          domain.JobProfileRepo
 	skillMetaRepo domain.JobSkillMetaRepo
+	parserService *service.JobProfileParserService
 	logger        *slog.Logger
 }
 
 func NewJobProfileUsecase(
 	repo domain.JobProfileRepo,
 	skillMetaRepo domain.JobSkillMetaRepo,
+	parserService *service.JobProfileParserService,
 	logger *slog.Logger,
 ) domain.JobProfileUsecase {
 	return &JobProfileUsecase{
 		repo:          repo,
 		skillMetaRepo: skillMetaRepo,
+		parserService: parserService,
 		logger:        logger,
 	}
 }
@@ -84,7 +88,13 @@ func (u *JobProfileUsecase) Create(ctx context.Context, req *domain.CreateJobPro
 		job.WorkType = consts.JobWorkType(*req.WorkType)
 	}
 
-	related, err := u.buildRelatedEntities(req.Skills, req.Responsibilities, req.EducationRequirements, req.ExperienceRequirements, req.IndustryRequirements)
+	// 处理技能输入，自动创建不存在的技能
+	processedSkills, err := u.processSkillInputs(ctx, req.Skills)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process skills: %w", err)
+	}
+
+	related, err := u.buildRelatedEntities(processedSkills, req.Responsibilities, req.EducationRequirements, req.ExperienceRequirements, req.IndustryRequirements)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +175,13 @@ func (u *JobProfileUsecase) Update(ctx context.Context, req *domain.UpdateJobPro
 		}
 
 		if req.Skills != nil {
-			if err := upsertSkills(ctx, tx, jobID, req.Skills); err != nil {
+			// 处理技能输入，自动创建不存在的技能
+			processedSkills, err := u.processSkillInputs(ctx, req.Skills)
+			if err != nil {
+				return fmt.Errorf("failed to process skills: %w", err)
+			}
+
+			if err := upsertSkills(ctx, tx, jobID, processedSkills); err != nil {
 				return err
 			}
 		}
@@ -406,9 +422,15 @@ func buildJobSkills(inputs []*domain.JobSkillInput) ([]*db.JobSkill, error) {
 			continue
 		}
 
-		skillID, err := uuid.Parse(strings.TrimSpace(input.SkillID))
+		// SkillID现在是可选的，如果为空则跳过验证，后续在服务层处理
+		if input.SkillID == nil || strings.TrimSpace(*input.SkillID) == "" {
+			// 对于没有SkillID的情况，我们暂时跳过，在上层处理
+			continue
+		}
+
+		skillID, err := uuid.Parse(strings.TrimSpace(*input.SkillID))
 		if err != nil {
-			return nil, fmt.Errorf("invalid skill id %q: %w", input.SkillID, err)
+			return nil, fmt.Errorf("invalid skill id %q: %w", *input.SkillID, err)
 		}
 
 		skillType := strings.TrimSpace(input.Type)
@@ -582,6 +604,66 @@ func upsertResponsibilities(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inp
 	return nil
 }
 
+// ensureSkillExists 确保技能存在，如果不存在则创建
+func (u *JobProfileUsecase) ensureSkillExists(ctx context.Context, skillName string) (string, error) {
+	if skillName == "" {
+		return "", fmt.Errorf("skill name cannot be empty")
+	}
+
+	// 先尝试根据名称查找现有技能
+	existing, err := u.skillMetaRepo.GetByName(ctx, skillName)
+	if err == nil {
+		return existing.ID.String(), nil
+	}
+	if err != nil && !db.IsNotFound(err) {
+		return "", fmt.Errorf("failed to check existing skill: %w", err)
+	}
+
+	// 如果不存在，则创建新技能
+	created, err := u.skillMetaRepo.Create(ctx, skillName)
+	if err != nil {
+		return "", fmt.Errorf("failed to create skill meta: %w", err)
+	}
+
+	return created.ID.String(), nil
+}
+
+// processSkillInputs 处理技能输入，自动创建不存在的技能
+func (u *JobProfileUsecase) processSkillInputs(ctx context.Context, inputs []*domain.JobSkillInput) ([]*domain.JobSkillInput, error) {
+	if len(inputs) == 0 {
+		return nil, nil
+	}
+
+	processed := make([]*domain.JobSkillInput, 0, len(inputs))
+	for _, input := range inputs {
+		if input == nil {
+			continue
+		}
+
+		// 如果没有SkillID，根据SkillName自动创建或查找
+		if input.SkillID == nil || strings.TrimSpace(*input.SkillID) == "" {
+			skillID, err := u.ensureSkillExists(ctx, strings.TrimSpace(input.SkillName))
+			if err != nil {
+				return nil, fmt.Errorf("failed to ensure skill exists for %q: %w", input.SkillName, err)
+			}
+
+			// 创建新的输入对象，设置SkillID
+			processedInput := &domain.JobSkillInput{
+				ID:        input.ID,
+				SkillID:   &skillID,
+				SkillName: input.SkillName,
+				Type:      input.Type,
+			}
+			processed = append(processed, processedInput)
+		} else {
+			// 已有SkillID，直接使用
+			processed = append(processed, input)
+		}
+	}
+
+	return processed, nil
+}
+
 func upsertSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*domain.JobSkillInput) error {
 	// 获取现有记录
 	existing, err := tx.JobSkill.Query().Where(jobskill.JobID(jobID)).All(ctx)
@@ -639,7 +721,12 @@ func upsertSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*dom
 			return fmt.Errorf("invalid skill ID: %w", err)
 		}
 
-		skillID, err := uuid.Parse(input.SkillID)
+		// 处理SkillID为可选的情况
+		if input.SkillID == nil || strings.TrimSpace(*input.SkillID) == "" {
+			return fmt.Errorf("skill_id is required for update operation")
+		}
+
+		skillID, err := uuid.Parse(strings.TrimSpace(*input.SkillID))
 		if err != nil {
 			return fmt.Errorf("invalid skill meta ID: %w", err)
 		}
@@ -657,7 +744,12 @@ func upsertSkills(ctx context.Context, tx *db.Tx, jobID uuid.UUID, inputs []*dom
 	if len(toCreate) > 0 {
 		builders := make([]*db.JobSkillCreate, 0, len(toCreate))
 		for _, input := range toCreate {
-			skillID, err := uuid.Parse(input.SkillID)
+			// 处理SkillID为可选的情况
+			if input.SkillID == nil || strings.TrimSpace(*input.SkillID) == "" {
+				return fmt.Errorf("skill_id is required for create operation")
+			}
+
+			skillID, err := uuid.Parse(strings.TrimSpace(*input.SkillID))
 			if err != nil {
 				return fmt.Errorf("invalid skill meta ID: %w", err)
 			}
@@ -1062,4 +1154,19 @@ func copyStringPtr(value *string) *string {
 	}
 	copy := *value
 	return &copy
+}
+
+// ParseJobProfile 解析岗位描述，返回结构化的岗位画像数据
+func (u *JobProfileUsecase) ParseJobProfile(ctx context.Context, req *domain.ParseJobProfileReq) (*domain.ParseJobProfileResp, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is required")
+	}
+
+	description := strings.TrimSpace(req.Description)
+	if description == "" {
+		return nil, fmt.Errorf("description is required")
+	}
+
+	// 使用 parser service 进行解析
+	return u.parserService.ParseJobProfile(ctx, req)
 }

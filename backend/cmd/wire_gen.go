@@ -28,6 +28,7 @@ import (
 	usecase2 "github.com/chaitin/WhaleHire/backend/internal/job_application/usecase"
 	v1_4 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/handler/v1"
 	repo5 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/repo"
+	service2 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/service"
 	usecase6 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
 	"github.com/chaitin/WhaleHire/backend/internal/notification/adapter"
@@ -46,7 +47,7 @@ import (
 	usecase11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/usecase"
 	v1_7 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	repo9 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
-	service2 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
+	service3 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
 	usecase8 "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
 	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/user/repo"
@@ -111,7 +112,8 @@ func newServer() (*Server, error) {
 	generalAgentUsecase := usecase5.NewGeneralAgentUsecase(configConfig, generalAgentRepo)
 	generalAgentHandler := v1_3.NewGeneralAgentHandler(web, generalAgentUsecase, authMiddleware, sessionSession, slogLogger, configConfig)
 	jobSkillMetaRepo := repo5.NewJobSkillMetaRepo(client)
-	jobProfileUsecase := usecase6.NewJobProfileUsecase(jobProfileRepo, jobSkillMetaRepo, slogLogger)
+	jobProfileParserService := service2.NewJobProfileParserService(configConfig, slogLogger, jobSkillMetaRepo)
+	jobProfileUsecase := usecase6.NewJobProfileUsecase(jobProfileRepo, jobSkillMetaRepo, jobProfileParserService, slogLogger)
 	jobProfileHandler := v1_4.NewJobProfileHandler(web, jobProfileUsecase, authMiddleware, slogLogger)
 	departmentRepo := repo8.NewDepartmentRepo(client)
 	departmentUsecase := usecase7.NewDepartmentUsecase(departmentRepo, slogLogger)
@@ -119,7 +121,7 @@ func newServer() (*Server, error) {
 	jobApplicationHandler := v1_6.NewJobApplicationHandler(web, jobApplicationUsecase, resumeUsecase, authMiddleware, slogLogger)
 	screeningRepo := repo9.NewScreeningRepo(client)
 	screeningNodeRunRepo := repo9.NewScreeningNodeRunRepo(client)
-	matchingService, err := service2.NewMatchingService(configConfig, slogLogger, screeningNodeRunRepo, screeningRepo)
+	matchingService, err := service3.NewMatchingService(configConfig, slogLogger, screeningNodeRunRepo, screeningRepo)
 	if err != nil {
 		return nil, err
 	}

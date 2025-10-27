@@ -34,6 +34,7 @@ func NewJobProfileHandler(
 	g.GET("/:id", web.BaseHandler(h.Get))
 	g.PUT("/:id", web.BindHandler(h.Update))
 	g.DELETE("/:id", web.BaseHandler(h.Delete))
+	g.POST("/parse", web.BindHandler(h.Parse)) // 新增解析接口
 
 	skillGroup := w.Group("/api/v1/job-skills/meta")
 	skillGroup.Use(auth.UserAuth())
@@ -135,6 +136,26 @@ func (h *JobProfileHandler) Delete(c *web.Context) error {
 	}
 
 	return c.Success(nil)
+}
+
+// Parse 解析岗位描述
+//
+//	@Tags			JobProfile
+//	@Summary		解析岗位描述
+//	@Description	根据输入的岗位描述文本，返回解析后的结构化岗位画像数据
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		domain.ParseJobProfileReq	true	"解析请求"
+//	@Success		200		{object}	web.Resp{data=domain.ParseJobProfileResp}
+//	@Router			/api/v1/job-profiles/parse [post]
+func (h *JobProfileHandler) Parse(c *web.Context, req domain.ParseJobProfileReq) error {
+	result, err := h.usecase.ParseJobProfile(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.Error("failed to parse job profile", "error", err, "description", req.Description)
+		return err
+	}
+
+	return c.Success(result)
 }
 
 // Search 搜索岗位画像
