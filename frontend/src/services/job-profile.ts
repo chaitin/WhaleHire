@@ -95,6 +95,36 @@ export const parseJobProfile = async (
   });
 };
 
+// 优化提示词返回类型
+interface PolishPromptResult {
+  polished_prompt: string;
+  responsibility_tips?: string[];
+  requirement_tips?: string[];
+  bonus_tips?: string[];
+}
+
+// 优化提示词
+export const polishPrompt = async (
+  idea: string
+): Promise<PolishPromptResult> => {
+  return await apiPost<PolishPromptResult>('/v1/job-profiles/polish-prompt', {
+    idea,
+  });
+};
+
+// 根据提示词生成岗位画像
+export const generateByPrompt = async (
+  prompt: string
+): Promise<JobProfileDetail> => {
+  const response = await apiPost<{ profile: JobProfileDetail }>(
+    '/v1/job-profiles/generate-by-prompt',
+    {
+      prompt,
+    }
+  );
+  return response.profile;
+};
+
 // 搜索岗位画像
 export const searchJobProfiles = async (
   params?: JobProfileQueryParams

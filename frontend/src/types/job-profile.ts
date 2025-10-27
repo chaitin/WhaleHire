@@ -118,6 +118,7 @@ export interface JobSkill {
   job_id: string;
   skill_id: string;
   skill: string;
+  skill_name?: string; // AI生成时可能返回的字段
   type: SkillType;
   weight?: number;
 }
@@ -143,6 +144,7 @@ export interface JobProfileDetail {
   id: string;
   name: string;
   description?: string;
+  description_markdown?: string; // AI生成的markdown格式描述
   department: string;
   department_id: string;
   work_type?: string; // 工作性质: full_time/part_time/internship/outsourcing
