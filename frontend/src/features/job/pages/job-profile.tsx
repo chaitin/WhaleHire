@@ -54,6 +54,7 @@ import { AddSkillModal } from '@/features/resume/components/add-skill-modal';
 import { ConfirmDialog } from '@/ui/confirm-dialog';
 import { JobProfilePreview } from '@/features/job/components/job-profile-preview';
 import { AIJobEditor } from '@/features/job/components/ai-job-editor';
+import { CreateJobModal } from '@/features/job/components/create-job-modal';
 
 export function JobProfilePage() {
   const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
@@ -1558,586 +1559,461 @@ export function JobProfilePage() {
         </div>
       </div>
 
-      {/* 新建岗位弹窗 */}
-      <Dialog
+      {/* 新建岗位弹窗 - 使用新的CreateJobModal组件 */}
+      <CreateJobModal
         open={isCreateJobModalOpen}
         onOpenChange={setIsCreateJobModalOpen}
-      >
-        <DialogContent
-          className={cn(
-            'max-h-[90vh] overflow-y-auto p-0 gap-0',
-            editMode === 'ai' ? 'max-w-[1100px]' : 'max-w-[800px]'
-          )}
-          onInteractOutside={(e) => e.preventDefault()}
+        onSuccess={fetchJobProfiles}
+      />
+
+      {/* 旧的弹窗已被替换,下面的代码可以删除 */}
+      {false && (
+        <Dialog
+          open={isCreateJobModalOpen}
+          onOpenChange={setIsCreateJobModalOpen}
         >
-          {/* 弹窗标题和关闭按钮 */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
-            <DialogHeader className="space-y-0">
-              <DialogTitle className="text-[18px] font-semibold text-[#1F2937]">
-                新建岗位
-              </DialogTitle>
-            </DialogHeader>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCloseCreateJobModal}
-              className="h-6 w-6 p-0 text-[#9CA3AF] hover:text-[#6B7280]"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="px-6 py-6 space-y-6">
-            {/* 选择编辑模式 */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#7bb8ff] rounded-sm flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-sm"></div>
-                </div>
-                <h3 className="text-[16px] font-medium text-[#1F2937]">
-                  选择编辑模式
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div
-                  className={cn(
-                    'flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors',
-                    editMode === 'manual'
-                      ? 'border-[#7bb8ff] bg-[#F0FDF4]'
-                      : 'border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]'
-                  )}
-                  onClick={() => setEditMode('manual')}
-                >
-                  <div className="flex items-center justify-center w-4 h-4 mt-0.5">
-                    <div
-                      className={cn(
-                        'w-4 h-4 rounded-full border-2 flex items-center justify-center',
-                        editMode === 'manual'
-                          ? 'border-[#7bb8ff]'
-                          : 'border-[#D1D5DB]'
-                      )}
-                    >
-                      {editMode === 'manual' && (
-                        <div className="w-2 h-2 bg-[#7bb8ff] rounded-full"></div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-[14px] font-medium text-[#1F2937] mb-1">
-                      手动编辑模式
-                    </div>
-                    <div className="text-[12px] text-[#6B7280]">
-                      完全自定义编辑，精细控制
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className={cn(
-                    'flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors',
-                    editMode === 'ai'
-                      ? 'border-[#7bb8ff] bg-[#F0FDF4]'
-                      : 'border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]'
-                  )}
-                  onClick={() => setEditMode('ai')}
-                >
-                  <div className="flex items-center justify-center w-4 h-4 mt-0.5">
-                    <div
-                      className={cn(
-                        'w-4 h-4 rounded-full border-2 flex items-center justify-center',
-                        editMode === 'ai'
-                          ? 'border-[#7bb8ff]'
-                          : 'border-[#D1D5DB]'
-                      )}
-                    >
-                      {editMode === 'ai' && (
-                        <div className="w-2 h-2 bg-[#7bb8ff] rounded-full"></div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-[14px] font-medium text-[#1F2937] mb-1">
-                      AI编辑模式
-                    </div>
-                    <div className="text-[12px] text-[#6B7280]">
-                      智能生成岗位内容，快速高效
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <DialogContent
+            className={cn(
+              'max-h-[90vh] overflow-y-auto p-0 gap-0',
+              editMode === 'ai' ? 'max-w-[1100px]' : 'max-w-[800px]'
+            )}
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            {/* 弹窗标题和关闭按钮 */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
+              <DialogHeader className="space-y-0">
+                <DialogTitle className="text-[18px] font-semibold text-[#1F2937]">
+                  新建岗位
+                </DialogTitle>
+              </DialogHeader>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCloseCreateJobModal}
+                className="h-6 w-6 p-0 text-[#9CA3AF] hover:text-[#6B7280]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
 
-            {/* AI编辑模式 */}
-            {editMode === 'ai' && (
-              <AIJobEditor
-                onClose={handleCloseCreateJobModal}
-                onSave={(content) => {
-                  // TODO: 处理AI生成的内容并保存
-                  console.log('AI生成的内容:', content);
-                }}
-              />
-            )}
-
-            {/* 手动编辑模式 - 基本信息表单 */}
-            {editMode === 'manual' && (
-              <>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-[#3B82F6] rounded-sm flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-sm"></div>
-                    </div>
-                    <h3 className="text-[16px] font-medium text-[#1F2937]">
-                      基本信息
-                    </h3>
-                    <span className="text-[12px] text-[#6B7280]">
-                      (<span className="text-[#EF4444]">*</span>为必填项)
-                    </span>
+            <div className="px-6 py-6 space-y-6">
+              {/* 选择编辑模式 */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-[#7bb8ff] rounded-sm flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-sm"></div>
                   </div>
+                  <h3 className="text-[16px] font-medium text-[#1F2937]">
+                    选择编辑模式
+                  </h3>
+                </div>
 
-                  {/* 第一行：岗位名称、工作地点 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="jobName"
-                        className="text-[14px] font-medium text-[#374151]"
+                <div className="grid grid-cols-2 gap-4">
+                  <div
+                    className={cn(
+                      'flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors',
+                      editMode === 'manual'
+                        ? 'border-[#7bb8ff] bg-[#F0FDF4]'
+                        : 'border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]'
+                    )}
+                    onClick={() => setEditMode('manual')}
+                  >
+                    <div className="flex items-center justify-center w-4 h-4 mt-0.5">
+                      <div
+                        className={cn(
+                          'w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                          editMode === 'manual'
+                            ? 'border-[#7bb8ff]'
+                            : 'border-[#D1D5DB]'
+                        )}
                       >
-                        岗位名称 <span className="text-[#EF4444]">*</span>
-                      </Label>
-                      <Input
-                        id="jobName"
-                        placeholder="例如：高级前端开发工程师"
-                        value={jobFormData.name}
-                        onChange={(e) =>
-                          handleFormDataChange('name', e.target.value)
-                        }
-                        className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
-                      />
+                        {editMode === 'manual' && (
+                          <div className="w-2 h-2 bg-[#7bb8ff] rounded-full"></div>
+                        )}
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="location"
-                        className="text-[14px] font-medium text-[#374151]"
-                      >
-                        工作地点 <span className="text-[#EF4444]">*</span>
-                      </Label>
-                      <Input
-                        id="location"
-                        placeholder="例如：北京市朝阳区"
-                        value={jobFormData.location}
-                        onChange={(e) =>
-                          handleFormDataChange('location', e.target.value)
-                        }
-                        className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
-                      />
+                    <div className="flex-1">
+                      <div className="text-[14px] font-medium text-[#1F2937] mb-1">
+                        手动编辑模式
+                      </div>
+                      <div className="text-[12px] text-[#6B7280]">
+                        完全自定义编辑，精细控制
+                      </div>
                     </div>
                   </div>
 
-                  {/* 第二行：所属部门、工作性质 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between min-h-[24px]">
+                  <div
+                    className={cn(
+                      'flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors',
+                      editMode === 'ai'
+                        ? 'border-[#7bb8ff] bg-[#F0FDF4]'
+                        : 'border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]'
+                    )}
+                    onClick={() => setEditMode('ai')}
+                  >
+                    <div className="flex items-center justify-center w-4 h-4 mt-0.5">
+                      <div
+                        className={cn(
+                          'w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                          editMode === 'ai'
+                            ? 'border-[#7bb8ff]'
+                            : 'border-[#D1D5DB]'
+                        )}
+                      >
+                        {editMode === 'ai' && (
+                          <div className="w-2 h-2 bg-[#7bb8ff] rounded-full"></div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[14px] font-medium text-[#1F2937] mb-1">
+                        AI编辑模式
+                      </div>
+                      <div className="text-[12px] text-[#6B7280]">
+                        智能生成岗位内容，快速高效
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI编辑模式 */}
+              {editMode === 'ai' && (
+                <AIJobEditor
+                  onClose={handleCloseCreateJobModal}
+                  onSave={(content) => {
+                    // TODO: 处理AI生成的内容并保存
+                    console.log('AI生成的内容:', content);
+                  }}
+                />
+              )}
+
+              {/* 手动编辑模式 - 基本信息表单 */}
+              {editMode === 'manual' && (
+                <>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-[#3B82F6] rounded-sm flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-sm"></div>
+                      </div>
+                      <h3 className="text-[16px] font-medium text-[#1F2937]">
+                        基本信息
+                      </h3>
+                      <span className="text-[12px] text-[#6B7280]">
+                        (<span className="text-[#EF4444]">*</span>为必填项)
+                      </span>
+                    </div>
+
+                    {/* 第一行：岗位名称、工作地点 */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label
-                          htmlFor="department"
+                          htmlFor="jobName"
                           className="text-[14px] font-medium text-[#374151]"
                         >
-                          所属部门 <span className="text-[#EF4444]">*</span>
+                          岗位名称 <span className="text-[#EF4444]">*</span>
                         </Label>
-                        <div className="flex items-center gap-2">
-                          {departmentsError && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={retryFetchDepartments}
-                              disabled={departmentsLoading}
-                              className="h-6 w-6 p-0 text-[#6B7280] hover:text-[#374151]"
-                              title="重试加载部门"
-                            >
-                              <RefreshCw
-                                className={`h-3 w-3 ${departmentsLoading ? 'animate-spin' : ''}`}
-                              />
-                            </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleNavigateToPlatformConfig}
-                            className="h-8 px-3 text-[12px] text-[#7bb8ff] border-[#7bb8ff] hover:bg-[#F0FDF4] hover:text-[#7bb8ff] hover:border-[#7bb8ff]"
-                          >
-                            + 新增所属部门
-                          </Button>
-                        </div>
+                        <Input
+                          id="jobName"
+                          placeholder="例如：高级前端开发工程师"
+                          value={jobFormData.name}
+                          onChange={(e) =>
+                            handleFormDataChange('name', e.target.value)
+                          }
+                          className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
+                        />
                       </div>
-                      <Select
-                        value={jobFormData.department}
-                        onValueChange={(value) =>
-                          handleFormDataChange('department', value)
-                        }
-                      >
-                        <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
-                          <SelectValue placeholder="请选择所属部门" />
-                        </SelectTrigger>
-                        <SelectContent
-                          onLoadMore={loadMoreDepartments}
-                          hasMore={departmentsHasMore}
-                          loading={departmentsLoading}
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="location"
+                          className="text-[14px] font-medium text-[#374151]"
                         >
-                          {departmentsLoading &&
-                          availableDepartments.length === 0 ? (
-                            <SelectItem value="__loading__" disabled>
-                              <div className="flex items-center gap-2">
-                                <RefreshCw className="h-3 w-3 animate-spin" />
-                                加载中...
-                              </div>
-                            </SelectItem>
-                          ) : departmentsError ? (
-                            <div className="p-2">
-                              <div className="text-[12px] text-[#EF4444] mb-2">
-                                加载失败
-                              </div>
+                          工作地点 <span className="text-[#EF4444]">*</span>
+                        </Label>
+                        <Input
+                          id="location"
+                          placeholder="例如：北京市朝阳区"
+                          value={jobFormData.location}
+                          onChange={(e) =>
+                            handleFormDataChange('location', e.target.value)
+                          }
+                          className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 第二行：所属部门、工作性质 */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between min-h-[24px]">
+                          <Label
+                            htmlFor="department"
+                            className="text-[14px] font-medium text-[#374151]"
+                          >
+                            所属部门 <span className="text-[#EF4444]">*</span>
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            {departmentsError && (
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
                                 onClick={retryFetchDepartments}
-                                className="h-6 text-[11px] px-2"
+                                disabled={departmentsLoading}
+                                className="h-6 w-6 p-0 text-[#6B7280] hover:text-[#374151]"
+                                title="重试加载部门"
                               >
-                                <RefreshCw className="h-3 w-3 mr-1" />
-                                重试
+                                <RefreshCw
+                                  className={`h-3 w-3 ${departmentsLoading ? 'animate-spin' : ''}`}
+                                />
                               </Button>
-                            </div>
-                          ) : availableDepartments.length > 0 ? (
-                            <>
-                              {availableDepartments.map((department) => (
-                                <SelectItem
-                                  key={department.id}
-                                  value={department.id}
-                                >
-                                  {department.name}
-                                </SelectItem>
-                              ))}
-                              {departmentsLoading && (
-                                <SelectItem value="__loading_more__" disabled>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleNavigateToPlatformConfig}
+                              className="h-8 px-3 text-[12px] text-[#7bb8ff] border-[#7bb8ff] hover:bg-[#F0FDF4] hover:text-[#7bb8ff] hover:border-[#7bb8ff]"
+                            >
+                              + 新增所属部门
+                            </Button>
+                          </div>
+                        </div>
+                        <Select
+                          value={jobFormData.department}
+                          onValueChange={(value) =>
+                            handleFormDataChange('department', value)
+                          }
+                        >
+                          <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
+                            <SelectValue placeholder="请选择所属部门" />
+                          </SelectTrigger>
+                          <SelectContent
+                            onLoadMore={loadMoreDepartments}
+                            hasMore={departmentsHasMore}
+                            loading={departmentsLoading}
+                          >
+                            {departmentsLoading &&
+                            availableDepartments.length === 0 ? (
+                              <SelectItem value="__loading__" disabled>
+                                <div className="flex items-center gap-2">
+                                  <RefreshCw className="h-3 w-3 animate-spin" />
                                   加载中...
-                                </SelectItem>
-                              )}
-                            </>
-                          ) : (
-                            <SelectItem value="__empty__" disabled>
-                              暂无部门选项
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                                </div>
+                              </SelectItem>
+                            ) : departmentsError ? (
+                              <div className="p-2">
+                                <div className="text-[12px] text-[#EF4444] mb-2">
+                                  加载失败
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={retryFetchDepartments}
+                                  className="h-6 text-[11px] px-2"
+                                >
+                                  <RefreshCw className="h-3 w-3 mr-1" />
+                                  重试
+                                </Button>
+                              </div>
+                            ) : availableDepartments.length > 0 ? (
+                              <>
+                                {availableDepartments.map((department) => (
+                                  <SelectItem
+                                    key={department.id}
+                                    value={department.id}
+                                  >
+                                    {department.name}
+                                  </SelectItem>
+                                ))}
+                                {departmentsLoading && (
+                                  <SelectItem value="__loading_more__" disabled>
+                                    加载中...
+                                  </SelectItem>
+                                )}
+                              </>
+                            ) : (
+                              <SelectItem value="__empty__" disabled>
+                                暂无部门选项
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between min-h-[24px]">
+                          <Label
+                            htmlFor="workType"
+                            className="text-[14px] font-medium text-[#374151]"
+                          >
+                            工作性质 <span className="text-[#EF4444]">*</span>
+                          </Label>
+                          {/* 占位div保持对齐，与所属部门标题行高度一致 */}
+                          <div className="flex items-center gap-2 h-8">
+                            {/* 空占位，确保与所属部门按钮区域高度一致 */}
+                          </div>
+                        </div>
+                        <Select
+                          value={jobFormData.workType}
+                          onValueChange={(value) =>
+                            handleFormDataChange('workType', value)
+                          }
+                        >
+                          <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
+                            <SelectValue placeholder="请选择工作性质" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="全职">全职</SelectItem>
+                            <SelectItem value="兼职">兼职</SelectItem>
+                            <SelectItem value="实习">实习</SelectItem>
+                            <SelectItem value="外包">外包</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between min-h-[24px]">
+
+                    {/* 第三行：学历要求、薪资范围 */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label
-                          htmlFor="workType"
+                          htmlFor="education"
                           className="text-[14px] font-medium text-[#374151]"
                         >
-                          工作性质 <span className="text-[#EF4444]">*</span>
+                          学历要求 <span className="text-[#EF4444]">*</span>
                         </Label>
-                        {/* 占位div保持对齐，与所属部门标题行高度一致 */}
-                        <div className="flex items-center gap-2 h-8">
-                          {/* 空占位，确保与所属部门按钮区域高度一致 */}
-                        </div>
-                      </div>
-                      <Select
-                        value={jobFormData.workType}
-                        onValueChange={(value) =>
-                          handleFormDataChange('workType', value)
-                        }
-                      >
-                        <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
-                          <SelectValue placeholder="请选择工作性质" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="全职">全职</SelectItem>
-                          <SelectItem value="兼职">兼职</SelectItem>
-                          <SelectItem value="实习">实习</SelectItem>
-                          <SelectItem value="外包">外包</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* 第三行：学历要求、薪资范围 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="education"
-                        className="text-[14px] font-medium text-[#374151]"
-                      >
-                        学历要求 <span className="text-[#EF4444]">*</span>
-                      </Label>
-                      <Select
-                        value={jobFormData.education}
-                        onValueChange={(value) =>
-                          handleFormDataChange('education', value)
-                        }
-                      >
-                        <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
-                          <SelectValue placeholder="请选择学历要求" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="不限">不限</SelectItem>
-                          <SelectItem value="大专">大专</SelectItem>
-                          <SelectItem value="本科">本科</SelectItem>
-                          <SelectItem value="硕士">硕士</SelectItem>
-                          <SelectItem value="博士">博士</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[14px] font-medium text-[#374151]">
-                        薪资范围 <span className="text-[#EF4444]">*</span>
-                      </Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          id="salaryMin"
-                          placeholder="最低薪资"
-                          value={jobFormData.salaryMin}
-                          onChange={(e) =>
-                            handleFormDataChange('salaryMin', e.target.value)
+                        <Select
+                          value={jobFormData.education}
+                          onValueChange={(value) =>
+                            handleFormDataChange('education', value)
                           }
-                          className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
-                        />
-                        <Input
-                          id="salaryMax"
-                          placeholder="最高薪资"
-                          value={jobFormData.salaryMax}
-                          onChange={(e) =>
-                            handleFormDataChange('salaryMax', e.target.value)
-                          }
-                          className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 第四行：工作经验 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="experience"
-                        className="text-[14px] font-medium text-[#374151]"
-                      >
-                        工作经验 <span className="text-[#EF4444]">*</span>
-                      </Label>
-                      <Select
-                        value={jobFormData.experience}
-                        onValueChange={(value) =>
-                          handleFormDataChange('experience', value)
-                        }
-                      >
-                        <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
-                          <SelectValue placeholder="请选择工作经验" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="不限">不限</SelectItem>
-                          <SelectItem value="应届毕业生">应届毕业生</SelectItem>
-                          <SelectItem value="1年以下">1年以下</SelectItem>
-                          <SelectItem value="1-3年">1-3年</SelectItem>
-                          <SelectItem value="3-5年">3-5年</SelectItem>
-                          <SelectItem value="5-10年">5-10年</SelectItem>
-                          <SelectItem value="10年以上">10年以上</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div></div>
-                  </div>
-
-                  {/* 行业要求和公司要求 */}
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-[14px] font-medium text-[#374151]">
-                        行业要求与公司要求
-                      </Label>
-                    </div>
-
-                    {jobFormData.industryRequirements.map(
-                      (requirement, index) => (
-                        <div key={index} className="flex gap-2 items-center">
-                          <Input
-                            placeholder="如：互联网"
-                            value={requirement.industry}
-                            onChange={(e) =>
-                              handleIndustryRequirementChange(
-                                index,
-                                'industry',
-                                e.target.value
-                              )
-                            }
-                            className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
-                          />
-                          <Input
-                            placeholder="如：阿里巴巴"
-                            value={requirement.companyName}
-                            onChange={(e) =>
-                              handleIndustryRequirementChange(
-                                index,
-                                'companyName',
-                                e.target.value
-                              )
-                            }
-                            className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
-                          />
-                          {/* 新增按钮 - 只在最后一行显示 */}
-                          {index ===
-                            jobFormData.industryRequirements.length - 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={addIndustryRequirement}
-                              className="h-8 w-8 p-0 border-[#7bb8ff] text-[#7bb8ff] hover:bg-[#F0FDF4] hover:border-[#7bb8ff] hover:text-[#7bb8ff]"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
-                          {/* 删除按钮 - 从第二行开始显示 */}
-                          {index > 0 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeIndustryRequirement(index)}
-                              className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
-                        </div>
-                      )
-                    )}
-                  </div>
-
-                  {/* 工作技能 */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Label className="text-[14px] font-medium text-[#374151]">
-                          工作技能
-                        </Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleNavigateToSkillConfig}
-                          className="h-6 px-2 text-[12px] text-[#7bb8ff] border-[#7bb8ff] hover:bg-[#F0FDF4] hover:text-[#7bb8ff] hover:border-[#7bb8ff]"
                         >
-                          <Plus className="h-3 w-3 mr-1" />
-                          增加
-                        </Button>
+                          <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
+                            <SelectValue placeholder="请选择学历要求" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="不限">不限</SelectItem>
+                            <SelectItem value="大专">大专</SelectItem>
+                            <SelectItem value="本科">本科</SelectItem>
+                            <SelectItem value="硕士">硕士</SelectItem>
+                            <SelectItem value="博士">博士</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[14px] font-medium text-[#374151]">
+                          薪资范围 <span className="text-[#EF4444]">*</span>
+                        </Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            id="salaryMin"
+                            placeholder="最低薪资"
+                            value={jobFormData.salaryMin}
+                            onChange={(e) =>
+                              handleFormDataChange('salaryMin', e.target.value)
+                            }
+                            className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
+                          />
+                          <Input
+                            id="salaryMax"
+                            placeholder="最高薪资"
+                            value={jobFormData.salaryMax}
+                            onChange={(e) =>
+                              handleFormDataChange('salaryMax', e.target.value)
+                            }
+                            className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 第四行：工作经验 */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="experience"
+                          className="text-[14px] font-medium text-[#374151]"
+                        >
+                          工作经验 <span className="text-[#EF4444]">*</span>
+                        </Label>
+                        <Select
+                          value={jobFormData.experience}
+                          onValueChange={(value) =>
+                            handleFormDataChange('experience', value)
+                          }
+                        >
+                          <SelectTrigger className="h-10 border-[#D1D5DB] text-[14px]">
+                            <SelectValue placeholder="请选择工作经验" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="不限">不限</SelectItem>
+                            <SelectItem value="应届毕业生">
+                              应届毕业生
+                            </SelectItem>
+                            <SelectItem value="1年以下">1年以下</SelectItem>
+                            <SelectItem value="1-3年">1-3年</SelectItem>
+                            <SelectItem value="3-5年">3-5年</SelectItem>
+                            <SelectItem value="5-10年">5-10年</SelectItem>
+                            <SelectItem value="10年以上">10年以上</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div></div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* 必填技能 */}
-                      <div className="space-y-2">
-                        <Label className="text-[14px] font-medium text-[#374151]">
-                          必填技能 <span className="text-[#EF4444]">*</span>
-                        </Label>
-                        <MultiSelect
-                          options={availableSkills.map((skill) => ({
-                            value: skill.id,
-                            label: skill.name,
-                          }))}
-                          selected={selectedRequiredSkillIds}
-                          onChange={handleRequiredSkillsChange}
-                          placeholder="请选择必填技能"
-                          multiple={true}
-                          onSelectAll={() => {
-                            const allSkillIds = availableSkills.map(
-                              (skill) => skill.id
-                            );
-                            setSelectedRequiredSkillIds(allSkillIds);
-                          }}
-                          onClearAll={() => {
-                            setSelectedRequiredSkillIds([]);
-                          }}
-                          selectCountLabel="技能"
-                          loading={skillsLoading}
-                          hasMore={skillsHasMore}
-                          onLoadMore={loadMoreSkills}
-                          onSearch={handleSkillSearch}
-                        />
-                      </div>
-
-                      {/* 选填技能 */}
-                      <div className="space-y-2">
-                        <Label className="text-[14px] font-medium text-[#374151]">
-                          选填技能
-                        </Label>
-                        <MultiSelect
-                          options={availableSkills.map((skill) => ({
-                            value: skill.id,
-                            label: skill.name,
-                          }))}
-                          selected={selectedOptionalSkillIds}
-                          onChange={handleOptionalSkillsChange}
-                          placeholder="请选择选填技能"
-                          multiple={true}
-                          onSelectAll={() => {
-                            const allSkillIds = availableSkills.map(
-                              (skill) => skill.id
-                            );
-                            setSelectedOptionalSkillIds(allSkillIds);
-                          }}
-                          onClearAll={() => {
-                            setSelectedOptionalSkillIds([]);
-                          }}
-                          selectCountLabel="技能"
-                          loading={skillsLoading}
-                          hasMore={skillsHasMore}
-                          onLoadMore={loadMoreSkills}
-                          onSearch={handleSkillSearch}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 岗位职责与要求 */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[14px] font-medium text-[#374151]">
-                        岗位职责与要求 <span className="text-[#EF4444]">*</span>
-                      </Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addResponsibility}
-                        className="h-8 px-3 text-[12px] text-[#7bb8ff] border-[#7bb8ff] hover:bg-[#F0FDF4] hover:text-[#7bb8ff] hover:border-[#7bb8ff]"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        添加职责
-                      </Button>
-                    </div>
+                    {/* 行业要求和公司要求 */}
                     <div className="space-y-3">
-                      {jobFormData.responsibilities.map(
-                        (responsibility, index) => (
-                          <div key={index} className="flex gap-2">
-                            <Textarea
-                              placeholder={`请描述第${index + 1}项岗位职责与要求`}
-                              value={responsibility}
+                      <div>
+                        <Label className="text-[14px] font-medium text-[#374151]">
+                          行业要求与公司要求
+                        </Label>
+                      </div>
+
+                      {jobFormData.industryRequirements.map(
+                        (requirement, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <Input
+                              placeholder="如：互联网"
+                              value={requirement.industry}
                               onChange={(e) =>
-                                handleResponsibilityChange(
+                                handleIndustryRequirementChange(
                                   index,
+                                  'industry',
                                   e.target.value
                                 )
                               }
-                              className="min-h-[80px] resize-none border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
+                              className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
                             />
+                            <Input
+                              placeholder="如：阿里巴巴"
+                              value={requirement.companyName}
+                              onChange={(e) =>
+                                handleIndustryRequirementChange(
+                                  index,
+                                  'companyName',
+                                  e.target.value
+                                )
+                              }
+                              className="h-10 border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
+                            />
+                            {/* 新增按钮 - 只在最后一行显示 */}
+                            {index ===
+                              jobFormData.industryRequirements.length - 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addIndustryRequirement}
+                                className="h-8 w-8 p-0 border-[#7bb8ff] text-[#7bb8ff] hover:bg-[#F0FDF4] hover:border-[#7bb8ff] hover:text-[#7bb8ff]"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                            {/* 删除按钮 - 从第二行开始显示 */}
                             {index > 0 && (
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => removeResponsibility(index)}
-                                className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444] mt-0"
-                                title="删除此项职责"
+                                onClick={() => removeIndustryRequirement(index)}
+                                className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444]"
                               >
                                 <X className="h-3.5 w-3.5" />
                               </Button>
@@ -2146,40 +2022,177 @@ export function JobProfilePage() {
                         )
                       )}
                     </div>
+
+                    {/* 工作技能 */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-[14px] font-medium text-[#374151]">
+                            工作技能
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleNavigateToSkillConfig}
+                            className="h-6 px-2 text-[12px] text-[#7bb8ff] border-[#7bb8ff] hover:bg-[#F0FDF4] hover:text-[#7bb8ff] hover:border-[#7bb8ff]"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            增加
+                          </Button>
+                        </div>
+                        <div></div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* 必填技能 */}
+                        <div className="space-y-2">
+                          <Label className="text-[14px] font-medium text-[#374151]">
+                            必填技能 <span className="text-[#EF4444]">*</span>
+                          </Label>
+                          <MultiSelect
+                            options={availableSkills.map((skill) => ({
+                              value: skill.id,
+                              label: skill.name,
+                            }))}
+                            selected={selectedRequiredSkillIds}
+                            onChange={handleRequiredSkillsChange}
+                            placeholder="请选择必填技能"
+                            multiple={true}
+                            onSelectAll={() => {
+                              const allSkillIds = availableSkills.map(
+                                (skill) => skill.id
+                              );
+                              setSelectedRequiredSkillIds(allSkillIds);
+                            }}
+                            onClearAll={() => {
+                              setSelectedRequiredSkillIds([]);
+                            }}
+                            selectCountLabel="技能"
+                            loading={skillsLoading}
+                            hasMore={skillsHasMore}
+                            onLoadMore={loadMoreSkills}
+                            onSearch={handleSkillSearch}
+                          />
+                        </div>
+
+                        {/* 选填技能 */}
+                        <div className="space-y-2">
+                          <Label className="text-[14px] font-medium text-[#374151]">
+                            选填技能
+                          </Label>
+                          <MultiSelect
+                            options={availableSkills.map((skill) => ({
+                              value: skill.id,
+                              label: skill.name,
+                            }))}
+                            selected={selectedOptionalSkillIds}
+                            onChange={handleOptionalSkillsChange}
+                            placeholder="请选择选填技能"
+                            multiple={true}
+                            onSelectAll={() => {
+                              const allSkillIds = availableSkills.map(
+                                (skill) => skill.id
+                              );
+                              setSelectedOptionalSkillIds(allSkillIds);
+                            }}
+                            onClearAll={() => {
+                              setSelectedOptionalSkillIds([]);
+                            }}
+                            selectCountLabel="技能"
+                            loading={skillsLoading}
+                            hasMore={skillsHasMore}
+                            onLoadMore={loadMoreSkills}
+                            onSearch={handleSkillSearch}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 岗位职责与要求 */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[14px] font-medium text-[#374151]">
+                          岗位职责与要求{' '}
+                          <span className="text-[#EF4444]">*</span>
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addResponsibility}
+                          className="h-8 px-3 text-[12px] text-[#7bb8ff] border-[#7bb8ff] hover:bg-[#F0FDF4] hover:text-[#7bb8ff] hover:border-[#7bb8ff]"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          添加职责
+                        </Button>
+                      </div>
+                      <div className="space-y-3">
+                        {jobFormData.responsibilities.map(
+                          (responsibility, index) => (
+                            <div key={index} className="flex gap-2">
+                              <Textarea
+                                placeholder={`请描述第${index + 1}项岗位职责与要求`}
+                                value={responsibility}
+                                onChange={(e) =>
+                                  handleResponsibilityChange(
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                                className="min-h-[80px] resize-none border-[#D1D5DB] text-[14px] placeholder:text-[#9CA3AF] flex-1"
+                              />
+                              {index > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeResponsibility(index)}
+                                  className="h-8 w-8 p-0 border-[#D1D5DB] hover:bg-[#FEF2F2] hover:border-[#EF4444] text-[#EF4444] mt-0"
+                                  title="删除此项职责"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
-          {/* 底部操作按钮 - 仅在手动编辑模式下显示 */}
-          {editMode === 'manual' && (
-            <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E7EB] bg-[#F9FAFB]">
-              <Button
-                variant="outline"
-                onClick={handleCloseCreateJobModal}
-                className="h-10 px-6 border-[#D1D5DB] text-[#374151] hover:bg-[#F3F4F6]"
-              >
-                取消
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleSaveDraft}
-                disabled={loading}
-                className="h-10 px-6 border-[#D1D5DB] text-[#374151] hover:bg-[#F3F4F6]"
-              >
-                {loading ? '保存中...' : '保存草稿'}
-              </Button>
-              <Button
-                onClick={handleSaveAndPublish}
-                disabled={loading}
-                className="h-10 px-6 bg-[#7bb8ff] hover:bg-[#7bb8ff] text-white"
-              >
-                {loading ? '发布中...' : '保存并发布'}
-              </Button>
+                </>
+              )}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            {/* 底部操作按钮 - 仅在手动编辑模式下显示 */}
+            {editMode === 'manual' && (
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E7EB] bg-[#F9FAFB]">
+                <Button
+                  variant="outline"
+                  onClick={handleCloseCreateJobModal}
+                  className="h-10 px-6 border-[#D1D5DB] text-[#374151] hover:bg-[#F3F4F6]"
+                >
+                  取消
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="h-10 px-6 border-[#D1D5DB] text-[#374151] hover:bg-[#F3F4F6]"
+                >
+                  {loading ? '保存中...' : '保存草稿'}
+                </Button>
+                <Button
+                  onClick={handleSaveAndPublish}
+                  disabled={loading}
+                  className="h-10 px-6 bg-[#7bb8ff] hover:bg-[#7bb8ff] text-white"
+                >
+                  {loading ? '发布中...' : '保存并发布'}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* 编辑岗位弹窗 */}
       <Dialog open={isEditJobModalOpen} onOpenChange={setIsEditJobModalOpen}>

@@ -61,6 +61,40 @@ export const createJobProfile = async (
   );
 };
 
+// 解析岗位描述返回类型
+interface ParseJobProfileResult {
+  name?: string;
+  location?: string;
+  work_type?: string;
+  salary_min?: number;
+  salary_max?: number;
+  education_requirements?: Array<{ education_type: string }>;
+  experience_requirements?: Array<{
+    experience_type: string;
+    min_years?: number;
+    ideal_years?: number;
+  }>;
+  industry_requirements?: Array<{ industry?: string; company_name?: string }>;
+  skills?: Array<{
+    skill_id?: string;
+    skill_name?: string;
+    name?: string;
+    type?: string;
+  }>;
+  responsibilities?: Array<
+    { responsibility?: string; description?: string } | string
+  >;
+}
+
+// 解析岗位描述
+export const parseJobProfile = async (
+  description: string
+): Promise<ParseJobProfileResult> => {
+  return await apiPost<ParseJobProfileResult>('/v1/job-profiles/parse', {
+    description,
+  });
+};
+
 // 搜索岗位画像
 export const searchJobProfiles = async (
   params?: JobProfileQueryParams

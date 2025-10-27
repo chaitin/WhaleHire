@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   
   // 获取环境变量，设置默认值
   const backendHost = env.VITE_BACKEND_HOST || 'http://localhost:8888'
-  const devServerPort = parseInt(env.VITE_DEV_SERVER_PORT) || 5175
+  const devServerPort = parseInt(env.VITE_DEV_SERVER_PORT) || 3000
   const devServerHost = env.VITE_DEV_SERVER_HOST || 'localhost'
   const enableSourcemap = env.VITE_BUILD_SOURCEMAP !== 'false'
   const enableMinify = env.VITE_BUILD_MINIFY !== 'false'
