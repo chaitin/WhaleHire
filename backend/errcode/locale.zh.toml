@@ -93,3 +93,21 @@ other = "邮箱凭据无效"
 
 [err-mailbox-connection-failed]
 other = "邮箱连接失败"
+
+[err-university-not-found]
+other = "高校不存在"
+
+[err-university-already-exists]
+other = "高校已存在"
+
+[err-csv-file-not-found]
+other = "CSV文件不存在"
+
+[err-csv-parse-error]
+other = "CSV文件解析失败"
+
+[err-csv-invalid-format]
+other = "CSV文件格式无效"
+
+[err-university-import-failed]
+other = "高校数据导入失败"

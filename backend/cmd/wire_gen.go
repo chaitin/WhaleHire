@@ -7,19 +7,17 @@
 package main
 
 import (
-	"log/slog"
-
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/db"
 	"github.com/chaitin/WhaleHire/backend/internal"
-	v1_8 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
+	v1_9 "github.com/chaitin/WhaleHire/backend/internal/audit/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/internal/audit/repo"
-	usecase9 "github.com/chaitin/WhaleHire/backend/internal/audit/usecase"
+	usecase10 "github.com/chaitin/WhaleHire/backend/internal/audit/usecase"
 	v1_5 "github.com/chaitin/WhaleHire/backend/internal/department/handler/v1"
 	repo8 "github.com/chaitin/WhaleHire/backend/internal/department/repo"
 	usecase7 "github.com/chaitin/WhaleHire/backend/internal/department/usecase"
-	v1_9 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
-	usecase10 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
+	v1_10 "github.com/chaitin/WhaleHire/backend/internal/file/handler/v1"
+	usecase11 "github.com/chaitin/WhaleHire/backend/internal/file/usecase"
 	v1_3 "github.com/chaitin/WhaleHire/backend/internal/general_agent/handler/v1"
 	repo7 "github.com/chaitin/WhaleHire/backend/internal/general_agent/repo"
 	usecase5 "github.com/chaitin/WhaleHire/backend/internal/general_agent/usecase"
@@ -32,7 +30,7 @@ import (
 	usecase6 "github.com/chaitin/WhaleHire/backend/internal/jobprofile/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/middleware"
 	"github.com/chaitin/WhaleHire/backend/internal/notification/adapter"
-	v1_10 "github.com/chaitin/WhaleHire/backend/internal/notification/handler/v1"
+	v1_11 "github.com/chaitin/WhaleHire/backend/internal/notification/handler/v1"
 	repo6 "github.com/chaitin/WhaleHire/backend/internal/notification/repo"
 	usecase3 "github.com/chaitin/WhaleHire/backend/internal/notification/usecase"
 	"github.com/chaitin/WhaleHire/backend/internal/notification/worker"
@@ -41,15 +39,18 @@ import (
 	"github.com/chaitin/WhaleHire/backend/internal/resume/service"
 	usecase4 "github.com/chaitin/WhaleHire/backend/internal/resume/usecase"
 	adapter2 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/adapter"
-	v1_11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
-	repo10 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/repo"
+	v1_12 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
+	repo11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/scheduler"
-	usecase11 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/usecase"
+	usecase12 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/usecase"
 	v1_7 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
 	repo9 "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	service3 "github.com/chaitin/WhaleHire/backend/internal/screening/service"
 	usecase8 "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
-	v1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
+	v1_8 "github.com/chaitin/WhaleHire/backend/internal/university/handler/v1"
+	repo10 "github.com/chaitin/WhaleHire/backend/internal/university/repo"
+	usecase9 "github.com/chaitin/WhaleHire/backend/internal/university/usecase"
+	"github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	repo2 "github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	"github.com/chaitin/WhaleHire/backend/internal/user/usecase"
 	"github.com/chaitin/WhaleHire/backend/pkg"
@@ -61,6 +62,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/pkg/store/s3"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 	"github.com/chaitin/WhaleHire/backend/pkg/web"
+	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -128,29 +130,32 @@ func newServer() (*Server, error) {
 	}
 	screeningUsecase := usecase8.NewScreeningUsecase(screeningRepo, screeningNodeRunRepo, jobProfileUsecase, resumeUsecase, userRepo, matchingService, notificationUsecase, configConfig, slogLogger)
 	screeningHandler := v1_7.NewScreeningHandler(web, screeningUsecase, authMiddleware, slogLogger)
-	auditUsecase := usecase9.NewAuditUsecase(auditRepo, slogLogger)
-	auditHandler := v1_8.NewAuditHandler(web, auditUsecase, authMiddleware, slogLogger)
-	fileUsecase := usecase10.NewFileUsecase(slogLogger, minioClient, configConfig)
-	fileHandler := v1_9.NewFileHandler(web, fileUsecase, authMiddleware)
+	universityRepo := repo10.NewUniversityRepo(client, configConfig)
+	universityUsecase := usecase9.NewUniversityUsecase(universityRepo)
+	universityHandler := v1_8.NewUniversityHandler(web, universityUsecase, authMiddleware, slogLogger)
+	auditUsecase := usecase10.NewAuditUsecase(auditRepo, slogLogger)
+	auditHandler := v1_9.NewAuditHandler(web, auditUsecase, authMiddleware, slogLogger)
+	fileUsecase := usecase11.NewFileUsecase(slogLogger, minioClient, configConfig)
+	fileHandler := v1_10.NewFileHandler(web, fileUsecase, authMiddleware)
 	consumer := internal.NewQueueConsumer(redisClient, configConfig)
 	dingTalkAdapter := adapter.NewDingTalkAdapter(notificationSettingUsecase, slogLogger)
 	notificationWorker := worker.NewNotificationWorker(consumer, notificationEventRepo, dingTalkAdapter, slogLogger)
-	notificationSettingHandler := v1_10.NewNotificationSettingHandler(web, notificationSettingUsecase, slogLogger, authMiddleware)
-	resumeMailboxSettingRepo := repo10.NewResumeMailboxSettingRepo(client)
-	resumeMailboxCursorRepo := repo10.NewResumeMailboxCursorRepo(client)
-	resumeMailboxStatisticRepo := repo10.NewResumeMailboxStatisticRepo(client)
+	notificationSettingHandler := v1_11.NewNotificationSettingHandler(web, notificationSettingUsecase, slogLogger, authMiddleware)
+	resumeMailboxSettingRepo := repo11.NewResumeMailboxSettingRepo(client)
+	resumeMailboxCursorRepo := repo11.NewResumeMailboxCursorRepo(client)
+	resumeMailboxStatisticRepo := repo11.NewResumeMailboxStatisticRepo(client)
 	credentialVault, err := credential.NewCredentialVault(configConfig)
 	if err != nil {
 		return nil, err
 	}
 	mailboxAdapterFactory := adapter2.NewAdapterFactory(slogLogger)
-	resumeMailboxSyncUsecase := usecase11.NewResumeMailboxSyncUsecase(resumeMailboxSettingRepo, resumeMailboxCursorRepo, resumeMailboxStatisticRepo, credentialVault, mailboxAdapterFactory, resumeUsecase, jobApplicationUsecase, slogLogger)
+	resumeMailboxSyncUsecase := usecase12.NewResumeMailboxSyncUsecase(resumeMailboxSettingRepo, resumeMailboxCursorRepo, resumeMailboxStatisticRepo, credentialVault, mailboxAdapterFactory, resumeUsecase, jobApplicationUsecase, slogLogger)
 	schedulerScheduler := scheduler.NewScheduler(resumeMailboxSettingRepo, resumeMailboxSyncUsecase, slogLogger)
 	resumeMailboxScheduler := internal.NewResumeMailboxScheduler(schedulerScheduler)
-	resumeMailboxStatisticUsecase := usecase11.NewResumeMailboxStatisticUsecase(resumeMailboxStatisticRepo)
-	resumeMailboxSettingUsecase := usecase11.NewResumeMailboxSettingUsecase(resumeMailboxSettingRepo, credentialVault, mailboxAdapterFactory, resumeMailboxScheduler, jobProfileUsecase, resumeMailboxStatisticUsecase)
-	resumeMailboxSettingHandler := v1_11.NewResumeMailboxSettingHandler(web, resumeMailboxSettingUsecase, resumeMailboxSyncUsecase, slogLogger, authMiddleware)
-	resumeMailboxStatisticHandler := v1_11.NewResumeMailboxStatisticHandler(web, resumeMailboxStatisticUsecase, slogLogger, authMiddleware)
+	resumeMailboxStatisticUsecase := usecase12.NewResumeMailboxStatisticUsecase(resumeMailboxStatisticRepo)
+	resumeMailboxSettingUsecase := usecase12.NewResumeMailboxSettingUsecase(resumeMailboxSettingRepo, credentialVault, mailboxAdapterFactory, resumeMailboxScheduler, jobProfileUsecase, resumeMailboxStatisticUsecase)
+	resumeMailboxSettingHandler := v1_12.NewResumeMailboxSettingHandler(web, resumeMailboxSettingUsecase, resumeMailboxSyncUsecase, slogLogger, authMiddleware)
+	resumeMailboxStatisticHandler := v1_12.NewResumeMailboxStatisticHandler(web, resumeMailboxStatisticUsecase, slogLogger, authMiddleware)
 	versionInfo := version.NewVersionInfo()
 	server := &Server{
 		config:                   configConfig,
@@ -164,6 +169,7 @@ func newServer() (*Server, error) {
 		departmentV1:             departmentHandler,
 		jobapplicationV1:         jobApplicationHandler,
 		screeningV1:              screeningHandler,
+		universityV1:             universityHandler,
 		auditV1:                  auditHandler,
 		fileV1:                   fileHandler,
 		notificationWorker:       notificationWorker,
@@ -190,12 +196,13 @@ type Server struct {
 	departmentV1             *v1_5.DepartmentHandler
 	jobapplicationV1         *v1_6.JobApplicationHandler
 	screeningV1              *v1_7.ScreeningHandler
-	auditV1                  *v1_8.AuditHandler
-	fileV1                   *v1_9.FileHandler
+	universityV1             *v1_8.UniversityHandler
+	auditV1                  *v1_9.AuditHandler
+	fileV1                   *v1_10.FileHandler
 	notificationWorker       *worker.NotificationWorker
-	notificationV1           *v1_10.NotificationSettingHandler
+	notificationV1           *v1_11.NotificationSettingHandler
 	resumeMailboxScheduler   *scheduler.Scheduler
-	resumeMailboxSettingV1   *v1_11.ResumeMailboxSettingHandler
-	resumeMailboxStatisticV1 *v1_11.ResumeMailboxStatisticHandler
+	resumeMailboxSettingV1   *v1_12.ResumeMailboxSettingHandler
+	resumeMailboxStatisticV1 *v1_12.ResumeMailboxStatisticHandler
 	version                  *version.VersionInfo
 }

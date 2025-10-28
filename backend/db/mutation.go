@@ -48,11 +48,13 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
+	"github.com/chaitin/WhaleHire/backend/db/universityprofile"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
 	"github.com/chaitin/WhaleHire/backend/ent/types"
 	"github.com/google/uuid"
+	pgvector "github.com/pgvector/pgvector-go"
 )
 
 const (
@@ -99,6 +101,7 @@ const (
 	TypeScreeningTask            = "ScreeningTask"
 	TypeScreeningTaskResume      = "ScreeningTaskResume"
 	TypeSetting                  = "Setting"
+	TypeUniversityProfile        = "UniversityProfile"
 	TypeUser                     = "User"
 	TypeUserIdentity             = "UserIdentity"
 	TypeUserLoginHistory         = "UserLoginHistory"
@@ -38730,6 +38733,1393 @@ func (m *SettingMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *SettingMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Setting edge %s", name)
+}
+
+// UniversityProfileMutation represents an operation that mutates the UniversityProfile nodes in the graph.
+type UniversityProfileMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	deleted_at            *time.Time
+	name_cn               *string
+	name_en               *string
+	alias                 *string
+	country               *string
+	is_double_first_class *bool
+	is_project_985        *bool
+	is_project_211        *bool
+	is_qs_top100          *bool
+	rank_qs               *int
+	addrank_qs            *int
+	overall_score         *float64
+	addoverall_score      *float64
+	metadata              *map[string]interface{}
+	vector_content        *string
+	vector                **pgvector.Vector
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*UniversityProfile, error)
+	predicates            []predicate.UniversityProfile
+}
+
+var _ ent.Mutation = (*UniversityProfileMutation)(nil)
+
+// universityprofileOption allows management of the mutation configuration using functional options.
+type universityprofileOption func(*UniversityProfileMutation)
+
+// newUniversityProfileMutation creates new mutation for the UniversityProfile entity.
+func newUniversityProfileMutation(c config, op Op, opts ...universityprofileOption) *UniversityProfileMutation {
+	m := &UniversityProfileMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUniversityProfile,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUniversityProfileID sets the ID field of the mutation.
+func withUniversityProfileID(id uuid.UUID) universityprofileOption {
+	return func(m *UniversityProfileMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UniversityProfile
+		)
+		m.oldValue = func(ctx context.Context) (*UniversityProfile, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UniversityProfile.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUniversityProfile sets the old UniversityProfile of the mutation.
+func withUniversityProfile(node *UniversityProfile) universityprofileOption {
+	return func(m *UniversityProfileMutation) {
+		m.oldValue = func(context.Context) (*UniversityProfile, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UniversityProfileMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UniversityProfileMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of UniversityProfile entities.
+func (m *UniversityProfileMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UniversityProfileMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UniversityProfileMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UniversityProfile.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *UniversityProfileMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *UniversityProfileMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *UniversityProfileMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[universityprofile.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *UniversityProfileMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *UniversityProfileMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, universityprofile.FieldDeletedAt)
+}
+
+// SetNameCn sets the "name_cn" field.
+func (m *UniversityProfileMutation) SetNameCn(s string) {
+	m.name_cn = &s
+}
+
+// NameCn returns the value of the "name_cn" field in the mutation.
+func (m *UniversityProfileMutation) NameCn() (r string, exists bool) {
+	v := m.name_cn
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNameCn returns the old "name_cn" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldNameCn(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNameCn is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNameCn requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNameCn: %w", err)
+	}
+	return oldValue.NameCn, nil
+}
+
+// ResetNameCn resets all changes to the "name_cn" field.
+func (m *UniversityProfileMutation) ResetNameCn() {
+	m.name_cn = nil
+}
+
+// SetNameEn sets the "name_en" field.
+func (m *UniversityProfileMutation) SetNameEn(s string) {
+	m.name_en = &s
+}
+
+// NameEn returns the value of the "name_en" field in the mutation.
+func (m *UniversityProfileMutation) NameEn() (r string, exists bool) {
+	v := m.name_en
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNameEn returns the old "name_en" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldNameEn(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNameEn is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNameEn requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNameEn: %w", err)
+	}
+	return oldValue.NameEn, nil
+}
+
+// ClearNameEn clears the value of the "name_en" field.
+func (m *UniversityProfileMutation) ClearNameEn() {
+	m.name_en = nil
+	m.clearedFields[universityprofile.FieldNameEn] = struct{}{}
+}
+
+// NameEnCleared returns if the "name_en" field was cleared in this mutation.
+func (m *UniversityProfileMutation) NameEnCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldNameEn]
+	return ok
+}
+
+// ResetNameEn resets all changes to the "name_en" field.
+func (m *UniversityProfileMutation) ResetNameEn() {
+	m.name_en = nil
+	delete(m.clearedFields, universityprofile.FieldNameEn)
+}
+
+// SetAlias sets the "alias" field.
+func (m *UniversityProfileMutation) SetAlias(s string) {
+	m.alias = &s
+}
+
+// Alias returns the value of the "alias" field in the mutation.
+func (m *UniversityProfileMutation) Alias() (r string, exists bool) {
+	v := m.alias
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAlias returns the old "alias" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldAlias(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAlias is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAlias requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAlias: %w", err)
+	}
+	return oldValue.Alias, nil
+}
+
+// ClearAlias clears the value of the "alias" field.
+func (m *UniversityProfileMutation) ClearAlias() {
+	m.alias = nil
+	m.clearedFields[universityprofile.FieldAlias] = struct{}{}
+}
+
+// AliasCleared returns if the "alias" field was cleared in this mutation.
+func (m *UniversityProfileMutation) AliasCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldAlias]
+	return ok
+}
+
+// ResetAlias resets all changes to the "alias" field.
+func (m *UniversityProfileMutation) ResetAlias() {
+	m.alias = nil
+	delete(m.clearedFields, universityprofile.FieldAlias)
+}
+
+// SetCountry sets the "country" field.
+func (m *UniversityProfileMutation) SetCountry(s string) {
+	m.country = &s
+}
+
+// Country returns the value of the "country" field in the mutation.
+func (m *UniversityProfileMutation) Country() (r string, exists bool) {
+	v := m.country
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCountry returns the old "country" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldCountry(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCountry is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCountry requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCountry: %w", err)
+	}
+	return oldValue.Country, nil
+}
+
+// ClearCountry clears the value of the "country" field.
+func (m *UniversityProfileMutation) ClearCountry() {
+	m.country = nil
+	m.clearedFields[universityprofile.FieldCountry] = struct{}{}
+}
+
+// CountryCleared returns if the "country" field was cleared in this mutation.
+func (m *UniversityProfileMutation) CountryCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldCountry]
+	return ok
+}
+
+// ResetCountry resets all changes to the "country" field.
+func (m *UniversityProfileMutation) ResetCountry() {
+	m.country = nil
+	delete(m.clearedFields, universityprofile.FieldCountry)
+}
+
+// SetIsDoubleFirstClass sets the "is_double_first_class" field.
+func (m *UniversityProfileMutation) SetIsDoubleFirstClass(b bool) {
+	m.is_double_first_class = &b
+}
+
+// IsDoubleFirstClass returns the value of the "is_double_first_class" field in the mutation.
+func (m *UniversityProfileMutation) IsDoubleFirstClass() (r bool, exists bool) {
+	v := m.is_double_first_class
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDoubleFirstClass returns the old "is_double_first_class" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldIsDoubleFirstClass(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDoubleFirstClass is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDoubleFirstClass requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDoubleFirstClass: %w", err)
+	}
+	return oldValue.IsDoubleFirstClass, nil
+}
+
+// ResetIsDoubleFirstClass resets all changes to the "is_double_first_class" field.
+func (m *UniversityProfileMutation) ResetIsDoubleFirstClass() {
+	m.is_double_first_class = nil
+}
+
+// SetIsProject985 sets the "is_project_985" field.
+func (m *UniversityProfileMutation) SetIsProject985(b bool) {
+	m.is_project_985 = &b
+}
+
+// IsProject985 returns the value of the "is_project_985" field in the mutation.
+func (m *UniversityProfileMutation) IsProject985() (r bool, exists bool) {
+	v := m.is_project_985
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsProject985 returns the old "is_project_985" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldIsProject985(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsProject985 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsProject985 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsProject985: %w", err)
+	}
+	return oldValue.IsProject985, nil
+}
+
+// ResetIsProject985 resets all changes to the "is_project_985" field.
+func (m *UniversityProfileMutation) ResetIsProject985() {
+	m.is_project_985 = nil
+}
+
+// SetIsProject211 sets the "is_project_211" field.
+func (m *UniversityProfileMutation) SetIsProject211(b bool) {
+	m.is_project_211 = &b
+}
+
+// IsProject211 returns the value of the "is_project_211" field in the mutation.
+func (m *UniversityProfileMutation) IsProject211() (r bool, exists bool) {
+	v := m.is_project_211
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsProject211 returns the old "is_project_211" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldIsProject211(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsProject211 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsProject211 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsProject211: %w", err)
+	}
+	return oldValue.IsProject211, nil
+}
+
+// ResetIsProject211 resets all changes to the "is_project_211" field.
+func (m *UniversityProfileMutation) ResetIsProject211() {
+	m.is_project_211 = nil
+}
+
+// SetIsQsTop100 sets the "is_qs_top100" field.
+func (m *UniversityProfileMutation) SetIsQsTop100(b bool) {
+	m.is_qs_top100 = &b
+}
+
+// IsQsTop100 returns the value of the "is_qs_top100" field in the mutation.
+func (m *UniversityProfileMutation) IsQsTop100() (r bool, exists bool) {
+	v := m.is_qs_top100
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsQsTop100 returns the old "is_qs_top100" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldIsQsTop100(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsQsTop100 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsQsTop100 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsQsTop100: %w", err)
+	}
+	return oldValue.IsQsTop100, nil
+}
+
+// ResetIsQsTop100 resets all changes to the "is_qs_top100" field.
+func (m *UniversityProfileMutation) ResetIsQsTop100() {
+	m.is_qs_top100 = nil
+}
+
+// SetRankQs sets the "rank_qs" field.
+func (m *UniversityProfileMutation) SetRankQs(i int) {
+	m.rank_qs = &i
+	m.addrank_qs = nil
+}
+
+// RankQs returns the value of the "rank_qs" field in the mutation.
+func (m *UniversityProfileMutation) RankQs() (r int, exists bool) {
+	v := m.rank_qs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRankQs returns the old "rank_qs" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldRankQs(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRankQs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRankQs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRankQs: %w", err)
+	}
+	return oldValue.RankQs, nil
+}
+
+// AddRankQs adds i to the "rank_qs" field.
+func (m *UniversityProfileMutation) AddRankQs(i int) {
+	if m.addrank_qs != nil {
+		*m.addrank_qs += i
+	} else {
+		m.addrank_qs = &i
+	}
+}
+
+// AddedRankQs returns the value that was added to the "rank_qs" field in this mutation.
+func (m *UniversityProfileMutation) AddedRankQs() (r int, exists bool) {
+	v := m.addrank_qs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearRankQs clears the value of the "rank_qs" field.
+func (m *UniversityProfileMutation) ClearRankQs() {
+	m.rank_qs = nil
+	m.addrank_qs = nil
+	m.clearedFields[universityprofile.FieldRankQs] = struct{}{}
+}
+
+// RankQsCleared returns if the "rank_qs" field was cleared in this mutation.
+func (m *UniversityProfileMutation) RankQsCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldRankQs]
+	return ok
+}
+
+// ResetRankQs resets all changes to the "rank_qs" field.
+func (m *UniversityProfileMutation) ResetRankQs() {
+	m.rank_qs = nil
+	m.addrank_qs = nil
+	delete(m.clearedFields, universityprofile.FieldRankQs)
+}
+
+// SetOverallScore sets the "overall_score" field.
+func (m *UniversityProfileMutation) SetOverallScore(f float64) {
+	m.overall_score = &f
+	m.addoverall_score = nil
+}
+
+// OverallScore returns the value of the "overall_score" field in the mutation.
+func (m *UniversityProfileMutation) OverallScore() (r float64, exists bool) {
+	v := m.overall_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOverallScore returns the old "overall_score" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldOverallScore(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOverallScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOverallScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOverallScore: %w", err)
+	}
+	return oldValue.OverallScore, nil
+}
+
+// AddOverallScore adds f to the "overall_score" field.
+func (m *UniversityProfileMutation) AddOverallScore(f float64) {
+	if m.addoverall_score != nil {
+		*m.addoverall_score += f
+	} else {
+		m.addoverall_score = &f
+	}
+}
+
+// AddedOverallScore returns the value that was added to the "overall_score" field in this mutation.
+func (m *UniversityProfileMutation) AddedOverallScore() (r float64, exists bool) {
+	v := m.addoverall_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearOverallScore clears the value of the "overall_score" field.
+func (m *UniversityProfileMutation) ClearOverallScore() {
+	m.overall_score = nil
+	m.addoverall_score = nil
+	m.clearedFields[universityprofile.FieldOverallScore] = struct{}{}
+}
+
+// OverallScoreCleared returns if the "overall_score" field was cleared in this mutation.
+func (m *UniversityProfileMutation) OverallScoreCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldOverallScore]
+	return ok
+}
+
+// ResetOverallScore resets all changes to the "overall_score" field.
+func (m *UniversityProfileMutation) ResetOverallScore() {
+	m.overall_score = nil
+	m.addoverall_score = nil
+	delete(m.clearedFields, universityprofile.FieldOverallScore)
+}
+
+// SetMetadata sets the "metadata" field.
+func (m *UniversityProfileMutation) SetMetadata(value map[string]interface{}) {
+	m.metadata = &value
+}
+
+// Metadata returns the value of the "metadata" field in the mutation.
+func (m *UniversityProfileMutation) Metadata() (r map[string]interface{}, exists bool) {
+	v := m.metadata
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetadata returns the old "metadata" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldMetadata(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetadata requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetadata: %w", err)
+	}
+	return oldValue.Metadata, nil
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (m *UniversityProfileMutation) ClearMetadata() {
+	m.metadata = nil
+	m.clearedFields[universityprofile.FieldMetadata] = struct{}{}
+}
+
+// MetadataCleared returns if the "metadata" field was cleared in this mutation.
+func (m *UniversityProfileMutation) MetadataCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldMetadata]
+	return ok
+}
+
+// ResetMetadata resets all changes to the "metadata" field.
+func (m *UniversityProfileMutation) ResetMetadata() {
+	m.metadata = nil
+	delete(m.clearedFields, universityprofile.FieldMetadata)
+}
+
+// SetVectorContent sets the "vector_content" field.
+func (m *UniversityProfileMutation) SetVectorContent(s string) {
+	m.vector_content = &s
+}
+
+// VectorContent returns the value of the "vector_content" field in the mutation.
+func (m *UniversityProfileMutation) VectorContent() (r string, exists bool) {
+	v := m.vector_content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVectorContent returns the old "vector_content" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldVectorContent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVectorContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVectorContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVectorContent: %w", err)
+	}
+	return oldValue.VectorContent, nil
+}
+
+// ClearVectorContent clears the value of the "vector_content" field.
+func (m *UniversityProfileMutation) ClearVectorContent() {
+	m.vector_content = nil
+	m.clearedFields[universityprofile.FieldVectorContent] = struct{}{}
+}
+
+// VectorContentCleared returns if the "vector_content" field was cleared in this mutation.
+func (m *UniversityProfileMutation) VectorContentCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldVectorContent]
+	return ok
+}
+
+// ResetVectorContent resets all changes to the "vector_content" field.
+func (m *UniversityProfileMutation) ResetVectorContent() {
+	m.vector_content = nil
+	delete(m.clearedFields, universityprofile.FieldVectorContent)
+}
+
+// SetVector sets the "vector" field.
+func (m *UniversityProfileMutation) SetVector(pg *pgvector.Vector) {
+	m.vector = &pg
+}
+
+// Vector returns the value of the "vector" field in the mutation.
+func (m *UniversityProfileMutation) Vector() (r *pgvector.Vector, exists bool) {
+	v := m.vector
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVector returns the old "vector" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldVector(ctx context.Context) (v *pgvector.Vector, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVector is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVector requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVector: %w", err)
+	}
+	return oldValue.Vector, nil
+}
+
+// ClearVector clears the value of the "vector" field.
+func (m *UniversityProfileMutation) ClearVector() {
+	m.vector = nil
+	m.clearedFields[universityprofile.FieldVector] = struct{}{}
+}
+
+// VectorCleared returns if the "vector" field was cleared in this mutation.
+func (m *UniversityProfileMutation) VectorCleared() bool {
+	_, ok := m.clearedFields[universityprofile.FieldVector]
+	return ok
+}
+
+// ResetVector resets all changes to the "vector" field.
+func (m *UniversityProfileMutation) ResetVector() {
+	m.vector = nil
+	delete(m.clearedFields, universityprofile.FieldVector)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UniversityProfileMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UniversityProfileMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UniversityProfileMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UniversityProfileMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UniversityProfileMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UniversityProfile entity.
+// If the UniversityProfile object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UniversityProfileMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UniversityProfileMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the UniversityProfileMutation builder.
+func (m *UniversityProfileMutation) Where(ps ...predicate.UniversityProfile) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UniversityProfileMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UniversityProfileMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UniversityProfile, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UniversityProfileMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UniversityProfileMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UniversityProfile).
+func (m *UniversityProfileMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UniversityProfileMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.deleted_at != nil {
+		fields = append(fields, universityprofile.FieldDeletedAt)
+	}
+	if m.name_cn != nil {
+		fields = append(fields, universityprofile.FieldNameCn)
+	}
+	if m.name_en != nil {
+		fields = append(fields, universityprofile.FieldNameEn)
+	}
+	if m.alias != nil {
+		fields = append(fields, universityprofile.FieldAlias)
+	}
+	if m.country != nil {
+		fields = append(fields, universityprofile.FieldCountry)
+	}
+	if m.is_double_first_class != nil {
+		fields = append(fields, universityprofile.FieldIsDoubleFirstClass)
+	}
+	if m.is_project_985 != nil {
+		fields = append(fields, universityprofile.FieldIsProject985)
+	}
+	if m.is_project_211 != nil {
+		fields = append(fields, universityprofile.FieldIsProject211)
+	}
+	if m.is_qs_top100 != nil {
+		fields = append(fields, universityprofile.FieldIsQsTop100)
+	}
+	if m.rank_qs != nil {
+		fields = append(fields, universityprofile.FieldRankQs)
+	}
+	if m.overall_score != nil {
+		fields = append(fields, universityprofile.FieldOverallScore)
+	}
+	if m.metadata != nil {
+		fields = append(fields, universityprofile.FieldMetadata)
+	}
+	if m.vector_content != nil {
+		fields = append(fields, universityprofile.FieldVectorContent)
+	}
+	if m.vector != nil {
+		fields = append(fields, universityprofile.FieldVector)
+	}
+	if m.created_at != nil {
+		fields = append(fields, universityprofile.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, universityprofile.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UniversityProfileMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case universityprofile.FieldDeletedAt:
+		return m.DeletedAt()
+	case universityprofile.FieldNameCn:
+		return m.NameCn()
+	case universityprofile.FieldNameEn:
+		return m.NameEn()
+	case universityprofile.FieldAlias:
+		return m.Alias()
+	case universityprofile.FieldCountry:
+		return m.Country()
+	case universityprofile.FieldIsDoubleFirstClass:
+		return m.IsDoubleFirstClass()
+	case universityprofile.FieldIsProject985:
+		return m.IsProject985()
+	case universityprofile.FieldIsProject211:
+		return m.IsProject211()
+	case universityprofile.FieldIsQsTop100:
+		return m.IsQsTop100()
+	case universityprofile.FieldRankQs:
+		return m.RankQs()
+	case universityprofile.FieldOverallScore:
+		return m.OverallScore()
+	case universityprofile.FieldMetadata:
+		return m.Metadata()
+	case universityprofile.FieldVectorContent:
+		return m.VectorContent()
+	case universityprofile.FieldVector:
+		return m.Vector()
+	case universityprofile.FieldCreatedAt:
+		return m.CreatedAt()
+	case universityprofile.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UniversityProfileMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case universityprofile.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case universityprofile.FieldNameCn:
+		return m.OldNameCn(ctx)
+	case universityprofile.FieldNameEn:
+		return m.OldNameEn(ctx)
+	case universityprofile.FieldAlias:
+		return m.OldAlias(ctx)
+	case universityprofile.FieldCountry:
+		return m.OldCountry(ctx)
+	case universityprofile.FieldIsDoubleFirstClass:
+		return m.OldIsDoubleFirstClass(ctx)
+	case universityprofile.FieldIsProject985:
+		return m.OldIsProject985(ctx)
+	case universityprofile.FieldIsProject211:
+		return m.OldIsProject211(ctx)
+	case universityprofile.FieldIsQsTop100:
+		return m.OldIsQsTop100(ctx)
+	case universityprofile.FieldRankQs:
+		return m.OldRankQs(ctx)
+	case universityprofile.FieldOverallScore:
+		return m.OldOverallScore(ctx)
+	case universityprofile.FieldMetadata:
+		return m.OldMetadata(ctx)
+	case universityprofile.FieldVectorContent:
+		return m.OldVectorContent(ctx)
+	case universityprofile.FieldVector:
+		return m.OldVector(ctx)
+	case universityprofile.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case universityprofile.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown UniversityProfile field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UniversityProfileMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case universityprofile.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case universityprofile.FieldNameCn:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNameCn(v)
+		return nil
+	case universityprofile.FieldNameEn:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNameEn(v)
+		return nil
+	case universityprofile.FieldAlias:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAlias(v)
+		return nil
+	case universityprofile.FieldCountry:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCountry(v)
+		return nil
+	case universityprofile.FieldIsDoubleFirstClass:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDoubleFirstClass(v)
+		return nil
+	case universityprofile.FieldIsProject985:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsProject985(v)
+		return nil
+	case universityprofile.FieldIsProject211:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsProject211(v)
+		return nil
+	case universityprofile.FieldIsQsTop100:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsQsTop100(v)
+		return nil
+	case universityprofile.FieldRankQs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRankQs(v)
+		return nil
+	case universityprofile.FieldOverallScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOverallScore(v)
+		return nil
+	case universityprofile.FieldMetadata:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetadata(v)
+		return nil
+	case universityprofile.FieldVectorContent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVectorContent(v)
+		return nil
+	case universityprofile.FieldVector:
+		v, ok := value.(*pgvector.Vector)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVector(v)
+		return nil
+	case universityprofile.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case universityprofile.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UniversityProfile field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UniversityProfileMutation) AddedFields() []string {
+	var fields []string
+	if m.addrank_qs != nil {
+		fields = append(fields, universityprofile.FieldRankQs)
+	}
+	if m.addoverall_score != nil {
+		fields = append(fields, universityprofile.FieldOverallScore)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UniversityProfileMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case universityprofile.FieldRankQs:
+		return m.AddedRankQs()
+	case universityprofile.FieldOverallScore:
+		return m.AddedOverallScore()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UniversityProfileMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case universityprofile.FieldRankQs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRankQs(v)
+		return nil
+	case universityprofile.FieldOverallScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOverallScore(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UniversityProfile numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UniversityProfileMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(universityprofile.FieldDeletedAt) {
+		fields = append(fields, universityprofile.FieldDeletedAt)
+	}
+	if m.FieldCleared(universityprofile.FieldNameEn) {
+		fields = append(fields, universityprofile.FieldNameEn)
+	}
+	if m.FieldCleared(universityprofile.FieldAlias) {
+		fields = append(fields, universityprofile.FieldAlias)
+	}
+	if m.FieldCleared(universityprofile.FieldCountry) {
+		fields = append(fields, universityprofile.FieldCountry)
+	}
+	if m.FieldCleared(universityprofile.FieldRankQs) {
+		fields = append(fields, universityprofile.FieldRankQs)
+	}
+	if m.FieldCleared(universityprofile.FieldOverallScore) {
+		fields = append(fields, universityprofile.FieldOverallScore)
+	}
+	if m.FieldCleared(universityprofile.FieldMetadata) {
+		fields = append(fields, universityprofile.FieldMetadata)
+	}
+	if m.FieldCleared(universityprofile.FieldVectorContent) {
+		fields = append(fields, universityprofile.FieldVectorContent)
+	}
+	if m.FieldCleared(universityprofile.FieldVector) {
+		fields = append(fields, universityprofile.FieldVector)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UniversityProfileMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UniversityProfileMutation) ClearField(name string) error {
+	switch name {
+	case universityprofile.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case universityprofile.FieldNameEn:
+		m.ClearNameEn()
+		return nil
+	case universityprofile.FieldAlias:
+		m.ClearAlias()
+		return nil
+	case universityprofile.FieldCountry:
+		m.ClearCountry()
+		return nil
+	case universityprofile.FieldRankQs:
+		m.ClearRankQs()
+		return nil
+	case universityprofile.FieldOverallScore:
+		m.ClearOverallScore()
+		return nil
+	case universityprofile.FieldMetadata:
+		m.ClearMetadata()
+		return nil
+	case universityprofile.FieldVectorContent:
+		m.ClearVectorContent()
+		return nil
+	case universityprofile.FieldVector:
+		m.ClearVector()
+		return nil
+	}
+	return fmt.Errorf("unknown UniversityProfile nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UniversityProfileMutation) ResetField(name string) error {
+	switch name {
+	case universityprofile.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case universityprofile.FieldNameCn:
+		m.ResetNameCn()
+		return nil
+	case universityprofile.FieldNameEn:
+		m.ResetNameEn()
+		return nil
+	case universityprofile.FieldAlias:
+		m.ResetAlias()
+		return nil
+	case universityprofile.FieldCountry:
+		m.ResetCountry()
+		return nil
+	case universityprofile.FieldIsDoubleFirstClass:
+		m.ResetIsDoubleFirstClass()
+		return nil
+	case universityprofile.FieldIsProject985:
+		m.ResetIsProject985()
+		return nil
+	case universityprofile.FieldIsProject211:
+		m.ResetIsProject211()
+		return nil
+	case universityprofile.FieldIsQsTop100:
+		m.ResetIsQsTop100()
+		return nil
+	case universityprofile.FieldRankQs:
+		m.ResetRankQs()
+		return nil
+	case universityprofile.FieldOverallScore:
+		m.ResetOverallScore()
+		return nil
+	case universityprofile.FieldMetadata:
+		m.ResetMetadata()
+		return nil
+	case universityprofile.FieldVectorContent:
+		m.ResetVectorContent()
+		return nil
+	case universityprofile.FieldVector:
+		m.ResetVector()
+		return nil
+	case universityprofile.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case universityprofile.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown UniversityProfile field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UniversityProfileMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UniversityProfileMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UniversityProfileMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UniversityProfileMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UniversityProfileMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UniversityProfileMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UniversityProfileMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown UniversityProfile unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UniversityProfileMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown UniversityProfile edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.

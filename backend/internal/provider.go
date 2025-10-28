@@ -41,6 +41,10 @@ import (
 	screeningrepo "github.com/chaitin/WhaleHire/backend/internal/screening/repo"
 	screeningservice "github.com/chaitin/WhaleHire/backend/internal/screening/service"
 	screeningusecase "github.com/chaitin/WhaleHire/backend/internal/screening/usecase"
+	universityV1 "github.com/chaitin/WhaleHire/backend/internal/university/handler/v1"
+	universityrepo "github.com/chaitin/WhaleHire/backend/internal/university/repo"
+	universityservice "github.com/chaitin/WhaleHire/backend/internal/university/service"
+	universityusecase "github.com/chaitin/WhaleHire/backend/internal/university/usecase"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	userrepo "github.com/chaitin/WhaleHire/backend/internal/user/repo"
 	userusecase "github.com/chaitin/WhaleHire/backend/internal/user/usecase"
@@ -109,6 +113,10 @@ var Provider = wire.NewSet(
 	screeningservice.NewMatchingService,
 	screeningusecase.NewScreeningUsecase,
 	screeningV1.NewScreeningHandler,
+	universityV1.NewUniversityHandler,
+	universityrepo.NewUniversityRepo,
+	universityusecase.NewUniversityUsecase,
+	universityservice.NewVectorService,
 	notificationV1.NewNotificationSettingHandler,
 	notificationrepo.NewNotificationEventRepo,
 	notificationrepo.NewNotificationSettingRepo,
