@@ -114,6 +114,10 @@ export function CreateJobModal({
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]); // 改为数组支持多选
   const [isLoadingSkills, setIsLoadingSkills] = useState(false);
 
+  // AI模式部门选择弹窗状态
+  const [isDepartmentSelectModalOpen, setIsDepartmentSelectModalOpen] =
+    useState(false);
+
   // 岗位职责列表
   const [responsibilities, setResponsibilities] = useState<
     Array<{ content: string; id: string }>
@@ -178,7 +182,7 @@ export function CreateJobModal({
     }
   }, [open, resetForm, fetchDepartments]);
 
-  // 更新Markdown内容显示
+  // 更新Markdown内容显示(当selectedProfile变化时强制更新DOM)
   useEffect(() => {
     if (
       markdownContentRef.current &&
@@ -189,7 +193,25 @@ export function CreateJobModal({
         selectedProfile.description_markdown ||
         selectedProfile.description ||
         '暂无岗位描述内容';
-      markdownContentRef.current.textContent = content;
+
+      // 将Markdown文本转换为HTML,为特定标题添加样式
+      const formattedContent = content
+        .replace(
+          /岗位职责：/g,
+          '<span style="font-weight: bold; font-size: 16px;">岗位职责：</span>'
+        )
+        .replace(
+          /任职要求：/g,
+          '<span style="font-weight: bold; font-size: 16px;">任职要求：</span>'
+        )
+        .replace(
+          /加分项：/g,
+          '<span style="font-weight: bold; font-size: 16px;">加分项：</span>'
+        )
+        .replace(/\n/g, '<br/>');
+
+      // 使用innerHTML来渲染带样式的HTML
+      markdownContentRef.current.innerHTML = formattedContent;
     }
   }, [selectedProfile, displayMode]);
 
@@ -489,12 +511,24 @@ export function CreateJobModal({
     setIsGenerating(true);
     try {
       const result = await generateByPrompt(aiPrompt);
+
+      // 调试日志
+      console.log('=== 生成岗位画像 ===');
+      console.log('API返回结果:', result);
+
       if (result) {
         // 生成一个临时ID(如果后端没有返回ID)
         const profileWithId = {
           ...result,
           id: result.id || `temp-${Date.now()}`,
         };
+
+        console.log('处理后的profile:', profileWithId);
+        console.log(
+          'description_markdown:',
+          profileWithId.description_markdown
+        );
+        console.log('description:', profileWithId.description);
 
         // 重置显示模式为markdown
         setDisplayMode('markdown');
@@ -619,7 +653,10 @@ export function CreateJobModal({
         if (selectedProfile.skills && selectedProfile.skills.length > 0) {
           requestData.skills = selectedProfile.skills.map((skill) => ({
             skill_id: skill.skill_id || '',
-            skill_name: skill.skill || '',
+            skill_name:
+              'skill_name' in skill && skill.skill_name
+                ? skill.skill_name
+                : skill.skill || '',
             type: skill.type as 'required' | 'bonus',
           }));
         }
@@ -1011,7 +1048,7 @@ export function CreateJobModal({
                           ))}
                           {departments.length === 0 &&
                             !isLoadingDepartments && (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="no-department" disabled>
                                 暂无部门
                               </SelectItem>
                             )}
@@ -1462,18 +1499,24 @@ export function CreateJobModal({
                         <button
                           onClick={() => {
                             if (selectedProfile) {
-                              const exists = generatedProfiles.find(
+                              const existingIndex = generatedProfiles.findIndex(
                                 (p) => p.id === selectedProfile.id
                               );
-                              if (!exists) {
-                                // 添加到列表开头
+
+                              if (existingIndex !== -1) {
+                                // 如果已存在,更新该岗位
+                                const updatedProfiles = [...generatedProfiles];
+                                updatedProfiles[existingIndex] =
+                                  selectedProfile;
+                                setGeneratedProfiles(updatedProfiles);
+                                toast.success('已更新暂存内容');
+                              } else {
+                                // 如果不存在,添加到列表开头
                                 setGeneratedProfiles([
                                   selectedProfile,
                                   ...generatedProfiles,
                                 ]);
                                 toast.success('已暂存到生成岗位概览');
-                              } else {
-                                toast.info('该岗位已在概览中');
                               }
                             }
                           }}
@@ -1530,22 +1573,50 @@ export function CreateJobModal({
                       ) : displayMode === 'markdown' ? (
                         /* Markdown 模式 */
                         <div className="space-y-5" key={selectedProfile.id}>
-                          {/* 标题 */}
+                          {/* 标题和部门 */}
                           <div className="pb-4 border-b border-gray-200">
-                            <h2
-                              key={`title-${selectedProfile.id}`}
-                              contentEditable
-                              suppressContentEditableWarning
-                              onBlur={(e) =>
-                                setSelectedProfile({
-                                  ...selectedProfile,
-                                  name: e.currentTarget.textContent || '',
-                                })
-                              }
-                              className="text-[18px] font-semibold text-gray-900 outline-none focus:bg-blue-50 px-2 py-1 rounded"
-                            >
-                              {selectedProfile.name || '岗位名称'}
-                            </h2>
+                            <div className="flex items-center justify-between">
+                              <h2
+                                key={`title-${selectedProfile.id}`}
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) =>
+                                  setSelectedProfile({
+                                    ...selectedProfile,
+                                    name: e.currentTarget.textContent || '',
+                                  })
+                                }
+                                className="text-[18px] font-semibold text-gray-900 outline-none focus:bg-blue-50 px-2 py-1 rounded"
+                              >
+                                {selectedProfile.name || '岗位名称'}
+                              </h2>
+
+                              {/* 部门显示/选择 - 右对齐 */}
+                              {selectedProfile.department ? (
+                                // 已选择部门,显示部门名称+icon
+                                <div
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-[13px] cursor-pointer hover:bg-blue-100 transition-colors"
+                                  onClick={() =>
+                                    setIsDepartmentSelectModalOpen(true)
+                                  }
+                                  title="点击修改所属部门"
+                                >
+                                  <Building2 className="w-3.5 h-3.5" />
+                                  <span>{selectedProfile.department}</span>
+                                </div>
+                              ) : (
+                                // 未选择部门,显示图标按钮
+                                <button
+                                  onClick={() =>
+                                    setIsDepartmentSelectModalOpen(true)
+                                  }
+                                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                  title="选择所属部门"
+                                >
+                                  <Building2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           {/* Markdown内容 */}
@@ -1554,14 +1625,43 @@ export function CreateJobModal({
                             contentEditable
                             suppressContentEditableWarning
                             onBlur={(e) => {
-                              const text = e.currentTarget.textContent || '';
+                              // 从innerHTML获取HTML,然后转换为纯文本,保留换行
+                              const html = e.currentTarget.innerHTML;
+
+                              // 先将块级元素和br标签转换为换行符
+                              let text = html
+                                // 处理各种换行标签
+                                .replace(/<br\s*\/?>/gi, '\n')
+                                .replace(/<div>/gi, '\n')
+                                .replace(/<\/div>/gi, '')
+                                .replace(/<p>/gi, '\n')
+                                .replace(/<\/p>/gi, '')
+                                // 处理span标签(保留内容,移除标签)
+                                .replace(/<span[^>]*>/gi, '')
+                                .replace(/<\/span>/gi, '');
+
+                              // 移除其他所有HTML标签
+                              const tempDiv = document.createElement('div');
+                              tempDiv.innerHTML = text;
+                              text =
+                                tempDiv.textContent || tempDiv.innerText || '';
+
+                              // 清理首尾的换行,但保留内部的所有换行
+                              text = text.trim();
+                              // 将连续的3个以上换行替换为2个(保留段落间距)
+                              text = text.replace(/\n{3,}/g, '\n\n');
+
                               setSelectedProfile({
                                 ...selectedProfile,
                                 description_markdown: text,
                               });
                             }}
                             className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap outline-none focus:bg-blue-50 p-2 rounded min-h-[200px]"
-                          />
+                          >
+                            {selectedProfile.description_markdown ||
+                              selectedProfile.description ||
+                              '暂无岗位描述内容'}
+                          </div>
                         </div>
                       ) : (
                         /* 结构化模式 */
@@ -2006,6 +2106,109 @@ export function CreateJobModal({
                   selectedSkillIds.length > 0 &&
                   (e.currentTarget.style.backgroundColor = '#7bb8ff')
                 }
+              >
+                确定
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI模式 - 部门选择弹窗 */}
+      <Dialog
+        open={isDepartmentSelectModalOpen}
+        onOpenChange={setIsDepartmentSelectModalOpen}
+      >
+        <DialogContent
+          className="max-w-md"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-[16px] font-medium text-gray-900">
+              选择所属部门
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* 部门选择下拉框 */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[14px] font-medium text-gray-700">
+                  所属部门:
+                </Label>
+                {/* 新增按钮 - 黑色字体,带边框 */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAddDepartment}
+                  className="h-7 px-2 text-[13px] text-gray-900 hover:bg-gray-100 border border-gray-300 rounded"
+                >
+                  + 新增
+                </Button>
+              </div>
+              <Select
+                value={selectedProfile?.department_id || ''}
+                onValueChange={(value) => {
+                  if (selectedProfile) {
+                    // 找到选中的部门对象
+                    const selectedDept = departments.find(
+                      (dept) => dept.id === value
+                    );
+                    setSelectedProfile({
+                      ...selectedProfile,
+                      department_id: value,
+                      department: selectedDept?.name || '',
+                    });
+                  }
+                }}
+                disabled={isLoadingDepartments}
+              >
+                <SelectTrigger className="text-[14px] border-gray-300 focus:border-blue-500 rounded-lg bg-white">
+                  <SelectValue
+                    placeholder={isLoadingDepartments ? '加载中...' : '请选择'}
+                  />
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  side="bottom"
+                  align="start"
+                  className="max-h-[300px]"
+                >
+                  {departments.length === 0 ? (
+                    <SelectItem value="no-department" disabled>
+                      暂无部门
+                    </SelectItem>
+                  ) : (
+                    departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 底部按钮 */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsDepartmentSelectModalOpen(false)}
+                className="text-[14px]"
+              >
+                取消
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsDepartmentSelectModalOpen(false);
+                  if (selectedProfile?.department) {
+                    toast.success('部门选择成功');
+                  }
+                }}
+                className="text-[14px] text-white"
+                style={{
+                  backgroundColor: '#2563EB',
+                }}
               >
                 确定
               </Button>
