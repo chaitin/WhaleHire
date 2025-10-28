@@ -24,6 +24,7 @@ import (
 	resumeMailboxSettingV1 "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/handler/v1"
 	resumemailboxscheduler "github.com/chaitin/WhaleHire/backend/internal/resume_mailbox/scheduler"
 	screeningV1 "github.com/chaitin/WhaleHire/backend/internal/screening/handler/v1"
+	universityV1 "github.com/chaitin/WhaleHire/backend/internal/university/handler/v1"
 	userV1 "github.com/chaitin/WhaleHire/backend/internal/user/handler/v1"
 	"github.com/chaitin/WhaleHire/backend/pkg/version"
 )
@@ -40,6 +41,7 @@ type Server struct {
 	departmentV1             *departmentV1.DepartmentHandler
 	jobapplicationV1         *jobapplicationV1.JobApplicationHandler
 	screeningV1              *screeningV1.ScreeningHandler
+	universityV1             *universityV1.UniversityHandler
 	auditV1                  *auditV1.AuditHandler
 	fileV1                   *fileV1.FileHandler
 	notificationWorker       *notificationworker.NotificationWorker

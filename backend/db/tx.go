@@ -84,6 +84,8 @@ type Tx struct {
 	ScreeningTaskResume *ScreeningTaskResumeClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
+	// UniversityProfile is the client for interacting with the UniversityProfile builders.
+	UniversityProfile *UniversityProfileClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserIdentity is the client for interacting with the UserIdentity builders.
@@ -256,6 +258,7 @@ func (tx *Tx) init() {
 	tx.ScreeningTask = NewScreeningTaskClient(tx.config)
 	tx.ScreeningTaskResume = NewScreeningTaskResumeClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
+	tx.UniversityProfile = NewUniversityProfileClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserIdentity = NewUserIdentityClient(tx.config)
 	tx.UserLoginHistory = NewUserLoginHistoryClient(tx.config)

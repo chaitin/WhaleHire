@@ -111,6 +111,9 @@ type ScreeningTaskResume func(*sql.Selector)
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
 
+// UniversityProfile is the predicate function for universityprofile builders.
+type UniversityProfile func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

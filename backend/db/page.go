@@ -501,6 +501,20 @@ func (s *SettingQuery) Page(ctx context.Context, page, size int) ([]*Setting, *P
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
 
+func (up *UniversityProfileQuery) Page(ctx context.Context, page, size int) ([]*UniversityProfile, *PageInfo, error) {
+	cnt, err := up.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := up.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}
+
 func (u *UserQuery) Page(ctx context.Context, page, size int) ([]*User, *PageInfo, error) {
 	cnt, err := u.Count(ctx)
 	if err != nil {

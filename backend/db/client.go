@@ -51,6 +51,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
+	"github.com/chaitin/WhaleHire/backend/db/universityprofile"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -133,6 +134,8 @@ type Client struct {
 	ScreeningTaskResume *ScreeningTaskResumeClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
+	// UniversityProfile is the client for interacting with the UniversityProfile builders.
+	UniversityProfile *UniversityProfileClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserIdentity is the client for interacting with the UserIdentity builders.
@@ -185,6 +188,7 @@ func (c *Client) init() {
 	c.ScreeningTask = NewScreeningTaskClient(c.config)
 	c.ScreeningTaskResume = NewScreeningTaskResumeClient(c.config)
 	c.Setting = NewSettingClient(c.config)
+	c.UniversityProfile = NewUniversityProfileClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserIdentity = NewUserIdentityClient(c.config)
 	c.UserLoginHistory = NewUserLoginHistoryClient(c.config)
@@ -315,6 +319,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ScreeningTask:            NewScreeningTaskClient(cfg),
 		ScreeningTaskResume:      NewScreeningTaskResumeClient(cfg),
 		Setting:                  NewSettingClient(cfg),
+		UniversityProfile:        NewUniversityProfileClient(cfg),
 		User:                     NewUserClient(cfg),
 		UserIdentity:             NewUserIdentityClient(cfg),
 		UserLoginHistory:         NewUserLoginHistoryClient(cfg),
@@ -372,6 +377,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ScreeningTask:            NewScreeningTaskClient(cfg),
 		ScreeningTaskResume:      NewScreeningTaskResumeClient(cfg),
 		Setting:                  NewSettingClient(cfg),
+		UniversityProfile:        NewUniversityProfileClient(cfg),
 		User:                     NewUserClient(cfg),
 		UserIdentity:             NewUserIdentityClient(cfg),
 		UserLoginHistory:         NewUserLoginHistoryClient(cfg),
@@ -413,7 +419,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ResumeMailboxCursor, c.ResumeMailboxSetting, c.ResumeMailboxStatistic,
 		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
 		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
-		c.User, c.UserIdentity, c.UserLoginHistory,
+		c.UniversityProfile, c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Use(hooks...)
 	}
@@ -432,7 +438,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ResumeMailboxCursor, c.ResumeMailboxSetting, c.ResumeMailboxStatistic,
 		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
 		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
-		c.User, c.UserIdentity, c.UserLoginHistory,
+		c.UniversityProfile, c.User, c.UserIdentity, c.UserLoginHistory,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -511,6 +517,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ScreeningTaskResume.mutate(ctx, m)
 	case *SettingMutation:
 		return c.Setting.mutate(ctx, m)
+	case *UniversityProfileMutation:
+		return c.UniversityProfile.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserIdentityMutation:
@@ -6341,6 +6349,141 @@ func (c *SettingClient) mutate(ctx context.Context, m *SettingMutation) (Value, 
 	}
 }
 
+// UniversityProfileClient is a client for the UniversityProfile schema.
+type UniversityProfileClient struct {
+	config
+}
+
+// NewUniversityProfileClient returns a client for the UniversityProfile from the given config.
+func NewUniversityProfileClient(c config) *UniversityProfileClient {
+	return &UniversityProfileClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `universityprofile.Hooks(f(g(h())))`.
+func (c *UniversityProfileClient) Use(hooks ...Hook) {
+	c.hooks.UniversityProfile = append(c.hooks.UniversityProfile, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `universityprofile.Intercept(f(g(h())))`.
+func (c *UniversityProfileClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UniversityProfile = append(c.inters.UniversityProfile, interceptors...)
+}
+
+// Create returns a builder for creating a UniversityProfile entity.
+func (c *UniversityProfileClient) Create() *UniversityProfileCreate {
+	mutation := newUniversityProfileMutation(c.config, OpCreate)
+	return &UniversityProfileCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UniversityProfile entities.
+func (c *UniversityProfileClient) CreateBulk(builders ...*UniversityProfileCreate) *UniversityProfileCreateBulk {
+	return &UniversityProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UniversityProfileClient) MapCreateBulk(slice any, setFunc func(*UniversityProfileCreate, int)) *UniversityProfileCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UniversityProfileCreateBulk{err: fmt.Errorf("calling to UniversityProfileClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UniversityProfileCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UniversityProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UniversityProfile.
+func (c *UniversityProfileClient) Update() *UniversityProfileUpdate {
+	mutation := newUniversityProfileMutation(c.config, OpUpdate)
+	return &UniversityProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UniversityProfileClient) UpdateOne(up *UniversityProfile) *UniversityProfileUpdateOne {
+	mutation := newUniversityProfileMutation(c.config, OpUpdateOne, withUniversityProfile(up))
+	return &UniversityProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UniversityProfileClient) UpdateOneID(id uuid.UUID) *UniversityProfileUpdateOne {
+	mutation := newUniversityProfileMutation(c.config, OpUpdateOne, withUniversityProfileID(id))
+	return &UniversityProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UniversityProfile.
+func (c *UniversityProfileClient) Delete() *UniversityProfileDelete {
+	mutation := newUniversityProfileMutation(c.config, OpDelete)
+	return &UniversityProfileDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UniversityProfileClient) DeleteOne(up *UniversityProfile) *UniversityProfileDeleteOne {
+	return c.DeleteOneID(up.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UniversityProfileClient) DeleteOneID(id uuid.UUID) *UniversityProfileDeleteOne {
+	builder := c.Delete().Where(universityprofile.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UniversityProfileDeleteOne{builder}
+}
+
+// Query returns a query builder for UniversityProfile.
+func (c *UniversityProfileClient) Query() *UniversityProfileQuery {
+	return &UniversityProfileQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUniversityProfile},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UniversityProfile entity by its id.
+func (c *UniversityProfileClient) Get(ctx context.Context, id uuid.UUID) (*UniversityProfile, error) {
+	return c.Query().Where(universityprofile.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UniversityProfileClient) GetX(ctx context.Context, id uuid.UUID) *UniversityProfile {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UniversityProfileClient) Hooks() []Hook {
+	hooks := c.hooks.UniversityProfile
+	return append(hooks[:len(hooks):len(hooks)], universityprofile.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UniversityProfileClient) Interceptors() []Interceptor {
+	inters := c.inters.UniversityProfile
+	return append(inters[:len(inters):len(inters)], universityprofile.Interceptors[:]...)
+}
+
+func (c *UniversityProfileClient) mutate(ctx context.Context, m *UniversityProfileMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UniversityProfileCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UniversityProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UniversityProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UniversityProfileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown UniversityProfile mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -6882,8 +7025,8 @@ type (
 		ResumeEducation, ResumeExperience, ResumeJobApplication, ResumeLog,
 		ResumeMailboxCursor, ResumeMailboxSetting, ResumeMailboxStatistic,
 		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
-		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
-		UserIdentity, UserLoginHistory []ent.Hook
+		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting,
+		UniversityProfile, User, UserIdentity, UserLoginHistory []ent.Hook
 	}
 	inters struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, AuditLog, Conversation,
@@ -6893,8 +7036,8 @@ type (
 		ResumeEducation, ResumeExperience, ResumeJobApplication, ResumeLog,
 		ResumeMailboxCursor, ResumeMailboxSetting, ResumeMailboxStatistic,
 		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
-		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting, User,
-		UserIdentity, UserLoginHistory []ent.Interceptor
+		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting,
+		UniversityProfile, User, UserIdentity, UserLoginHistory []ent.Interceptor
 	}
 )
 
