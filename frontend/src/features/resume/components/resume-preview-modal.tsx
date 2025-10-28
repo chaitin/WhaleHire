@@ -168,7 +168,7 @@ export function ResumePreviewModal({
                 className="px-8 py-5 border-b border-gray-200"
                 style={{
                   background:
-                    'linear-gradient(135deg, #8b5cf6 0%, #7bb8ff 100%)',
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                 }}
               >
                 {/* 姓名和操作按钮 */}
@@ -221,28 +221,30 @@ export function ResumePreviewModal({
                           {displayData.name}
                         </h1>
                       )}
-                      {/* 岗位名称展示 */}
-                      {displayData.job_names &&
-                        displayData.job_names.length > 0 && (
+                      {/* 岗位名称展示 - 从job_positions获取,加粗 */}
+                      {displayData.job_positions &&
+                        displayData.job_positions.length > 0 && (
                           <div className="relative group">
-                            <span className="text-sm text-white/90">
-                              {displayData.job_names.length === 1
-                                ? displayData.job_names[0]
-                                : `${displayData.job_names[0]} 等${displayData.job_names.length}个`}
+                            <span className="text-sm font-semibold text-white/90">
+                              {displayData.job_positions.length === 1
+                                ? displayData.job_positions[0].job_title
+                                : `${displayData.job_positions[0].job_title} 等${displayData.job_positions.length}个岗位`}
                             </span>
                             {/* Hover展示所有岗位 */}
-                            {displayData.job_names.length > 1 && (
+                            {displayData.job_positions.length > 1 && (
                               <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-10">
                                 <div className="bg-white rounded-lg shadow-lg p-3 min-w-[200px]">
                                   <div className="space-y-1">
-                                    {displayData.job_names.map((job, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="text-sm text-[#1E293B] py-1"
-                                      >
-                                        {job}
-                                      </div>
-                                    ))}
+                                    {displayData.job_positions.map(
+                                      (jobPos, idx) => (
+                                        <div
+                                          key={jobPos.id || idx}
+                                          className="text-sm text-[#1E293B] py-1"
+                                        >
+                                          {jobPos.job_title}
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -398,8 +400,16 @@ export function ResumePreviewModal({
                 </div>
               </div>
 
-              {/* 内容区域 - 所有内容垂直滚动展示 */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 bg-white space-y-6">
+              {/* 内容区域 - 所有内容垂直滚动展示,添加科技感线条 */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 bg-white space-y-6 relative">
+                {/* 科技感装饰线条 - 提高透明度使其更清晰 */}
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                  <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                  <div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
+                  <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                  <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-blue-500 to-transparent"></div>
+                  <div className="absolute top-0 left-3/4 w-px h-full bg-gradient-to-b from-transparent via-purple-500 to-transparent"></div>
+                </div>
                 {/* 求职意向 */}
                 <JobIntentionSection
                   resumeDetail={displayData}
@@ -529,10 +539,16 @@ function IntroSection({
 
   return (
     <div className="space-y-3">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-xl font-bold text-[#1E293B]">个人简介</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-purple-200 to-transparent"></div>
       </div>
 
       {/* 内容区 */}
@@ -576,10 +592,16 @@ function JobIntentionSection({
 
   return (
     <div className="space-y-3">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-lg font-bold text-[#1E293B]">求职意向</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-green-300 via-teal-200 to-transparent"></div>
       </div>
 
       {/* 三项内容一排展示 - 左右对齐 */}
@@ -679,10 +701,16 @@ function ExperienceSection({
 
   return (
     <div className="space-y-3">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-lg font-bold text-[#1E293B]">工作经验</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-purple-200 to-transparent"></div>
       </div>
 
       {/* 工作经历列表 */}
@@ -696,7 +724,7 @@ function ExperienceSection({
                 className="w-6 h-6 rounded-full flex items-center justify-center"
                 style={{
                   background:
-                    'linear-gradient(135deg, #8b5cf6 0%, #7bb8ff 100%)',
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                 }}
               >
                 <Briefcase className="w-3.5 h-3.5 text-white" />
@@ -815,10 +843,16 @@ function EducationSection({
 
   return (
     <div className="space-y-3">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-lg font-bold text-[#1E293B]">教育背景</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-green-300 via-teal-200 to-transparent"></div>
       </div>
 
       {/* 教育经历列表 */}
@@ -839,7 +873,7 @@ function EducationSection({
                   className="w-6 h-6 rounded-full flex items-center justify-center"
                   style={{
                     background:
-                      'linear-gradient(135deg, #8b5cf6 0%, #7bb8ff 100%)',
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                   }}
                 >
                   <GraduationCap className="w-3.5 h-3.5 text-white" />
@@ -996,10 +1030,16 @@ function SkillsSection({
 
   return (
     <div className="space-y-6">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-lg font-bold text-[#1E293B]">技能专长</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-purple-300 via-pink-200 to-transparent"></div>
       </div>
 
       {/* 技术技能 - 带进度条 */}
@@ -1026,7 +1066,7 @@ function SkillsSection({
                     style={{
                       width: getProgressWidth(skill.level),
                       background:
-                        'linear-gradient(90deg, #8b5cf6 0%, #7bb8ff 100%)',
+                        'linear-gradient(90deg, #7bb8ff 0%, #3F3663 100%)',
                     }}
                   />
                 </div>
@@ -1113,10 +1153,16 @@ function ProjectsSection({
 
   return (
     <div className="space-y-3">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-lg font-bold text-[#1E293B]">项目经历</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-cyan-200 to-transparent"></div>
       </div>
 
       {/* 项目列表 */}
@@ -1136,7 +1182,7 @@ function ProjectsSection({
                   className="w-6 h-6 rounded-full flex items-center justify-center"
                   style={{
                     background:
-                      'linear-gradient(135deg, #8b5cf6 0%, #7bb8ff 100%)',
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                   }}
                 >
                   <FolderGit2 className="w-3.5 h-3.5 text-white" />
@@ -1261,7 +1307,11 @@ function ProjectsSection({
                         {techArray.map((tech, idx) => (
                           <span
                             key={idx}
-                            className="inline-block px-3 py-1 text-xs bg-[#7bb8ff] text-white rounded-full"
+                            className="inline-block px-3 py-1 text-xs text-white rounded-full"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                            }}
                           >
                             {tech}
                           </span>
@@ -1347,10 +1397,16 @@ function CertificatesSection({
 
   return (
     <div className="space-y-3">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-xl font-bold text-[#1E293B]">荣誉与资格证书</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-yellow-300 via-amber-200 to-transparent"></div>
       </div>
 
       {/* 证书卡片列表 */}
@@ -1435,10 +1491,16 @@ function OtherSection({
 
   return (
     <div className="space-y-3">
-      {/* 标题区 - 带左侧蓝色装饰条 */}
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
       <div className="flex items-center gap-3">
-        <div className="w-1 h-7 bg-[#7bb8ff] rounded" />
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
         <h3 className="text-xl font-bold text-[#1E293B]">其他</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-gray-300 via-slate-200 to-transparent"></div>
       </div>
 
       {/* 内容区 */}

@@ -162,7 +162,12 @@ export function Sidebar({
       {/* Logo */}
       <div className="flex h-16 items-center justify-between gap-2 border-b px-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7bb8ff]">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-lg"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
+          >
             <svg
               width="18"
               height="18"
@@ -283,7 +288,13 @@ export function Sidebar({
         <div className="border-t px-4 pt-4 pb-4">
           <div className="rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 border border-[#7bb8ff] p-4 opacity-60 cursor-not-allowed">
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7bb8ff]">
+              <div
+                className="flex h-6 w-6 items-center justify-center rounded-full"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
+              >
                 <Rocket className="h-3 w-3 text-white" />
               </div>
               <span className="text-sm font-medium text-gray-700">
@@ -295,7 +306,10 @@ export function Sidebar({
             </p>
             <button
               disabled
-              className="w-full rounded-md bg-[#7bb8ff] px-3 py-2 text-xs font-medium text-white cursor-not-allowed opacity-70"
+              className="w-full rounded-md px-3 py-2 text-xs font-medium text-white cursor-not-allowed opacity-70"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
             >
               立即升级
             </button>

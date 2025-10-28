@@ -149,7 +149,15 @@ export default function LoginPage() {
             {/* Subtitle */}
             <h2 className="text-3xl font-semibold text-gray-900 text-left">
               智能招聘
-              <span className="text-[#7bb8ff] ml-3">AI驱动未来</span>
+              <span
+                className="ml-3 bg-clip-text text-transparent"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
+              >
+                AI驱动未来
+              </span>
             </h2>
 
             {/* Description */}
@@ -164,7 +172,13 @@ export default function LoginPage() {
                   {/* Tech Background Pattern */}
                   <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-4 left-4 w-8 h-8 border-2 border-blue-400 rounded rotate-45"></div>
-                    <div className="absolute top-8 right-8 w-6 h-6 bg-[#7bb8ff] rounded-full"></div>
+                    <div
+                      className="absolute top-8 right-8 w-6 h-6 rounded-full"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }}
+                    ></div>
                     <div className="absolute bottom-8 left-8 w-4 h-4 bg-purple-400 rounded"></div>
                     <div className="absolute bottom-4 right-12 w-10 h-10 border-2 border-indigo-400 rounded-full"></div>
                   </div>
@@ -184,7 +198,13 @@ export default function LoginPage() {
                           </svg>
                         </div>
                         {/* Floating particles */}
-                        <div className="absolute -top-2 -right-2 w-4 h-4 bg-[#7bb8ff] rounded-full animate-pulse"></div>
+                        <div
+                          className="absolute -top-2 -right-2 w-4 h-4 rounded-full animate-pulse"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                          }}
+                        ></div>
                         <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-blue-400 rounded-full animate-pulse delay-300"></div>
                       </div>
 
@@ -203,8 +223,20 @@ export default function LoginPage() {
                         <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                           <div className="w-4 h-4 bg-blue-500 rounded"></div>
                         </div>
-                        <div className="w-8 h-8 bg-[#7bb8ff]/20 rounded-lg flex items-center justify-center">
-                          <div className="w-4 h-4 bg-[#7bb8ff] rounded-full"></div>
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(123, 184, 255, 0.2) 0%, rgba(63, 54, 99, 0.2) 100%)',
+                          }}
+                        >
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                            }}
+                          ></div>
                         </div>
                         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                           <div className="w-4 h-4 bg-purple-500 rounded rotate-45"></div>
@@ -328,8 +360,16 @@ export default function LoginPage() {
                   'w-full font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#7bb8ff] focus:ring-offset-2',
                   isLoading
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-[#7bb8ff] hover:bg-[#5aa3e6] text-white'
+                    : 'hover:bg-[#5aa3e6] text-white'
                 )}
+                style={
+                  !isLoading
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }
+                    : undefined
+                }
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -380,7 +420,11 @@ export default function LoginPage() {
                   还没有账号？
                   <Link
                     to="/register"
-                    className="text-[#7bb8ff] font-medium hover:text-[#5aa3e6] ml-1"
+                    className="font-medium ml-1 bg-clip-text text-transparent hover:opacity-80"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                    }}
                   >
                     立即注册
                   </Link>

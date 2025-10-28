@@ -85,7 +85,10 @@ export function ResumeFiltersComponent({
         </div>
         <Button
           type="button"
-          className="h-11 rounded-lg px-6"
+          className="h-11 rounded-lg px-6 text-white"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
           onClick={onSearch}
         >
           搜索

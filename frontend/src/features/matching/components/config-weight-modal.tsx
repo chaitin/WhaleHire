@@ -516,10 +516,16 @@ export function ConfigWeightModal({
               disabled={!isWeightValid}
               className={cn(
                 'px-6 text-white',
-                isWeightValid
-                  ? 'bg-primary hover:bg-primary/90'
-                  : 'bg-gray-300 cursor-not-allowed'
+                !isWeightValid && 'bg-gray-300 cursor-not-allowed'
               )}
+              style={
+                isWeightValid
+                  ? {
+                      background:
+                        'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                    }
+                  : undefined
+              }
             >
               下一步
             </Button>

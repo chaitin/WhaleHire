@@ -53,11 +53,20 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="header-profile cursor-pointer hover:bg-accent/50 transition-colors">
-              <Avatar className="header-avatar">
+              <Avatar
+                className="h-8 w-8 border-2"
+                style={{ borderColor: '#7bb8ff' }}
+              >
                 {user?.avatar_url && (
                   <AvatarImage src={user.avatar_url} alt="用户头像" />
                 )}
-                <AvatarFallback className="bg-primary text-primary-foreground">
+                <AvatarFallback
+                  className="text-primary-foreground"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
+                >
                   {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>

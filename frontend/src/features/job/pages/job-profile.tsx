@@ -990,7 +990,10 @@ export function JobProfilePage() {
           </p>
         </div>
         <Button
-          className="gap-2 rounded-lg px-4 py-2 shadow-sm btn-primary"
+          className="gap-2 rounded-lg px-4 py-2 shadow-sm btn-primary text-white"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
           onClick={handleOpenCreateJobModal}
           disabled={loading}
         >
@@ -1120,7 +1123,13 @@ export function JobProfilePage() {
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <Button onClick={handleSearch} className="gap-2">
+            <Button
+              onClick={handleSearch}
+              className="gap-2 text-white"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
+            >
               <Search className="h-4 w-4" />
               搜索
             </Button>
@@ -1357,9 +1366,16 @@ export function JobProfilePage() {
                     onClick={() => handlePageChange(page)}
                     className={cn(
                       'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
-                      page === currentPage &&
-                        'border-[#7bb8ff] bg-[#7bb8ff] text-white'
+                      page === currentPage && 'border-[#7bb8ff] text-white'
                     )}
+                    style={
+                      page === currentPage
+                        ? {
+                            background:
+                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                          }
+                        : undefined
+                    }
                   >
                     {page}
                   </Button>
@@ -1431,7 +1447,13 @@ export function JobProfilePage() {
               {/* 选择编辑模式 */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-[#7bb8ff] rounded-sm flex items-center justify-center">
+                  <div
+                    className="w-4 h-4 rounded-sm flex items-center justify-center"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                    }}
+                  >
                     <div className="w-2 h-2 bg-white rounded-sm"></div>
                   </div>
                   <h3 className="text-[16px] font-medium text-[#1F2937]">
@@ -1459,7 +1481,13 @@ export function JobProfilePage() {
                         )}
                       >
                         {editMode === 'manual' && (
-                          <div className="w-2 h-2 bg-[#7bb8ff] rounded-full"></div>
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                            }}
+                          ></div>
                         )}
                       </div>
                     </div>
@@ -1492,7 +1520,13 @@ export function JobProfilePage() {
                         )}
                       >
                         {editMode === 'ai' && (
-                          <div className="w-2 h-2 bg-[#7bb8ff] rounded-full"></div>
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                            }}
+                          ></div>
                         )}
                       </div>
                     </div>
@@ -2015,7 +2049,11 @@ export function JobProfilePage() {
                 <Button
                   onClick={handleSaveAndPublish}
                   disabled={loading}
-                  className="h-10 px-6 bg-[#7bb8ff] hover:bg-[#7bb8ff] text-white"
+                  className="h-10 px-6 text-white"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
                 >
                   {loading ? '发布中...' : '保存并发布'}
                 </Button>
@@ -2077,7 +2115,13 @@ export function JobProfilePage() {
             {/* 基本信息 */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#7bb8ff] rounded-sm flex items-center justify-center">
+                <div
+                  className="w-4 h-4 rounded-sm flex items-center justify-center"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
+                >
                   <div className="w-2 h-2 bg-white rounded-sm"></div>
                 </div>
                 <h3 className="text-[16px] font-medium text-[#1F2937]">
@@ -2389,7 +2433,13 @@ export function JobProfilePage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-[#7bb8ff] rounded-sm flex items-center justify-center">
+                    <div
+                      className="w-4 h-4 rounded-sm flex items-center justify-center"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }}
+                    >
                       <div className="w-2 h-2 bg-white rounded-sm"></div>
                     </div>
                     <h3 className="text-[16px] font-medium text-[#1F2937]">
@@ -2533,7 +2583,10 @@ export function JobProfilePage() {
             <Button
               onClick={handleUpdateJob}
               disabled={loading}
-              className="h-10 px-6 bg-[#7bb8ff] hover:bg-[#7bb8ff] text-white"
+              className="h-10 px-6 text-white"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
             >
               {loading ? '更新中...' : '保存更新'}
             </Button>

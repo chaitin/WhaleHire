@@ -236,7 +236,10 @@ export default function AuditLogPage() {
             </div>
             <Button
               type="button"
-              className="h-11 rounded-lg px-6"
+              className="h-11 rounded-lg px-6 text-white"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
               onClick={handleSearch}
               disabled={loading}
             >
@@ -412,9 +415,16 @@ export default function AuditLogPage() {
                       onClick={() => handlePageChange(page)}
                       className={cn(
                         'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
-                        page === currentPage &&
-                          'border-[#7bb8ff] bg-[#7bb8ff] text-white'
+                        page === currentPage && 'border-[#7bb8ff] text-white'
                       )}
+                      style={
+                        page === currentPage
+                          ? {
+                              background:
+                                'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                            }
+                          : undefined
+                      }
                     >
                       {page}
                     </Button>

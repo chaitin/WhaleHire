@@ -613,7 +613,10 @@ export default function PlatformConfig() {
 
           {/* 配置按钮 */}
           <Button
-            className="gap-2 rounded-lg px-5 py-2 shadow-sm"
+            className="gap-2 rounded-lg px-5 py-2 shadow-sm text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
             onClick={handleOpenModal}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -666,7 +669,10 @@ export default function PlatformConfig() {
 
           {/* 配置按钮 */}
           <Button
-            className="gap-2 rounded-lg px-5 py-2 shadow-sm"
+            className="gap-2 rounded-lg px-5 py-2 shadow-sm text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
             onClick={handleOpenSkillModal}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -719,7 +725,10 @@ export default function PlatformConfig() {
 
           {/* 配置按钮 */}
           <Button
-            className="gap-2 rounded-lg px-5 py-2 shadow-sm"
+            className="gap-2 rounded-lg px-5 py-2 shadow-sm text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
             onClick={handleOpenResumeCollectionModal}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -754,7 +763,10 @@ export default function PlatformConfig() {
 
           {/* 配置按钮 */}
           <Button
-            className="gap-2 rounded-lg px-5 py-2 shadow-sm"
+            className="gap-2 rounded-lg px-5 py-2 shadow-sm text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
             onClick={() => setIsNotificationConfigModalOpen(true)}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -810,7 +822,11 @@ export default function PlatformConfig() {
               {/* 添加部门按钮 */}
               <div className="mb-6">
                 <Button
-                  className="gap-2"
+                  className="gap-2 text-white"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
                   onClick={handleOpenAddDeptModal}
                   disabled={loading}
                 >
@@ -969,8 +985,16 @@ export default function PlatformConfig() {
                           className={cn(
                             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                             page === currentPage &&
-                              'border-[#7bb8ff] bg-[#7bb8ff] text-white'
+                              'border-[#7bb8ff] text-white'
                           )}
+                          style={
+                            page === currentPage
+                              ? {
+                                  background:
+                                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                                }
+                              : undefined
+                          }
                         >
                           {page}
                         </Button>
@@ -1063,7 +1087,11 @@ export default function PlatformConfig() {
                 取消
               </Button>
               <Button
-                className="px-6"
+                className="px-6 text-white"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
                 onClick={handleSaveNewDept}
                 disabled={submitting}
               >
@@ -1147,7 +1175,11 @@ export default function PlatformConfig() {
                 取消
               </Button>
               <Button
-                className="px-6"
+                className="px-6 text-white"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
                 onClick={handleSaveEditDept}
                 disabled={submitting}
               >
@@ -1202,7 +1234,11 @@ export default function PlatformConfig() {
               {/* 添加技能按钮 */}
               <div className="mb-6">
                 <Button
-                  className="gap-2"
+                  className="gap-2 text-white"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
                   onClick={handleOpenAddSkillModal}
                   disabled={skillSubmitting}
                 >
@@ -1348,8 +1384,16 @@ export default function PlatformConfig() {
                           className={cn(
                             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
                             page === skillCurrentPage &&
-                              'border-[#7bb8ff] bg-[#7bb8ff] text-white'
+                              'border-[#7bb8ff] text-white'
                           )}
+                          style={
+                            page === skillCurrentPage
+                              ? {
+                                  background:
+                                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                                }
+                              : undefined
+                          }
                         >
                           {page}
                         </Button>
@@ -1430,7 +1474,11 @@ export default function PlatformConfig() {
                 取消
               </Button>
               <Button
-                className="px-6"
+                className="px-6 text-white"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
                 onClick={handleSaveNewSkill}
                 disabled={skillSubmitting}
               >

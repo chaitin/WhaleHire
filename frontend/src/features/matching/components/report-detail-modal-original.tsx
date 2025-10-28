@@ -825,7 +825,10 @@ export function ReportDetailModal({
         <div className="border-t border-[#E0E0E0] px-10 py-7 flex items-center justify-end">
           <Button
             onClick={() => onOpenChange(false)}
-            className="rounded-[25px] px-7 py-4 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="rounded-[25px] px-7 py-4 text-primary-foreground"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
           >
             完成
           </Button>

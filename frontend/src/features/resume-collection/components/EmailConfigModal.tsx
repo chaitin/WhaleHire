@@ -472,7 +472,11 @@ export function EmailConfigModal({ isOpen, onClose }: EmailConfigModalProps) {
             <div className="mb-6 flex justify-end">
               <Button
                 size="sm"
-                className="gap-1.5 rounded-lg px-3 py-1.5 shadow-sm"
+                className="gap-1.5 rounded-lg px-3 py-1.5 shadow-sm text-white"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
                 onClick={handleOpenAddModal}
                 disabled={submitting}
               >
@@ -715,9 +719,16 @@ export function EmailConfigModal({ isOpen, onClose }: EmailConfigModalProps) {
                         onClick={() => handlePageChange(page)}
                         className={cn(
                           'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
-                          page === currentPage &&
-                            'border-[#7bb8ff] bg-[#7bb8ff] text-white'
+                          page === currentPage && 'border-[#7bb8ff] text-white'
                         )}
+                        style={
+                          page === currentPage
+                            ? {
+                                background:
+                                  'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                              }
+                            : undefined
+                        }
                       >
                         {page}
                       </Button>
@@ -1157,7 +1168,11 @@ function AddEmailConfigModal({
               </Button>
               <Button
                 type="button"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+                className="px-4 py-2 text-white"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
                 onClick={onSave}
                 disabled={submitting || testingId !== null}
               >

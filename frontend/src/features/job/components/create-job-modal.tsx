@@ -199,18 +199,29 @@ export function CreateJobModal({
         // 编辑模式:根据数据判断编辑模式并填充数据
         // 判断依据:
         // 1. 如果有description_markdown字段且不为空,肯定是AI模式
-        // 2. 如果description字段包含markdown格式内容(如岗位职责:、任职要求:等),也认为是AI模式
+        // 2. 如果有responsibilities数组为空且description中包含markdown格式,认为是AI模式
+        // 3. 如果有responsibilities数组不为空,则是手动模式
         const hasDescriptionMarkdown =
           editingJob.description_markdown &&
           editingJob.description_markdown.trim().length > 0;
+
+        // 检查是否有手动填写的结构化数据
+        const hasStructuredData =
+          (editingJob.responsibilities &&
+            editingJob.responsibilities.length > 0) ||
+          (editingJob.skills && editingJob.skills.length > 0);
+
+        // 只有当有description_markdown或者(没有结构化数据且description包含特定格式)时才认为是AI模式
         const descriptionContent = editingJob.description || '';
         const hasMarkdownFormat =
           descriptionContent.includes('岗位职责：') ||
           descriptionContent.includes('任职要求：') ||
           descriptionContent.includes('加分项：');
 
-        const isAIMode = hasDescriptionMarkdown || hasMarkdownFormat;
+        const isAIMode =
+          hasDescriptionMarkdown || (!hasStructuredData && hasMarkdownFormat);
         console.log('>>> hasDescriptionMarkdown:', hasDescriptionMarkdown);
+        console.log('>>> hasStructuredData:', hasStructuredData);
         console.log('>>> hasMarkdownFormat:', hasMarkdownFormat);
         console.log('>>> isAIMode:', isAIMode);
 
@@ -1580,7 +1591,8 @@ export function CreateJobModal({
                                     style={
                                       selectedProfile?.id === profile.id
                                         ? {
-                                            backgroundColor: '#7bb8ff',
+                                            background:
+                                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                                             borderColor: '#7bb8ff',
                                           }
                                         : { borderColor: '#7bb8ff' }
@@ -2019,7 +2031,10 @@ export function CreateJobModal({
                                       >
                                         <span
                                           className="inline-block w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                                          style={{ backgroundColor: '#7bb8ff' }}
+                                          style={{
+                                            background:
+                                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                                          }}
                                         ></span>
                                         <span>
                                           {typeof resp === 'string'
@@ -2136,15 +2151,17 @@ export function CreateJobModal({
               disabled={isSubmitting}
               className="h-10 px-6 text-[14px] text-white disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: isSubmitting ? '#a0d1ff' : '#7bb8ff',
+                background: isSubmitting
+                  ? '#a0d1ff'
+                  : 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
               }}
               onMouseEnter={(e) =>
-                !isSubmitting &&
-                (e.currentTarget.style.backgroundColor = '#6aa8ee')
+                !isSubmitting && (e.currentTarget.style.background = '#6aa8ee')
               }
               onMouseLeave={(e) =>
                 !isSubmitting &&
-                (e.currentTarget.style.backgroundColor = '#7bb8ff')
+                (e.currentTarget.style.background =
+                  'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)')
               }
             >
               {isSubmitting ? '发布中...' : '保存发布'}
@@ -2288,16 +2305,19 @@ export function CreateJobModal({
                 disabled={selectedSkillIds.length === 0}
                 className="text-[14px] text-white disabled:opacity-50"
                 style={{
-                  backgroundColor:
-                    selectedSkillIds.length === 0 ? '#d1d5db' : '#7bb8ff',
+                  background:
+                    selectedSkillIds.length === 0
+                      ? '#d1d5db'
+                      : 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                 }}
                 onMouseEnter={(e) =>
                   selectedSkillIds.length > 0 &&
-                  (e.currentTarget.style.backgroundColor = '#6aa8ee')
+                  (e.currentTarget.style.background = '#6aa8ee')
                 }
                 onMouseLeave={(e) =>
                   selectedSkillIds.length > 0 &&
-                  (e.currentTarget.style.backgroundColor = '#7bb8ff')
+                  (e.currentTarget.style.background =
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)')
                 }
               >
                 确定
