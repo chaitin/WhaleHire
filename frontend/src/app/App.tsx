@@ -17,6 +17,7 @@ import RegisterPage from '@/features/auth/pages/register';
 import OAuthCallbackPage from '@/features/auth/pages/oauth-callback';
 import { AuthProvider } from '@/hooks/useAuth';
 import { ErrorBoundary } from '@/components/common/error-boundary';
+import { ToastContainer } from '@/ui/toast';
 import '@/styles/globals.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
     <ErrorBoundary>
       <Router>
         <AuthProvider>
+          <ToastContainer />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />

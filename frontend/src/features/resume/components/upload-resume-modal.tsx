@@ -533,6 +533,9 @@ export function UploadResumeModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, taskId]);
 
+  // 拖拽状态
+  const [isDragging, setIsDragging] = useState(false);
+
   // 选择文件
   const handleSelectFiles = () => {
     const input = document.createElement('input');
@@ -551,6 +554,52 @@ export function UploadResumeModal({
       }
     };
     input.click();
+  };
+
+  // 处理拖拽进入
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  // 处理拖拽离开
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  // 处理拖拽悬停
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // 处理文件放置
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      // 过滤出支持的文件类型
+      const supportedFiles = Array.from(files).filter((file) => {
+        const ext = file.name.toLowerCase().split('.').pop();
+        return ext === 'pdf' || ext === 'doc' || ext === 'docx';
+      });
+
+      if (supportedFiles.length > 0) {
+        console.log(
+          `📁 拖拽上传了 ${supportedFiles.length} 个文件:`,
+          supportedFiles.map((f) => f.name)
+        );
+        setSelectedFiles(supportedFiles);
+      } else {
+        alert('请上传 PDF、DOC 或 DOCX 格式的文件');
+      }
+    }
   };
 
   // 上传文件
@@ -789,6 +838,58 @@ export function UploadResumeModal({
                   disabled={loadingJobs}
                   selectCountLabel="岗位"
                 />
+
+                {/* 已选择岗位展示 */}
+                {selectedJobIds.length > 0 && (
+                  <div className="bg-gray-50 rounded-lg px-3 py-2">
+                    <div className="text-sm text-gray-700">
+                      {selectedJobIds.length === 1 ? (
+                        <span>
+                          已选择：
+                          <span className="font-medium text-gray-900">
+                            {jobOptions.find(
+                              (job) => job.value === selectedJobIds[0]
+                            )?.label || '未知岗位'}
+                          </span>
+                        </span>
+                      ) : (
+                        <span>
+                          已选择：
+                          <span className="font-medium text-gray-900">
+                            {jobOptions.find(
+                              (job) => job.value === selectedJobIds[0]
+                            )?.label || '未知岗位'}
+                          </span>
+                          等
+                          <span className="relative font-medium text-[#7bb8ff] cursor-pointer group">
+                            {selectedJobIds.length}
+                            {/* Hover 提示框 */}
+                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 w-max max-w-xs">
+                              <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg">
+                                <div className="font-medium mb-1.5">
+                                  已选择的岗位：
+                                </div>
+                                <div className="space-y-1 max-h-48 overflow-y-auto">
+                                  {selectedJobIds.map((jobId, index) => (
+                                    <div key={jobId} className="text-gray-200">
+                                      {index + 1}.{' '}
+                                      {jobOptions.find(
+                                        (job) => job.value === jobId
+                                      )?.label || '未知岗位'}
+                                    </div>
+                                  ))}
+                                </div>
+                                {/* 小三角 */}
+                                <div className="absolute left-4 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          </span>
+                          个岗位
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 上传方式选择 */}
@@ -797,10 +898,10 @@ export function UploadResumeModal({
                   选择上传方式 <span className="text-red-500">*</span>
                 </Label>
 
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-2 gap-3">
                   {/* 本地上传 */}
                   <div
-                    className={`relative p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                    className={`relative p-3 border-2 rounded-lg cursor-pointer transition-all ${
                       uploadMethod === 'local'
                         ? 'border-[#7bb8ff] bg-[#7bb8ff]/10'
                         : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
@@ -808,33 +909,33 @@ export function UploadResumeModal({
                     onClick={() => setUploadMethod('local')}
                   >
                     <div className="text-center">
-                      <div className="mx-auto w-12 h-12 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-4">
-                        <Upload className="h-5 w-5 text-[#7bb8ff]" />
+                      <div className="mx-auto w-8 h-8 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-2">
+                        <Upload className="h-4 w-4 text-[#7bb8ff]" />
                       </div>
-                      <h4 className="text-base font-medium text-gray-900 mb-2">
+                      <h4 className="text-sm font-medium text-gray-900 mb-1">
                         本地上传
                       </h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-xs text-gray-600 leading-relaxed">
                         从您的设备上传简历文件
                       </p>
                     </div>
                     {uploadMethod === 'local' && (
-                      <div className="absolute top-3 right-3 w-5 h-5 bg-[#7bb8ff] rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <div className="absolute top-2 right-2 w-4 h-4 bg-[#7bb8ff] rounded-full flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                       </div>
                     )}
                   </div>
 
                   {/* 链接导入 - 置灰不可选 */}
-                  <div className="relative p-6 border-2 border-dashed border-gray-200 rounded-xl opacity-50 cursor-not-allowed">
+                  <div className="relative p-3 border-2 border-gray-200 rounded-lg opacity-50 cursor-not-allowed">
                     <div className="text-center">
-                      <div className="mx-auto w-12 h-12 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-4">
-                        <Link className="h-5 w-5 text-[#7bb8ff]" />
+                      <div className="mx-auto w-8 h-8 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-2">
+                        <Link className="h-4 w-4 text-[#7bb8ff]" />
                       </div>
-                      <h4 className="text-base font-medium text-gray-900 mb-2">
+                      <h4 className="text-sm font-medium text-gray-900 mb-1">
                         链接导入
                       </h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-xs text-gray-600 leading-relaxed">
                         通过简历链接导入
                       </p>
                     </div>
@@ -844,58 +945,121 @@ export function UploadResumeModal({
                 {/* 本地上传 - 文件选择和列表 */}
                 {uploadMethod === 'local' && (
                   <div className="space-y-3">
-                    {/* 选择文件按钮 */}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleSelectFiles}
-                      disabled={uploading}
+                    {/* 拖拽上传区域 */}
+                    <div
+                      className={`relative border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer ${
+                        isDragging
+                          ? 'border-[#7bb8ff] bg-[#7bb8ff]/10'
+                          : 'border-gray-300 hover:border-[#7bb8ff] hover:bg-gray-50'
+                      } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => !uploading && handleSelectFiles()}
+                      onDragEnter={handleDragEnter}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {selectedFiles.length > 0 ? '重新选择文件' : '选择文件'}
-                    </Button>
+                      <div className="text-center">
+                        <div className="mx-auto w-16 h-16 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-4">
+                          <Upload
+                            className={`h-8 w-8 ${isDragging ? 'text-[#7bb8ff] animate-bounce' : 'text-[#7bb8ff]'}`}
+                          />
+                        </div>
+                        <h4 className="text-base font-medium text-gray-900 mb-2">
+                          {isDragging
+                            ? '释放文件以上传'
+                            : selectedFiles.length > 0
+                              ? '点击或拖拽文件到此处重新选择'
+                              : '点击或拖拽文件到此处'}
+                        </h4>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          支持 PDF、DOC、DOCX 格式，单个文件最大 100MB
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          可同时选择多个文件批量上传
+                        </p>
+                      </div>
+                    </div>
 
                     {/* 已选择的文件列表 */}
                     {selectedFiles.length > 0 && (
-                      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                        <div className="text-sm font-medium text-gray-700">
-                          已选择 {selectedFiles.length} 个文件：
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium text-gray-700">
+                            已选择 {selectedFiles.length} 个文件
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedFiles([]);
+                            }}
+                            className="text-xs text-[#7bb8ff] hover:text-[#6aa8ee] font-medium"
+                          >
+                            清空列表
+                          </button>
                         </div>
-                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
                           {selectedFiles.map((file, index) => (
                             <div
                               key={index}
-                              className="flex items-center justify-between text-xs bg-white rounded px-2 py-1.5"
+                              className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2.5 shadow-sm"
                             >
                               <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                <span className="truncate text-gray-700">
+                                <FileText className="w-4 h-4 text-[#7bb8ff] flex-shrink-0" />
+                                <span className="truncate text-gray-700 font-medium">
                                   {file.name}
                                 </span>
                               </div>
-                              <span className="text-gray-500 ml-2 flex-shrink-0">
-                                {(file.size / 1024 / 1024).toFixed(2)} MB
-                              </span>
+                              <div className="flex items-center gap-3 ml-2 flex-shrink-0">
+                                <span className="text-gray-500">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedFiles(
+                                      selectedFiles.filter(
+                                        (_, i) => i !== index
+                                      )
+                                    );
+                                  }}
+                                  className="text-gray-400 hover:text-red-500 transition-colors"
+                                  title="移除此文件"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* 说明文字 */}
-                    <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                      默认支持 .pdf、.doc、.docx 格式，文件大小 100M
-                      {uploading && (
-                        <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-                          <span>上传中...</span>
-                          <span>{uploadProgress}%</span>
+                    {/* 上传进度和错误信息 */}
+                    {uploading && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between text-sm text-blue-700 mb-2">
+                          <span className="font-medium">上传中...</span>
+                          <span className="font-semibold">
+                            {uploadProgress}%
+                          </span>
                         </div>
-                      )}
-                      {error && !uploading && (
-                        <div className="mt-2 text-xs text-red-500">{error}</div>
-                      )}
-                    </div>
+                        <div className="w-full bg-blue-100 rounded-full h-2">
+                          <div
+                            className="bg-[#7bb8ff] h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {error && !uploading && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm text-red-700">{error}</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

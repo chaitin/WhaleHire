@@ -1912,6 +1912,52 @@
                 }
             }
         },
+        "/api/v1/job-profiles/parse": {
+            "post": {
+                "description": "根据输入的岗位描述文本，返回解析后的结构化岗位画像数据",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "JobProfile"
+                ],
+                "summary": "解析岗位描述",
+                "parameters": [
+                    {
+                        "description": "解析请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ParseJobProfileReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ParseJobProfileResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/job-profiles/search": {
             "get": {
                 "description": "根据关键词和条件搜索岗位画像，支持模糊搜索",
@@ -3727,9 +3773,10 @@
                     },
                     {
                         "type": "string",
-                        "description": "申请来源",
+                        "description": "申请来源类型，必需参数，可选值：email（邮箱采集）、manual（手动上传）",
                         "name": "source",
-                        "in": "formData"
+                        "in": "formData",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -4001,9 +4048,10 @@
                     },
                     {
                         "type": "string",
-                        "description": "申请来源",
+                        "description": "申请来源类型，必需参数，可选值：email（邮箱采集）、manual（手动上传）",
                         "name": "source",
-                        "in": "formData"
+                        "in": "formData",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -5563,7 +5611,10 @@
                 "setting",
                 "attachment",
                 "conversation",
-                "message"
+                "message",
+                "notification_setting",
+                "resume_mailbox_setting",
+                "resume_mailbox_statistic"
             ],
             "x-enum-comments": {
                 "ResourceTypeAdmin": "管理员",
@@ -5572,7 +5623,10 @@
                 "ResourceTypeDepartment": "部门",
                 "ResourceTypeJobPosition": "职位",
                 "ResourceTypeMessage": "消息",
+                "ResourceTypeNotificationSetting": "通知设置",
                 "ResourceTypeResume": "简历",
+                "ResourceTypeResumeMailboxSetting": "简历邮箱设置",
+                "ResourceTypeResumeMailboxStatistic": "简历邮箱统计",
                 "ResourceTypeRole": "角色",
                 "ResourceTypeScreening": "筛选任务",
                 "ResourceTypeSetting": "系统设置",
@@ -5589,7 +5643,10 @@
                 "ResourceTypeSetting",
                 "ResourceTypeAttachment",
                 "ResourceTypeConversation",
-                "ResourceTypeMessage"
+                "ResourceTypeMessage",
+                "ResourceTypeNotificationSetting",
+                "ResourceTypeResumeMailboxSetting",
+                "ResourceTypeResumeMailboxStatistic"
             ]
         },
         "consts.ScreeningNodeRunStatus": {
@@ -5949,7 +6006,7 @@
                     "type": "string"
                 },
                 "resource_type": {
-                    "description": "资源类型: user用户、admin管理员、role角色、department部门、job_position职位、resume简历、screening筛选任务、setting系统设置、attachment附件、conversation对话、message消息",
+                    "description": "资源类型: user用户、admin管理员、role角色、department部门、job_position职位、resume简历、\nscreening筛选任务、setting系统设置、attachment附件、conversation对话、message消息、\nnotification_setting通知设置、resume_mailbox_setting简历邮箱设置、resume_mailbox_statistic简历邮箱统计",
                     "allOf": [
                         {
                             "$ref": "#/definitions/consts.ResourceType"
@@ -6499,7 +6556,7 @@
                 "name",
                 "port",
                 "protocol",
-                "uploader_id"
+                "status"
             ],
             "properties": {
                 "auth_type": {
@@ -6556,7 +6613,7 @@
                     ]
                 },
                 "status": {
-                    "description": "状态：enabled或disabled，可选",
+                    "description": "状态：enabled或disabled，必须",
                     "type": "string",
                     "enum": [
                         "enabled",
@@ -7679,7 +7736,7 @@
         "domain.JobSkillInput": {
             "type": "object",
             "required": [
-                "skill_id",
+                "skill_name",
                 "type"
             ],
             "properties": {
@@ -7687,6 +7744,11 @@
                     "type": "string"
                 },
                 "skill_id": {
+                    "description": "技能ID，如果为空则根据SkillName自动创建新技能",
+                    "type": "string"
+                },
+                "skill_name": {
+                    "description": "技能名称，用于前端显示",
                     "type": "string"
                 },
                 "type": {
@@ -8134,6 +8196,10 @@
                 "total_parsed_resumes": {
                     "type": "integer"
                 },
+                "total_resumes": {
+                    "description": "所有解析的简历总数（成功+失败）",
+                    "type": "integer"
+                },
                 "total_skipped_attachments": {
                     "type": "integer"
                 },
@@ -8435,6 +8501,92 @@
                 "total_count": {
                     "description": "总操作数",
                     "type": "integer"
+                }
+            }
+        },
+        "domain.ParseJobProfileReq": {
+            "description": "岗位画像解析请求参数",
+            "type": "object",
+            "required": [
+                "description"
+            ],
+            "properties": {
+                "description": {
+                    "description": "岗位描述文本，用于AI解析",
+                    "type": "string",
+                    "example": "我们正在寻找一名资深的Go后端开发工程师，负责微服务架构设计和开发..."
+                }
+            }
+        },
+        "domain.ParseJobProfileResp": {
+            "description": "AI解析岗位描述后返回的结构化数据，包含岗位的基本信息和详细要求",
+            "type": "object",
+            "properties": {
+                "education_requirements": {
+                    "description": "学历要求列表，可能包含多个学历层次",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.JobEducationRequirementInput"
+                    }
+                },
+                "experience_requirements": {
+                    "description": "工作经验要求列表，包含年限和具体经验类型",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.JobExperienceRequirementInput"
+                    }
+                },
+                "industry_requirements": {
+                    "description": "行业背景要求列表，可能指定特定行业或公司经验",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.JobIndustryRequirementInput"
+                    }
+                },
+                "location": {
+                    "description": "工作地点，可能包含多个城市",
+                    "type": "string",
+                    "example": "北京"
+                },
+                "name": {
+                    "description": "基本信息",
+                    "type": "string",
+                    "example": "Go后端开发工程师"
+                },
+                "responsibilities": {
+                    "description": "详细信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.JobResponsibilityInput"
+                    }
+                },
+                "salary_max": {
+                    "description": "最高薪资（月薪，单位：元）",
+                    "type": "number",
+                    "example": 25000
+                },
+                "salary_min": {
+                    "description": "最低薪资（月薪，单位：元）",
+                    "type": "number",
+                    "example": 15000
+                },
+                "skills": {
+                    "description": "技能要求列表，包含必需技能和加分技能",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.JobSkillInput"
+                    }
+                },
+                "work_type": {
+                    "description": "工作性质：全职/兼职/实习/外包",
+                    "type": "string",
+                    "enum": [
+                        "full_time",
+                        "part_time",
+                        "internship",
+                        "outsourcing"
+                    ],
+                    "example": "full_time"
                 }
             }
         },
@@ -8852,6 +9004,10 @@
                 "sync_interval_minutes": {
                     "type": "integer"
                 },
+                "total_resumes": {
+                    "description": "该配置总解析简历数（成功+失败）",
+                    "type": "integer"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -8894,6 +9050,10 @@
                     "type": "integer"
                 },
                 "synced_emails": {
+                    "type": "integer"
+                },
+                "total_parsed_resumes": {
+                    "description": "解析简历总数（成功+失败）",
                     "type": "integer"
                 },
                 "updated_at": {
@@ -10508,14 +10668,17 @@
                 1000000000,
                 60000000000,
                 3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000
+                3600000000000,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -10526,14 +10689,17 @@
                 "Second",
                 "Minute",
                 "Hour",
-                "minDuration",
-                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
                 "Minute",
-                "Hour"
+                "Hour",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute"
             ]
         }
     }
