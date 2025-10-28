@@ -19,7 +19,13 @@ import {
   Target,
   Check,
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/ui/dialog';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
@@ -33,6 +39,7 @@ import {
 } from '@/ui/select';
 import {
   createJobProfile,
+  updateJobProfile,
   parseJobProfile,
   listJobSkillMeta,
   polishPrompt,
@@ -46,13 +53,16 @@ interface CreateJobModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void; // 成功创建后的回调函数
+  editingJob?: JobProfileDetail | null; // 编辑的岗位数据
 }
 
 export function CreateJobModal({
   open,
   onOpenChange,
   onSuccess,
+  editingJob,
 }: CreateJobModalProps) {
+  // 编辑模式状态(会在useEffect中根据editingJob动态设置)
   const [editMode, setEditMode] = useState<'manual' | 'ai'>('manual');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
@@ -175,13 +185,95 @@ export function CreateJobModal({
     }
   }, []);
 
-  // 监听弹窗打开状态，打开时重置表单并加载部门
+  // 监听弹窗打开状态，打开时重置表单或填充编辑数据并加载部门
   useEffect(() => {
     if (open) {
-      resetForm();
+      console.log('=== CreateJobModal打开 ===');
+      console.log('editingJob:', editingJob);
+      console.log(
+        'editingJob.description_markdown:',
+        editingJob?.description_markdown
+      );
+
+      if (editingJob) {
+        // 编辑模式:根据数据判断编辑模式并填充数据
+        // 判断依据:
+        // 1. 如果有description_markdown字段且不为空,肯定是AI模式
+        // 2. 如果description字段包含markdown格式内容(如岗位职责:、任职要求:等),也认为是AI模式
+        const hasDescriptionMarkdown =
+          editingJob.description_markdown &&
+          editingJob.description_markdown.trim().length > 0;
+        const descriptionContent = editingJob.description || '';
+        const hasMarkdownFormat =
+          descriptionContent.includes('岗位职责：') ||
+          descriptionContent.includes('任职要求：') ||
+          descriptionContent.includes('加分项：');
+
+        const isAIMode = hasDescriptionMarkdown || hasMarkdownFormat;
+        console.log('>>> hasDescriptionMarkdown:', hasDescriptionMarkdown);
+        console.log('>>> hasMarkdownFormat:', hasMarkdownFormat);
+        console.log('>>> isAIMode:', isAIMode);
+
+        if (isAIMode) {
+          // AI模式
+          console.log('>>> 设置为AI编辑模式');
+          setEditMode('ai');
+          setSelectedProfile({
+            ...editingJob,
+            description:
+              editingJob.description_markdown || editingJob.description || '',
+            description_markdown:
+              editingJob.description_markdown || editingJob.description || '',
+          });
+          // 如果有生成的数据,添加到概览中
+          if (editingJob.name) {
+            setGeneratedProfiles([editingJob]);
+          }
+        } else {
+          // 手动模式
+          console.log('>>> 设置为手动编辑模式');
+          setEditMode('manual');
+          // 填充手动模式表单数据
+          setFormData({
+            description: editingJob.description || '',
+            jobName: editingJob.name || '',
+            educationRequirement:
+              editingJob.education_requirements?.[0]?.education_type || '',
+            workType: editingJob.work_type || '',
+            department: editingJob.department_id || '',
+            location: editingJob.location || '',
+            salaryMin: editingJob.salary_min?.toString() || '',
+            salaryMax: editingJob.salary_max?.toString() || '',
+            industryRequirement:
+              editingJob.industry_requirements?.[0]?.industry || '',
+            companyRequirement:
+              editingJob.industry_requirements?.[0]?.company_name || '',
+            workExperience:
+              editingJob.experience_requirements?.[0]?.experience_type || '',
+          });
+          // 填充职责
+          const respList = editingJob.responsibilities?.map((r, idx) => ({
+            content: r.responsibility,
+            id: `resp-${idx}`,
+          })) || [{ content: '', id: 'resp-0' }];
+          setResponsibilities(respList);
+          // 填充技能
+          const jobSkills =
+            editingJob.skills?.map((s) => ({
+              skill_id: s.skill_id || '',
+              skill_name: s.skill || '',
+              type: (s.type || 'required') as 'required' | 'bonus',
+            })) || [];
+          setSkills(jobSkills);
+        }
+      } else {
+        // 新建模式:重置表单
+        console.log('>>> 新建模式,重置表单');
+        resetForm();
+      }
       fetchDepartments();
     }
-  }, [open, resetForm, fetchDepartments]);
+  }, [open, editingJob, resetForm, fetchDepartments]);
 
   // 更新Markdown内容显示(当selectedProfile变化时强制更新DOM)
   useEffect(() => {
@@ -757,13 +849,23 @@ export function CreateJobModal({
         }
       }
 
-      await createJobProfile(requestData);
-
-      // 根据状态显示不同的成功消息
-      if (status === 'draft') {
-        toast.success('岗位画像已保存为草稿');
+      // 判断是创建还是更新
+      if (editingJob) {
+        // 更新操作
+        await updateJobProfile(editingJob.id, {
+          id: editingJob.id,
+          ...requestData,
+        });
+        toast.success('岗位画像已更新');
       } else {
-        toast.success('岗位画像已发布');
+        // 创建操作
+        await createJobProfile(requestData);
+        // 根据状态显示不同的成功消息
+        if (status === 'draft') {
+          toast.success('岗位画像已保存为草稿');
+        } else {
+          toast.success('岗位画像已发布');
+        }
       }
 
       // 调用成功回调刷新列表
@@ -775,10 +877,10 @@ export function CreateJobModal({
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      console.error('创建失败:', error);
+      console.error(editingJob ? '更新失败:' : '创建失败:', error);
       const errorMessage =
         error instanceof Error ? error.message : '请稍后重试';
-      toast.error(`创建失败: ${errorMessage}`);
+      toast.error(`${editingJob ? '更新' : '创建'}失败: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -792,7 +894,7 @@ export function CreateJobModal({
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
             <DialogHeader className="space-y-0">
               <DialogTitle className="text-[18px] font-semibold text-gray-900">
-                新建岗位
+                {editingJob ? '编辑岗位' : '新建岗位'}
               </DialogTitle>
             </DialogHeader>
             <Button
@@ -2071,6 +2173,9 @@ export function CreateJobModal({
                 + 新增技能
               </Button>
             </div>
+            <DialogDescription className="sr-only">
+              选择该岗位需要的工作技能
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -2215,6 +2320,9 @@ export function CreateJobModal({
             <DialogTitle className="text-[16px] font-medium text-gray-900">
               选择所属部门
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              为该岗位选择所属部门
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">

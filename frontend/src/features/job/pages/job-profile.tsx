@@ -28,6 +28,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Label } from '@/ui/label';
 import { Textarea } from '@/ui/textarea';
 import { MultiSelect } from '@/ui/multi-select';
+import { toast } from '@/ui/toast';
 import {
   listJobProfiles,
   createJobProfile,
@@ -100,41 +101,6 @@ export function JobProfilePage() {
       外包: 'outsourcing',
     };
     return workTypeMap[workType] || workType;
-  };
-
-  // 反向转换函数 - 用于编辑时的数据回显
-  const reverseConvertEducationRequirement = (education: string): string => {
-    const reverseEducationMap: Record<string, string> = {
-      unlimited: '不限',
-      junior_college: '大专',
-      bachelor: '本科',
-      master: '硕士',
-      doctor: '博士',
-    };
-    return reverseEducationMap[education] || education;
-  };
-
-  const reverseConvertExperienceRequirement = (experience: string): string => {
-    const reverseExperienceMap: Record<string, string> = {
-      unlimited: '不限',
-      fresh_graduate: '应届毕业生',
-      under_one_year: '1年以下',
-      one_to_three_years: '1-3年',
-      three_to_five_years: '3-5年',
-      five_to_ten_years: '5-10年',
-      over_ten_years: '10年以上',
-    };
-    return reverseExperienceMap[experience] || experience;
-  };
-
-  const reverseConvertWorkType = (workType: string): string => {
-    const reverseWorkTypeMap: Record<string, string> = {
-      full_time: '全职',
-      part_time: '兼职',
-      internship: '实习',
-      outsourcing: '外包',
-    };
-    return reverseWorkTypeMap[workType] || workType;
   };
 
   // 获取岗位画像列表
@@ -775,161 +741,19 @@ export function JobProfilePage() {
     try {
       setEditJobLoading(true);
       setEditJobError(null);
-      setEditingJob(job);
 
       // 调用API获取岗位详情
       const jobDetail = await getJobProfile(job.id);
 
-      // 处理行业要求数据
-      let industryRequirements = [{ industry: '', companyName: '' }];
-      if (
-        jobDetail.industry_requirements &&
-        jobDetail.industry_requirements.length > 0
-      ) {
-        industryRequirements = jobDetail.industry_requirements.map((req) => ({
-          industry: req.industry || '',
-          companyName: req.company_name || '',
-        }));
-      }
+      // 设置编辑的岗位数据
+      setEditingJob(jobDetail);
 
-      // 处理教育要求数据
-      let educationValue = '';
-      if (
-        jobDetail.education_requirements &&
-        jobDetail.education_requirements.length > 0
-      ) {
-        educationValue = reverseConvertEducationRequirement(
-          jobDetail.education_requirements[0].education_type
-        );
-      }
-
-      // 处理工作经验数据
-      let experienceValue = '';
-      if (
-        jobDetail.experience_requirements &&
-        jobDetail.experience_requirements.length > 0
-      ) {
-        experienceValue = reverseConvertExperienceRequirement(
-          jobDetail.experience_requirements[0].experience_type
-        );
-      }
-
-      // 处理工作性质数据
-      let workTypeValue = '';
-      if (jobDetail.work_type) {
-        workTypeValue = reverseConvertWorkType(jobDetail.work_type);
-      }
-
-      // 处理岗位职责数据 - 使用 responsibilities 数组而不是 description
-      let responsibilitiesArray = [''];
-      if (jobDetail.responsibilities && jobDetail.responsibilities.length > 0) {
-        responsibilitiesArray = jobDetail.responsibilities
-          .map((resp) => resp.responsibility || '')
-          .filter((r) => r.trim());
-        // 确保至少有一个空项用于添加新职责
-        if (responsibilitiesArray.length === 0) {
-          responsibilitiesArray = [''];
-        }
-      }
-
-      // 预填充基本信息
-      setJobFormData({
-        name: jobDetail.name,
-        location: jobDetail.location || '',
-        department: jobDetail.department_id || '',
-        workType: workTypeValue,
-        education: educationValue,
-        salaryMin: jobDetail.salary_min ? jobDetail.salary_min.toString() : '',
-        salaryMax: jobDetail.salary_max ? jobDetail.salary_max.toString() : '',
-        experience: experienceValue,
-        industryRequirements: industryRequirements,
-        responsibilities: responsibilitiesArray,
-      });
-
-      // 处理技能数据预填充
-      const requiredSkills: JobSkillMeta[] = [];
-      const optionalSkills: JobSkillMeta[] = [];
-      const requiredSkillInputs: JobSkillInput[] = [];
-      const optionalSkillInputs: JobSkillInput[] = [];
-
-      if (jobDetail.skills && jobDetail.skills.length > 0) {
-        jobDetail.skills.forEach((skill) => {
-          const skillMeta: JobSkillMeta = {
-            id: skill.skill_id,
-            name: skill.skill || `技能${skill.skill_id}`,
-            created_at: 0,
-            updated_at: 0,
-          };
-
-          const skillInput: JobSkillInput = {
-            id: skill.id, // 保存技能记录ID
-            skill_id: skill.skill_id,
-            type: skill.type,
-            weight: skill.weight,
-          };
-
-          if (skill.type === 'required') {
-            requiredSkills.push(skillMeta);
-            requiredSkillInputs.push(skillInput);
-          } else if (skill.type === 'bonus') {
-            optionalSkills.push(skillMeta);
-            optionalSkillInputs.push(skillInput);
-          }
-        });
-      }
-
-      // 保存完整的技能记录信息
-      setSelectedRequiredSkills(requiredSkillInputs);
-      setSelectedOptionalSkills(optionalSkillInputs);
-      // 为了兼容MultiSelect组件，也保存技能ID数组
-      setSelectedRequiredSkillIds(requiredSkills.map((skill) => skill.id));
-      setSelectedOptionalSkillIds(optionalSkills.map((skill) => skill.id));
-
-      // 将岗位的技能数据合并到可用技能列表中，确保编辑时能正确显示
-      const allJobSkills = [...requiredSkills, ...optionalSkills];
-      setAvailableSkills((prevSkills) => {
-        // 去重合并：保留现有技能，添加岗位中的新技能
-        const existingSkillIds = new Set(prevSkills.map((skill) => skill.id));
-        const newSkills = allJobSkills.filter(
-          (skill) => !existingSkillIds.has(skill.id)
-        );
-        return [...prevSkills, ...newSkills];
-      });
-
-      // 同时加载更多技能数据，确保用户可以选择其他技能
-      await fetchSkills();
-
-      setIsEditJobModalOpen(true);
+      // 打开新建/编辑岗位弹窗(会自动根据数据判断模式)
+      setIsCreateJobModalOpen(true);
     } catch (err) {
       console.error('获取岗位详情失败:', err);
       setEditJobError(err instanceof Error ? err.message : '获取岗位详情失败');
-      // 即使获取详情失败，也要打开编辑弹窗，使用基本信息进行预填充
-      setEditingJob(job);
-      setJobFormData({
-        name: job.name,
-        location: job.location || '',
-        department: job.department_id || '',
-        workType: '',
-        education: '',
-        salaryMin: job.salary_min ? job.salary_min.toString() : '',
-        salaryMax: job.salary_max ? job.salary_max.toString() : '',
-        experience: '',
-        industryRequirements: [{ industry: '', companyName: '' }],
-        responsibilities: job.description
-          ? job.description.split('\n').filter((r) => r.trim())
-          : [''],
-      });
-
-      // 清空技能相关状态
-      setSelectedRequiredSkills([]);
-      setSelectedOptionalSkills([]);
-      setSelectedRequiredSkillIds([]);
-      setSelectedOptionalSkillIds([]);
-
-      // 即使获取详情失败，也要加载技能列表，确保用户可以选择技能
-      await fetchSkills();
-
-      setIsEditJobModalOpen(true);
+      toast.error('获取岗位详情失败,请重试');
     } finally {
       setEditJobLoading(false);
     }
@@ -1562,8 +1386,15 @@ export function JobProfilePage() {
       {/* 新建岗位弹窗 - 使用新的CreateJobModal组件 */}
       <CreateJobModal
         open={isCreateJobModalOpen}
-        onOpenChange={setIsCreateJobModalOpen}
+        onOpenChange={(open) => {
+          setIsCreateJobModalOpen(open);
+          if (!open) {
+            // 关闭时清除编辑状态
+            setEditingJob(null);
+          }
+        }}
         onSuccess={fetchJobProfiles}
+        editingJob={editingJob}
       />
 
       {/* 旧的弹窗已被替换,下面的代码可以删除 */}
