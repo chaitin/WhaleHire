@@ -102,9 +102,17 @@ export function CreateJobModal({
     workExperience: '',
   });
 
+  // 保存编辑时的各项ID
+  const [editingIds, setEditingIds] = useState<{
+    educationId?: string;
+    experienceId?: string;
+    industryId?: string;
+  }>({});
+
   // 技能列表 - 存储完整的技能对象
   const [skills, setSkills] = useState<
     Array<{
+      id?: string; // 编辑时保留技能id
       skill_id: string;
       skill_name: string;
       type: 'required' | 'bonus';
@@ -131,7 +139,7 @@ export function CreateJobModal({
 
   // 岗位职责列表
   const [responsibilities, setResponsibilities] = useState<
-    Array<{ content: string; id: string }>
+    Array<{ content: string; id: string; dbId?: string }> // dbId用于保存数据库中的id
   >([{ content: '', id: '1' }]);
 
   // 重置表单
@@ -152,6 +160,7 @@ export function CreateJobModal({
     });
     setSkills([]);
     setResponsibilities([{ content: '', id: '1' }]);
+    setEditingIds({}); // 清空编辑ID
 
     // 重置AI编辑模式的状态
     setEditMode('manual'); // 默认选中手动编辑模式
@@ -262,15 +271,23 @@ export function CreateJobModal({
             workExperience:
               editingJob.experience_requirements?.[0]?.experience_type || '',
           });
+          // 保存各项的ID
+          setEditingIds({
+            educationId: editingJob.education_requirements?.[0]?.id,
+            experienceId: editingJob.experience_requirements?.[0]?.id,
+            industryId: editingJob.industry_requirements?.[0]?.id,
+          });
           // 填充职责
-          const respList = editingJob.responsibilities?.map((r, idx) => ({
+          const respList = editingJob.responsibilities?.map((r) => ({
             content: r.responsibility,
-            id: `resp-${idx}`,
+            id: r.id, // 保留原始id用于更新
+            dbId: r.id, // 单独保存数据库id
           })) || [{ content: '', id: 'resp-0' }];
           setResponsibilities(respList);
           // 填充技能
           const jobSkills =
             editingJob.skills?.map((s) => ({
+              id: s.id, // 保留技能id用于更新
               skill_id: s.skill_id || '',
               skill_name: s.skill || '',
               type: (s.type || 'required') as 'required' | 'bonus',
@@ -730,6 +747,7 @@ export function CreateJobModal({
         ) {
           requestData.education_requirements =
             selectedProfile.education_requirements.map((edu) => ({
+              ...(edu.id && { id: edu.id }), // 编辑时保留id
               education_type: edu.education_type,
             }));
         }
@@ -741,6 +759,7 @@ export function CreateJobModal({
         ) {
           requestData.experience_requirements =
             selectedProfile.experience_requirements.map((exp) => ({
+              ...(exp.id && { id: exp.id }), // 编辑时保留id
               experience_type: exp.experience_type,
             }));
         }
@@ -752,6 +771,7 @@ export function CreateJobModal({
         ) {
           requestData.industry_requirements =
             selectedProfile.industry_requirements.map((req) => ({
+              ...(req.id && { id: req.id }), // 编辑时保留id
               industry: req.industry || '',
               company_name: req.company_name || '',
             }));
@@ -760,6 +780,7 @@ export function CreateJobModal({
         // 添加技能要求
         if (selectedProfile.skills && selectedProfile.skills.length > 0) {
           requestData.skills = selectedProfile.skills.map((skill) => ({
+            ...(skill.id && { id: skill.id }), // 编辑时保留id
             skill_id: skill.skill_id || '',
             skill_name:
               'skill_name' in skill && skill.skill_name
@@ -776,6 +797,7 @@ export function CreateJobModal({
         ) {
           requestData.responsibilities = selectedProfile.responsibilities.map(
             (resp) => ({
+              ...(typeof resp !== 'string' && resp.id && { id: resp.id }), // 编辑时保留id
               responsibility:
                 typeof resp === 'string' ? resp : resp.responsibility,
             })
@@ -804,6 +826,7 @@ export function CreateJobModal({
         if (formData.educationRequirement) {
           requestData.education_requirements = [
             {
+              ...(editingIds.educationId && { id: editingIds.educationId }), // 编辑时保留id
               education_type: formData.educationRequirement,
             },
           ];
@@ -813,6 +836,7 @@ export function CreateJobModal({
         if (formData.workExperience) {
           requestData.experience_requirements = [
             {
+              ...(editingIds.experienceId && { id: editingIds.experienceId }), // 编辑时保留id
               experience_type: formData.workExperience,
             },
           ];
@@ -824,16 +848,19 @@ export function CreateJobModal({
           // 如果两者都有，合并为一个对象
           if (formData.industryRequirement && formData.companyRequirement) {
             requestData.industry_requirements.push({
+              ...(editingIds.industryId && { id: editingIds.industryId }), // 编辑时保留id
               industry: formData.industryRequirement,
               company_name: formData.companyRequirement,
             });
           } else if (formData.industryRequirement) {
             requestData.industry_requirements.push({
+              ...(editingIds.industryId && { id: editingIds.industryId }), // 编辑时保留id
               industry: formData.industryRequirement,
               company_name: '', // 提供默认值
             });
           } else if (formData.companyRequirement) {
             requestData.industry_requirements.push({
+              ...(editingIds.industryId && { id: editingIds.industryId }), // 编辑时保留id
               industry: '', // 提供默认值
               company_name: formData.companyRequirement,
             });
@@ -843,6 +870,7 @@ export function CreateJobModal({
         // 添加技能要求（按照API格式传递完整的技能对象）
         if (skills.length > 0) {
           requestData.skills = skills.map((skill) => ({
+            ...(skill.id && { id: skill.id }), // 编辑时保留id
             skill_id: skill.skill_id,
             skill_name: skill.skill_name,
             type: skill.type,
@@ -855,6 +883,7 @@ export function CreateJobModal({
         );
         if (validResponsibilities.length > 0) {
           requestData.responsibilities = validResponsibilities.map((r) => ({
+            ...(r.dbId && { id: r.dbId }), // 编辑时保留id
             responsibility: r.content,
           }));
         }
