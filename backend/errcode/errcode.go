@@ -62,4 +62,12 @@ var (
 	ErrResumeMailboxStatisticNotFound = web.NewBadRequestBusinessErr(90003, "err-resume-mailbox-statistic-not-found")
 	ErrInvalidCredentials             = web.NewBadRequestBusinessErr(90001, "err-invalid-credentials")
 	ErrMailboxConnectionFailed        = web.NewBadRequestBusinessErr(90002, "err-mailbox-connection-failed")
+
+	// ========== 高校管理模块 (100000-109999) ==========
+	ErrUniversityNotFound      = web.NewBadRequestBusinessErr(100000, "err-university-not-found")
+	ErrUniversityAlreadyExists = web.NewBadRequestBusinessErr(100001, "err-university-already-exists")
+	ErrCSVFileNotFound         = web.NewBadRequestBusinessErr(100002, "err-csv-file-not-found")
+	ErrCSVParseError           = web.NewBadRequestBusinessErr(100003, "err-csv-parse-error")
+	ErrCSVInvalidFormat        = web.NewBadRequestBusinessErr(100004, "err-csv-invalid-format")
+	ErrUniversityImportFailed  = web.NewBadRequestBusinessErr(100005, "err-university-import-failed")
 )

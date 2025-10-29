@@ -40,6 +40,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
+	"github.com/chaitin/WhaleHire/backend/db/universityprofile"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -1003,6 +1004,47 @@ func init() {
 	settingDescID := settingFields[0].Descriptor()
 	// setting.DefaultID holds the default value on creation for the id field.
 	setting.DefaultID = settingDescID.Default.(func() uuid.UUID)
+	universityprofileMixin := schema.UniversityProfile{}.Mixin()
+	universityprofileMixinHooks0 := universityprofileMixin[0].Hooks()
+	universityprofile.Hooks[0] = universityprofileMixinHooks0[0]
+	universityprofileMixinInters0 := universityprofileMixin[0].Interceptors()
+	universityprofile.Interceptors[0] = universityprofileMixinInters0[0]
+	universityprofileFields := schema.UniversityProfile{}.Fields()
+	_ = universityprofileFields
+	// universityprofileDescNameCn is the schema descriptor for name_cn field.
+	universityprofileDescNameCn := universityprofileFields[1].Descriptor()
+	// universityprofile.NameCnValidator is a validator for the "name_cn" field. It is called by the builders before save.
+	universityprofile.NameCnValidator = universityprofileDescNameCn.Validators[0].(func(string) error)
+	// universityprofileDescIsDoubleFirstClass is the schema descriptor for is_double_first_class field.
+	universityprofileDescIsDoubleFirstClass := universityprofileFields[5].Descriptor()
+	// universityprofile.DefaultIsDoubleFirstClass holds the default value on creation for the is_double_first_class field.
+	universityprofile.DefaultIsDoubleFirstClass = universityprofileDescIsDoubleFirstClass.Default.(bool)
+	// universityprofileDescIsProject985 is the schema descriptor for is_project_985 field.
+	universityprofileDescIsProject985 := universityprofileFields[6].Descriptor()
+	// universityprofile.DefaultIsProject985 holds the default value on creation for the is_project_985 field.
+	universityprofile.DefaultIsProject985 = universityprofileDescIsProject985.Default.(bool)
+	// universityprofileDescIsProject211 is the schema descriptor for is_project_211 field.
+	universityprofileDescIsProject211 := universityprofileFields[7].Descriptor()
+	// universityprofile.DefaultIsProject211 holds the default value on creation for the is_project_211 field.
+	universityprofile.DefaultIsProject211 = universityprofileDescIsProject211.Default.(bool)
+	// universityprofileDescIsQsTop100 is the schema descriptor for is_qs_top100 field.
+	universityprofileDescIsQsTop100 := universityprofileFields[8].Descriptor()
+	// universityprofile.DefaultIsQsTop100 holds the default value on creation for the is_qs_top100 field.
+	universityprofile.DefaultIsQsTop100 = universityprofileDescIsQsTop100.Default.(bool)
+	// universityprofileDescCreatedAt is the schema descriptor for created_at field.
+	universityprofileDescCreatedAt := universityprofileFields[14].Descriptor()
+	// universityprofile.DefaultCreatedAt holds the default value on creation for the created_at field.
+	universityprofile.DefaultCreatedAt = universityprofileDescCreatedAt.Default.(func() time.Time)
+	// universityprofileDescUpdatedAt is the schema descriptor for updated_at field.
+	universityprofileDescUpdatedAt := universityprofileFields[15].Descriptor()
+	// universityprofile.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	universityprofile.DefaultUpdatedAt = universityprofileDescUpdatedAt.Default.(func() time.Time)
+	// universityprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	universityprofile.UpdateDefaultUpdatedAt = universityprofileDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// universityprofileDescID is the schema descriptor for id field.
+	universityprofileDescID := universityprofileFields[0].Descriptor()
+	// universityprofile.DefaultID holds the default value on creation for the id field.
+	universityprofile.DefaultID = universityprofileDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinHooks0 := userMixin[0].Hooks()
 	user.Hooks[0] = userMixinHooks0[0]

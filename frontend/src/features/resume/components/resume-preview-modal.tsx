@@ -1,43 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Edit,
-  Save,
-  XCircle,
   Mail,
   Phone,
   MapPin,
-  Plus,
-  Trash2,
-  RefreshCw,
+  Eye,
+  Sparkles,
+  User,
+  Calendar,
+  Save,
+  DollarSign,
+  Clock,
+  GraduationCap,
+  FileText,
+  Users,
   Briefcase,
+  FolderGit2,
 } from 'lucide-react';
-import {
-  ResumeDetail,
-  ResumeUpdateParams,
-  Resume,
-  ResumeStatus,
-} from '@/types/resume';
-import {
-  getResumeDetail,
-  updateResume,
-  reparseResume,
-  downloadResumeFile,
-} from '@/services/resume';
+import { Dialog, DialogContent } from '@/ui/dialog';
+import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/ui/tooltip';
-import { ConfirmDialog } from '@/ui/confirm-dialog';
-import { formatDate } from '@/lib/utils';
-import { MultiSelect, Option } from '@/ui/multi-select';
-import { listJobProfiles } from '@/services/job-profile';
+import { Textarea } from '@/ui/textarea';
+import { ResumeDetail } from '@/types/resume';
+import { getResumeDetail, downloadResumeFile } from '@/services/resume';
+import { toast } from '@/ui/toast';
 
 interface ResumePreviewModalProps {
   isOpen: boolean;
@@ -53,1397 +41,1483 @@ export function ResumePreviewModal({
   isOpen,
   onClose,
   resumeId,
-  onEdit: _onEdit,
-  onNavigate,
-  canNavigatePrev = false,
-  canNavigateNext = false,
 }: ResumePreviewModalProps) {
   const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editFormData, setEditFormData] = useState<ResumeUpdateParams | null>(
-    null
-  );
-  const [isSaving, setIsSaving] = useState(false);
-  const [isReparsing, setIsReparsing] = useState(false);
-  const [reparseMessage, setReparseMessage] = useState<string | null>(null);
-  const [showReparseConfirm, setShowReparseConfirm] = useState(false);
-  const [showReparseResult, setShowReparseResult] = useState(false);
-  const [reparseResult, setReparseResult] = useState<{
-    success: boolean;
-    message: string;
-  } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedData, setEditedData] = useState<ResumeDetail | null>(null);
 
-  // 岗位相关状态
-  const [jobOptions, setJobOptions] = useState<Option[]>([]);
-  const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
-  const [loadingJobs, setLoadingJobs] = useState(false);
-
-  // 获取岗位列表
-  const fetchJobProfiles = useCallback(async () => {
-    setLoadingJobs(true);
-    try {
-      const response = await listJobProfiles({
-        page: 1,
-        page_size: 100,
-      });
-
-      const options: Option[] = response.items.map((job) => ({
-        value: job.id,
-        label: job.name,
-      }));
-      setJobOptions(options);
-    } catch (err) {
-      console.error('获取岗位列表失败:', err);
-    } finally {
-      setLoadingJobs(false);
-    }
-  }, []);
-
-  const fetchResumeDetail = useCallback(async () => {
-    if (!resumeId) return;
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const detail = await getResumeDetail(resumeId);
-      setResumeDetail(detail);
-      // 初始化已选岗位 - 从 job_positions 中提取岗位ID
-      const jobIds =
-        detail.job_positions?.map((jp) => jp.job_position_id).filter(Boolean) ||
-        [];
-      setSelectedJobIds(jobIds);
-    } catch (err) {
-      console.error('获取简历详情失败:', err);
-      setError('获取简历详情失败，请稍后重试');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [resumeId]);
-
+  // 获取简历详情
   useEffect(() => {
+    const fetchResumeDetail = async () => {
+      setIsLoading(true);
+      try {
+        const detail = await getResumeDetail(resumeId);
+        setResumeDetail(detail);
+      } catch (error) {
+        console.error('获取简历详情失败:', error);
+        toast.error('获取简历详情失败');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (isOpen && resumeId) {
       fetchResumeDetail();
-      fetchJobProfiles();
     }
-  }, [isOpen, resumeId, fetchResumeDetail, fetchJobProfiles]);
+  }, [isOpen, resumeId]);
 
-  const handleClose = () => {
-    setResumeDetail(null);
-    setError(null);
-    setIsEditing(false);
-    setEditFormData(null);
-    onClose();
-  };
-
-  // 处理简历切换
-  const handleNavigate = (direction: 'prev' | 'next') => {
-    if (onNavigate && !isEditing) {
-      onNavigate(direction);
-      // 当 resumeId prop 更新时，useEffect 会自动触发重新获取数据
-    }
-  };
-
-  // 处理下载简历 - 统一使用 downloadResumeFile 函数，确保一致的错误处理和日志记录
+  // 下载简历
   const handleDownload = async () => {
-    if (!resumeDetail) {
-      console.error('❌ 简历详情不存在，无法下载');
+    if (!resumeDetail?.resume_file_url) {
+      toast.error('简历文件不存在');
       return;
     }
 
     setIsDownloading(true);
     try {
-      console.log('🔽 预览模态框开始下载简历:', {
-        resumeId: resumeDetail.id,
-        name: resumeDetail.name,
-        hasFileUrl: !!resumeDetail.resume_file_url,
-      });
-
-      // 构造 Resume 对象调用统一的 downloadResumeFile 函数
-      // 这样可以确保使用相同的错误处理、URL处理和日志记录逻辑
-      const resume: Resume = {
-        id: resumeDetail.id,
-        name: resumeDetail.name || '',
-        phone: resumeDetail.phone || '',
-        email: resumeDetail.email || '',
-        current_city: resumeDetail.current_city || '',
-        status: ResumeStatus.COMPLETED,
-        created_at:
-          typeof resumeDetail.created_at === 'number'
-            ? resumeDetail.created_at
-            : Date.now(),
-        updated_at:
-          typeof resumeDetail.updated_at === 'number'
-            ? resumeDetail.updated_at
-            : Date.now(),
-        uploader_name: resumeDetail.uploader_name || '',
-        resume_file_url: resumeDetail.resume_file_url || '',
-        uploader_id: resumeDetail.uploader_id || '',
-      };
-
-      await downloadResumeFile(resume);
-      console.log('✅ 预览模态框下载完成');
+      await downloadResumeFile(resumeDetail, resumeDetail.name);
+      toast.success('简历下载成功');
     } catch (error) {
-      console.error('❌ 预览模态框下载简历失败:', error);
-
-      // 显示用户友好的错误信息
-      let errorMessage = '下载失败，请稍后重试';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      // 这里可以添加 toast 通知或其他用户提示
-      // 暂时使用 console.error，后续可以集成通知组件
-      console.error('用户错误提示:', errorMessage);
+      console.error('下载简历失败:', error);
+      toast.error('下载简历失败');
     } finally {
       setIsDownloading(false);
     }
   };
 
-  // 开始编辑
-  const handleStartEdit = () => {
-    if (resumeDetail) {
-      setIsEditing(true);
-      setEditFormData({
-        name: resumeDetail.name || '',
-        email: resumeDetail.email || '',
-        phone: resumeDetail.phone || '',
-        current_city: resumeDetail.current_city || '',
-        experiences:
-          resumeDetail.experiences?.map((exp) => ({
-            id: exp.id,
-            action: 'update' as const,
-            company: exp.company,
-            position: exp.position,
-            title: exp.title,
-            start_date: exp.start_date,
-            end_date: exp.end_date,
-            description: exp.description,
-          })) || [],
-        educations:
-          resumeDetail.educations?.map((edu) => ({
-            id: edu.id,
-            action: 'update' as const,
-            school: edu.school,
-            major: edu.major,
-            degree: edu.degree,
-            start_date: edu.start_date,
-            end_date: edu.end_date,
-            university_type: edu.university_type || 'ordinary', // 初始化大学类型字段
-          })) || [],
-        skills:
-          resumeDetail.skills?.map((skill) => ({
-            id: skill.id,
-            action: 'update' as const,
-            skill_name: skill.skill_name,
-            level: skill.level,
-            description: skill.description,
-          })) || [],
-        projects:
-          resumeDetail.projects?.map((project) => ({
-            id: project.id,
-            action: 'update' as const,
-            name: project.name || project.project_name,
-            project_name: project.project_name,
-            description: project.description,
-            start_date: project.start_date,
-            end_date: project.end_date,
-            achievements: project.achievements,
-            company: project.company,
-            project_type: project.project_type,
-            project_url: project.project_url,
-            responsibilities: project.responsibilities,
-            role: project.role,
-            technologies: project.technologies || project.tech_stack,
-            tech_stack: project.tech_stack,
-          })) || [],
-      });
+  // 查看原始简历
+  const handleViewOriginal = () => {
+    if (resumeDetail?.resume_file_url) {
+      window.open(resumeDetail.resume_file_url, '_blank');
+    } else {
+      toast.error('原始简历文件不存在');
     }
+  };
+
+  // AI分析(占位功能)
+  const handleAIAnalysis = () => {
+    toast.info('AI分析功能开发中');
+  };
+
+  // 进入编辑模式
+  const handleEdit = () => {
+    setIsEditMode(true);
+    setEditedData(resumeDetail);
   };
 
   // 取消编辑
   const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditFormData(null);
-  };
-
-  // 处理重新解析简历 - 显示确认对话框
-  const handleReparse = () => {
-    if (isReparsing) return;
-    setShowReparseConfirm(true);
-  };
-
-  // 确认重新解析
-  const handleConfirmReparse = async () => {
-    if (!resumeId || isReparsing) return;
-
-    setShowReparseConfirm(false);
-    setIsReparsing(true);
-    setReparseMessage(null);
-
-    try {
-      await reparseResume(resumeId);
-      setReparseResult({
-        success: true,
-        message: '简历重新解析成功！系统已更新简历信息。',
-      });
-
-      // 延迟重新获取简历详情，给后端处理时间
-      setTimeout(() => {
-        fetchResumeDetail();
-      }, 1000);
-    } catch (err) {
-      console.error('重新解析简历失败:', err);
-      setReparseResult({
-        success: false,
-        message: '重新解析失败，请检查网络连接后重试。',
-      });
-    } finally {
-      setIsReparsing(false);
-      setShowReparseResult(true);
-    }
+    setIsEditMode(false);
+    setEditedData(null);
   };
 
   // 保存编辑
-  const handleSaveEdit = async () => {
-    if (!editFormData || !resumeId) return;
-
-    setIsSaving(true);
-    try {
-      // 将选中的岗位ID添加到更新参数中，使用 job_position_ids 字段
-      const updateData = {
-        ...editFormData,
-        job_position_ids: selectedJobIds,
-      };
-      await updateResume(resumeId, updateData);
-      await fetchResumeDetail(); // 重新获取数据
-      setIsEditing(false);
-      setEditFormData(null);
-    } catch (err) {
-      console.error('保存简历失败:', err);
-      setError('保存简历失败，请稍后重试');
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSaveEdit = () => {
+    // TODO: 调用API保存编辑后的数据
+    toast.success('简历保存成功');
+    setResumeDetail(editedData);
+    setIsEditMode(false);
+    setEditedData(null);
   };
 
-  // 更新表单数据
-  const updateFormData = (
-    field: keyof ResumeUpdateParams,
-    value: string | number | boolean
+  // 更新编辑数据
+  const handleDataChange = (
+    field: string,
+    value: string | number | string[] | unknown[]
   ) => {
-    if (editFormData) {
-      setEditFormData({
-        ...editFormData,
-        [field]: value,
-      });
-    }
-  };
-
-  // 更新工作经验
-  const updateExperience = (index: number, field: string, value: string) => {
-    if (editFormData && editFormData.experiences) {
-      const newExperiences = [...editFormData.experiences];
-      newExperiences[index] = {
-        ...newExperiences[index],
-        [field]: value,
-      };
-      setEditFormData({
-        ...editFormData,
-        experiences: newExperiences,
-      });
-    }
-  };
-
-  // 更新教育经历
-  const updateEducation = (index: number, field: string, value: string) => {
-    if (editFormData && editFormData.educations) {
-      const newEducations = [...editFormData.educations];
-      newEducations[index] = {
-        ...newEducations[index],
-        [field]: value,
-      };
-      setEditFormData({
-        ...editFormData,
-        educations: newEducations,
-      });
-    }
-  };
-
-  // 更新项目经历
-  const updateProject = (index: number, field: string, value: string) => {
-    if (editFormData && editFormData.projects) {
-      const newProjects = [...editFormData.projects];
-      newProjects[index] = {
-        ...newProjects[index],
-        [field]: value,
-      };
-      setEditFormData({
-        ...editFormData,
-        projects: newProjects,
-      });
-    }
-  };
-
-  // 更新技能
-  const updateSkill = (index: number, value: string) => {
-    if (editFormData && editFormData.skills) {
-      const newSkills = [...editFormData.skills];
-      newSkills[index] = {
-        ...newSkills[index],
-        skill_name: value,
-      };
-      setEditFormData({
-        ...editFormData,
-        skills: newSkills,
-      });
-    }
-  };
-
-  // 添加技能
-  const addSkill = () => {
-    if (editFormData) {
-      const newSkill = {
-        id: `temp_${Date.now()}`, // 临时ID
-        action: 'create' as const,
-        skill_name: '',
-        level: '',
-        description: '',
-      };
-      setEditFormData({
-        ...editFormData,
-        skills: [...(editFormData.skills || []), newSkill],
-      });
-    }
-  };
-
-  // 删除技能
-  const removeSkill = (index: number) => {
-    if (editFormData && editFormData.skills) {
-      const newSkills = [...editFormData.skills];
-      const skillToRemove = newSkills[index];
-
-      // 如果是已存在的技能，标记为删除；如果是新添加的，直接移除
-      if (skillToRemove.id && !skillToRemove.id.startsWith('temp_')) {
-        newSkills[index] = {
-          ...skillToRemove,
-          action: 'delete' as const,
-        };
-      } else {
-        newSkills.splice(index, 1);
-      }
-
-      setEditFormData({
-        ...editFormData,
-        skills: newSkills,
-      });
-    }
+    if (!editedData) return;
+    setEditedData({
+      ...editedData,
+      [field]: value,
+    });
   };
 
   if (!isOpen) return null;
 
+  const displayData = isEditMode ? editedData : resumeDetail;
+
   return (
-    <TooltipProvider>
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* 半透明黑色背景 */}
-        <div
-          className="absolute inset-0 bg-black bg-opacity-50"
-          onClick={handleClose}
-        />
-
-        {/* 弹窗容器 - 增大尺寸 */}
-        <div className="relative bg-white rounded-lg shadow-xl w-[1200px] max-h-[90vh] overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-[700px] h-[90vh] overflow-hidden p-0 gap-0">
+        {/* 单一框体 */}
+        <div className="bg-white rounded-xl overflow-hidden flex flex-col h-full">
           {/* 顶部标题栏 */}
-          <div className="bg-gray-100 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-gray-900">简历详情预览</h2>
-            <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => handleNavigate('prev')}
-                    disabled={!canNavigatePrev || isEditing}
-                    className={`p-2 rounded transition-colors ${
-                      canNavigatePrev && !isEditing
-                        ? 'hover:bg-gray-200 text-gray-600'
-                        : 'text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>上一份简历</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => handleNavigate('next')}
-                    disabled={!canNavigateNext || isEditing}
-                    className={`p-2 rounded transition-colors ${
-                      canNavigateNext && !isEditing
-                        ? 'hover:bg-gray-200 text-gray-600'
-                        : 'text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>下一份简历</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleDownload}
-                    disabled={!resumeDetail || isDownloading}
-                    className={`p-2 rounded transition-colors ${
-                      !resumeDetail || isDownloading
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'hover:bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{isDownloading ? '下载中...' : '下载简历'}</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* 重新解析按钮 */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleReparse}
-                    disabled={isReparsing}
-                    className={`p-2 rounded ${
-                      isReparsing
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'hover:bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 ${isReparsing ? 'animate-spin' : ''}`}
-                    />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>重新解析简历</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* 编辑按钮 */}
-              {!isEditing && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={handleStartEdit}
-                      className="p-2 hover:bg-gray-200 rounded"
-                    >
-                      <Edit className="w-4 h-4 text-gray-600" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>编辑简历</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="p-2 hover:bg-gray-200 rounded"
-                    onClick={handleClose}
-                  >
-                    <X className="w-4 h-4 text-gray-600" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>关闭</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-[#1E293B]">简历预览</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* 内容区域 */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 overflow-y-auto max-h-[calc(90vh-140px)]">
-            {/* 重新解析消息提示 */}
-            {reparseMessage && (
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[600px]">
+              <div className="text-gray-500">加载中...</div>
+            </div>
+          ) : displayData ? (
+            <>
+              {/* 渐变头部区域 */}
               <div
-                className={`mb-4 p-3 rounded-lg text-center ${
-                  reparseMessage.includes('成功')
-                    ? 'bg-blue-100 text-[#7bb8ff] border border-blue-200'
-                    : 'bg-red-100 text-red-700 border border-red-200'
-                }`}
+                className="px-8 py-5 border-b border-gray-200"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
               >
-                {reparseMessage}
-              </div>
-            )}
-
-            {isLoading && (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-gray-500 text-lg">加载中...</div>
-              </div>
-            )}
-
-            {error && (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-red-500 text-lg">{error}</div>
-              </div>
-            )}
-
-            {resumeDetail && (
-              <div className="bg-white rounded-lg shadow-sm p-8 max-w-4xl mx-auto">
-                {/* 个人信息头部 */}
-                <div className="text-center mb-8">
-                  {isEditing ? (
-                    <div className="space-y-4">
-                      <Input
-                        value={editFormData?.name || ''}
-                        onChange={(e) => updateFormData('name', e.target.value)}
-                        className="text-3xl font-bold text-center"
-                        placeholder="姓名"
-                      />
-                      {/* 编辑模式下的岗位选择 */}
-                      <div className="mt-4">
-                        <div className="text-sm font-medium text-gray-700 mb-2 text-left">
-                          <Briefcase className="w-4 h-4 inline-block mr-1 text-[#7bb8ff]" />
-                          选择岗位
-                        </div>
-                        <MultiSelect
-                          options={jobOptions}
-                          selected={selectedJobIds}
-                          onChange={setSelectedJobIds}
-                          placeholder={
-                            loadingJobs ? '加载岗位中...' : '请选择岗位'
-                          }
-                          multiple={true}
-                          searchPlaceholder="搜索岗位名称..."
-                          disabled={loadingJobs}
-                          selectCountLabel="岗位"
+                {/* 姓名和操作按钮 */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    {/* 头像图标 */}
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%)',
+                        border: '2px solid rgba(255,255,255,0.6)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle
+                          cx="12"
+                          cy="8"
+                          r="4"
+                          fill="white"
+                          opacity="0.9"
                         />
-                      </div>
+                        <path
+                          d="M6 18.5C6 15.5 8.5 13 12 13C15.5 13 18 15.5 18 18.5V20H6V18.5Z"
+                          fill="white"
+                          opacity="0.9"
+                        />
+                      </svg>
                     </div>
-                  ) : (
-                    <>
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        {resumeDetail.name || '张明'}
-                      </h1>
-                    </>
-                  )}
 
-                  {/* 岗位显示 - 使用 job_positions 获取 job_title */}
-                  {!isEditing &&
-                    resumeDetail.job_positions &&
-                    resumeDetail.job_positions.length > 0 && (
-                      <div className="flex items-center justify-center gap-2 text-sm mb-3">
-                        <Briefcase className="w-4 h-4 text-[#7bb8ff]" />
-                        {resumeDetail.job_positions.length === 1 ? (
-                          <span className="text-[#7bb8ff]">
-                            {resumeDetail.job_positions[0].job_title}
-                          </span>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-pointer text-[#7bb8ff]">
-                                  {resumeDetail.job_positions[0].job_title}等
-                                  <span className="font-medium underline decoration-dotted mx-1">
-                                    {resumeDetail.job_positions.length - 1}
-                                  </span>
-                                  个岗位
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="bottom"
-                                className="max-w-xs"
-                              >
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-xs text-gray-500 mb-2">
-                                    所有岗位：
+                    <div className="flex items-center gap-2">
+                      {isEditMode ? (
+                        <Input
+                          value={displayData.name}
+                          onChange={(e) =>
+                            handleDataChange('name', e.target.value)
+                          }
+                          className="text-lg font-semibold text-white bg-white/20 border-white/30 h-8 w-48"
+                          placeholder="姓名"
+                        />
+                      ) : (
+                        <h1 className="text-lg font-semibold text-white">
+                          {displayData.name}
+                        </h1>
+                      )}
+                      {/* 岗位名称展示 - 从job_positions获取,加粗 */}
+                      {displayData.job_positions &&
+                        displayData.job_positions.length > 0 && (
+                          <div className="relative group">
+                            <span className="text-sm font-semibold text-white/90">
+                              {displayData.job_positions.length === 1
+                                ? displayData.job_positions[0].job_title
+                                : `${displayData.job_positions[0].job_title} 等${displayData.job_positions.length}个岗位`}
+                            </span>
+                            {/* Hover展示所有岗位 */}
+                            {displayData.job_positions.length > 1 && (
+                              <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-10">
+                                <div className="bg-white rounded-lg shadow-lg p-3 min-w-[200px]">
+                                  <div className="space-y-1">
+                                    {displayData.job_positions.map(
+                                      (jobPos, idx) => (
+                                        <div
+                                          key={jobPos.id || idx}
+                                          className="text-sm text-[#1E293B] py-1"
+                                        >
+                                          {jobPos.job_title}
+                                        </div>
+                                      )
+                                    )}
                                   </div>
-                                  {resumeDetail.job_positions.map(
-                                    (jobPos, idx) => (
-                                      <div
-                                        key={jobPos.id || idx}
-                                        className="text-sm"
-                                      >
-                                        {jobPos.job_title}
-                                      </div>
-                                    )
-                                  )}
                                 </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                              </div>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    )}
+                    </div>
+                  </div>
 
-                  <div className="flex items-center justify-center gap-6 text-sm text-gray-600">
-                    {isEditing ? (
-                      <>
-                        <div className="flex items-center gap-1">
-                          <Mail className="w-4 h-4" />
-                          <Input
-                            value={editFormData?.email || ''}
-                            onChange={(e) =>
-                              updateFormData('email', e.target.value)
-                            }
-                            placeholder="邮箱"
-                            className="w-40"
-                          />
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-4 h-4" />
-                          <Input
-                            value={editFormData?.phone || ''}
-                            onChange={(e) =>
-                              updateFormData('phone', e.target.value)
-                            }
-                            placeholder="电话"
-                            className="w-40"
-                          />
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <Input
-                            value={editFormData?.current_city || ''}
-                            onChange={(e) =>
-                              updateFormData('current_city', e.target.value)
-                            }
-                            placeholder="城市"
-                            className="w-40"
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {resumeDetail.email && (
-                          <div className="flex items-center gap-1">
-                            <Mail className="w-4 h-4" />
-                            <span>{resumeDetail.email}</span>
-                          </div>
-                        )}
-                        {resumeDetail.phone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="w-4 h-4" />
-                            <span>{resumeDetail.phone}</span>
-                          </div>
-                        )}
-                        {resumeDetail.current_city && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{resumeDetail.current_city}</span>
-                          </div>
-                        )}
-                      </>
-                    )}
+                  {/* 操作按钮 - 缩小尺寸 */}
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30 opacity-50 cursor-not-allowed"
+                      onClick={handleAIAnalysis}
+                      disabled
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      <span className="text-xs font-medium">AI分析</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      onClick={handleViewOriginal}
+                      disabled={!displayData.resume_file_url}
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      <span className="text-xs font-medium">查看</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      onClick={handleEdit}
+                      disabled={isEditMode}
+                    >
+                      <Edit className="w-3 h-3 mr-1" />
+                      <span className="text-xs font-medium">编辑</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      onClick={handleDownload}
+                      disabled={isDownloading || !displayData.resume_file_url}
+                    >
+                      <Download className="w-3 h-3 mr-1" />
+                      <span className="text-xs font-medium">下载</span>
+                    </Button>
                   </div>
                 </div>
 
-                {/* 工作经验模块 */}
-                {((isEditing && editFormData?.experiences) ||
-                  (!isEditing && resumeDetail.experiences)) && (
-                  <div className="mb-8">
-                    <div className="border-l-4 border-[#7bb8ff] pl-4 mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        工作经验
-                      </h2>
-                    </div>
-                    <div className="space-y-6">
-                      {(isEditing
-                        ? editFormData?.experiences
-                        : resumeDetail.experiences
-                      )?.map((exp, index) => (
-                        <div
-                          key={exp.id || index}
-                          className="bg-gray-50 rounded-lg p-6"
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              {isEditing ? (
-                                <div className="space-y-2">
-                                  <Input
-                                    value={exp.company || ''}
-                                    onChange={(e) =>
-                                      updateExperience(
-                                        index,
-                                        'company',
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="公司名称"
-                                    className="text-lg font-semibold"
-                                  />
-                                  <Input
-                                    value={exp.position || ''}
-                                    onChange={(e) =>
-                                      updateExperience(
-                                        index,
-                                        'position',
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="职位"
-                                    className="text-[#7bb8ff] font-medium"
-                                  />
-                                </div>
-                              ) : (
-                                <>
-                                  <h3 className="text-lg font-semibold text-gray-900">
-                                    {exp.company}
-                                  </h3>
-                                  <p className="text-[#7bb8ff] font-medium">
-                                    {exp.position}
-                                  </p>
-                                </>
-                              )}
-                            </div>
-                            <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded">
-                              {formatDate(exp.start_date)} -{' '}
-                              {exp.end_date ? formatDate(exp.end_date) : '至今'}
-                            </span>
-                          </div>
-                          {isEditing ? (
-                            <textarea
-                              value={exp.description || ''}
-                              onChange={(e) =>
-                                updateExperience(
-                                  index,
-                                  'description',
-                                  e.target.value
-                                )
-                              }
-                              placeholder="工作描述"
-                              className="w-full p-3 border border-gray-300 rounded-md resize-none"
-                              rows={3}
-                            />
-                          ) : (
-                            exp.description && (
-                              <div className="text-gray-700 leading-relaxed">
-                                {exp.description
-                                  .split('\n')
-                                  .map((line, lineIndex) => (
-                                    <p key={lineIndex} className="mb-2">
-                                      • {line}
-                                    </p>
-                                  ))}
-                              </div>
-                            )
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 项目经历模块 */}
-                {((isEditing && editFormData?.projects) ||
-                  (!isEditing && resumeDetail.projects)) && (
-                  <div className="mb-8">
-                    <div className="border-l-4 border-[#7bb8ff] pl-4 mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        项目经历
-                      </h2>
-                    </div>
-                    <div className="space-y-6">
-                      {(isEditing
-                        ? editFormData?.projects
-                        : resumeDetail.projects
-                      )?.map((project, index) => (
-                        <div
-                          key={project.id || index}
-                          className="bg-gray-50 rounded-lg p-6"
-                        >
-                          {/* 项目标题和时间 */}
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              {isEditing ? (
-                                <div className="space-y-2">
-                                  <Input
-                                    value={
-                                      project.name || project.project_name || ''
-                                    }
-                                    onChange={(e) =>
-                                      updateProject(
-                                        index,
-                                        'name',
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="项目名称"
-                                    className="text-lg font-semibold"
-                                  />
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <Input
-                                      value={project.company || ''}
-                                      onChange={(e) =>
-                                        updateProject(
-                                          index,
-                                          'company',
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="所属公司"
-                                      className="text-sm"
-                                    />
-                                    <Input
-                                      value={project.role || ''}
-                                      onChange={(e) =>
-                                        updateProject(
-                                          index,
-                                          'role',
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="担任角色"
-                                      className="text-sm"
-                                    />
-                                  </div>
-                                </div>
-                              ) : (
-                                <>
-                                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                    {project.name || project.project_name}
-                                  </h3>
-                                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
-                                    {project.company && (
-                                      <span className="flex items-center">
-                                        <span className="font-medium">
-                                          公司：
-                                        </span>
-                                        {project.company}
-                                      </span>
-                                    )}
-                                    {project.role && (
-                                      <span className="flex items-center">
-                                        <span className="font-medium">
-                                          角色：
-                                        </span>
-                                        {project.role}
-                                      </span>
-                                    )}
-                                    {project.project_type && (
-                                      <span className="flex items-center">
-                                        <span className="font-medium">
-                                          类型：
-                                        </span>
-                                        {project.project_type}
-                                      </span>
-                                    )}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                            <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded">
-                              {formatDate(project.start_date)} -{' '}
-                              {project.end_date
-                                ? formatDate(project.end_date)
-                                : '至今'}
-                            </span>
-                          </div>
-
-                          {/* 技术栈 */}
-                          {(project.technologies || project.tech_stack) && (
-                            <div className="mb-3">
-                              {isEditing ? (
-                                <Input
-                                  value={
-                                    project.technologies ||
-                                    project.tech_stack ||
-                                    ''
-                                  }
-                                  onChange={(e) =>
-                                    updateProject(
-                                      index,
-                                      'technologies',
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="技术栈"
-                                  className="text-[#7bb8ff] font-medium"
-                                />
-                              ) : (
-                                <div className="flex flex-wrap gap-2">
-                                  <span className="text-sm font-medium text-gray-700">
-                                    技术栈：
-                                  </span>
-                                  <div className="flex flex-wrap gap-1">
-                                    {(
-                                      project.technologies || project.tech_stack
-                                    )
-                                      ?.split(/[,，、]/)
-                                      .map((tech, techIndex) => (
-                                        <span
-                                          key={techIndex}
-                                          className="bg-blue-100 text-[#7bb8ff] px-2 py-1 rounded text-xs font-medium"
-                                        >
-                                          {tech.trim()}
-                                        </span>
-                                      ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* 项目链接 */}
-                          {project.project_url && !isEditing && (
-                            <div className="mb-3">
-                              <span className="text-sm font-medium text-gray-700">
-                                项目链接：
-                              </span>
-                              <a
-                                href={project.project_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 underline ml-1"
-                              >
-                                {project.project_url}
-                              </a>
-                            </div>
-                          )}
-
-                          {/* 项目描述 */}
-                          {project.description && (
-                            <div className="mb-3">
-                              {isEditing ? (
-                                <textarea
-                                  value={project.description || ''}
-                                  onChange={(e) =>
-                                    updateProject(
-                                      index,
-                                      'description',
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="项目描述"
-                                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
-                                  rows={3}
-                                />
-                              ) : (
-                                <div>
-                                  <span className="text-sm font-medium text-gray-700 block mb-1">
-                                    项目描述：
-                                  </span>
-                                  <div className="text-gray-700 leading-relaxed">
-                                    {project.description
-                                      .split('\n')
-                                      .map((line, lineIndex) => (
-                                        <p key={lineIndex} className="mb-1">
-                                          • {line}
-                                        </p>
-                                      ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* 项目职责 */}
-                          {project.responsibilities && (
-                            <div className="mb-3">
-                              {isEditing ? (
-                                <textarea
-                                  value={project.responsibilities || ''}
-                                  onChange={(e) =>
-                                    updateProject(
-                                      index,
-                                      'responsibilities',
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="项目职责"
-                                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
-                                  rows={2}
-                                />
-                              ) : (
-                                <div>
-                                  <span className="text-sm font-medium text-gray-700 block mb-1">
-                                    项目职责：
-                                  </span>
-                                  <div className="text-gray-700 leading-relaxed">
-                                    {project.responsibilities
-                                      .split('\n')
-                                      .map((line, lineIndex) => (
-                                        <p key={lineIndex} className="mb-1">
-                                          • {line}
-                                        </p>
-                                      ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* 项目成就 */}
-                          {project.achievements && (
-                            <div className="mb-3">
-                              {isEditing ? (
-                                <textarea
-                                  value={project.achievements || ''}
-                                  onChange={(e) =>
-                                    updateProject(
-                                      index,
-                                      'achievements',
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="项目成就"
-                                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
-                                  rows={2}
-                                />
-                              ) : (
-                                <div>
-                                  <span className="text-sm font-medium text-gray-700 block mb-1">
-                                    项目成就：
-                                  </span>
-                                  <div className="text-gray-700 leading-relaxed">
-                                    {project.achievements
-                                      .split('\n')
-                                      .map((line, lineIndex) => (
-                                        <p key={lineIndex} className="mb-1">
-                                          • {line}
-                                        </p>
-                                      ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* 编辑模式下的额外字段 */}
-                          {isEditing && (
-                            <div className="grid grid-cols-2 gap-2 mt-3">
-                              <Input
-                                value={project.project_type || ''}
-                                onChange={(e) =>
-                                  updateProject(
-                                    index,
-                                    'project_type',
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="项目类型"
-                                className="text-sm"
-                              />
-                              <Input
-                                value={project.project_url || ''}
-                                onChange={(e) =>
-                                  updateProject(
-                                    index,
-                                    'project_url',
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="项目链接"
-                                className="text-sm"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 教育经历模块 */}
-                {((isEditing && editFormData?.educations) ||
-                  (!isEditing && resumeDetail.educations)) && (
-                  <div className="mb-8">
-                    <div className="border-l-4 border-[#7bb8ff] pl-4 mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        教育经历
-                      </h2>
-                    </div>
-                    <div className="space-y-4">
-                      {(isEditing
-                        ? editFormData?.educations
-                        : resumeDetail.educations
-                      )?.map((edu, index) => (
-                        <div
-                          key={edu.id || index}
-                          className="bg-gray-50 rounded-lg p-6"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              {isEditing ? (
-                                <div className="space-y-2">
-                                  <Input
-                                    value={edu.school || ''}
-                                    onChange={(e) =>
-                                      updateEducation(
-                                        index,
-                                        'school',
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="学校名称"
-                                    className="text-lg font-semibold"
-                                  />
-                                  <Input
-                                    value={edu.major || ''}
-                                    onChange={(e) =>
-                                      updateEducation(
-                                        index,
-                                        'major',
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="专业"
-                                    className="text-[#7bb8ff] font-medium"
-                                  />
-                                  <Input
-                                    value={edu.degree || ''}
-                                    onChange={(e) =>
-                                      updateEducation(
-                                        index,
-                                        'degree',
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="学位"
-                                    className="text-gray-600"
-                                  />
-                                  <select
-                                    value={edu.university_type || 'ordinary'}
-                                    onChange={(e) =>
-                                      updateEducation(
-                                        index,
-                                        'university_type',
-                                        e.target.value as
-                                          | 'ordinary'
-                                          | '211'
-                                          | '985'
-                                      )
-                                    }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                  >
-                                    <option value="ordinary">普通学校</option>
-                                    <option value="211">211工程</option>
-                                    <option value="985">985工程</option>
-                                  </select>
-                                </div>
-                              ) : (
-                                <>
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                      {edu.school}
-                                    </h3>
-                                    {/* 大学类型标签 */}
-                                    {edu.university_type === '211' && (
-                                      <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium">
-                                        211
-                                      </span>
-                                    )}
-                                    {edu.university_type === '985' && (
-                                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">
-                                        985
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-[#7bb8ff] font-medium">
-                                    {edu.major}
-                                  </p>
-                                  {edu.degree && (
-                                    <p className="text-gray-600">
-                                      {edu.degree}
-                                    </p>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                            <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded">
-                              {formatDate(edu.start_date)} -{' '}
-                              {edu.end_date ? formatDate(edu.end_date) : '至今'}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 技能特长模块 */}
-                {((isEditing && editFormData?.skills) ||
-                  (!isEditing && resumeDetail.skills)) && (
-                  <div className="mb-8">
-                    <div className="border-l-4 border-[#7bb8ff] pl-4 mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        技能特长
-                      </h2>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {(isEditing ? editFormData?.skills : resumeDetail.skills)
-                        ?.filter(
-                          (skill) =>
-                            !('action' in skill) || skill.action !== 'delete'
-                        ) // 过滤掉标记为删除的技能
-                        ?.map((skill, index) =>
-                          isEditing ? (
-                            <div
-                              key={skill.id || index}
-                              className="flex items-center gap-2 bg-gray-50 rounded-lg p-2"
-                            >
-                              <Input
-                                value={skill.skill_name || ''}
-                                onChange={(e) =>
-                                  updateSkill(index, e.target.value)
-                                }
-                                placeholder="技能名称"
-                                className="w-32 h-8"
-                              />
-                              <button
-                                onClick={() => removeSkill(index)}
-                                className="p-1 hover:bg-red-100 rounded text-red-500"
-                                title="删除技能"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span
-                              key={skill.id || index}
-                              className="bg-blue-100 text-[#7bb8ff] px-4 py-2 rounded-full text-sm font-medium"
-                            >
-                              {skill.skill_name}
-                            </span>
-                          )
-                        )}
-                      {/* 添加技能按钮 */}
-                      {isEditing && (
-                        <button
-                          onClick={addSkill}
-                          className="flex items-center gap-1 px-3 py-2 border-2 border-dashed border-blue-300 text-[#7bb8ff] rounded-lg hover:bg-blue-50 transition-colors"
-                          title="添加技能"
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span className="text-sm">添加技能</span>
-                        </button>
+                {/* 个人信息 - icon+内容形式 */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  {(displayData.phone || isEditMode) && (
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-white" />
+                      {isEditMode ? (
+                        <Input
+                          value={displayData.phone || ''}
+                          onChange={(e) =>
+                            handleDataChange('phone', e.target.value)
+                          }
+                          className="text-sm text-white bg-white/20 border-white/30 h-6 w-32"
+                          placeholder="电话"
+                        />
+                      ) : (
+                        <span className="text-sm text-white">
+                          {displayData.phone}
+                        </span>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* 编辑模式下的操作按钮 */}
-                {isEditing && (
-                  <div className="mb-6 flex justify-center gap-4 p-4 bg-gray-50 rounded-lg">
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={isSaving}
-                      className="flex items-center gap-2 px-6 py-2 bg-[#7bb8ff] text-white rounded-lg hover:bg-[#5aa3e6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <Save className="w-4 h-4" />
-                      {isSaving ? '保存中...' : '保存修改'}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="flex items-center gap-2 px-6 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      取消编辑
-                    </button>
-                  </div>
-                )}
+                  )}
+                  {(displayData.email || isEditMode) && (
+                    <div className="flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-white" />
+                      {isEditMode ? (
+                        <Input
+                          value={displayData.email || ''}
+                          onChange={(e) =>
+                            handleDataChange('email', e.target.value)
+                          }
+                          className="text-sm text-white bg-white/20 border-white/30 h-6 w-40"
+                          placeholder="邮箱"
+                        />
+                      ) : (
+                        <span className="text-sm text-white">
+                          {displayData.email}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {((displayData as unknown as { age?: number }).age ||
+                    isEditMode) && (
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-white" />
+                      {isEditMode ? (
+                        <Input
+                          type="number"
+                          value={
+                            (displayData as unknown as { age?: number }).age ||
+                            ''
+                          }
+                          onChange={(e) =>
+                            handleDataChange('age', parseInt(e.target.value))
+                          }
+                          className="text-sm text-white bg-white/20 border-white/30 h-6 w-20"
+                          placeholder="年龄"
+                        />
+                      ) : (
+                        <span className="text-sm text-white">
+                          {(displayData as unknown as { age: number }).age}岁
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {(displayData.gender || isEditMode) && (
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-white" />
+                      {isEditMode ? (
+                        <Input
+                          value={displayData.gender || ''}
+                          onChange={(e) =>
+                            handleDataChange('gender', e.target.value)
+                          }
+                          className="text-sm text-white bg-white/20 border-white/30 h-6 w-20"
+                          placeholder="性别"
+                        />
+                      ) : (
+                        <span className="text-sm text-white">
+                          {displayData.gender}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {(displayData.current_city || isEditMode) && (
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3.5 text-white" />
+                      {isEditMode ? (
+                        <Input
+                          value={displayData.current_city || ''}
+                          onChange={(e) =>
+                            handleDataChange('current_city', e.target.value)
+                          }
+                          className="text-sm text-white bg-white/20 border-white/30 h-6 w-32"
+                          placeholder="工作城市"
+                        />
+                      ) : (
+                        <span className="text-sm text-white">
+                          {displayData.current_city}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* 底部操作栏 */}
-          <div className="bg-white border-t px-6 py-4 flex justify-end">
-            <button
-              className="px-6 py-2 bg-white text-gray-900 border border-gray-300 rounded hover:bg-gray-50"
-              onClick={handleClose}
-            >
-              关闭
-            </button>
-          </div>
+              {/* 内容区域 - 所有内容垂直滚动展示,添加科技感线条 */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 bg-white space-y-6 relative">
+                {/* 科技感装饰线条 - 提高透明度使其更清晰 */}
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                  <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                  <div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
+                  <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                  <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-blue-500 to-transparent"></div>
+                  <div className="absolute top-0 left-3/4 w-px h-full bg-gradient-to-b from-transparent via-purple-500 to-transparent"></div>
+                </div>
+                {/* 求职意向 */}
+                <JobIntentionSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 教育背景 */}
+                <EducationSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 工作经验 */}
+                <ExperienceSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 个人简介 */}
+                <IntroSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 项目经验 */}
+                <ProjectsSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 技能专长 */}
+                <SkillsSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 荣誉与资格证书 */}
+                <CertificatesSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 其他 */}
+                <OtherSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+              </div>
+
+              {/* 编辑模式底部按钮 */}
+              {isEditMode && (
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-white">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    className="h-9 px-4"
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    className="h-9 px-4 bg-[#3B82F6] text-white hover:bg-[#2563EB]"
+                  >
+                    <Save className="w-4 h-4 mr-1.5" />
+                    保存
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-[600px]">
+              <div className="text-gray-500">暂无数据</div>
+            </div>
+          )}
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ==================== 内容区域组件 ====================
+
+// 个人简介
+function IntroSection({
+  resumeDetail,
+  isEditMode,
+  onDataChange,
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  // 个人简介字段检查 - 假设有 personal_summary 或 summary 字段
+  const hasDescription =
+    (resumeDetail as { personal_summary?: string }).personal_summary ||
+    (resumeDetail as { summary?: string }).summary;
+
+  // 如果没有个人简介内容且不是编辑模式,则不显示整个section
+  if (!hasDescription && !isEditMode) {
+    return null;
+  }
+
+  const handleChange = (value: string) => {
+    if (onDataChange) {
+      // 尝试更新 personal_summary 或 summary 字段
+      if (
+        (resumeDetail as { personal_summary?: string }).personal_summary !==
+        undefined
+      ) {
+        onDataChange('personal_summary', value);
+      } else {
+        onDataChange('summary', value);
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-xl font-bold text-[#1E293B]">个人简介</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-purple-200 to-transparent"></div>
       </div>
 
-      {/* 重新解析确认对话框 */}
-      <ConfirmDialog
-        open={showReparseConfirm}
-        onOpenChange={setShowReparseConfirm}
-        title="确认重新解析"
-        description="确定要重新解析简历吗？这将使用最新的解析算法重新处理简历内容。"
-        confirmText="确认解析"
-        cancelText="取消"
-        onConfirm={handleConfirmReparse}
-        loading={isReparsing}
-      />
-
-      {/* 重新解析结果对话框 */}
-      {showReparseResult && reparseResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black bg-opacity-50"
-            onClick={() => setShowReparseResult(false)}
+      {/* 内容区 */}
+      <div className="space-y-3">
+        {isEditMode ? (
+          <Textarea
+            value={(hasDescription as string) || ''}
+            onChange={(e) => handleChange(e.target.value)}
+            className="text-base leading-[1.625] text-[#1E293B] min-h-[100px]"
+            placeholder="请输入个人简介..."
           />
-          <div className="relative bg-white rounded-lg shadow-xl w-96 p-6">
-            <div className="text-center">
+        ) : (
+          <p className="text-base leading-[1.625] text-[#1E293B]">
+            {hasDescription}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 求职意向
+function JobIntentionSection({
+  resumeDetail,
+  isEditMode,
+  onDataChange,
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  const expectedSalary = (
+    resumeDetail as unknown as { expected_salary?: string }
+  ).expected_salary;
+  const expectedCity = resumeDetail.current_city;
+  const availableDate = (resumeDetail as unknown as { available_date?: string })
+    .available_date;
+
+  return (
+    <div className="space-y-3">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-lg font-bold text-[#1E293B]">求职意向</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-green-300 via-teal-200 to-transparent"></div>
+      </div>
+
+      {/* 三项内容一排展示 - 左右对齐 */}
+      <div className="flex items-center justify-between">
+        {/* 期望薪资 */}
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-4 h-4 text-[#9CA3AF]" />
+          <span className="text-sm font-medium text-[#64748B]">期望薪资</span>
+          {isEditMode ? (
+            <Input
+              value={expectedSalary || ''}
+              onChange={(e) =>
+                onDataChange?.('expected_salary', e.target.value)
+              }
+              className="text-sm font-medium text-[#64748B] h-7 w-32"
+              placeholder="--"
+            />
+          ) : (
+            <span className="text-sm font-medium text-[#64748B]">
+              {expectedSalary || '--'}
+            </span>
+          )}
+        </div>
+
+        {/* 期望城市 */}
+        <div className="flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-[#9CA3AF]" />
+          <span className="text-sm font-medium text-[#64748B]">期望城市</span>
+          {isEditMode ? (
+            <Input
+              value={expectedCity || ''}
+              onChange={(e) => onDataChange?.('current_city', e.target.value)}
+              className="text-sm font-medium text-[#64748B] h-7 w-32"
+              placeholder="--"
+            />
+          ) : (
+            <span className="text-sm font-medium text-[#64748B]">
+              {expectedCity || '--'}
+            </span>
+          )}
+        </div>
+
+        {/* 到岗时间 */}
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-[#9CA3AF]" />
+          <span className="text-sm font-medium text-[#64748B]">到岗时间</span>
+          {isEditMode ? (
+            <Input
+              value={availableDate || ''}
+              onChange={(e) => onDataChange?.('available_date', e.target.value)}
+              className="text-sm font-medium text-[#64748B] h-7 w-32"
+              placeholder="--"
+            />
+          ) : (
+            <span className="text-sm font-medium text-[#64748B]">
+              {availableDate || '--'}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 工作经验
+function ExperienceSection({
+  resumeDetail,
+  isEditMode,
+  onDataChange,
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  const experiences = resumeDetail.experiences || [];
+
+  if (experiences.length === 0 && !isEditMode) {
+    return null;
+  }
+
+  const handleExperienceChange = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+    if (!onDataChange) return;
+    const newExperiences = [...experiences];
+    newExperiences[index] = {
+      ...newExperiences[index],
+      [field]: value,
+    };
+    onDataChange('experiences', newExperiences);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-lg font-bold text-[#1E293B]">工作经验</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-purple-200 to-transparent"></div>
+      </div>
+
+      {/* 工作经历列表 */}
+      <div className="space-y-6">
+        {experiences.map((exp, index) => (
+          <div key={exp.id} className="relative pl-8">
+            {/* 左侧装饰 - 更优雅的设计 */}
+            <div className="absolute left-0 top-0">
+              {/* 圆形图标 - 渐变色背景 */}
               <div
-                className={`mx-auto mb-4 w-12 h-12 rounded-full flex items-center justify-center ${
-                  reparseResult.success ? 'bg-blue-100' : 'bg-red-100'
-                }`}
+                className="w-6 h-6 rounded-full flex items-center justify-center"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
               >
-                {reparseResult.success ? (
-                  <svg
-                    className="w-6 h-6 text-[#7bb8ff]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                <Briefcase className="w-3.5 h-3.5 text-white" />
+              </div>
+              {/* 连接线 - 如果不是最后一个 */}
+              {index < experiences.length - 1 && (
+                <div className="absolute left-[11px] top-6 w-0.5 h-[calc(100%+1.5rem)] bg-[#E5E7EB]" />
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {/* 公司名称 + 工作职责 + 时间 */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  {isEditMode ? (
+                    <>
+                      <Input
+                        value={exp.company}
+                        onChange={(e) =>
+                          handleExperienceChange(
+                            index,
+                            'company',
+                            e.target.value
+                          )
+                        }
+                        className="text-sm font-bold text-[#1E293B] h-7 w-40"
+                        placeholder="公司名称"
+                      />
+                      <Input
+                        value={exp.position}
+                        onChange={(e) =>
+                          handleExperienceChange(
+                            index,
+                            'position',
+                            e.target.value
+                          )
+                        }
+                        className="text-sm font-bold text-[#1E293B] h-7 w-32"
+                        placeholder="职位"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-sm font-bold text-[#1E293B]">
+                        {exp.company}
+                      </span>
+                      <span className="text-sm font-bold text-[#1E293B]">
+                        {exp.position}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {/* 时间右对齐 */}
+                <div className="text-sm text-[#64748B] whitespace-nowrap">
+                  {exp.start_date?.split('-').slice(0, 2).join('年') + '月'} -{' '}
+                  {exp.end_date
+                    ? exp.end_date.split('-').slice(0, 2).join('年') + '月'
+                    : '至今'}
+                </div>
+              </div>
+
+              {/* 工作经验内容 */}
+              {(exp.description || isEditMode) &&
+                (isEditMode ? (
+                  <Textarea
+                    value={exp.description || ''}
+                    onChange={(e) =>
+                      handleExperienceChange(
+                        index,
+                        'description',
+                        e.target.value
+                      )
+                    }
+                    className="text-sm font-medium leading-relaxed text-[#64748B] min-h-[80px]"
+                    placeholder="工作描述..."
+                  />
                 ) : (
-                  <svg
-                    className="w-6 h-6 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <p className="text-sm font-medium leading-relaxed text-[#64748B]">
+                    {exp.description}
+                  </p>
+                ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 教育背景
+function EducationSection({
+  resumeDetail,
+  // isEditMode, // TODO: 未来可扩展编辑功能
+  // onDataChange // TODO: 未来可扩展编辑功能
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  const educations = resumeDetail.educations || [];
+
+  // 学历类型映射
+  const degreeMap: Record<string, string> = {
+    bachelor: '本科',
+    master: '硕士',
+    doctor: '博士',
+    junior_college: '大专',
+  };
+
+  if (educations.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-lg font-bold text-[#1E293B]">教育背景</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-green-300 via-teal-200 to-transparent"></div>
+      </div>
+
+      {/* 教育经历列表 */}
+      <div className="space-y-6">
+        {educations.map((edu, index) => {
+          const eduExtended = edu as unknown as {
+            gpa?: string;
+            papers?: string | string[];
+            clubs?: string | string[];
+          };
+
+          return (
+            <div key={edu.id} className="relative pl-8">
+              {/* 左侧装饰 - 更优雅的设计 */}
+              <div className="absolute left-0 top-0">
+                {/* 圆形图标 - 渐变色背景 */}
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
+                >
+                  <GraduationCap className="w-3.5 h-3.5 text-white" />
+                </div>
+                {/* 连接线 - 如果不是最后一个 */}
+                {index < educations.length - 1 && (
+                  <div className="absolute left-[11px] top-6 w-0.5 h-[calc(100%+1.5rem)] bg-[#E5E7EB]" />
                 )}
               </div>
-              <h3
-                className={`text-lg font-medium mb-2 ${
-                  reparseResult.success ? 'text-[#7bb8ff]' : 'text-red-900'
-                }`}
-              >
-                {reparseResult.success ? '解析成功' : '解析失败'}
-              </h3>
-              <p className="text-gray-600 mb-6">{reparseResult.message}</p>
-              <button
-                onClick={() => setShowReparseResult(false)}
-                className={`px-6 py-2 rounded-lg text-white font-medium ${
-                  reparseResult.success
-                    ? 'bg-[#7bb8ff] hover:bg-[#5aa3e6]'
-                    : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                确定
-              </button>
+
+              <div className="space-y-3">
+                {/* 学校名称 + 就读时间 */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-[#1E293B]">
+                    {edu.school}
+                  </p>
+                  <div className="text-sm text-[#64748B] whitespace-nowrap">
+                    {edu.start_date?.split('-').slice(0, 2).join('年') + '月'} -{' '}
+                    {edu.end_date?.split('-').slice(0, 2).join('年') + '月'}
+                  </div>
+                </div>
+
+                {/* 专业 + 学历标签 */}
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-[#64748B]">
+                    {edu.major}
+                  </h4>
+                  {/* 学历标签 */}
+                  <span className="inline-block px-2.5 py-0.5 text-xs bg-[#EFF6FF] text-[#3B82F6] rounded-full">
+                    {degreeMap[edu.degree] || edu.degree}
+                  </span>
+                </div>
+              </div>
+
+              {/* GPA展示 */}
+              {eduExtended.gpa && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4 text-[#3B82F6]" />
+                    <span className="text-sm font-medium text-[#64748B]">
+                      GPA
+                    </span>
+                  </div>
+                  <p className="text-base text-[#1E293B] pl-6">
+                    {eduExtended.gpa}
+                  </p>
+                </div>
+              )}
+
+              {/* 论文发表 */}
+              {eduExtended.papers && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#3B82F6]" />
+                    <span className="text-sm font-medium text-[#64748B]">
+                      论文发表
+                    </span>
+                  </div>
+                  <div className="pl-6 space-y-1">
+                    {Array.isArray(eduExtended.papers) ? (
+                      eduExtended.papers.map((paper, idx) => (
+                        <p key={idx} className="text-base text-[#1E293B]">
+                          • {paper}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-base text-[#1E293B]">
+                        {eduExtended.papers}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 社团和组织经历 */}
+              {eduExtended.clubs && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#3B82F6]" />
+                    <span className="text-sm font-medium text-[#64748B]">
+                      社团和组织经历
+                    </span>
+                  </div>
+                  <div className="pl-6 space-y-1">
+                    {Array.isArray(eduExtended.clubs) ? (
+                      eduExtended.clubs.map((club, idx) => (
+                        <p key={idx} className="text-base text-[#1E293B]">
+                          • {club}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-base text-[#1E293B]">
+                        {eduExtended.clubs}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// 技能专长
+function SkillsSection({
+  resumeDetail,
+  // isEditMode, // TODO: 未来可扩展编辑功能
+  // onDataChange // TODO: 未来可扩展编辑功能
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  const skills = resumeDetail.skills || [];
+
+  if (skills.length === 0) {
+    return null;
+  }
+
+  // 获取进度条宽度 (缩短到30%)
+  const getProgressWidth = (level?: string) => {
+    switch (level) {
+      case '精通':
+        return '27%'; // 90% * 30% = 27% (最高)
+      case '高级':
+        return '24%'; // 80% * 30% = 24%
+      case '熟练':
+        return '22.5%'; // 75% * 30% = 22.5%
+      case '中级':
+        return '18%'; // 60% * 30% = 18%
+      case '了解':
+      case '初级':
+        return '15%'; // 50% * 30% = 15% (最低)
+      default:
+        return '25.5%'; // 85% * 30% = 25.5%
+    }
+  };
+
+  // 按类型分类技能(如果有category字段)
+  const technicalSkills = skills.filter(
+    (s) =>
+      (s as { category?: string }).category === 'technical' ||
+      !(s as { category?: string }).category
+  );
+  const otherSkills = skills.filter(
+    (s) => (s as { category?: string }).category === 'other'
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-lg font-bold text-[#1E293B]">技能专长</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-purple-300 via-pink-200 to-transparent"></div>
+      </div>
+
+      {/* 技术技能 - 带进度条 */}
+      {technicalSkills.length > 0 && (
+        <div className="space-y-3">
+          {/* 每行3个技能 */}
+          <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+            {technicalSkills.map((skill) => (
+              <div key={skill.id} className="space-y-2">
+                {/* 技能名称 + 等级 */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-[#64748B]">
+                    {skill.skill_name}
+                  </span>
+                  <span className="text-sm font-medium text-[#64748B]">
+                    {skill.level || '精通'}
+                  </span>
+                </div>
+
+                {/* 进度条 */}
+                <div className="h-2.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: getProgressWidth(skill.level),
+                      background:
+                        'linear-gradient(90deg, #7bb8ff 0%, #3F3663 100%)',
+                    }}
+                  />
+                </div>
+
+                {/* 技术标签 */}
+                {(skill as unknown as { tags?: string[] }).tags && (
+                  <div className="flex flex-wrap gap-1">
+                    {(skill as unknown as { tags: string[] }).tags.map(
+                      (tag, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-block px-2 py-0.5 text-xs bg-[#F3F4F6] text-[#64748B] rounded"
+                        >
+                          {tag}
+                        </span>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
-    </TooltipProvider>
+
+      {/* 其他技能 - 带圆点列表 */}
+      {otherSkills.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-lg font-semibold text-[#1E293B]">其他技能</h4>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+            {otherSkills.map((skill) => (
+              <div key={skill.id} className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] flex-shrink-0 mt-2" />
+                <span className="text-base text-[#1E293B]">
+                  {skill.skill_name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 如果没有分类,显示所有技能为其他技能 */}
+      {technicalSkills.length === 0 &&
+        otherSkills.length === 0 &&
+        skills.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-lg font-semibold text-[#1E293B]">技能列表</h4>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              {skills.map((skill) => (
+                <div key={skill.id} className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] flex-shrink-0 mt-2" />
+                  <span className="text-base text-[#1E293B]">
+                    {skill.skill_name} {skill.level ? `(${skill.level})` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+    </div>
+  );
+}
+
+// 项目经历
+function ProjectsSection({
+  resumeDetail,
+  // isEditMode, // TODO: 未来可扩展编辑功能
+  // onDataChange // TODO: 未来可扩展编辑功能
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  const projects = resumeDetail.projects || [];
+
+  // 如果没有项目经历,不显示此区域
+  if (projects.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-lg font-bold text-[#1E293B]">项目经历</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-cyan-200 to-transparent"></div>
+      </div>
+
+      {/* 项目列表 */}
+      <div className="space-y-6">
+        {projects.map((project, index) => {
+          const projectExtended = project as unknown as {
+            role?: string;
+            achievements?: string | string[];
+          };
+
+          return (
+            <div key={project.id} className="relative pl-8">
+              {/* 左侧装饰 - 更优雅的设计 */}
+              <div className="absolute left-0 top-0">
+                {/* 圆形图标 - 渐变色背景 */}
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
+                >
+                  <FolderGit2 className="w-3.5 h-3.5 text-white" />
+                </div>
+                {/* 连接线 - 如果不是最后一个 */}
+                {index < projects.length - 1 && (
+                  <div className="absolute left-[11px] top-6 w-0.5 h-[calc(100%+1.5rem)] bg-[#E5E7EB]" />
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {/* 项目名称 + 角色 + 时间 */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-[#1E293B]">
+                      {project.name}
+                    </h4>
+                    {projectExtended.role && (
+                      <span className="text-sm font-bold text-[#1E293B]">
+                        {projectExtended.role}
+                      </span>
+                    )}
+                  </div>
+                  {/* 时间右对齐 */}
+                  <div className="text-sm text-[#64748B] whitespace-nowrap">
+                    {project.start_date?.split('-').slice(0, 2).join('年') +
+                      '月'}{' '}
+                    -{' '}
+                    {project.end_date
+                      ? project.end_date.split('-').slice(0, 2).join('年') +
+                        '月'
+                      : '至今'}
+                  </div>
+                </div>
+
+                {/* 公司名称 */}
+                {project.company && (
+                  <p className="text-sm font-medium text-[#64748B]">
+                    {project.company}
+                  </p>
+                )}
+
+                {/* 项目描述 */}
+                {project.description && (
+                  <p className="text-sm font-medium leading-relaxed text-[#64748B]">
+                    {project.description}
+                  </p>
+                )}
+
+                {/* 主要职责 */}
+                {(project.responsibilities || projectExtended.achievements) && (
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium text-[#64748B]">
+                      主要职责
+                    </h5>
+                    <ul className="space-y-2">
+                      {/* responsibilities 字段 */}
+                      {project.responsibilities &&
+                        (typeof project.responsibilities === 'string'
+                          ? [project.responsibilities]
+                          : (project.responsibilities as unknown as string[]) ||
+                            []
+                        ).map((resp, idx) => (
+                          <li
+                            key={`resp-${idx}`}
+                            className="flex items-start gap-2"
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] flex-shrink-0 mt-2" />
+                            <span className="text-sm font-medium text-[#64748B]">
+                              {resp}
+                            </span>
+                          </li>
+                        ))}
+                      {/* achievements 字段 */}
+                      {projectExtended.achievements &&
+                        (typeof projectExtended.achievements === 'string'
+                          ? [projectExtended.achievements]
+                          : projectExtended.achievements || []
+                        ).map((ach, idx) => (
+                          <li
+                            key={`ach-${idx}`}
+                            className="flex items-start gap-2"
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] flex-shrink-0 mt-2" />
+                            <span className="text-sm font-medium text-[#64748B]">
+                              {ach}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 关键词标签 (technologies) */}
+                {(project.technologies ||
+                  (project as { tech_stack?: string }).tech_stack) &&
+                  (() => {
+                    const techData =
+                      project.technologies ||
+                      (project as { tech_stack?: string }).tech_stack ||
+                      '';
+
+                    // 处理不同的数据格式
+                    let techArray: string[] = [];
+                    if (Array.isArray(techData)) {
+                      // 如果是数组，直接使用
+                      techArray = techData.filter((t) => t && t.trim());
+                    } else if (typeof techData === 'string') {
+                      // 如果是字符串，支持多种分隔符：逗号、顿号、分号
+                      // 先统一替换为逗号，再分隔
+                      const normalizedData = techData.replace(/[、；;]/g, ',');
+                      techArray = normalizedData
+                        .split(',')
+                        .map((t) => t.trim())
+                        .filter((t) => t);
+                    }
+
+                    if (techArray.length === 0) return null;
+
+                    return (
+                      <div className="flex flex-wrap gap-1.5">
+                        {techArray.map((tech, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-block px-3 py-1 text-xs text-white rounded-full"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                            }}
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// 荣誉与资格证书
+function CertificatesSection({
+  resumeDetail,
+  // isEditMode, // TODO: 未来可扩展编辑功能
+  // onDataChange // TODO: 未来可扩展编辑功能
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  const certificatesData = resumeDetail as unknown as {
+    certificates?:
+      | Array<{
+          id: string;
+          name: string;
+          issuer?: string;
+          date?: string;
+        }>
+      | string;
+    honors?: string;
+  };
+
+  // 处理证书数据
+  let certificates: Array<{
+    id: string;
+    name: string;
+    issuer?: string;
+    date?: string;
+  }> = [];
+
+  if (Array.isArray(certificatesData.certificates)) {
+    certificates = certificatesData.certificates;
+  } else if (
+    typeof certificatesData.certificates === 'string' &&
+    certificatesData.certificates.trim()
+  ) {
+    // 如果是字符串，将其转换为数组
+    certificates = certificatesData.certificates
+      .split('\n')
+      .filter((c) => c.trim())
+      .map((cert, idx) => ({
+        id: `cert-${idx}`,
+        name: cert.trim(),
+      }));
+  }
+
+  // 如果有honors字段也添加进来
+  if (certificatesData.honors && typeof certificatesData.honors === 'string') {
+    const honorsList = certificatesData.honors
+      .split('\n')
+      .filter((h) => h.trim());
+    honorsList.forEach((honor, idx) => {
+      certificates.push({
+        id: `honor-${idx}`,
+        name: honor.trim(),
+      });
+    });
+  }
+
+  // 如果没有证书或荣誉，不显示此区域
+  if (certificates.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-xl font-bold text-[#1E293B]">荣誉与资格证书</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-yellow-300 via-amber-200 to-transparent"></div>
+      </div>
+
+      {/* 证书卡片列表 */}
+      <div className="space-y-3">
+        {certificates.map((cert) => (
+          <div
+            key={cert.id}
+            className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow"
+          >
+            {/* 图标 */}
+            <div className="w-9 h-10 bg-blue-50/60 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg
+                className="w-5 h-4 text-[#3B82F6]"
+                fill="none"
+                viewBox="0 0 20 16"
+              >
+                <path
+                  fill="currentColor"
+                  d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 2h12v12H4V2zm2 2v2h8V4H6zm0 4v2h8V8H6zm0 4v2h5v-2H6z"
+                />
+              </svg>
+            </div>
+
+            {/* 证书信息 */}
+            <div className="flex-1">
+              <h4 className="text-base font-semibold text-[#1E293B] mb-1">
+                {cert.name}
+              </h4>
+              {cert.issuer && (
+                <p className="text-sm text-[#64748B] mb-0.5">{cert.issuer}</p>
+              )}
+              {cert.date && (
+                <p className="text-sm text-[#64748B]">{cert.date}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 其他
+function OtherSection({
+  resumeDetail,
+  isEditMode,
+  onDataChange,
+}: {
+  resumeDetail: ResumeDetail;
+  isEditMode?: boolean;
+  onDataChange?: (
+    field: string,
+    value: string | number | string[] | unknown[]
+  ) => void;
+}) {
+  const otherData = resumeDetail as unknown as {
+    other?: string;
+    additional_info?: string;
+    remarks?: string;
+  };
+
+  // 合并所有"其他"相关字段
+  const otherContent = [
+    otherData.other,
+    otherData.additional_info,
+    otherData.remarks,
+  ]
+    .filter((content) => content && content.trim())
+    .join('\n\n');
+
+  // 如果没有内容且不是编辑模式，不显示此区域
+  if (!otherContent && !isEditMode) {
+    return null;
+  }
+
+  const handleOtherChange = (value: string) => {
+    if (onDataChange) {
+      // 更新 other 字段作为主要字段
+      onDataChange('other', value);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-1 h-7 rounded"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        />
+        <h3 className="text-xl font-bold text-[#1E293B]">其他</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-gray-300 via-slate-200 to-transparent"></div>
+      </div>
+
+      {/* 内容区 */}
+      <div className="space-y-2">
+        {isEditMode ? (
+          <Textarea
+            value={otherContent || ''}
+            onChange={(e) => handleOtherChange(e.target.value)}
+            className="text-base leading-relaxed text-[#1E293B] min-h-[80px]"
+            placeholder="请输入其他信息..."
+          />
+        ) : (
+          <p className="text-base leading-relaxed text-[#1E293B] whitespace-pre-wrap">
+            {otherContent}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

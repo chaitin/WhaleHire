@@ -445,7 +445,10 @@ export function ResumeManagementPage() {
           </div>
         </div>
         <Button
-          className="gap-2 rounded-lg px-5 py-2 shadow-sm btn-primary"
+          className="gap-2 rounded-lg px-5 py-2 shadow-sm btn-primary text-white"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
           onClick={() => setIsUploadModalOpen(true)}
           disabled={isLoading}
         >

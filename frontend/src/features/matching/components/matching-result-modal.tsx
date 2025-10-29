@@ -199,9 +199,16 @@ export function MatchingResultModal({
           onClick={() => setCurrentPage(i)}
           className={cn(
             'h-8 w-8 p-0',
-            i === currentPage &&
-              'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+            i === currentPage && 'text-white border-primary hover:text-white'
           )}
+          style={
+            i === currentPage
+              ? {
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }
+              : undefined
+          }
         >
           {i}
         </Button>
@@ -508,6 +515,7 @@ export function MatchingResultModal({
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 text-[#7bb8ff] hover:text-[#7bb8ff]/80 hover:bg-[#D1FAE5]/50"
+                              style={{ color: '#7bb8ff' }}
                               onClick={() => {
                                 setSelectedResumeId(result.id);
                                 setSelectedResumeName(
@@ -608,7 +616,10 @@ export function MatchingResultModal({
                 onOpenChange(false);
                 onBackToHome?.();
               }}
-              className="px-6 bg-primary hover:bg-primary/90 text-white"
+              className="px-6 text-white"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
             >
               返回首页
             </Button>

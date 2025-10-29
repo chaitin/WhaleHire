@@ -470,9 +470,16 @@ export function IntelligentMatchingPage() {
           onClick={() => handlePageChange(i)}
           className={cn(
             'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151] pagination-btn',
-            i === pagination.current &&
-              'border-primary bg-primary text-primary-foreground'
+            i === pagination.current && 'border-primary text-primary-foreground'
           )}
+          style={
+            i === pagination.current
+              ? {
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }
+              : undefined
+          }
         >
           {i}
         </Button>
@@ -493,7 +500,10 @@ export function IntelligentMatchingPage() {
           </p>
         </div>
         <Button
-          className="gap-2 rounded-lg px-4 py-2 shadow-sm btn-primary"
+          className="gap-2 rounded-lg px-4 py-2 shadow-sm btn-primary text-white"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
           onClick={() => setIsCreateModalOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -605,7 +615,13 @@ export function IntelligentMatchingPage() {
                 onKeyPress={handleSearchKeyPress}
               />
             </div>
-            <Button onClick={handleSearch} className="gap-2 btn-secondary">
+            <Button
+              onClick={handleSearch}
+              className="gap-2 btn-secondary text-white"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
+            >
               <Search className="h-4 w-4" />
               搜索
             </Button>

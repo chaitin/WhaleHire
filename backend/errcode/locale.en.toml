@@ -93,3 +93,21 @@ other = "Invalid mailbox credentials"
 
 [err-mailbox-connection-failed]
 other = "Mailbox connection failed"
+
+[err-university-not-found]
+other = "University not found"
+
+[err-university-already-exists]
+other = "University already exists"
+
+[err-csv-file-not-found]
+other = "CSV file not found"
+
+[err-csv-parse-error]
+other = "Failed to parse CSV file"
+
+[err-csv-invalid-format]
+other = "Invalid CSV file format"
+
+[err-university-import-failed]
+other = "Failed to import university data"

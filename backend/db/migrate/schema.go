@@ -1369,6 +1369,66 @@ var (
 		Columns:    SettingsColumns,
 		PrimaryKey: []*schema.Column{SettingsColumns[0]},
 	}
+	// UniversityProfilesColumns holds the columns for the "university_profiles" table.
+	UniversityProfilesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name_cn", Type: field.TypeString},
+		{Name: "name_en", Type: field.TypeString, Nullable: true},
+		{Name: "alias", Type: field.TypeString, Nullable: true},
+		{Name: "country", Type: field.TypeString, Nullable: true},
+		{Name: "is_double_first_class", Type: field.TypeBool, Default: false},
+		{Name: "is_project_985", Type: field.TypeBool, Default: false},
+		{Name: "is_project_211", Type: field.TypeBool, Default: false},
+		{Name: "is_qs_top100", Type: field.TypeBool, Default: false},
+		{Name: "rank_qs", Type: field.TypeInt, Nullable: true},
+		{Name: "overall_score", Type: field.TypeFloat64, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "vector_content", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "vector", Type: field.TypeOther, Nullable: true, SchemaType: map[string]string{"postgres": "vector"}},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// UniversityProfilesTable holds the schema information for the "university_profiles" table.
+	UniversityProfilesTable = &schema.Table{
+		Name:       "university_profiles",
+		Columns:    UniversityProfilesColumns,
+		PrimaryKey: []*schema.Column{UniversityProfilesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "universityprofile_name_cn",
+				Unique:  true,
+				Columns: []*schema.Column{UniversityProfilesColumns[2]},
+			},
+			{
+				Name:    "universityprofile_metadata",
+				Unique:  false,
+				Columns: []*schema.Column{UniversityProfilesColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Type: "GIN",
+				},
+			},
+			{
+				Name:    "universityprofile_vector",
+				Unique:  false,
+				Columns: []*schema.Column{UniversityProfilesColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					OpClass: "vector_cosine_ops",
+					Type:    "ivfflat",
+				},
+			},
+			{
+				Name:    "universityprofile_is_double_first_class_is_project_985_is_project_211_is_qs_top100",
+				Unique:  false,
+				Columns: []*schema.Column{UniversityProfilesColumns[6], UniversityProfilesColumns[7], UniversityProfilesColumns[8], UniversityProfilesColumns[9]},
+			},
+			{
+				Name:    "universityprofile_country",
+				Unique:  false,
+				Columns: []*schema.Column{UniversityProfilesColumns[5]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -1483,6 +1543,7 @@ var (
 		ScreeningTasksTable,
 		ScreeningTaskResumesTable,
 		SettingsTable,
+		UniversityProfilesTable,
 		UsersTable,
 		UserIdentitiesTable,
 		UserLoginHistoriesTable,
@@ -1630,6 +1691,9 @@ func init() {
 	}
 	SettingsTable.Annotation = &entsql.Annotation{
 		Table: "settings",
+	}
+	UniversityProfilesTable.Annotation = &entsql.Annotation{
+		Table: "university_profiles",
 	}
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",

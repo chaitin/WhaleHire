@@ -705,10 +705,15 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('upload')
-                    ? 'bg-[#7bb8ff] text-white'
+                    ? 'text-white'
                     : isStepActive('upload')
-                      ? 'bg-[#7bb8ff] text-white'
+                      ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
+                }
+                style={
+                  isStepCompleted('upload') || isStepActive('upload')
+                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    : undefined
                 }`}
               >
                 {isStepCompleted('upload') ? (
@@ -735,9 +740,13 @@ export function UploadResumeModal({
             {/* 连接线1 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
               <div
-                className={`h-full bg-[#7bb8ff] rounded transition-all duration-300 ${
+                className={`h-full rounded transition-all duration-300 ${
                   isStepCompleted('upload') ? 'w-full' : 'w-0'
                 }`}
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
               ></div>
             </div>
 
@@ -746,10 +755,15 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('preview')
-                    ? 'bg-[#7bb8ff] text-white'
+                    ? 'text-white'
                     : isStepActive('preview')
-                      ? 'bg-[#7bb8ff] text-white'
+                      ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
+                }
+                style={
+                  isStepCompleted('preview') || isStepActive('preview')
+                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    : undefined
                 }`}
               >
                 {isStepCompleted('preview') ? (
@@ -776,9 +790,13 @@ export function UploadResumeModal({
             {/* 连接线2 */}
             <div className="flex-1 mx-4 h-1 bg-gray-200 rounded max-w-24">
               <div
-                className={`h-full bg-[#7bb8ff] rounded transition-all duration-300 ${
+                className={`h-full rounded transition-all duration-300 ${
                   isStepCompleted('preview') ? 'w-full' : 'w-0'
                 }`}
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
               ></div>
             </div>
 
@@ -787,10 +805,15 @@ export function UploadResumeModal({
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
                   isStepCompleted('complete')
-                    ? 'bg-[#7bb8ff] text-white'
+                    ? 'text-white'
                     : isStepActive('complete')
-                      ? 'bg-[#7bb8ff] text-white'
+                      ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
+                }
+                style={
+                  isStepCompleted('complete') || isStepActive('complete')
+                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    : undefined
                 }`}
               >
                 {isStepCompleted('complete') ? (
@@ -903,13 +926,24 @@ export function UploadResumeModal({
                   <div
                     className={`relative p-3 border-2 rounded-lg cursor-pointer transition-all ${
                       uploadMethod === 'local'
-                        ? 'border-[#7bb8ff] bg-[#7bb8ff]/10'
+                        ? 'border-[#7bb8ff]'
                         : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                    }
+                    style={
+                      uploadMethod === 'local'
+                        ? { background: 'linear-gradient(135deg, rgba(123, 184, 255, 0.1) 0%, rgba(63, 54, 99, 0.1) 100%)' }
+                        : undefined
                     }`}
                     onClick={() => setUploadMethod('local')}
                   >
                     <div className="text-center">
-                      <div className="mx-auto w-8 h-8 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-2">
+                      <div
+                        className="mx-auto w-8 h-8 rounded-full flex items-center justify-center mb-2"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, rgba(123, 184, 255, 0.2) 0%, rgba(63, 54, 99, 0.2) 100%)',
+                        }}
+                      >
                         <Upload className="h-4 w-4 text-[#7bb8ff]" />
                       </div>
                       <h4 className="text-sm font-medium text-gray-900 mb-1">
@@ -920,7 +954,13 @@ export function UploadResumeModal({
                       </p>
                     </div>
                     {uploadMethod === 'local' && (
-                      <div className="absolute top-2 right-2 w-4 h-4 bg-[#7bb8ff] rounded-full flex items-center justify-center">
+                      <div
+                        className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                        }}
+                      >
                         <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                       </div>
                     )}
@@ -929,7 +969,13 @@ export function UploadResumeModal({
                   {/* 链接导入 - 置灰不可选 */}
                   <div className="relative p-3 border-2 border-gray-200 rounded-lg opacity-50 cursor-not-allowed">
                     <div className="text-center">
-                      <div className="mx-auto w-8 h-8 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-2">
+                      <div
+                        className="mx-auto w-8 h-8 rounded-full flex items-center justify-center mb-2"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, rgba(123, 184, 255, 0.2) 0%, rgba(63, 54, 99, 0.2) 100%)',
+                        }}
+                      >
                         <Link className="h-4 w-4 text-[#7bb8ff]" />
                       </div>
                       <h4 className="text-sm font-medium text-gray-900 mb-1">
@@ -949,8 +995,13 @@ export function UploadResumeModal({
                     <div
                       className={`relative border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer ${
                         isDragging
-                          ? 'border-[#7bb8ff] bg-[#7bb8ff]/10'
+                          ? 'border-[#7bb8ff]'
                           : 'border-gray-300 hover:border-[#7bb8ff] hover:bg-gray-50'
+                      }
+                      style={
+                        isDragging
+                          ? { background: 'linear-gradient(135deg, rgba(123, 184, 255, 0.1) 0%, rgba(63, 54, 99, 0.1) 100%)' }
+                          : undefined
                       } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       onClick={() => !uploading && handleSelectFiles()}
                       onDragEnter={handleDragEnter}
@@ -959,7 +1010,13 @@ export function UploadResumeModal({
                       onDrop={handleDrop}
                     >
                       <div className="text-center">
-                        <div className="mx-auto w-16 h-16 bg-[#7bb8ff]/20 rounded-full flex items-center justify-center mb-4">
+                        <div
+                          className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(123, 184, 255, 0.2) 0%, rgba(63, 54, 99, 0.2) 100%)',
+                          }}
+                        >
                           <Upload
                             className={`h-8 w-8 ${isDragging ? 'text-[#7bb8ff] animate-bounce' : 'text-[#7bb8ff]'}`}
                           />
@@ -1045,8 +1102,12 @@ export function UploadResumeModal({
                         </div>
                         <div className="w-full bg-blue-100 rounded-full h-2">
                           <div
-                            className="bg-[#7bb8ff] h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${uploadProgress}%` }}
+                            className="h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${uploadProgress}%`,
+                              background:
+                                'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                            }}
                           ></div>
                         </div>
                       </div>
@@ -1236,8 +1297,13 @@ export function UploadResumeModal({
                               onClick={() => setCurrentResumeIndex(index)}
                               className={`h-1.5 rounded-full transition-all ${
                                 index === currentResumeIndex
-                                  ? 'w-8 bg-[#7bb8ff]'
+                                  ? 'w-8'
                                   : 'w-1.5 bg-gray-300 hover:bg-gray-400'
+                              }
+                              style={
+                                index === currentResumeIndex
+                                  ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                                  : undefined
                               }`}
                               title={`查看第 ${index + 1} 份简历`}
                             />
@@ -1356,7 +1422,7 @@ export function UploadResumeModal({
                                     <span
                                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
                                         resume.status === 'completed'
-                                          ? 'bg-[#7bb8ff]/20 text-[#7bb8ff]'
+                                          ? 'text-[#7bb8ff]'
                                           : resume.status === 'processing'
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : resume.status === 'pending'
@@ -1386,7 +1452,13 @@ export function UploadResumeModal({
 
                     {/* 内容提示 */}
                     {showContentTip && (
-                      <div className="bg-[#7bb8ff]/10 border border-[#7bb8ff]/30 rounded-lg p-3 mt-3">
+                      <div
+                        className="border border-[#7bb8ff]/30 rounded-lg p-3 mt-3"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, rgba(123, 184, 255, 0.1) 0%, rgba(63, 54, 99, 0.1) 100%)',
+                        }}
+                      >
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="h-4 w-4 text-[#7bb8ff]" />
                           <span className="text-xs font-medium text-[#7bb8ff]">
@@ -1433,9 +1505,17 @@ export function UploadResumeModal({
                           onClick={() => setCurrentResumeIndex(index)}
                           className={`h-1.5 rounded-full transition-all ${
                             index === currentResumeIndex
-                              ? 'w-8 bg-[#7bb8ff]'
+                              ? 'w-8'
                               : 'w-1.5 bg-gray-300 hover:bg-gray-400'
                           }`}
+                          style={
+                            index === currentResumeIndex
+                              ? {
+                                  background:
+                                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                                }
+                              : undefined
+                          }
                           title={`查看第 ${index + 1} 份简历`}
                         />
                       ))}
@@ -1563,7 +1643,7 @@ export function UploadResumeModal({
                                   <span
                                     className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                                       detail.status === 'completed'
-                                        ? 'bg-[#7bb8ff]/20 text-[#7bb8ff]'
+                                        ? 'text-[#7bb8ff]'
                                         : detail.status === 'processing'
                                           ? 'bg-yellow-100 text-yellow-800'
                                           : detail.status === 'pending'
@@ -1631,7 +1711,11 @@ export function UploadResumeModal({
                     uploading ||
                     selectedJobIds.length === 0
                   }
-                  className="bg-[#7bb8ff] hover:bg-[#5aa3e6] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
+                  className="hover:bg-[#5aa3e6] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
                 >
                   {uploading ? '上传中...' : '下一步'}
                   <ArrowRight className="h-4 w-4" />

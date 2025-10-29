@@ -47,6 +47,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
+	"github.com/chaitin/WhaleHire/backend/db/universityprofile"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -145,6 +146,7 @@ func checkColumn(table, column string) error {
 			screeningtask.Table:            screeningtask.ValidColumn,
 			screeningtaskresume.Table:      screeningtaskresume.ValidColumn,
 			setting.Table:                  setting.ValidColumn,
+			universityprofile.Table:        universityprofile.ValidColumn,
 			user.Table:                     user.ValidColumn,
 			useridentity.Table:             useridentity.ValidColumn,
 			userloginhistory.Table:         userloginhistory.ValidColumn,

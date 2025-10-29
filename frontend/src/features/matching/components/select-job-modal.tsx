@@ -270,9 +270,16 @@ export function SelectJobModal({
           onClick={() => setCurrentPage(i)}
           className={cn(
             'h-8 w-8 p-0',
-            i === currentPage &&
-              'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+            i === currentPage && 'text-white border-primary hover:text-white'
           )}
+          style={
+            i === currentPage
+              ? {
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }
+              : undefined
+          }
         >
           {i}
         </Button>
@@ -433,7 +440,11 @@ export function SelectJobModal({
                 </div>
                 <Button
                   onClick={handleSearch}
-                  className="h-9 px-6 rounded-l-none bg-primary hover:bg-primary/90"
+                  className="h-9 px-6 rounded-l-none text-white"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
                 >
                   <Search className="h-3.5 w-3.5 mr-1 text-white" />
                   搜索
@@ -590,7 +601,10 @@ export function SelectJobModal({
             </Button>
             <Button
               onClick={handleNext}
-              className="px-6 bg-primary hover:bg-primary/90 text-white"
+              className="px-6 text-white"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
             >
               下一步
             </Button>

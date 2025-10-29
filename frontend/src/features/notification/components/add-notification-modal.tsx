@@ -292,7 +292,14 @@ export function AddNotificationModal({
           <Button variant="outline" onClick={onClose} disabled={submitting}>
             取消
           </Button>
-          <Button onClick={handleSave} disabled={submitting}>
+          <Button
+            className="text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
+            onClick={handleSave}
+            disabled={submitting}
+          >
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />

@@ -1,15 +1,19 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/dialog';
+import { Dialog, DialogContent } from '@/ui/dialog';
 import { Button } from '@/ui/button';
 import {
   X,
   MapPin,
   Briefcase,
-  Building2,
-  CheckCircle2,
-  Gift,
   GraduationCap,
-  ClipboardList,
-  Award,
+  Share2,
+  Clock,
+  Building2,
+  Sparkles,
+  BarChart3,
+  Grid,
+  Target,
+  CheckCircle2,
+  Star,
 } from 'lucide-react';
 import type { JobProfileDetail } from '@/types/job-profile';
 
@@ -45,6 +49,17 @@ const getExperienceLabel = (experienceType: string): string => {
   return experienceMap[experienceType] || experienceType;
 };
 
+// 工作性质转换
+const getWorkTypeLabel = (workType: string): string => {
+  const workTypeMap: Record<string, string> = {
+    full_time: '全职',
+    part_time: '兼职',
+    internship: '实习',
+    outsourcing: '外包',
+  };
+  return workTypeMap[workType] || workType;
+};
+
 export function JobProfilePreview({
   open,
   onOpenChange,
@@ -53,10 +68,16 @@ export function JobProfilePreview({
   if (!jobProfile) return null;
 
   // 格式化薪资范围
-  const salaryRange =
-    jobProfile.salary_min && jobProfile.salary_max
-      ? `${jobProfile.salary_min / 1000}K-${jobProfile.salary_max / 1000}K·15薪`
-      : '面议';
+  const formatSalary = () => {
+    if (jobProfile.salary_min && jobProfile.salary_max) {
+      return `${jobProfile.salary_min}K-${jobProfile.salary_max}K/月`;
+    } else if (jobProfile.salary_min) {
+      return `${jobProfile.salary_min}K以上/月`;
+    } else if (jobProfile.salary_max) {
+      return `${jobProfile.salary_max}K以下/月`;
+    }
+    return '薪资面议';
+  };
 
   // 获取学历要求
   const educationLabel =
@@ -78,185 +99,302 @@ export function JobProfilePreview({
   const responsibilities =
     jobProfile.responsibilities?.map((r) => r.responsibility) || [];
 
-  // 获取技能列表
-  const requiredSkills =
-    jobProfile.skills
-      ?.filter((s) => s.type === 'required')
-      .map((s) => s.skill) || [];
-  const bonusSkills =
-    jobProfile.skills?.filter((s) => s.type === 'bonus').map((s) => s.skill) ||
-    [];
+  // 从description中提取任职要求(如果存在)
+  const getRequirementsFromDescription = () => {
+    if (!jobProfile.description) return [];
 
-  // 获取工作性质标签
-  const getWorkTypeLabel = (workType: string): string => {
-    const workTypeMap: Record<string, string> = {
-      full_time: '全职',
-      part_time: '兼职',
-      internship: '实习',
-      outsourcing: '外包',
-    };
-    return workTypeMap[workType] || workType;
+    // 查找"任职要求"后的内容
+    const requirementMatch = jobProfile.description.match(
+      /任职要求[：:]\s*([\s\S]*?)(?=\n\n|$)/
+    );
+    if (requirementMatch && requirementMatch[1]) {
+      // 按行分割,过滤空行
+      return requirementMatch[1]
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line && line.length > 0);
+    }
+    return [];
   };
 
-  const workTypeLabel = jobProfile.work_type
-    ? getWorkTypeLabel(jobProfile.work_type)
-    : '';
+  // 获取技能列表 - 用于加分项展示
+  // 直接使用所有skills作为加分项展示
+  const bonusSkills = jobProfile.skills || [];
+
+  // 任职要求 - 从description中提取
+  const requiredSkills = getRequirementsFromDescription();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] max-h-[90vh] overflow-hidden p-0 gap-0">
-        {/* 顶部标题区域 - 白色背景 */}
-        <div className="bg-white border-b border-gray-100">
-          <div className="flex items-center justify-between px-6 py-2.5">
-            <DialogHeader className="space-y-0">
-              <DialogTitle className="text-[16px] font-semibold text-[#1F2937]">
-                岗位画像预览
-              </DialogTitle>
-            </DialogHeader>
+      <DialogContent className="max-w-[700px] h-[90vh] overflow-hidden p-0 gap-0">
+        {/* 单一框体 */}
+        <div className="bg-white rounded-xl overflow-hidden flex flex-col h-full">
+          {/* 顶部标题栏 */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-[#1E293B]">岗位预览</h2>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="h-6 w-6 p-0 text-[#546E7A] hover:text-[#1F2937] hover:bg-gray-100"
+              className="h-8 w-8 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-        </div>
 
-        {/* 岗位名称区域 - 淡蓝色渐变背景 */}
-        <div className="bg-gradient-to-r from-[#E3F2FD] via-[#BBDEFB] to-[#E3F2FD] px-6 py-5">
-          <div className="flex items-start justify-between mb-3">
-            <h1 className="text-[24px] font-semibold text-[#1F2937]">
-              {jobProfile.name}
-            </h1>
-            <div className="text-[26px] font-semibold text-[#FF6B35] whitespace-nowrap ml-4">
-              {salaryRange}
+          {/* 岗位头部信息 - 渐变背景 */}
+          <div
+            className="px-8 py-5 border-b border-gray-200"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
+          >
+            {/* 整体布局容器 */}
+            <div className="relative">
+              {/* 岗位名称和状态 */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3 flex-1">
+                  {/* 岗位图标 - 使用目标靶心图标代表岗位 */}
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%)',
+                      border: '2px solid rgba(255,255,255,0.6)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    }}
+                  >
+                    <Target className="w-6 h-6 text-white" />
+                  </div>
+
+                  <div className="flex items-center justify-between flex-1 gap-3">
+                    {/* 左侧:岗位名称和状态标签 */}
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl font-semibold text-white">
+                        {jobProfile.name}
+                      </h1>
+                      {/* 状态标签 - 继续缩小 */}
+                      <div className="relative inline-flex items-center">
+                        <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded blur-[1px] opacity-50"></div>
+                        <div className="relative px-1.5 py-[1px] bg-gradient-to-r from-green-400 to-emerald-500 rounded">
+                          <span className="text-[8px] font-semibold text-white tracking-wide">
+                            已发布
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* 右侧:薪资范围右对齐 */}
+                    <span
+                      className="text-lg font-bold"
+                      style={{ color: '#FF8C42' }}
+                    >
+                      {formatSalary()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 关键信息标签 - 简化显示:只显示icon+内容 */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
+                {/* 所属部门 */}
+                {jobProfile.department && (
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-white" />
+                    <span className="text-sm text-white">
+                      {jobProfile.department}
+                    </span>
+                  </div>
+                )}
+                {/* 工作地点 */}
+                {jobProfile.location && (
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="w-3 h-3.5 text-white" />
+                    <span className="text-sm text-white">
+                      {jobProfile.location}
+                    </span>
+                  </div>
+                )}
+                {/* 工作性质 */}
+                {jobProfile.work_type && (
+                  <div className="flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-white" />
+                    <span className="text-sm text-white">
+                      {getWorkTypeLabel(jobProfile.work_type)}
+                    </span>
+                  </div>
+                )}
+                {/* 学历要求 */}
+                {educationLabel && educationLabel !== '不限' && (
+                  <div className="flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-white" />
+                    <span className="text-sm text-white">{educationLabel}</span>
+                  </div>
+                )}
+                {/* 工作经验 */}
+                {experienceLabel && experienceLabel !== '不限' && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-white" />
+                    <span className="text-sm text-white">
+                      {experienceLabel}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* 操作按钮 - 放在框体的右下角 */}
+              <div className="absolute bottom-0 right-0 flex items-center gap-1">
+                {/* 结构体 - 可点击 */}
+                <Button
+                  variant="outline"
+                  className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
+                  onClick={() => {
+                    alert('结构体功能开发中');
+                  }}
+                >
+                  <Grid className="w-3 h-3 mr-1" />
+                  <span className="text-xs font-medium">结构体</span>
+                </Button>
+                {/* AI关联 - 置灰 */}
+                <Button
+                  variant="outline"
+                  className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30 opacity-50 cursor-not-allowed"
+                  disabled
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  <span className="text-xs font-medium">AI关联</span>
+                </Button>
+                {/* 进度概览 - 置灰 */}
+                <Button
+                  variant="outline"
+                  className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30 opacity-50 cursor-not-allowed"
+                  disabled
+                >
+                  <BarChart3 className="w-3 h-3 mr-1" />
+                  <span className="text-xs font-medium">进度概览</span>
+                </Button>
+                {/* 分享 - 置灰 */}
+                <Button
+                  variant="outline"
+                  className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30 opacity-50 cursor-not-allowed"
+                  disabled
+                >
+                  <Share2 className="w-3 h-3 mr-1" />
+                  <span className="text-xs font-medium">分享</span>
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* 标签信息 - 一行展示：工作地点、工作经验要求、所属部门、工作性质 */}
-          <div className="flex items-center gap-4 flex-wrap mb-3">
-            {jobProfile.location && (
-              <div className="flex items-center gap-1.5 text-[14px] text-[#546E7A]">
-                <MapPin className="h-4 w-4" />
-                <span>{jobProfile.location}</span>
-              </div>
-            )}
-            {experienceLabel && experienceLabel !== '不限' && (
-              <div className="flex items-center gap-1.5 text-[14px] text-[#546E7A]">
-                <Briefcase className="h-4 w-4" />
-                <span>{experienceLabel}</span>
-              </div>
-            )}
-            {jobProfile.department && (
-              <div className="flex items-center gap-1.5 text-[14px] text-[#546E7A]">
-                <Building2 className="h-4 w-4" />
-                <span>{jobProfile.department}</span>
-              </div>
-            )}
-            {workTypeLabel && (
-              <div className="flex items-center gap-1.5 text-[14px] text-[#546E7A]">
-                <CheckCircle2 className="h-4 w-4" />
-                <span>{workTypeLabel}</span>
-              </div>
-            )}
-            {educationLabel && educationLabel !== '不限' && (
-              <div className="flex items-center gap-1.5 text-[14px] text-[#546E7A]">
-                <GraduationCap className="h-4 w-4" />
-                <span>{educationLabel}及以上</span>
-              </div>
-            )}
-          </div>
-        </div>
+          {/* 内容区域 - 添加科技感线条 */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 bg-white space-y-6 relative">
+            {/* 科技感装饰线条 */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+              <div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
+              <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+              <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-blue-500 to-transparent"></div>
+              <div className="absolute top-0 left-3/4 w-px h-full bg-gradient-to-b from-transparent via-purple-500 to-transparent"></div>
+            </div>
 
-        {/* 白色内容区域 */}
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)] bg-[#F5F5F5]">
-          <div className="p-6 space-y-5">
-            {/* 岗位职责及要求 */}
+            {/* 岗位职责 */}
             {responsibilities.length > 0 && (
-              <div className="bg-white rounded-lg p-5 shadow-sm">
-                <h3 className="text-[16px] font-semibold text-[#1F2937] mb-4 flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-[#7bb8ff]" />
-                  岗位职责及要求
-                </h3>
-                <div className="space-y-3">
-                  {responsibilities.map((responsibility, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <span className="text-[14px] text-[#6B7280] mt-1 flex-shrink-0">
-                        {index + 1}.
+              <div className="relative space-y-3">
+                {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-1 h-7 rounded"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                    }}
+                  />
+                  <h3 className="text-lg font-bold text-[#1E293B]">岗位职责</h3>
+                  <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-purple-200 to-transparent"></div>
+                </div>
+                <ul className="space-y-2.5 relative">
+                  {/* 左侧垂直装饰线 */}
+                  <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-blue-200 via-purple-100 to-transparent opacity-30"></div>
+                  {responsibilities.map((resp, index) => (
+                    <li key={index} className="flex items-start gap-2.5 pl-3">
+                      {/* 使用Target图标代表岗位职责 */}
+                      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Target className="w-4 h-4 text-[#3B82F6]" />
+                      </div>
+                      <span className="text-sm font-medium text-[#64748B] leading-relaxed flex-1">
+                        {resp}
                       </span>
-                      <p className="text-[14px] text-[#374151] leading-relaxed">
-                        {responsibility}
-                      </p>
-                    </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* 任职要求 - 从description中提取 */}
+            {requiredSkills.length > 0 && (
+              <div className="relative space-y-3">
+                {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-1 h-7 rounded"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                    }}
+                  />
+                  <h3 className="text-lg font-bold text-[#1E293B]">任职要求</h3>
+                  <div className="flex-1 h-px bg-gradient-to-r from-green-300 via-teal-200 to-transparent"></div>
+                </div>
+                <ul className="space-y-2 relative">
+                  {/* 左侧垂直装饰线 */}
+                  <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-green-200 via-teal-100 to-transparent opacity-30"></div>
+                  {requiredSkills.map((requirement, index) => (
+                    <li key={index} className="flex items-start gap-2.5 pl-3">
+                      {/* 使用CheckCircle2图标代表任职要求 */}
+                      <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
+                      </div>
+                      <span className="text-sm font-medium text-[#64748B] leading-relaxed">
+                        {requirement}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* 加分项 - 标签形式展示 */}
+            {bonusSkills.length > 0 && (
+              <div className="relative space-y-3">
+                {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-1 h-7 rounded"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                    }}
+                  />
+                  <h3 className="text-lg font-bold text-[#1E293B]">加分项</h3>
+                  <div className="flex-1 h-px bg-gradient-to-r from-yellow-300 via-amber-200 to-transparent"></div>
+                </div>
+                {/* 标签展示区域 */}
+                <div className="flex flex-wrap gap-2 pl-3">
+                  {bonusSkills.map((skill, index) => (
+                    <span
+                      key={skill.id || index}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-sm font-medium"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }}
+                    >
+                      <Star className="w-3.5 h-3.5" />
+                      {skill.skill || skill.skill_name || ''}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* 技能要求 - 小标签形式 */}
-            {(requiredSkills.length > 0 || bonusSkills.length > 0) && (
-              <div className="bg-white rounded-lg p-5 shadow-sm">
-                <h3 className="text-[16px] font-semibold text-[#1F2937] mb-4 flex items-center gap-2">
-                  <Award className="h-4 w-4 text-[#7bb8ff]" />
-                  技能要求
-                </h3>
-                <div className="space-y-3">
-                  {requiredSkills.length > 0 && (
-                    <div>
-                      <div className="text-[12px] text-[#6B7280] mb-2 font-medium">
-                        必备技能
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {requiredSkills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-3 py-1.5 bg-[#FEE2E2] text-[#DC2626] rounded-md text-[13px] font-medium"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {bonusSkills.length > 0 && (
-                    <div>
-                      <div className="text-[12px] text-[#6B7280] mb-2 font-medium">
-                        加分技能
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {bonusSkills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-3 py-1.5 bg-[#DBEAFE] text-[#2563EB] rounded-md text-[13px] font-medium"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 其他信息 */}
-            <div className="bg-white rounded-lg p-5 shadow-sm">
-              <h3 className="text-[16px] font-semibold text-[#1F2937] mb-4 flex items-center gap-2">
-                <Gift className="h-4 w-4 text-[#7bb8ff]" />
-                其他信息
-              </h3>
-              {jobProfile.description ? (
-                <div className="text-[14px] text-[#374151] leading-relaxed whitespace-pre-wrap">
-                  {jobProfile.description}
-                </div>
-              ) : (
-                <div className="text-[14px] text-[#9CA3AF] leading-relaxed">
-                  暂无其他信息
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </DialogContent>

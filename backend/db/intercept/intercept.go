@@ -44,6 +44,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/screeningtask"
 	"github.com/chaitin/WhaleHire/backend/db/screeningtaskresume"
 	"github.com/chaitin/WhaleHire/backend/db/setting"
+	"github.com/chaitin/WhaleHire/backend/db/universityprofile"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
@@ -1050,6 +1051,33 @@ func (f TraverseSetting) Traverse(ctx context.Context, q db.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *db.SettingQuery", q)
 }
 
+// The UniversityProfileFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UniversityProfileFunc func(context.Context, *db.UniversityProfileQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f UniversityProfileFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.UniversityProfileQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.UniversityProfileQuery", q)
+}
+
+// The TraverseUniversityProfile type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUniversityProfile func(context.Context, *db.UniversityProfileQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUniversityProfile) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUniversityProfile) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.UniversityProfileQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.UniversityProfileQuery", q)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UserFunc func(context.Context, *db.UserQuery) (db.Value, error)
 
@@ -1204,6 +1232,8 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.ScreeningTaskResumeQuery, predicate.ScreeningTaskResume, screeningtaskresume.OrderOption]{typ: db.TypeScreeningTaskResume, tq: q}, nil
 	case *db.SettingQuery:
 		return &query[*db.SettingQuery, predicate.Setting, setting.OrderOption]{typ: db.TypeSetting, tq: q}, nil
+	case *db.UniversityProfileQuery:
+		return &query[*db.UniversityProfileQuery, predicate.UniversityProfile, universityprofile.OrderOption]{typ: db.TypeUniversityProfile, tq: q}, nil
 	case *db.UserQuery:
 		return &query[*db.UserQuery, predicate.User, user.OrderOption]{typ: db.TypeUser, tq: q}, nil
 	case *db.UserIdentityQuery:
