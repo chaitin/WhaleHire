@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
@@ -266,15 +267,15 @@ func (rpu *ResumeProjectUpdate) ClearProjectURL() *ResumeProjectUpdate {
 }
 
 // SetProjectType sets the "project_type" field.
-func (rpu *ResumeProjectUpdate) SetProjectType(s string) *ResumeProjectUpdate {
-	rpu.mutation.SetProjectType(s)
+func (rpu *ResumeProjectUpdate) SetProjectType(ct consts.ProjectType) *ResumeProjectUpdate {
+	rpu.mutation.SetProjectType(ct)
 	return rpu
 }
 
 // SetNillableProjectType sets the "project_type" field if the given value is not nil.
-func (rpu *ResumeProjectUpdate) SetNillableProjectType(s *string) *ResumeProjectUpdate {
-	if s != nil {
-		rpu.SetProjectType(*s)
+func (rpu *ResumeProjectUpdate) SetNillableProjectType(ct *consts.ProjectType) *ResumeProjectUpdate {
+	if ct != nil {
+		rpu.SetProjectType(*ct)
 	}
 	return rpu
 }
@@ -753,15 +754,15 @@ func (rpuo *ResumeProjectUpdateOne) ClearProjectURL() *ResumeProjectUpdateOne {
 }
 
 // SetProjectType sets the "project_type" field.
-func (rpuo *ResumeProjectUpdateOne) SetProjectType(s string) *ResumeProjectUpdateOne {
-	rpuo.mutation.SetProjectType(s)
+func (rpuo *ResumeProjectUpdateOne) SetProjectType(ct consts.ProjectType) *ResumeProjectUpdateOne {
+	rpuo.mutation.SetProjectType(ct)
 	return rpuo
 }
 
 // SetNillableProjectType sets the "project_type" field if the given value is not nil.
-func (rpuo *ResumeProjectUpdateOne) SetNillableProjectType(s *string) *ResumeProjectUpdateOne {
-	if s != nil {
-		rpuo.SetProjectType(*s)
+func (rpuo *ResumeProjectUpdateOne) SetNillableProjectType(ct *consts.ProjectType) *ResumeProjectUpdateOne {
+	if ct != nil {
+		rpuo.SetProjectType(*ct)
 	}
 	return rpuo
 }

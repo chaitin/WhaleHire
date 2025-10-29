@@ -26,8 +26,10 @@ const (
 	FieldDegree = "degree"
 	// FieldMajor holds the string denoting the major field in the database.
 	FieldMajor = "major"
-	// FieldUniversityType holds the string denoting the university_type field in the database.
-	FieldUniversityType = "university_type"
+	// FieldGpa holds the string denoting the gpa field in the database.
+	FieldGpa = "gpa"
+	// FieldUniversityTypes holds the string denoting the university_types field in the database.
+	FieldUniversityTypes = "university_types"
 	// FieldStartDate holds the string denoting the start_date field in the database.
 	FieldStartDate = "start_date"
 	// FieldEndDate holds the string denoting the end_date field in the database.
@@ -57,7 +59,8 @@ var Columns = []string{
 	FieldSchool,
 	FieldDegree,
 	FieldMajor,
-	FieldUniversityType,
+	FieldGpa,
+	FieldUniversityTypes,
 	FieldStartDate,
 	FieldEndDate,
 	FieldCreatedAt,
@@ -125,9 +128,9 @@ func ByMajor(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMajor, opts...).ToFunc()
 }
 
-// ByUniversityType orders the results by the university_type field.
-func ByUniversityType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUniversityType, opts...).ToFunc()
+// ByGpa orders the results by the gpa field.
+func ByGpa(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGpa, opts...).ToFunc()
 }
 
 // ByStartDate orders the results by the start_date field.

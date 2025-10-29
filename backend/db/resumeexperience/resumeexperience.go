@@ -32,6 +32,8 @@ const (
 	FieldEndDate = "end_date"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldExperienceType holds the string denoting the experience_type field in the database.
+	FieldExperienceType = "experience_type"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -60,6 +62,7 @@ var Columns = []string{
 	FieldStartDate,
 	FieldEndDate,
 	FieldDescription,
+	FieldExperienceType,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -138,6 +141,11 @@ func ByEndDate(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByExperienceType orders the results by the experience_type field.
+func ByExperienceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExperienceType, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

@@ -594,11 +594,18 @@ var (
 		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "gender", Type: field.TypeString, Nullable: true},
 		{Name: "birthday", Type: field.TypeTime, Nullable: true},
+		{Name: "age", Type: field.TypeInt, Nullable: true},
 		{Name: "email", Type: field.TypeString, Nullable: true},
 		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "current_city", Type: field.TypeString, Nullable: true},
 		{Name: "highest_education", Type: field.TypeString, Nullable: true, Size: 50},
 		{Name: "years_experience", Type: field.TypeFloat64, Nullable: true},
+		{Name: "personal_summary", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "expected_salary", Type: field.TypeString, Nullable: true},
+		{Name: "expected_city", Type: field.TypeString, Nullable: true},
+		{Name: "available_date", Type: field.TypeTime, Nullable: true},
+		{Name: "honors_certificates", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "other_info", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "resume_file_url", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "pending"},
 		{Name: "error_message", Type: field.TypeString, Nullable: true},
@@ -615,7 +622,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "resumes_users_resumes",
-				Columns:    []*schema.Column{ResumesColumns[16]},
+				Columns:    []*schema.Column{ResumesColumns[23]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -658,7 +665,8 @@ var (
 		{Name: "school", Type: field.TypeString, Nullable: true},
 		{Name: "degree", Type: field.TypeString, Nullable: true},
 		{Name: "major", Type: field.TypeString, Nullable: true},
-		{Name: "university_type", Type: field.TypeString, Nullable: true},
+		{Name: "gpa", Type: field.TypeFloat64, Nullable: true},
+		{Name: "university_types", Type: field.TypeJSON, Nullable: true},
 		{Name: "start_date", Type: field.TypeTime, Nullable: true},
 		{Name: "end_date", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
@@ -673,7 +681,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "resume_educations_resumes_educations",
-				Columns:    []*schema.Column{ResumeEducationsColumns[10]},
+				Columns:    []*schema.Column{ResumeEducationsColumns[11]},
 				RefColumns: []*schema.Column{ResumesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -689,6 +697,7 @@ var (
 		{Name: "start_date", Type: field.TypeTime, Nullable: true},
 		{Name: "end_date", Type: field.TypeTime, Nullable: true},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "experience_type", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "resume_id", Type: field.TypeUUID},
@@ -701,7 +710,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "resume_experiences_resumes_experiences",
-				Columns:    []*schema.Column{ResumeExperiencesColumns[10]},
+				Columns:    []*schema.Column{ResumeExperiencesColumns[11]},
 				RefColumns: []*schema.Column{ResumesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

@@ -94,7 +94,10 @@ func newServer() (*Server, error) {
 	readOnlyMiddleware := middleware.NewReadOnlyMiddleware(configConfig)
 	userHandler := v1.NewUserHandler(web, userUsecase, authMiddleware, activeMiddleware, readOnlyMiddleware, sessionSession, slogLogger, configConfig)
 	resumeRepo := repo3.NewResumeRepo(client)
-	parserService := service.NewParserService(configConfig, slogLogger, resumeRepo)
+	parserService, err := service.NewParserService(configConfig, slogLogger, resumeRepo)
+	if err != nil {
+		return nil, err
+	}
 	minioClient, err := s3.NewMinioClient(configConfig)
 	if err != nil {
 		return nil, err

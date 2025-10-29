@@ -26,6 +26,8 @@ const (
 	FieldGender = "gender"
 	// FieldBirthday holds the string denoting the birthday field in the database.
 	FieldBirthday = "birthday"
+	// FieldAge holds the string denoting the age field in the database.
+	FieldAge = "age"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
 	// FieldPhone holds the string denoting the phone field in the database.
@@ -36,6 +38,18 @@ const (
 	FieldHighestEducation = "highest_education"
 	// FieldYearsExperience holds the string denoting the years_experience field in the database.
 	FieldYearsExperience = "years_experience"
+	// FieldPersonalSummary holds the string denoting the personal_summary field in the database.
+	FieldPersonalSummary = "personal_summary"
+	// FieldExpectedSalary holds the string denoting the expected_salary field in the database.
+	FieldExpectedSalary = "expected_salary"
+	// FieldExpectedCity holds the string denoting the expected_city field in the database.
+	FieldExpectedCity = "expected_city"
+	// FieldAvailableDate holds the string denoting the available_date field in the database.
+	FieldAvailableDate = "available_date"
+	// FieldHonorsCertificates holds the string denoting the honors_certificates field in the database.
+	FieldHonorsCertificates = "honors_certificates"
+	// FieldOtherInfo holds the string denoting the other_info field in the database.
+	FieldOtherInfo = "other_info"
 	// FieldResumeFileURL holds the string denoting the resume_file_url field in the database.
 	FieldResumeFileURL = "resume_file_url"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -150,11 +164,18 @@ var Columns = []string{
 	FieldName,
 	FieldGender,
 	FieldBirthday,
+	FieldAge,
 	FieldEmail,
 	FieldPhone,
 	FieldCurrentCity,
 	FieldHighestEducation,
 	FieldYearsExperience,
+	FieldPersonalSummary,
+	FieldExpectedSalary,
+	FieldExpectedCity,
+	FieldAvailableDate,
+	FieldHonorsCertificates,
+	FieldOtherInfo,
 	FieldResumeFileURL,
 	FieldStatus,
 	FieldErrorMessage,
@@ -228,6 +249,11 @@ func ByBirthday(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBirthday, opts...).ToFunc()
 }
 
+// ByAge orders the results by the age field.
+func ByAge(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAge, opts...).ToFunc()
+}
+
 // ByEmail orders the results by the email field.
 func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
@@ -251,6 +277,36 @@ func ByHighestEducation(opts ...sql.OrderTermOption) OrderOption {
 // ByYearsExperience orders the results by the years_experience field.
 func ByYearsExperience(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldYearsExperience, opts...).ToFunc()
+}
+
+// ByPersonalSummary orders the results by the personal_summary field.
+func ByPersonalSummary(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPersonalSummary, opts...).ToFunc()
+}
+
+// ByExpectedSalary orders the results by the expected_salary field.
+func ByExpectedSalary(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpectedSalary, opts...).ToFunc()
+}
+
+// ByExpectedCity orders the results by the expected_city field.
+func ByExpectedCity(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpectedCity, opts...).ToFunc()
+}
+
+// ByAvailableDate orders the results by the available_date field.
+func ByAvailableDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAvailableDate, opts...).ToFunc()
+}
+
+// ByHonorsCertificates orders the results by the honors_certificates field.
+func ByHonorsCertificates(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHonorsCertificates, opts...).ToFunc()
+}
+
+// ByOtherInfo orders the results by the other_info field.
+func ByOtherInfo(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOtherInfo, opts...).ToFunc()
 }
 
 // ByResumeFileURL orders the results by the resume_file_url field.

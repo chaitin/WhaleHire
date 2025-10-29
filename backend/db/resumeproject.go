@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/google/uuid"
@@ -44,7 +45,7 @@ type ResumeProject struct {
 	// ProjectURL holds the value of the "project_url" field.
 	ProjectURL string `json:"project_url,omitempty"`
 	// ProjectType holds the value of the "project_type" field.
-	ProjectType string `json:"project_type,omitempty"`
+	ProjectType consts.ProjectType `json:"project_type,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -183,7 +184,7 @@ func (rp *ResumeProject) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field project_type", values[i])
 			} else if value.Valid {
-				rp.ProjectType = value.String
+				rp.ProjectType = consts.ProjectType(value.String)
 			}
 		case resumeproject.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -275,7 +276,7 @@ func (rp *ResumeProject) String() string {
 	builder.WriteString(rp.ProjectURL)
 	builder.WriteString(", ")
 	builder.WriteString("project_type=")
-	builder.WriteString(rp.ProjectType)
+	builder.WriteString(fmt.Sprintf("%v", rp.ProjectType))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(rp.CreatedAt.Format(time.ANSIC))

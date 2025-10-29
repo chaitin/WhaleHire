@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
@@ -185,6 +186,26 @@ func (reu *ResumeExperienceUpdate) ClearDescription() *ResumeExperienceUpdate {
 	return reu
 }
 
+// SetExperienceType sets the "experience_type" field.
+func (reu *ResumeExperienceUpdate) SetExperienceType(ct consts.ExperienceType) *ResumeExperienceUpdate {
+	reu.mutation.SetExperienceType(ct)
+	return reu
+}
+
+// SetNillableExperienceType sets the "experience_type" field if the given value is not nil.
+func (reu *ResumeExperienceUpdate) SetNillableExperienceType(ct *consts.ExperienceType) *ResumeExperienceUpdate {
+	if ct != nil {
+		reu.SetExperienceType(*ct)
+	}
+	return reu
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (reu *ResumeExperienceUpdate) ClearExperienceType() *ResumeExperienceUpdate {
+	reu.mutation.ClearExperienceType()
+	return reu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (reu *ResumeExperienceUpdate) SetCreatedAt(t time.Time) *ResumeExperienceUpdate {
 	reu.mutation.SetCreatedAt(t)
@@ -330,6 +351,12 @@ func (reu *ResumeExperienceUpdate) sqlSave(ctx context.Context) (n int, err erro
 	}
 	if reu.mutation.DescriptionCleared() {
 		_spec.ClearField(resumeexperience.FieldDescription, field.TypeString)
+	}
+	if value, ok := reu.mutation.ExperienceType(); ok {
+		_spec.SetField(resumeexperience.FieldExperienceType, field.TypeString, value)
+	}
+	if reu.mutation.ExperienceTypeCleared() {
+		_spec.ClearField(resumeexperience.FieldExperienceType, field.TypeString)
 	}
 	if value, ok := reu.mutation.CreatedAt(); ok {
 		_spec.SetField(resumeexperience.FieldCreatedAt, field.TypeTime, value)
@@ -542,6 +569,26 @@ func (reuo *ResumeExperienceUpdateOne) ClearDescription() *ResumeExperienceUpdat
 	return reuo
 }
 
+// SetExperienceType sets the "experience_type" field.
+func (reuo *ResumeExperienceUpdateOne) SetExperienceType(ct consts.ExperienceType) *ResumeExperienceUpdateOne {
+	reuo.mutation.SetExperienceType(ct)
+	return reuo
+}
+
+// SetNillableExperienceType sets the "experience_type" field if the given value is not nil.
+func (reuo *ResumeExperienceUpdateOne) SetNillableExperienceType(ct *consts.ExperienceType) *ResumeExperienceUpdateOne {
+	if ct != nil {
+		reuo.SetExperienceType(*ct)
+	}
+	return reuo
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (reuo *ResumeExperienceUpdateOne) ClearExperienceType() *ResumeExperienceUpdateOne {
+	reuo.mutation.ClearExperienceType()
+	return reuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (reuo *ResumeExperienceUpdateOne) SetCreatedAt(t time.Time) *ResumeExperienceUpdateOne {
 	reuo.mutation.SetCreatedAt(t)
@@ -717,6 +764,12 @@ func (reuo *ResumeExperienceUpdateOne) sqlSave(ctx context.Context) (_node *Resu
 	}
 	if reuo.mutation.DescriptionCleared() {
 		_spec.ClearField(resumeexperience.FieldDescription, field.TypeString)
+	}
+	if value, ok := reuo.mutation.ExperienceType(); ok {
+		_spec.SetField(resumeexperience.FieldExperienceType, field.TypeString, value)
+	}
+	if reuo.mutation.ExperienceTypeCleared() {
+		_spec.ClearField(resumeexperience.FieldExperienceType, field.TypeString)
 	}
 	if value, ok := reuo.mutation.CreatedAt(); ok {
 		_spec.SetField(resumeexperience.FieldCreatedAt, field.TypeTime, value)

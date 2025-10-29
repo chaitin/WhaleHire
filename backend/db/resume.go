@@ -29,6 +29,8 @@ type Resume struct {
 	Gender string `json:"gender,omitempty"`
 	// Birthday holds the value of the "birthday" field.
 	Birthday time.Time `json:"birthday,omitempty"`
+	// Age holds the value of the "age" field.
+	Age int `json:"age,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
 	// Phone holds the value of the "phone" field.
@@ -39,6 +41,18 @@ type Resume struct {
 	HighestEducation string `json:"highest_education,omitempty"`
 	// YearsExperience holds the value of the "years_experience" field.
 	YearsExperience float64 `json:"years_experience,omitempty"`
+	// PersonalSummary holds the value of the "personal_summary" field.
+	PersonalSummary string `json:"personal_summary,omitempty"`
+	// ExpectedSalary holds the value of the "expected_salary" field.
+	ExpectedSalary string `json:"expected_salary,omitempty"`
+	// ExpectedCity holds the value of the "expected_city" field.
+	ExpectedCity string `json:"expected_city,omitempty"`
+	// AvailableDate holds the value of the "available_date" field.
+	AvailableDate time.Time `json:"available_date,omitempty"`
+	// HonorsCertificates holds the value of the "honors_certificates" field.
+	HonorsCertificates string `json:"honors_certificates,omitempty"`
+	// OtherInfo holds the value of the "other_info" field.
+	OtherInfo string `json:"other_info,omitempty"`
 	// ResumeFileURL holds the value of the "resume_file_url" field.
 	ResumeFileURL string `json:"resume_file_url,omitempty"`
 	// Status holds the value of the "status" field.
@@ -183,9 +197,11 @@ func (*Resume) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case resume.FieldYearsExperience:
 			values[i] = new(sql.NullFloat64)
-		case resume.FieldName, resume.FieldGender, resume.FieldEmail, resume.FieldPhone, resume.FieldCurrentCity, resume.FieldHighestEducation, resume.FieldResumeFileURL, resume.FieldStatus, resume.FieldErrorMessage:
+		case resume.FieldAge:
+			values[i] = new(sql.NullInt64)
+		case resume.FieldName, resume.FieldGender, resume.FieldEmail, resume.FieldPhone, resume.FieldCurrentCity, resume.FieldHighestEducation, resume.FieldPersonalSummary, resume.FieldExpectedSalary, resume.FieldExpectedCity, resume.FieldHonorsCertificates, resume.FieldOtherInfo, resume.FieldResumeFileURL, resume.FieldStatus, resume.FieldErrorMessage:
 			values[i] = new(sql.NullString)
-		case resume.FieldDeletedAt, resume.FieldBirthday, resume.FieldParsedAt, resume.FieldCreatedAt, resume.FieldUpdatedAt:
+		case resume.FieldDeletedAt, resume.FieldBirthday, resume.FieldAvailableDate, resume.FieldParsedAt, resume.FieldCreatedAt, resume.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case resume.FieldID, resume.FieldUploaderID:
 			values[i] = new(uuid.UUID)
@@ -240,6 +256,12 @@ func (r *Resume) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Birthday = value.Time
 			}
+		case resume.FieldAge:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field age", values[i])
+			} else if value.Valid {
+				r.Age = int(value.Int64)
+			}
 		case resume.FieldEmail:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field email", values[i])
@@ -269,6 +291,42 @@ func (r *Resume) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field years_experience", values[i])
 			} else if value.Valid {
 				r.YearsExperience = value.Float64
+			}
+		case resume.FieldPersonalSummary:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field personal_summary", values[i])
+			} else if value.Valid {
+				r.PersonalSummary = value.String
+			}
+		case resume.FieldExpectedSalary:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field expected_salary", values[i])
+			} else if value.Valid {
+				r.ExpectedSalary = value.String
+			}
+		case resume.FieldExpectedCity:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field expected_city", values[i])
+			} else if value.Valid {
+				r.ExpectedCity = value.String
+			}
+		case resume.FieldAvailableDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field available_date", values[i])
+			} else if value.Valid {
+				r.AvailableDate = value.Time
+			}
+		case resume.FieldHonorsCertificates:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field honors_certificates", values[i])
+			} else if value.Valid {
+				r.HonorsCertificates = value.String
+			}
+		case resume.FieldOtherInfo:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field other_info", values[i])
+			} else if value.Valid {
+				r.OtherInfo = value.String
 			}
 		case resume.FieldResumeFileURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -407,6 +465,9 @@ func (r *Resume) String() string {
 	builder.WriteString("birthday=")
 	builder.WriteString(r.Birthday.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("age=")
+	builder.WriteString(fmt.Sprintf("%v", r.Age))
+	builder.WriteString(", ")
 	builder.WriteString("email=")
 	builder.WriteString(r.Email)
 	builder.WriteString(", ")
@@ -421,6 +482,24 @@ func (r *Resume) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("years_experience=")
 	builder.WriteString(fmt.Sprintf("%v", r.YearsExperience))
+	builder.WriteString(", ")
+	builder.WriteString("personal_summary=")
+	builder.WriteString(r.PersonalSummary)
+	builder.WriteString(", ")
+	builder.WriteString("expected_salary=")
+	builder.WriteString(r.ExpectedSalary)
+	builder.WriteString(", ")
+	builder.WriteString("expected_city=")
+	builder.WriteString(r.ExpectedCity)
+	builder.WriteString(", ")
+	builder.WriteString("available_date=")
+	builder.WriteString(r.AvailableDate.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("honors_certificates=")
+	builder.WriteString(r.HonorsCertificates)
+	builder.WriteString(", ")
+	builder.WriteString("other_info=")
+	builder.WriteString(r.OtherInfo)
 	builder.WriteString(", ")
 	builder.WriteString("resume_file_url=")
 	builder.WriteString(r.ResumeFileURL)

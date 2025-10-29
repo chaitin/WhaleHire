@@ -3,7 +3,6 @@ package resumeparser
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
@@ -33,7 +32,7 @@ func (c *ResumeParserChain) Compile(ctx context.Context) (compose.Runnable[*Resu
 func newInputLambda(ctx context.Context, input *ResumeParseInput, opts ...any) (map[string]any, error) {
 	return map[string]any{
 		"resume": input.Resume,
-		"date":   time.Now().Format("2006-01-02"),
+		// "date":   time.Now().Format("2006-01-02"),
 	}, nil
 }
 
