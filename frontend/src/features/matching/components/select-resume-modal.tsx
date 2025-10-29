@@ -230,9 +230,16 @@ export function SelectResumeModal({
             onClick={() => setCurrentPage(i)}
             className={cn(
               'h-8 w-8 p-0 text-sm',
-              i === currentPage &&
-                'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+              i === currentPage && 'text-white border-primary hover:text-white'
             )}
+            style={
+              i === currentPage
+                ? {
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }
+                : undefined
+            }
           >
             {i}
           </Button>
@@ -248,9 +255,16 @@ export function SelectResumeModal({
           onClick={() => setCurrentPage(1)}
           className={cn(
             'h-8 w-8 p-0 text-sm',
-            1 === currentPage &&
-              'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+            1 === currentPage && 'text-white border-primary hover:text-white'
           )}
+          style={
+            1 === currentPage
+              ? {
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }
+              : undefined
+          }
         >
           1
         </Button>
@@ -266,9 +280,16 @@ export function SelectResumeModal({
             onClick={() => setCurrentPage(2)}
             className={cn(
               'h-8 w-8 p-0 text-sm',
-              2 === currentPage &&
-                'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+              2 === currentPage && 'text-white border-primary hover:text-white'
             )}
+            style={
+              2 === currentPage
+                ? {
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }
+                : undefined
+            }
           >
             2
           </Button>
@@ -284,9 +305,16 @@ export function SelectResumeModal({
             onClick={() => setCurrentPage(3)}
             className={cn(
               'h-8 w-8 p-0 text-sm',
-              3 === currentPage &&
-                'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+              3 === currentPage && 'text-white border-primary hover:text-white'
             )}
+            style={
+              3 === currentPage
+                ? {
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }
+                : undefined
+            }
           >
             3
           </Button>
@@ -315,8 +343,16 @@ export function SelectResumeModal({
           className={cn(
             'h-8 w-8 p-0 text-sm',
             totalPages === currentPage &&
-              'bg-primary text-white border-primary hover:bg-primary hover:text-white'
+              'text-white border-primary hover:text-white'
           )}
+          style={
+            totalPages === currentPage
+              ? {
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }
+              : undefined
+          }
         >
           {totalPages}
         </Button>
@@ -515,7 +551,11 @@ export function SelectResumeModal({
                 </div>
                 <Button
                   onClick={handleSearch}
-                  className="h-9 px-6 rounded-l-none bg-primary hover:bg-primary/90"
+                  className="h-9 px-6 rounded-l-none text-white"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                  }}
                 >
                   <Search className="h-3.5 w-3.5 mr-1 text-white" />
                   搜索
@@ -700,7 +740,10 @@ export function SelectResumeModal({
             </Button>
             <Button
               onClick={handleNext}
-              className="px-6 bg-primary hover:bg-primary/90 text-white"
+              className="px-6 text-white"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
             >
               下一步
             </Button>

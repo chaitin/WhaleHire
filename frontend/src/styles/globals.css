@@ -79,7 +79,7 @@
 }
 
 .sidebar-nav-item.active {
-  background-color: #7bb8ff;
+  background: linear-gradient(135deg, #7bb8ff 0%, #3f3663 100%);
   color: white;
 }
 
@@ -272,7 +272,7 @@
 }
 
 .sidebar-nav-item.active {
-  background-color: #7bb8ff;
+  background: linear-gradient(135deg, #7bb8ff 0%, #3f3663 100%);
   color: white;
   @apply shadow-sm;
 }

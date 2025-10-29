@@ -279,7 +279,13 @@ export function ResumeTable({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-4">
                       <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary/10 text-primary">
+                        <AvatarFallback
+                          className="text-primary"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(123, 184, 255, 0.1) 0%, rgba(63, 54, 99, 0.1) 100%)',
+                          }}
+                        >
                           {resume.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
@@ -433,9 +439,16 @@ export function ResumeTable({
                   onClick={() => onPageChange(page)}
                   className={cn(
                     'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
-                    page === pagination.current &&
-                      'border-[#7bb8ff] bg-[#7bb8ff] text-white'
+                    page === pagination.current && 'border-[#7bb8ff] text-white'
                   )}
+                  style={
+                    page === pagination.current
+                      ? {
+                          background:
+                            'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                        }
+                      : undefined
+                  }
                 >
                   {page}
                 </Button>

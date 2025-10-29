@@ -116,13 +116,27 @@ export const polishPrompt = async (
 export const generateByPrompt = async (
   prompt: string
 ): Promise<JobProfileDetail> => {
-  const response = await apiPost<{ profile: JobProfileDetail }>(
-    '/v1/job-profiles/generate-by-prompt',
-    {
-      prompt,
-    }
-  );
-  return response.profile;
+  // apiPost已经返回data.data,所以这里的response就是后端返回的data内容
+  const data = await apiPost<{
+    profile: JobProfileDetail;
+    description_markdown?: string;
+  }>('/v1/job-profiles/generate-by-prompt', {
+    prompt,
+  });
+
+  // 打印完整数据以便调试
+  console.log('=== generateByPrompt 返回数据 ===', data);
+  console.log('data.profile:', data.profile);
+  console.log('data.description_markdown:', data.description_markdown);
+
+  // 后端返回 { profile: {...}, description_markdown: "..." }
+  // 需要将description_markdown合并到profile中
+  console.log('使用 data.profile 并合并 description_markdown');
+  return {
+    ...data.profile,
+    description_markdown:
+      data.description_markdown || data.profile.description_markdown,
+  };
 };
 
 // 搜索岗位画像

@@ -17,8 +17,15 @@ import {
   DollarSign,
   GraduationCap,
   Target,
+  Check,
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/ui/dialog';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
@@ -32,6 +39,7 @@ import {
 } from '@/ui/select';
 import {
   createJobProfile,
+  updateJobProfile,
   parseJobProfile,
   listJobSkillMeta,
   polishPrompt,
@@ -45,13 +53,16 @@ interface CreateJobModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void; // 成功创建后的回调函数
+  editingJob?: JobProfileDetail | null; // 编辑的岗位数据
 }
 
 export function CreateJobModal({
   open,
   onOpenChange,
   onSuccess,
+  editingJob,
 }: CreateJobModalProps) {
+  // 编辑模式状态(会在useEffect中根据editingJob动态设置)
   const [editMode, setEditMode] = useState<'manual' | 'ai'>('manual');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
@@ -114,6 +125,10 @@ export function CreateJobModal({
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]); // 改为数组支持多选
   const [isLoadingSkills, setIsLoadingSkills] = useState(false);
 
+  // AI模式部门选择弹窗状态
+  const [isDepartmentSelectModalOpen, setIsDepartmentSelectModalOpen] =
+    useState(false);
+
   // 岗位职责列表
   const [responsibilities, setResponsibilities] = useState<
     Array<{ content: string; id: string }>
@@ -170,15 +185,108 @@ export function CreateJobModal({
     }
   }, []);
 
-  // 监听弹窗打开状态，打开时重置表单并加载部门
+  // 监听弹窗打开状态，打开时重置表单或填充编辑数据并加载部门
   useEffect(() => {
     if (open) {
-      resetForm();
+      console.log('=== CreateJobModal打开 ===');
+      console.log('editingJob:', editingJob);
+      console.log(
+        'editingJob.description_markdown:',
+        editingJob?.description_markdown
+      );
+
+      if (editingJob) {
+        // 编辑模式:根据数据判断编辑模式并填充数据
+        // 判断依据:
+        // 1. 如果有description_markdown字段且不为空,肯定是AI模式
+        // 2. 如果有responsibilities数组为空且description中包含markdown格式,认为是AI模式
+        // 3. 如果有responsibilities数组不为空,则是手动模式
+        const hasDescriptionMarkdown =
+          editingJob.description_markdown &&
+          editingJob.description_markdown.trim().length > 0;
+
+        // 检查是否有手动填写的结构化数据
+        const hasStructuredData =
+          (editingJob.responsibilities &&
+            editingJob.responsibilities.length > 0) ||
+          (editingJob.skills && editingJob.skills.length > 0);
+
+        // 只有当有description_markdown或者(没有结构化数据且description包含特定格式)时才认为是AI模式
+        const descriptionContent = editingJob.description || '';
+        const hasMarkdownFormat =
+          descriptionContent.includes('岗位职责：') ||
+          descriptionContent.includes('任职要求：') ||
+          descriptionContent.includes('加分项：');
+
+        const isAIMode =
+          hasDescriptionMarkdown || (!hasStructuredData && hasMarkdownFormat);
+        console.log('>>> hasDescriptionMarkdown:', hasDescriptionMarkdown);
+        console.log('>>> hasStructuredData:', hasStructuredData);
+        console.log('>>> hasMarkdownFormat:', hasMarkdownFormat);
+        console.log('>>> isAIMode:', isAIMode);
+
+        if (isAIMode) {
+          // AI模式
+          console.log('>>> 设置为AI编辑模式');
+          setEditMode('ai');
+          setSelectedProfile({
+            ...editingJob,
+            description:
+              editingJob.description_markdown || editingJob.description || '',
+            description_markdown:
+              editingJob.description_markdown || editingJob.description || '',
+          });
+          // 如果有生成的数据,添加到概览中
+          if (editingJob.name) {
+            setGeneratedProfiles([editingJob]);
+          }
+        } else {
+          // 手动模式
+          console.log('>>> 设置为手动编辑模式');
+          setEditMode('manual');
+          // 填充手动模式表单数据
+          setFormData({
+            description: editingJob.description || '',
+            jobName: editingJob.name || '',
+            educationRequirement:
+              editingJob.education_requirements?.[0]?.education_type || '',
+            workType: editingJob.work_type || '',
+            department: editingJob.department_id || '',
+            location: editingJob.location || '',
+            salaryMin: editingJob.salary_min?.toString() || '',
+            salaryMax: editingJob.salary_max?.toString() || '',
+            industryRequirement:
+              editingJob.industry_requirements?.[0]?.industry || '',
+            companyRequirement:
+              editingJob.industry_requirements?.[0]?.company_name || '',
+            workExperience:
+              editingJob.experience_requirements?.[0]?.experience_type || '',
+          });
+          // 填充职责
+          const respList = editingJob.responsibilities?.map((r, idx) => ({
+            content: r.responsibility,
+            id: `resp-${idx}`,
+          })) || [{ content: '', id: 'resp-0' }];
+          setResponsibilities(respList);
+          // 填充技能
+          const jobSkills =
+            editingJob.skills?.map((s) => ({
+              skill_id: s.skill_id || '',
+              skill_name: s.skill || '',
+              type: (s.type || 'required') as 'required' | 'bonus',
+            })) || [];
+          setSkills(jobSkills);
+        }
+      } else {
+        // 新建模式:重置表单
+        console.log('>>> 新建模式,重置表单');
+        resetForm();
+      }
       fetchDepartments();
     }
-  }, [open, resetForm, fetchDepartments]);
+  }, [open, editingJob, resetForm, fetchDepartments]);
 
-  // 更新Markdown内容显示
+  // 更新Markdown内容显示(当selectedProfile变化时强制更新DOM)
   useEffect(() => {
     if (
       markdownContentRef.current &&
@@ -189,7 +297,25 @@ export function CreateJobModal({
         selectedProfile.description_markdown ||
         selectedProfile.description ||
         '暂无岗位描述内容';
-      markdownContentRef.current.textContent = content;
+
+      // 将Markdown文本转换为HTML,为特定标题添加样式
+      const formattedContent = content
+        .replace(
+          /岗位职责：/g,
+          '<span style="font-weight: bold; font-size: 16px;">岗位职责：</span>'
+        )
+        .replace(
+          /任职要求：/g,
+          '<span style="font-weight: bold; font-size: 16px;">任职要求：</span>'
+        )
+        .replace(
+          /加分项：/g,
+          '<span style="font-weight: bold; font-size: 16px;">加分项：</span>'
+        )
+        .replace(/\n/g, '<br/>');
+
+      // 使用innerHTML来渲染带样式的HTML
+      markdownContentRef.current.innerHTML = formattedContent;
     }
   }, [selectedProfile, displayMode]);
 
@@ -489,12 +615,24 @@ export function CreateJobModal({
     setIsGenerating(true);
     try {
       const result = await generateByPrompt(aiPrompt);
+
+      // 调试日志
+      console.log('=== 生成岗位画像 ===');
+      console.log('API返回结果:', result);
+
       if (result) {
         // 生成一个临时ID(如果后端没有返回ID)
         const profileWithId = {
           ...result,
           id: result.id || `temp-${Date.now()}`,
         };
+
+        console.log('处理后的profile:', profileWithId);
+        console.log(
+          'description_markdown:',
+          profileWithId.description_markdown
+        );
+        console.log('description:', profileWithId.description);
 
         // 重置显示模式为markdown
         setDisplayMode('markdown');
@@ -522,6 +660,10 @@ export function CreateJobModal({
       }
       if (!selectedProfile.name?.trim()) {
         toast.error('请输入岗位名称');
+        return;
+      }
+      if (!selectedProfile.department_id) {
+        toast.error('请选择岗位所属部门');
         return;
       }
     } else {
@@ -619,7 +761,10 @@ export function CreateJobModal({
         if (selectedProfile.skills && selectedProfile.skills.length > 0) {
           requestData.skills = selectedProfile.skills.map((skill) => ({
             skill_id: skill.skill_id || '',
-            skill_name: skill.skill || '',
+            skill_name:
+              'skill_name' in skill && skill.skill_name
+                ? skill.skill_name
+                : skill.skill || '',
             type: skill.type as 'required' | 'bonus',
           }));
         }
@@ -715,13 +860,23 @@ export function CreateJobModal({
         }
       }
 
-      await createJobProfile(requestData);
-
-      // 根据状态显示不同的成功消息
-      if (status === 'draft') {
-        toast.success('岗位画像已保存为草稿');
+      // 判断是创建还是更新
+      if (editingJob) {
+        // 更新操作
+        await updateJobProfile(editingJob.id, {
+          id: editingJob.id,
+          ...requestData,
+        });
+        toast.success('岗位画像已更新');
       } else {
-        toast.success('岗位画像已发布');
+        // 创建操作
+        await createJobProfile(requestData);
+        // 根据状态显示不同的成功消息
+        if (status === 'draft') {
+          toast.success('岗位画像已保存为草稿');
+        } else {
+          toast.success('岗位画像已发布');
+        }
       }
 
       // 调用成功回调刷新列表
@@ -733,10 +888,10 @@ export function CreateJobModal({
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      console.error('创建失败:', error);
+      console.error(editingJob ? '更新失败:' : '创建失败:', error);
       const errorMessage =
         error instanceof Error ? error.message : '请稍后重试';
-      toast.error(`创建失败: ${errorMessage}`);
+      toast.error(`${editingJob ? '更新' : '创建'}失败: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -750,7 +905,7 @@ export function CreateJobModal({
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
             <DialogHeader className="space-y-0">
               <DialogTitle className="text-[18px] font-semibold text-gray-900">
-                新建岗位
+                {editingJob ? '编辑岗位' : '新建岗位'}
               </DialogTitle>
             </DialogHeader>
             <Button
@@ -1011,7 +1166,7 @@ export function CreateJobModal({
                           ))}
                           {departments.length === 0 &&
                             !isLoadingDepartments && (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="no-department" disabled>
                                 暂无部门
                               </SelectItem>
                             )}
@@ -1415,25 +1570,52 @@ export function CreateJobModal({
                               className={cn(
                                 'border rounded-lg p-4 cursor-pointer transition-all',
                                 selectedProfile?.id === profile.id
-                                  ? 'border-[#2563EB] bg-blue-50'
+                                  ? 'bg-blue-50'
                                   : 'border-gray-200 hover:border-gray-300'
                               )}
+                              style={
+                                selectedProfile?.id === profile.id
+                                  ? { borderColor: '#7bb8ff' }
+                                  : undefined
+                              }
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <div
                                     className={cn(
-                                      'w-4 h-4 rounded border flex-shrink-0',
+                                      'w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center',
                                       selectedProfile?.id === profile.id
-                                        ? 'border-[#2563EB] bg-[#2563EB]'
-                                        : 'border-[#2563EB]'
+                                        ? ''
+                                        : ''
                                     )}
-                                  />
-                                  <h4 className="text-[14px] font-medium text-[#1D4ED8] truncate">
+                                    style={
+                                      selectedProfile?.id === profile.id
+                                        ? {
+                                            background:
+                                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                                            borderColor: '#7bb8ff',
+                                          }
+                                        : { borderColor: '#7bb8ff' }
+                                    }
+                                  >
+                                    {selectedProfile?.id === profile.id && (
+                                      <Check className="w-3 h-3 text-white" />
+                                    )}
+                                  </div>
+                                  <h4
+                                    className="text-[14px] font-medium truncate"
+                                    style={{ color: '#7bb8ff' }}
+                                  >
                                     {profile.name || '未命名岗位'}
                                   </h4>
                                 </div>
-                                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[12px] rounded-full flex-shrink-0 ml-2">
+                                <span
+                                  className="px-2 py-0.5 text-[12px] rounded-full flex-shrink-0 ml-2"
+                                  style={{
+                                    backgroundColor: '#e6f4ff',
+                                    color: '#7bb8ff',
+                                  }}
+                                >
                                   待保存
                                 </span>
                               </div>
@@ -1462,18 +1644,24 @@ export function CreateJobModal({
                         <button
                           onClick={() => {
                             if (selectedProfile) {
-                              const exists = generatedProfiles.find(
+                              const existingIndex = generatedProfiles.findIndex(
                                 (p) => p.id === selectedProfile.id
                               );
-                              if (!exists) {
-                                // 添加到列表开头
+
+                              if (existingIndex !== -1) {
+                                // 如果已存在,更新该岗位
+                                const updatedProfiles = [...generatedProfiles];
+                                updatedProfiles[existingIndex] =
+                                  selectedProfile;
+                                setGeneratedProfiles(updatedProfiles);
+                                toast.success('已更新暂存内容');
+                              } else {
+                                // 如果不存在,添加到列表开头
                                 setGeneratedProfiles([
                                   selectedProfile,
                                   ...generatedProfiles,
                                 ]);
                                 toast.success('已暂存到生成岗位概览');
-                              } else {
-                                toast.info('该岗位已在概览中');
                               }
                             }
                           }}
@@ -1530,22 +1718,50 @@ export function CreateJobModal({
                       ) : displayMode === 'markdown' ? (
                         /* Markdown 模式 */
                         <div className="space-y-5" key={selectedProfile.id}>
-                          {/* 标题 */}
+                          {/* 标题和部门 */}
                           <div className="pb-4 border-b border-gray-200">
-                            <h2
-                              key={`title-${selectedProfile.id}`}
-                              contentEditable
-                              suppressContentEditableWarning
-                              onBlur={(e) =>
-                                setSelectedProfile({
-                                  ...selectedProfile,
-                                  name: e.currentTarget.textContent || '',
-                                })
-                              }
-                              className="text-[18px] font-semibold text-gray-900 outline-none focus:bg-blue-50 px-2 py-1 rounded"
-                            >
-                              {selectedProfile.name || '岗位名称'}
-                            </h2>
+                            <div className="flex items-center justify-between">
+                              <h2
+                                key={`title-${selectedProfile.id}`}
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) =>
+                                  setSelectedProfile({
+                                    ...selectedProfile,
+                                    name: e.currentTarget.textContent || '',
+                                  })
+                                }
+                                className="text-[18px] font-semibold text-gray-900 outline-none focus:bg-blue-50 px-2 py-1 rounded"
+                              >
+                                {selectedProfile.name || '岗位名称'}
+                              </h2>
+
+                              {/* 部门显示/选择 - 右对齐 */}
+                              {selectedProfile.department ? (
+                                // 已选择部门,显示部门名称+icon
+                                <div
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-[13px] cursor-pointer hover:bg-blue-100 transition-colors"
+                                  onClick={() =>
+                                    setIsDepartmentSelectModalOpen(true)
+                                  }
+                                  title="点击修改所属部门"
+                                >
+                                  <Building2 className="w-3.5 h-3.5" />
+                                  <span>{selectedProfile.department}</span>
+                                </div>
+                              ) : (
+                                // 未选择部门,显示图标按钮
+                                <button
+                                  onClick={() =>
+                                    setIsDepartmentSelectModalOpen(true)
+                                  }
+                                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                  title="选择所属部门"
+                                >
+                                  <Building2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           {/* Markdown内容 */}
@@ -1554,19 +1770,48 @@ export function CreateJobModal({
                             contentEditable
                             suppressContentEditableWarning
                             onBlur={(e) => {
-                              const text = e.currentTarget.textContent || '';
+                              // 从innerHTML获取HTML,然后转换为纯文本,保留换行
+                              const html = e.currentTarget.innerHTML;
+
+                              // 先将块级元素和br标签转换为换行符
+                              let text = html
+                                // 处理各种换行标签
+                                .replace(/<br\s*\/?>/gi, '\n')
+                                .replace(/<div>/gi, '\n')
+                                .replace(/<\/div>/gi, '')
+                                .replace(/<p>/gi, '\n')
+                                .replace(/<\/p>/gi, '')
+                                // 处理span标签(保留内容,移除标签)
+                                .replace(/<span[^>]*>/gi, '')
+                                .replace(/<\/span>/gi, '');
+
+                              // 移除其他所有HTML标签
+                              const tempDiv = document.createElement('div');
+                              tempDiv.innerHTML = text;
+                              text =
+                                tempDiv.textContent || tempDiv.innerText || '';
+
+                              // 清理首尾的换行,但保留内部的所有换行
+                              text = text.trim();
+                              // 将连续的3个以上换行替换为2个(保留段落间距)
+                              text = text.replace(/\n{3,}/g, '\n\n');
+
                               setSelectedProfile({
                                 ...selectedProfile,
                                 description_markdown: text,
                               });
                             }}
                             className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap outline-none focus:bg-blue-50 p-2 rounded min-h-[200px]"
-                          />
+                          >
+                            {selectedProfile.description_markdown ||
+                              selectedProfile.description ||
+                              '暂无岗位描述内容'}
+                          </div>
                         </div>
                       ) : (
                         /* 结构化模式 */
                         <div
-                          className="space-y-5"
+                          className="space-y-6"
                           key={`structured-${selectedProfile.id}`}
                         >
                           {/* 岗位标题 */}
@@ -1581,31 +1826,45 @@ export function CreateJobModal({
                                   name: e.currentTarget.textContent || '',
                                 })
                               }
-                              className="text-[18px] font-semibold text-gray-900 outline-none focus:bg-blue-50 px-2 py-1 rounded"
+                              className="text-[20px] font-bold text-gray-900 outline-none focus:bg-blue-50 px-2 py-1 rounded"
                             >
                               {selectedProfile.name || '岗位名称'}
                             </h2>
                           </div>
 
-                          {/* 基本信息 */}
-                          <div className="grid grid-cols-2 gap-4 text-[14px]">
-                            {selectedProfile.location && (
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">
-                                  {selectedProfile.location}
+                          {/* 基本信息卡片 */}
+                          <div
+                            className="rounded-xl p-5 border"
+                            style={{
+                              backgroundColor: '#e6f4ff',
+                              borderColor: '#7bb8ff',
+                            }}
+                          >
+                            <div className="flex flex-wrap gap-x-6 gap-y-3 text-[14px]">
+                              {/* 工作地点 */}
+                              <div className="flex items-center gap-2 min-w-[140px]">
+                                <MapPin
+                                  className="w-4 h-4 flex-shrink-0"
+                                  style={{ color: '#7bb8ff' }}
+                                />
+                                <span className="text-gray-700 font-medium">
+                                  {selectedProfile.location || '暂无要求'}
                                 </span>
                               </div>
-                            )}
-                            {selectedProfile.experience_requirements &&
-                              selectedProfile.experience_requirements.length >
-                                0 && (
-                                <div className="flex items-center gap-2">
-                                  <Briefcase className="w-4 h-4 text-gray-500" />
-                                  <span className="text-gray-700">
-                                    {selectedProfile.experience_requirements[0]
-                                      .experience_type === 'unlimited'
-                                      ? '不限'
+
+                              {/* 工作经验 */}
+                              <div className="flex items-center gap-2 min-w-[140px]">
+                                <Briefcase
+                                  className="w-4 h-4 flex-shrink-0"
+                                  style={{ color: '#7bb8ff' }}
+                                />
+                                <span className="text-gray-700 font-medium">
+                                  {selectedProfile.experience_requirements &&
+                                  selectedProfile.experience_requirements
+                                    .length > 0
+                                    ? selectedProfile.experience_requirements[0]
+                                        .experience_type === 'unlimited'
+                                      ? '经验不限'
                                       : selectedProfile
                                             .experience_requirements[0]
                                             .experience_type ===
@@ -1620,159 +1879,168 @@ export function CreateJobModal({
                                                 .experience_requirements[0]
                                                 .experience_type ===
                                               'one_to_three_years'
-                                            ? '1-3年'
+                                            ? '1-3年经验'
                                             : selectedProfile
                                                   .experience_requirements[0]
                                                   .experience_type ===
                                                 'three_to_five_years'
-                                              ? '3-5年'
+                                              ? '3-5年经验'
                                               : selectedProfile
                                                     .experience_requirements[0]
                                                     .experience_type ===
                                                   'five_to_ten_years'
-                                                ? '5-10年'
+                                                ? '5-10年经验'
                                                 : selectedProfile
                                                       .experience_requirements[0]
                                                       .experience_type ===
                                                     'over_ten_years'
                                                   ? '10年以上'
-                                                  : ''}
+                                                  : '暂无要求'
+                                    : '暂无要求'}
+                                </span>
+                              </div>
+
+                              {/* 工作性质 */}
+                              <div className="flex items-center gap-2 min-w-[140px]">
+                                <Briefcase
+                                  className="w-4 h-4 flex-shrink-0"
+                                  style={{ color: '#7bb8ff' }}
+                                />
+                                <span className="text-gray-700 font-medium">
+                                  {selectedProfile.work_type
+                                    ? selectedProfile.work_type === 'full_time'
+                                      ? '全职'
+                                      : selectedProfile.work_type ===
+                                          'part_time'
+                                        ? '兼职'
+                                        : selectedProfile.work_type ===
+                                            'internship'
+                                          ? '实习'
+                                          : selectedProfile.work_type ===
+                                              'outsourcing'
+                                            ? '外包'
+                                            : '暂无要求'
+                                    : '暂无要求'}
+                                </span>
+                              </div>
+
+                              {/* 教育经历要求 */}
+                              <div className="flex items-center gap-2 min-w-[140px]">
+                                <GraduationCap
+                                  className="w-4 h-4 flex-shrink-0"
+                                  style={{ color: '#7bb8ff' }}
+                                />
+                                <span className="text-gray-700 font-medium">
+                                  {selectedProfile.education_requirements &&
+                                  selectedProfile.education_requirements
+                                    .length > 0
+                                    ? selectedProfile.education_requirements
+                                        .map((edu) =>
+                                          edu.education_type === 'unlimited'
+                                            ? '学历不限'
+                                            : edu.education_type ===
+                                                'junior_college'
+                                              ? '大专'
+                                              : edu.education_type ===
+                                                  'bachelor'
+                                                ? '本科'
+                                                : edu.education_type ===
+                                                    'master'
+                                                  ? '硕士'
+                                                  : edu.education_type ===
+                                                      'doctor'
+                                                    ? '博士'
+                                                    : ''
+                                        )
+                                        .filter(Boolean)
+                                        .join('、') || '暂无要求'
+                                    : '暂无要求'}
+                                </span>
+                              </div>
+
+                              {/* 行业背景要求 */}
+                              <div className="flex items-center gap-2 min-w-[140px]">
+                                <Building2
+                                  className="w-4 h-4 flex-shrink-0"
+                                  style={{ color: '#7bb8ff' }}
+                                />
+                                <span className="text-gray-700 font-medium">
+                                  {selectedProfile.industry_requirements &&
+                                  selectedProfile.industry_requirements.length >
+                                    0
+                                    ? selectedProfile.industry_requirements
+                                        .map((req) => {
+                                          const parts = [];
+                                          if (req.industry)
+                                            parts.push(req.industry);
+                                          if (req.company_name)
+                                            parts.push(req.company_name);
+                                          return parts.join('·');
+                                        })
+                                        .filter(Boolean)
+                                        .join('、') || '暂无要求'
+                                    : '暂无要求'}
+                                </span>
+                              </div>
+
+                              {/* 薪资范围 */}
+                              {(selectedProfile.salary_min ||
+                                selectedProfile.salary_max) && (
+                                <div className="flex items-center gap-2 min-w-[140px]">
+                                  <DollarSign
+                                    className="w-4 h-4 flex-shrink-0"
+                                    style={{ color: '#7bb8ff' }}
+                                  />
+                                  <span className="text-gray-700 font-medium">
+                                    {selectedProfile.salary_min &&
+                                    selectedProfile.salary_max
+                                      ? `${selectedProfile.salary_min}-${selectedProfile.salary_max}K/月`
+                                      : selectedProfile.salary_min
+                                        ? `${selectedProfile.salary_min}K以上/月`
+                                        : `${selectedProfile.salary_max}K以下/月`}
                                   </span>
                                 </div>
                               )}
-                            {selectedProfile.department && (
-                              <div className="flex items-center gap-2">
-                                <Building2 className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">
-                                  {selectedProfile.department}
-                                </span>
-                              </div>
-                            )}
-                            {selectedProfile.work_type && (
-                              <div className="flex items-center gap-2">
-                                <Briefcase className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">
-                                  {selectedProfile.work_type === 'full_time'
-                                    ? '全职'
-                                    : selectedProfile.work_type === 'part_time'
-                                      ? '兼职'
-                                      : selectedProfile.work_type ===
-                                          'internship'
-                                        ? '实习'
-                                        : selectedProfile.work_type ===
-                                            'outsourcing'
-                                          ? '外包'
-                                          : ''}
-                                </span>
-                              </div>
-                            )}
-                            {(selectedProfile.salary_min ||
-                              selectedProfile.salary_max) && (
-                              <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">
-                                  {selectedProfile.salary_min &&
-                                  selectedProfile.salary_max
-                                    ? `${selectedProfile.salary_min}-${selectedProfile.salary_max}K/月`
-                                    : selectedProfile.salary_min
-                                      ? `${selectedProfile.salary_min}K以上/月`
-                                      : `${selectedProfile.salary_max}K以下/月`}
-                                </span>
-                              </div>
-                            )}
+                            </div>
                           </div>
-
-                          {/* 教育经历要求 */}
-                          {selectedProfile.education_requirements &&
-                            selectedProfile.education_requirements.length >
-                              0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <GraduationCap className="w-4 h-4 text-gray-700" />
-                                  <h3 className="text-[16px] font-semibold text-gray-900">
-                                    教育经历要求
-                                  </h3>
-                                </div>
-                                <div className="text-[14px] text-gray-700">
-                                  {selectedProfile.education_requirements.map(
-                                    (edu, idx) => (
-                                      <span key={idx}>
-                                        {edu.education_type === 'unlimited'
-                                          ? '不限'
-                                          : edu.education_type ===
-                                              'junior_college'
-                                            ? '大专'
-                                            : edu.education_type === 'bachelor'
-                                              ? '本科'
-                                              : edu.education_type === 'master'
-                                                ? '硕士'
-                                                : edu.education_type ===
-                                                    'doctor'
-                                                  ? '博士'
-                                                  : ''}
-                                        {idx <
-                                        selectedProfile.education_requirements!
-                                          .length -
-                                          1
-                                          ? '、'
-                                          : ''}
-                                      </span>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                          {/* 行业背景要求 */}
-                          {selectedProfile.industry_requirements &&
-                            selectedProfile.industry_requirements.length >
-                              0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Building2 className="w-4 h-4 text-gray-700" />
-                                  <h3 className="text-[16px] font-semibold text-gray-900">
-                                    行业背景要求
-                                  </h3>
-                                </div>
-                                <div className="space-y-2 text-[14px] text-gray-700">
-                                  {selectedProfile.industry_requirements.map(
-                                    (req, idx) => (
-                                      <div key={idx}>
-                                        {req.industry && (
-                                          <span>行业: {req.industry}</span>
-                                        )}
-                                        {req.company_name && (
-                                          <span className="ml-4">
-                                            公司: {req.company_name}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
 
                           {/* 职责要求 */}
                           {selectedProfile.responsibilities &&
                             selectedProfile.responsibilities.length > 0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Target className="w-4 h-4 text-gray-700" />
+                              <div className="bg-white rounded-lg p-5 border border-gray-200">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <div
+                                    className="p-2 rounded-lg"
+                                    style={{ backgroundColor: '#e6f4ff' }}
+                                  >
+                                    <Target
+                                      className="w-5 h-5"
+                                      style={{ color: '#7bb8ff' }}
+                                    />
+                                  </div>
                                   <h3 className="text-[16px] font-semibold text-gray-900">
                                     职责要求
                                   </h3>
                                 </div>
-                                <ul className="space-y-2 list-disc list-inside">
+                                <ul className="space-y-2.5">
                                   {selectedProfile.responsibilities.map(
                                     (resp, idx) => (
                                       <li
                                         key={idx}
-                                        className="text-[14px] text-gray-700"
+                                        className="flex items-start gap-2 text-[14px] text-gray-700"
                                       >
-                                        {typeof resp === 'string'
-                                          ? resp
-                                          : resp.responsibility}
+                                        <span
+                                          className="inline-block w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                                          style={{
+                                            background:
+                                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                                          }}
+                                        ></span>
+                                        <span>
+                                          {typeof resp === 'string'
+                                            ? resp
+                                            : resp.responsibility}
+                                        </span>
                                       </li>
                                     )
                                   )}
@@ -1783,34 +2051,71 @@ export function CreateJobModal({
                           {/* 技能要求 */}
                           {selectedProfile.skills &&
                             selectedProfile.skills.length > 0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Target className="w-4 h-4 text-gray-700" />
+                              <div className="bg-white rounded-lg p-5 border border-gray-200">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <div className="p-2 bg-green-100 rounded-lg">
+                                    <Target className="w-5 h-5 text-green-600" />
+                                  </div>
                                   <h3 className="text-[16px] font-semibold text-gray-900">
                                     技能要求
                                   </h3>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2.5">
                                   {selectedProfile.skills.map((skill, idx) => {
                                     // 优先使用skill_name(AI生成时的字段),否则使用skill
-                                    const skillName =
+                                    let skillName =
                                       'skill_name' in skill && skill.skill_name
                                         ? skill.skill_name
                                         : skill.skill;
+
+                                    // 移除技能名称中的 * 号
+                                    if (skillName) {
+                                      skillName = skillName
+                                        .replace(/\*/g, '')
+                                        .trim();
+                                    }
+
+                                    // 根据技能类型使用不同的背景色
+                                    const isRequired =
+                                      skill.type === 'required';
+
                                     return (
                                       <span
                                         key={idx}
-                                        className="inline-flex items-center px-3 py-1 rounded-full text-[14px] bg-blue-50 text-blue-700 border border-blue-200"
+                                        className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[14px] border transition-colors ${
+                                          isRequired
+                                            ? 'text-gray-800'
+                                            : 'bg-gray-100 text-gray-700 border-gray-300'
+                                        }`}
+                                        style={
+                                          isRequired
+                                            ? {
+                                                backgroundColor: '#e6f4ff',
+                                                borderColor: '#7bb8ff',
+                                              }
+                                            : undefined
+                                        }
                                       >
                                         {skillName}
-                                        {skill.type === 'required' && (
-                                          <span className="ml-1 text-[12px]">
-                                            *
-                                          </span>
-                                        )}
                                       </span>
                                     );
                                   })}
+                                </div>
+                                <div className="mt-3 text-[12px] text-gray-500 flex items-center gap-4">
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className="w-3 h-3 rounded border"
+                                      style={{
+                                        backgroundColor: '#e6f4ff',
+                                        borderColor: '#7bb8ff',
+                                      }}
+                                    ></span>
+                                    <span>必须技能</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="w-3 h-3 rounded bg-gray-100 border border-gray-300"></span>
+                                    <span>加分技能</span>
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -1846,15 +2151,17 @@ export function CreateJobModal({
               disabled={isSubmitting}
               className="h-10 px-6 text-[14px] text-white disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: isSubmitting ? '#a0d1ff' : '#7bb8ff',
+                background: isSubmitting
+                  ? '#a0d1ff'
+                  : 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
               }}
               onMouseEnter={(e) =>
-                !isSubmitting &&
-                (e.currentTarget.style.backgroundColor = '#6aa8ee')
+                !isSubmitting && (e.currentTarget.style.background = '#6aa8ee')
               }
               onMouseLeave={(e) =>
                 !isSubmitting &&
-                (e.currentTarget.style.backgroundColor = '#7bb8ff')
+                (e.currentTarget.style.background =
+                  'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)')
               }
             >
               {isSubmitting ? '发布中...' : '保存发布'}
@@ -1883,6 +2190,9 @@ export function CreateJobModal({
                 + 新增技能
               </Button>
             </div>
+            <DialogDescription className="sr-only">
+              选择该岗位需要的工作技能
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -1995,17 +2305,126 @@ export function CreateJobModal({
                 disabled={selectedSkillIds.length === 0}
                 className="text-[14px] text-white disabled:opacity-50"
                 style={{
-                  backgroundColor:
-                    selectedSkillIds.length === 0 ? '#d1d5db' : '#7bb8ff',
+                  background:
+                    selectedSkillIds.length === 0
+                      ? '#d1d5db'
+                      : 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                 }}
                 onMouseEnter={(e) =>
                   selectedSkillIds.length > 0 &&
-                  (e.currentTarget.style.backgroundColor = '#6aa8ee')
+                  (e.currentTarget.style.background = '#6aa8ee')
                 }
                 onMouseLeave={(e) =>
                   selectedSkillIds.length > 0 &&
-                  (e.currentTarget.style.backgroundColor = '#7bb8ff')
+                  (e.currentTarget.style.background =
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)')
                 }
+              >
+                确定
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI模式 - 部门选择弹窗 */}
+      <Dialog
+        open={isDepartmentSelectModalOpen}
+        onOpenChange={setIsDepartmentSelectModalOpen}
+      >
+        <DialogContent
+          className="max-w-md"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-[16px] font-medium text-gray-900">
+              选择所属部门
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              为该岗位选择所属部门
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* 部门选择下拉框 */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[14px] font-medium text-gray-700">
+                  所属部门:
+                </Label>
+                {/* 新增按钮 - 黑色字体,带边框 */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAddDepartment}
+                  className="h-7 px-2 text-[13px] text-gray-900 hover:bg-gray-100 border border-gray-300 rounded"
+                >
+                  + 新增
+                </Button>
+              </div>
+              <Select
+                value={selectedProfile?.department_id || ''}
+                onValueChange={(value) => {
+                  if (selectedProfile) {
+                    // 找到选中的部门对象
+                    const selectedDept = departments.find(
+                      (dept) => dept.id === value
+                    );
+                    setSelectedProfile({
+                      ...selectedProfile,
+                      department_id: value,
+                      department: selectedDept?.name || '',
+                    });
+                  }
+                }}
+                disabled={isLoadingDepartments}
+              >
+                <SelectTrigger className="text-[14px] border-gray-300 focus:border-blue-500 rounded-lg bg-white">
+                  <SelectValue
+                    placeholder={isLoadingDepartments ? '加载中...' : '请选择'}
+                  />
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  side="bottom"
+                  align="start"
+                  className="max-h-[300px]"
+                >
+                  {departments.length === 0 ? (
+                    <SelectItem value="no-department" disabled>
+                      暂无部门
+                    </SelectItem>
+                  ) : (
+                    departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 底部按钮 */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsDepartmentSelectModalOpen(false)}
+                className="text-[14px]"
+              >
+                取消
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsDepartmentSelectModalOpen(false);
+                  if (selectedProfile?.department) {
+                    toast.success('部门选择成功');
+                  }
+                }}
+                className="text-[14px] text-white"
+                style={{
+                  backgroundColor: '#2563EB',
+                }}
               >
                 确定
               </Button>

@@ -145,7 +145,14 @@ export function NotificationConfigModal({
 
             {/* 添加通知按钮 */}
             <div className="mb-6">
-              <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
+              <Button
+                className="gap-2 text-white"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
+                onClick={() => setIsAddModalOpen(true)}
+              >
                 <Plus className="w-4 h-4" />
                 添加通知
               </Button>

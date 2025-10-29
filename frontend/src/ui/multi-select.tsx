@@ -330,9 +330,17 @@ export function MultiSelect({
                           className={cn(
                             'flex h-4 w-4 items-center justify-center rounded border-2 transition-all',
                             isSelected
-                              ? 'bg-[#7bb8ff] border-[#7bb8ff]'
+                              ? 'border-[#7bb8ff]'
                               : 'bg-white border-[#D1D5DB] hover:border-[#7bb8ff]'
                           )}
+                          style={
+                            isSelected
+                              ? {
+                                  background:
+                                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                                }
+                              : undefined
+                          }
                         >
                           {isSelected && (
                             <Check className="h-3 w-3 text-white stroke-[3]" />
@@ -348,7 +356,13 @@ export function MultiSelect({
                           )}
                         >
                           {isSelected && (
-                            <div className="h-2 w-2 rounded-full bg-[#7bb8ff]" />
+                            <div
+                              className="h-2 w-2 rounded-full"
+                              style={{
+                                background:
+                                  'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                              }}
+                            />
                           )}
                         </div>
                       )}
@@ -365,7 +379,13 @@ export function MultiSelect({
                       </span>
                       {/* 选中指示器 */}
                       {isSelected && multiple && (
-                        <div className="w-2 h-2 rounded-full bg-[#7bb8ff]" />
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                          }}
+                        />
                       )}
                     </div>
                   </DropdownMenuItem>

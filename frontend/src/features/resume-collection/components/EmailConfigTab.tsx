@@ -533,7 +533,10 @@ export function EmailConfigTab() {
         <div className="mb-6">
           <Button
             size="sm"
-            className="gap-1.5 rounded-lg px-3 py-1.5 shadow-sm"
+            className="gap-1.5 rounded-lg px-3 py-1.5 shadow-sm text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
             onClick={handleOpenAddModal}
             disabled={submitting}
           >
@@ -770,9 +773,16 @@ export function EmailConfigTab() {
                     onClick={() => handlePageChange(page)}
                     className={cn(
                       'h-[34px] w-[34px] rounded border border-[#D1D5DB] bg-white p-0 text-sm font-normal text-[#374151]',
-                      page === currentPage &&
-                        'border-[#7bb8ff] bg-[#7bb8ff] text-white'
+                      page === currentPage && 'border-[#7bb8ff] text-white'
                     )}
+                    style={
+                      page === currentPage
+                        ? {
+                            background:
+                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                          }
+                        : undefined
+                    }
                   >
                     {page}
                   </Button>
@@ -1096,7 +1106,14 @@ function AddEmailConfigModal({
           <Button variant="outline" className="px-6" onClick={onClose}>
             取消
           </Button>
-          <Button className="px-6" onClick={onSave} disabled={submitting}>
+          <Button
+            className="px-6 text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
+            onClick={onSave}
+            disabled={submitting}
+          >
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />

@@ -2135,7 +2135,12 @@ export function ReportDetailModal({
   const renderHeader = () => (
     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-[#7bb8ff] rounded-full flex items-center justify-center">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+          }}
+        >
           <BarChart3 className="w-4 h-4 text-white" />
         </div>
         <h2 className="text-xl font-semibold text-gray-900">报告详情</h2>
@@ -2220,7 +2225,10 @@ export function ReportDetailModal({
             <Button
               onClick={handleDownloadResume}
               disabled={isDownloading || !resumeDetail?.resume_file_url}
-              className="h-6 px-2 text-xs flex items-center gap-1 bg-[#7bb8ff] hover:bg-[#5aa3e6] text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="h-6 px-2 text-xs flex items-center gap-1 hover:bg-[#5aa3e6] text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              style={{
+                background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+              }}
               size="sm"
             >
               <Download className="w-3 h-3" />
