@@ -400,10 +400,10 @@ export function ResumePreviewModal({
                 </div>
               </div>
 
-              {/* 内容区域 - 所有内容垂直滚动展示,添加科技感线条 */}
+              {/* 内容区域 - 所有内容垂直滚动展示 */}
               <div className="flex-1 overflow-y-auto px-6 py-4 bg-white space-y-6 relative">
-                {/* 科技感装饰线条 - 提高透明度使其更清晰 */}
-                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                {/* 科技感装饰线条 - 弱化背景线条 */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none">
                   <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
                   <div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
                   <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
