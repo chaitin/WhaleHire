@@ -57,7 +57,7 @@ var systemPrompt = `
   - experience_type：取值 work/internship/volunteer/organization。
 * skills（数组）
   - name：技能名、技术栈或证书名称。
-  - level：熟练度（如“精通”“熟练”“掌握”“了解”），无就留空字符串。
+  - level：结合简历上下文由你判断的熟练度（如“精通”“熟练”“掌握”“了解”），需主动归纳;
   - description：补充说明，可为空字符串。
 * projects（数组，包含项目与论文）
   - name：项目名称或论文题目。

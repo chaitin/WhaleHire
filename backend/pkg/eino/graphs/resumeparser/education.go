@@ -57,12 +57,13 @@ func newEducationNode(ctx context.Context, db *sql.DB, cfg *config.Config, logge
 		return nil, fmt.Errorf("education enrichment: 创建嵌入模型失败: %w", err)
 	}
 
-	// 创建检索器，传入数据库连接和嵌入模型
+	// 创建向量检索器，传入数据库连接和嵌入模型
 	ret, err := universityretrieval.NewRetriever(ctx,
 		universityretrieval.WithDB(db),
 		universityretrieval.WithEmbedding(embedder, cfg.Embedding.Dimension),
 		universityretrieval.WithTopK(cfg.Retriever.TopK),
-		// universityretrieval.WithDistanceThreshold(cfg.Retriever.DistanceThreshold),
+		universityretrieval.WithDistanceThreshold(cfg.Retriever.DistanceThreshold),
+		universityretrieval.WithExactMatch(true),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("education enrichment: 创建高校检索器失败: %w", err)
@@ -229,7 +230,12 @@ func fillEducationWithDoc(edu *domain.ParsedEducation, doc *schema.Document) {
 		edu.UniversityMatchScore = nil
 	}
 
-	edu.UniversityMatchSource = consts.UniversityMatchSourceVector
+	// 根据匹配类型设置匹配来源
+	if matchType, ok := meta["match_type"].(string); ok && matchType == "exact" {
+		edu.UniversityMatchSource = consts.UniversityMatchSourceExact
+	} else {
+		edu.UniversityMatchSource = consts.UniversityMatchSourceVector
+	}
 }
 
 func (n *educationNode) fetchDocsWithCache(ctx context.Context, cache *queryCache, normalized string) ([]*schema.Document, error) {
@@ -241,12 +247,24 @@ func (n *educationNode) fetchDocsWithCache(ctx context.Context, cache *queryCach
 	}
 
 	if n.logger != nil {
-		n.logger.Debug("高校检索开始", slog.String("school", normalized))
+		n.logger.Debug("开始高校检索", slog.String("school", normalized))
 	}
 
 	docs, err := n.retriever.Retrieve(ctx, normalized)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, doc := range docs {
+		if doc == nil {
+			continue
+		}
+		if doc.MetaData == nil {
+			doc.MetaData = make(map[string]any)
+		}
+		if _, ok := doc.MetaData["match_type"]; !ok {
+			doc.MetaData["match_type"] = "vector"
+		}
 	}
 
 	cache.put(normalized, docs)

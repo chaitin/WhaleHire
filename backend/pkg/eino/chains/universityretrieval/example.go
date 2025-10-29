@@ -54,6 +54,7 @@ func main() {
 		universityretrieval.WithEmbedding(embedder, cfg.Embedding.Dimension),
 		universityretrieval.WithTopK(cfg.Retriever.TopK),
 		universityretrieval.WithDistanceThreshold(cfg.Retriever.DistanceThreshold),
+		universityretrieval.WithExactMatch(true),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "构建高校召回器失败: %v\n", err)
