@@ -154,6 +154,7 @@ const (
 	MatchLevelGood      MatchLevel = "good"
 	MatchLevelFair      MatchLevel = "fair"
 	MatchLevelPoor      MatchLevel = "poor"
+	MatchLevelNoMatch   MatchLevel = "no_match"
 )
 
 func (ml MatchLevel) String() string {
@@ -163,7 +164,7 @@ func (ml MatchLevel) String() string {
 // MatchLevelValidator is a validator for the "match_level" field enum values. It is called by the builders before save.
 func MatchLevelValidator(ml MatchLevel) error {
 	switch ml {
-	case MatchLevelExcellent, MatchLevelGood, MatchLevelFair, MatchLevelPoor:
+	case MatchLevelExcellent, MatchLevelGood, MatchLevelFair, MatchLevelPoor, MatchLevelNoMatch:
 		return nil
 	default:
 		return fmt.Errorf("screeningresult: invalid enum value for match_level field: %q", ml)

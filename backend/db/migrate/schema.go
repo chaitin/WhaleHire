@@ -1109,7 +1109,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "overall_score", Type: field.TypeFloat64},
-		{Name: "match_level", Type: field.TypeEnum, Nullable: true, Enums: []string{"excellent", "good", "fair", "poor"}},
+		{Name: "match_level", Type: field.TypeEnum, Nullable: true, Enums: []string{"excellent", "good", "fair", "poor", "no_match"}},
 		{Name: "dimension_scores", Type: field.TypeJSON, Nullable: true},
 		{Name: "skill_detail", Type: field.TypeJSON, Nullable: true},
 		{Name: "responsibility_detail", Type: field.TypeJSON, Nullable: true},

@@ -47,6 +47,7 @@ func (ScreeningResult) Fields() []ent.Field {
 			string(consts.MatchLevelGood),
 			string(consts.MatchLevelFair),
 			string(consts.MatchLevelPoor),
+			string(consts.MatchLevelNoMatch),
 		).Optional().Comment("匹配等级"),
 		field.JSON("dimension_scores", map[string]interface{}{}).Optional().Comment("各维度分数"),
 		field.JSON("skill_detail", map[string]interface{}{}).Optional().Comment("技能匹配详情"),
