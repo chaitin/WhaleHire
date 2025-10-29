@@ -702,7 +702,23 @@ export function UploadResumeModal({
           <div className="flex items-center justify-center max-w-2xl mx-auto">
             {/* 步骤1 - 上传文件 */}
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium bg-gray-200 text-gray-900">
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
+                  isStepCompleted('upload')
+                    ? 'text-white'
+                    : isStepActive('upload')
+                      ? 'text-white'
+                      : 'bg-gray-200 text-gray-600'
+                }`}
+                style={
+                  isStepCompleted('upload') || isStepActive('upload')
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }
+                    : undefined
+                }
+              >
                 {isStepCompleted('upload') ? (
                   <CheckCircle className="h-5 w-5" />
                 ) : (
@@ -710,7 +726,15 @@ export function UploadResumeModal({
                 )}
               </div>
               <div className="ml-3 hidden sm:block">
-                <div className="text-sm font-medium text-gray-600">
+                <div
+                  className={`text-sm font-medium ${
+                    isStepCompleted('upload')
+                      ? 'text-[#7bb8ff]'
+                      : isStepActive('upload')
+                        ? 'text-[#7bb8ff]'
+                        : 'text-gray-600'
+                  }`}
+                >
                   上传文件
                 </div>
               </div>
@@ -738,12 +762,15 @@ export function UploadResumeModal({
                     : isStepActive('preview')
                       ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
-                }
+                }`}
                 style={
                   isStepCompleted('preview') || isStepActive('preview')
-                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }
                     : undefined
-                }`}
+                }
               >
                 {isStepCompleted('preview') ? (
                   <CheckCircle className="h-5 w-5" />
@@ -788,12 +815,15 @@ export function UploadResumeModal({
                     : isStepActive('complete')
                       ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
-                }
+                }`}
                 style={
                   isStepCompleted('complete') || isStepActive('complete')
-                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }
                     : undefined
-                }`}
+                }
               >
                 {isStepCompleted('complete') ? (
                   <CheckCircle className="h-5 w-5" />

@@ -1795,20 +1795,26 @@ export function CreateJobModal({
                                   }
                                   title="点击修改所属部门"
                                 >
+                                  <span>所属部门：</span>
                                   <Building2 className="w-3.5 h-3.5" />
                                   <span>{selectedProfile.department}</span>
                                 </div>
                               ) : (
-                                // 未选择部门,显示图标按钮
-                                <button
-                                  onClick={() =>
-                                    setIsDepartmentSelectModalOpen(true)
-                                  }
-                                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                  title="选择所属部门"
-                                >
-                                  <Building2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                                </button>
+                                // 未选择部门,显示文字+图标按钮
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[13px] text-gray-600">
+                                    所属部门：
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      setIsDepartmentSelectModalOpen(true)
+                                    }
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                    title="选择所属部门"
+                                  >
+                                    <Building2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -2464,7 +2470,8 @@ export function CreateJobModal({
                 }}
                 className="text-[14px] text-white"
                 style={{
-                  backgroundColor: '#2563EB',
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                 }}
               >
                 确定
