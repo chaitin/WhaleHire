@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -94,6 +95,12 @@ func EndDate(v time.Time) predicate.ResumeExperience {
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.ResumeExperience {
 	return predicate.ResumeExperience(sql.FieldEQ(FieldDescription, v))
+}
+
+// ExperienceType applies equality check predicate on the "experience_type" field. It's identical to ExperienceTypeEQ.
+func ExperienceType(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldEQ(FieldExperienceType, vc))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -574,6 +581,100 @@ func DescriptionEqualFold(v string) predicate.ResumeExperience {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.ResumeExperience {
 	return predicate.ResumeExperience(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// ExperienceTypeEQ applies the EQ predicate on the "experience_type" field.
+func ExperienceTypeEQ(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldEQ(FieldExperienceType, vc))
+}
+
+// ExperienceTypeNEQ applies the NEQ predicate on the "experience_type" field.
+func ExperienceTypeNEQ(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldNEQ(FieldExperienceType, vc))
+}
+
+// ExperienceTypeIn applies the In predicate on the "experience_type" field.
+func ExperienceTypeIn(vs ...consts.ExperienceType) predicate.ResumeExperience {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.ResumeExperience(sql.FieldIn(FieldExperienceType, v...))
+}
+
+// ExperienceTypeNotIn applies the NotIn predicate on the "experience_type" field.
+func ExperienceTypeNotIn(vs ...consts.ExperienceType) predicate.ResumeExperience {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.ResumeExperience(sql.FieldNotIn(FieldExperienceType, v...))
+}
+
+// ExperienceTypeGT applies the GT predicate on the "experience_type" field.
+func ExperienceTypeGT(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldGT(FieldExperienceType, vc))
+}
+
+// ExperienceTypeGTE applies the GTE predicate on the "experience_type" field.
+func ExperienceTypeGTE(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldGTE(FieldExperienceType, vc))
+}
+
+// ExperienceTypeLT applies the LT predicate on the "experience_type" field.
+func ExperienceTypeLT(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldLT(FieldExperienceType, vc))
+}
+
+// ExperienceTypeLTE applies the LTE predicate on the "experience_type" field.
+func ExperienceTypeLTE(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldLTE(FieldExperienceType, vc))
+}
+
+// ExperienceTypeContains applies the Contains predicate on the "experience_type" field.
+func ExperienceTypeContains(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldContains(FieldExperienceType, vc))
+}
+
+// ExperienceTypeHasPrefix applies the HasPrefix predicate on the "experience_type" field.
+func ExperienceTypeHasPrefix(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldHasPrefix(FieldExperienceType, vc))
+}
+
+// ExperienceTypeHasSuffix applies the HasSuffix predicate on the "experience_type" field.
+func ExperienceTypeHasSuffix(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldHasSuffix(FieldExperienceType, vc))
+}
+
+// ExperienceTypeIsNil applies the IsNil predicate on the "experience_type" field.
+func ExperienceTypeIsNil() predicate.ResumeExperience {
+	return predicate.ResumeExperience(sql.FieldIsNull(FieldExperienceType))
+}
+
+// ExperienceTypeNotNil applies the NotNil predicate on the "experience_type" field.
+func ExperienceTypeNotNil() predicate.ResumeExperience {
+	return predicate.ResumeExperience(sql.FieldNotNull(FieldExperienceType))
+}
+
+// ExperienceTypeEqualFold applies the EqualFold predicate on the "experience_type" field.
+func ExperienceTypeEqualFold(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldEqualFold(FieldExperienceType, vc))
+}
+
+// ExperienceTypeContainsFold applies the ContainsFold predicate on the "experience_type" field.
+func ExperienceTypeContainsFold(v consts.ExperienceType) predicate.ResumeExperience {
+	vc := string(v)
+	return predicate.ResumeExperience(sql.FieldContainsFold(FieldExperienceType, vc))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

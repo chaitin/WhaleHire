@@ -185,10 +185,10 @@ func Init() (*Config, error) {
 	v.SetDefault("embedding.model_name", "bge-m3")
 	v.SetDefault("embedding.api_endpoint", "https://model-square.app.baizhi.cloud/v1")
 	v.SetDefault("embedding.api_key", "")
-	v.SetDefault("embedding.dimension", 4096)
+	v.SetDefault("embedding.dimension", 1024)
 
 	v.SetDefault("retriever.top_k", 3)
-	v.SetDefault("retriever.distance_threshold", 0.8)
+	v.SetDefault("retriever.distance_threshold", 0.6)
 	v.SetDefault("s3.endpoint", "whalehire-minio:9000")
 	v.SetDefault("s3.access_key", "s3whale-hire")
 	v.SetDefault("s3.secret_key", "")

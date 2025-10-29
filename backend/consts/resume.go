@@ -3,34 +3,28 @@ package consts
 type UniversityType string
 
 const (
-	UniversityTypeOrdinary UniversityType = "ordinary" // 普通学校
-	UniversityType211      UniversityType = "211"      // 211工程学校
-	UniversityType985      UniversityType = "985"      // 985工程学校
+	// 基础类型
+	UniversityTypeOrdinary         UniversityType = "ordinary"           // 普通学校
+	UniversityType211              UniversityType = "211"                // 211工程学校
+	UniversityType985              UniversityType = "985"                // 985工程学校
+	UniversityTypeDoubleFirstClass UniversityType = "double_first_class" // 双一流学校
+	UniversityTypeQSTop100         UniversityType = "qs_top100"          // QS Top 100
 )
 
-// UniversityBadge 高校标签类型
-type UniversityBadge string
-
-const (
-	UniversityBadgeDoubleFirstClass UniversityBadge = "double_first_class" // 双一流
-	UniversityBadge985              UniversityBadge = "project_985"        // 985工程
-	UniversityBadge211              UniversityBadge = "project_211"        // 211工程
-	UniversityBadgeQSTop100         UniversityBadge = "qs_top100"          // QS Top 100
-)
-
-// Values 返回所有高校标签值
-func (UniversityBadge) Values() []UniversityBadge {
-	return []UniversityBadge{
-		UniversityBadgeDoubleFirstClass,
-		UniversityBadge985,
-		UniversityBadge211,
-		UniversityBadgeQSTop100,
+// Values 返回所有高校类型值
+func (UniversityType) Values() []UniversityType {
+	return []UniversityType{
+		UniversityTypeOrdinary,
+		UniversityType211,
+		UniversityType985,
+		UniversityTypeDoubleFirstClass,
+		UniversityTypeQSTop100,
 	}
 }
 
-// IsValid 检查高校标签是否有效
-func (u UniversityBadge) IsValid() bool {
-	for _, v := range UniversityBadge("").Values() {
+// IsValid 检查高校类型是否有效
+func (u UniversityType) IsValid() bool {
+	for _, v := range UniversityType("").Values() {
 		if u == v {
 			return true
 		}
@@ -60,6 +54,68 @@ func (UniversityMatchSource) Values() []UniversityMatchSource {
 func (u UniversityMatchSource) IsValid() bool {
 	for _, v := range UniversityMatchSource("").Values() {
 		if u == v {
+			return true
+		}
+	}
+	return false
+}
+
+// ProjectType 项目类型
+type ProjectType string
+
+const (
+	ProjectTypePersonal   ProjectType = "personal"   // 个人项目
+	ProjectTypeTeam       ProjectType = "team"       // 团队项目
+	ProjectTypeOpenSource ProjectType = "opensource" // 开源项目
+	ProjectTypePaper      ProjectType = "paper"      // 论文发表
+	ProjectTypeOther      ProjectType = "other"      // 其他类型
+)
+
+// Values 返回所有项目类型值
+func (ProjectType) Values() []ProjectType {
+	return []ProjectType{
+		ProjectTypePersonal,
+		ProjectTypeTeam,
+		ProjectTypeOpenSource,
+		ProjectTypePaper,
+		ProjectTypeOther,
+	}
+}
+
+// IsValid 检查项目类型是否有效
+func (p ProjectType) IsValid() bool {
+	for _, v := range ProjectType("").Values() {
+		if p == v {
+			return true
+		}
+	}
+	return false
+}
+
+// ExperienceType 经验类型
+type ExperienceType string
+
+const (
+	ExperienceTypeWork         ExperienceType = "work"         // 工作经历
+	ExperienceTypeOrganization ExperienceType = "organization" // 社团组织
+	ExperienceTypeVolunteer    ExperienceType = "volunteer"    // 志愿服务
+	ExperienceTypeInternship   ExperienceType = "internship"   // 实习经历
+)
+
+// Values 返回所有经验类型值
+func (ExperienceType) Values() []ExperienceType {
+	return []ExperienceType{
+		ExperienceTypeWork,
+		ExperienceTypeOrganization,
+		ExperienceTypeVolunteer,
+		ExperienceTypeInternship,
+	}
+}
+
+// IsValid 检查经验类型是否有效
+func (e ExperienceType) IsValid() bool {
+	for _, v := range ExperienceType("").Values() {
+		if e == v {
 			return true
 		}
 	}

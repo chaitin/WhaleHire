@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/google/uuid"
@@ -125,6 +126,20 @@ func (rec *ResumeExperienceCreate) SetDescription(s string) *ResumeExperienceCre
 func (rec *ResumeExperienceCreate) SetNillableDescription(s *string) *ResumeExperienceCreate {
 	if s != nil {
 		rec.SetDescription(*s)
+	}
+	return rec
+}
+
+// SetExperienceType sets the "experience_type" field.
+func (rec *ResumeExperienceCreate) SetExperienceType(ct consts.ExperienceType) *ResumeExperienceCreate {
+	rec.mutation.SetExperienceType(ct)
+	return rec
+}
+
+// SetNillableExperienceType sets the "experience_type" field if the given value is not nil.
+func (rec *ResumeExperienceCreate) SetNillableExperienceType(ct *consts.ExperienceType) *ResumeExperienceCreate {
+	if ct != nil {
+		rec.SetExperienceType(*ct)
 	}
 	return rec
 }
@@ -314,6 +329,10 @@ func (rec *ResumeExperienceCreate) createSpec() (*ResumeExperience, *sqlgraph.Cr
 	if value, ok := rec.mutation.Description(); ok {
 		_spec.SetField(resumeexperience.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if value, ok := rec.mutation.ExperienceType(); ok {
+		_spec.SetField(resumeexperience.FieldExperienceType, field.TypeString, value)
+		_node.ExperienceType = value
 	}
 	if value, ok := rec.mutation.CreatedAt(); ok {
 		_spec.SetField(resumeexperience.FieldCreatedAt, field.TypeTime, value)
@@ -527,6 +546,24 @@ func (u *ResumeExperienceUpsert) UpdateDescription() *ResumeExperienceUpsert {
 // ClearDescription clears the value of the "description" field.
 func (u *ResumeExperienceUpsert) ClearDescription() *ResumeExperienceUpsert {
 	u.SetNull(resumeexperience.FieldDescription)
+	return u
+}
+
+// SetExperienceType sets the "experience_type" field.
+func (u *ResumeExperienceUpsert) SetExperienceType(v consts.ExperienceType) *ResumeExperienceUpsert {
+	u.Set(resumeexperience.FieldExperienceType, v)
+	return u
+}
+
+// UpdateExperienceType sets the "experience_type" field to the value that was provided on create.
+func (u *ResumeExperienceUpsert) UpdateExperienceType() *ResumeExperienceUpsert {
+	u.SetExcluded(resumeexperience.FieldExperienceType)
+	return u
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (u *ResumeExperienceUpsert) ClearExperienceType() *ResumeExperienceUpsert {
+	u.SetNull(resumeexperience.FieldExperienceType)
 	return u
 }
 
@@ -760,6 +797,27 @@ func (u *ResumeExperienceUpsertOne) UpdateDescription() *ResumeExperienceUpsertO
 func (u *ResumeExperienceUpsertOne) ClearDescription() *ResumeExperienceUpsertOne {
 	return u.Update(func(s *ResumeExperienceUpsert) {
 		s.ClearDescription()
+	})
+}
+
+// SetExperienceType sets the "experience_type" field.
+func (u *ResumeExperienceUpsertOne) SetExperienceType(v consts.ExperienceType) *ResumeExperienceUpsertOne {
+	return u.Update(func(s *ResumeExperienceUpsert) {
+		s.SetExperienceType(v)
+	})
+}
+
+// UpdateExperienceType sets the "experience_type" field to the value that was provided on create.
+func (u *ResumeExperienceUpsertOne) UpdateExperienceType() *ResumeExperienceUpsertOne {
+	return u.Update(func(s *ResumeExperienceUpsert) {
+		s.UpdateExperienceType()
+	})
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (u *ResumeExperienceUpsertOne) ClearExperienceType() *ResumeExperienceUpsertOne {
+	return u.Update(func(s *ResumeExperienceUpsert) {
+		s.ClearExperienceType()
 	})
 }
 
@@ -1164,6 +1222,27 @@ func (u *ResumeExperienceUpsertBulk) UpdateDescription() *ResumeExperienceUpsert
 func (u *ResumeExperienceUpsertBulk) ClearDescription() *ResumeExperienceUpsertBulk {
 	return u.Update(func(s *ResumeExperienceUpsert) {
 		s.ClearDescription()
+	})
+}
+
+// SetExperienceType sets the "experience_type" field.
+func (u *ResumeExperienceUpsertBulk) SetExperienceType(v consts.ExperienceType) *ResumeExperienceUpsertBulk {
+	return u.Update(func(s *ResumeExperienceUpsert) {
+		s.SetExperienceType(v)
+	})
+}
+
+// UpdateExperienceType sets the "experience_type" field to the value that was provided on create.
+func (u *ResumeExperienceUpsertBulk) UpdateExperienceType() *ResumeExperienceUpsertBulk {
+	return u.Update(func(s *ResumeExperienceUpsert) {
+		s.UpdateExperienceType()
+	})
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (u *ResumeExperienceUpsertBulk) ClearExperienceType() *ResumeExperienceUpsertBulk {
+	return u.Update(func(s *ResumeExperienceUpsert) {
+		s.ClearExperienceType()
 	})
 }
 

@@ -235,6 +235,9 @@ func (u *ResumeUsecase) Update(ctx context.Context, req *domain.UpdateResumeReq)
 		if req.Birthday != nil {
 			updateOne.SetBirthday(*req.Birthday)
 		}
+		if req.Age != nil {
+			updateOne.SetAge(*req.Age)
+		}
 		if req.Email != nil {
 			updateOne.SetEmail(*req.Email)
 		}
@@ -249,6 +252,24 @@ func (u *ResumeUsecase) Update(ctx context.Context, req *domain.UpdateResumeReq)
 		}
 		if req.YearsExperience != nil {
 			updateOne.SetYearsExperience(*req.YearsExperience)
+		}
+		if req.PersonalSummary != nil {
+			updateOne.SetPersonalSummary(*req.PersonalSummary)
+		}
+		if req.ExpectedSalary != nil {
+			updateOne.SetExpectedSalary(*req.ExpectedSalary)
+		}
+		if req.ExpectedCity != nil {
+			updateOne.SetExpectedCity(*req.ExpectedCity)
+		}
+		if req.AvailableDate != nil {
+			updateOne.SetAvailableDate(*req.AvailableDate)
+		}
+		if req.HonorsCertificates != nil {
+			updateOne.SetHonorsCertificates(*req.HonorsCertificates)
+		}
+		if req.OtherInfo != nil {
+			updateOne.SetOtherInfo(*req.OtherInfo)
 		}
 		updateOne.SetUpdatedAt(time.Now())
 
@@ -582,6 +603,28 @@ func (u *ResumeUsecase) updateParsedData(ctx context.Context, resumeID string, d
 			if data.BasicInfo.YearsExperience != 0 {
 				updateOne.SetYearsExperience(data.BasicInfo.YearsExperience)
 			}
+			// 新增字段的处理
+			if data.BasicInfo.Age != 0 {
+				updateOne.SetAge(data.BasicInfo.Age)
+			}
+			if data.BasicInfo.PersonalSummary != "" {
+				updateOne.SetPersonalSummary(data.BasicInfo.PersonalSummary)
+			}
+			if data.BasicInfo.ExpectedSalary != "" {
+				updateOne.SetExpectedSalary(data.BasicInfo.ExpectedSalary)
+			}
+			if data.BasicInfo.ExpectedCity != "" {
+				updateOne.SetExpectedCity(data.BasicInfo.ExpectedCity)
+			}
+			if data.BasicInfo.AvailableDate != nil {
+				updateOne.SetAvailableDate(*data.BasicInfo.AvailableDate)
+			}
+			if data.BasicInfo.HonorsCertificates != "" {
+				updateOne.SetHonorsCertificates(data.BasicInfo.HonorsCertificates)
+			}
+			if data.BasicInfo.OtherInfo != "" {
+				updateOne.SetOtherInfo(data.BasicInfo.OtherInfo)
+			}
 		}
 		updateOne.SetParsedAt(time.Now())
 		updateOne.SetUpdatedAt(time.Now())
@@ -595,13 +638,16 @@ func (u *ResumeUsecase) updateParsedData(ctx context.Context, resumeID string, d
 	// 保存教育经历
 	for _, edu := range data.Educations {
 		education := &db.ResumeEducation{
-			ResumeID:       resumeUUID,
-			School:         edu.School,
-			Degree:         edu.Degree,
-			Major:          edu.Major,
-			UniversityType: edu.UniversityType,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			ResumeID:        resumeUUID,
+			School:          edu.School,
+			Degree:          edu.Degree,
+			Major:           edu.Major,
+			UniversityTypes: edu.UniversityTags,
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+		}
+		if edu.GPA != nil {
+			education.Gpa = *edu.GPA
 		}
 		if edu.StartDate != nil {
 			education.StartDate = *edu.StartDate
@@ -623,6 +669,9 @@ func (u *ResumeUsecase) updateParsedData(ctx context.Context, resumeID string, d
 			Description: exp.Description,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
+		}
+		if exp.ExperienceType != "" {
+			experience.ExperienceType = exp.ExperienceType
 		}
 		if exp.StartDate != nil {
 			experience.StartDate = *exp.StartDate
@@ -808,14 +857,17 @@ func (u *ResumeUsecase) updateEducations(ctx context.Context, tx *db.Tx, resumeI
 			if education.Major != nil {
 				updater.SetMajor(*education.Major)
 			}
+			if education.GPA != nil {
+				updater.SetGpa(*education.GPA)
+			}
 			if education.StartDate != nil {
 				updater.SetStartDate(*education.StartDate)
 			}
 			if education.EndDate != nil {
 				updater.SetEndDate(*education.EndDate)
 			}
-			if education.UniversityType != nil {
-				updater.SetUniversityType(*education.UniversityType)
+			if education.UniversityTypes != nil {
+				updater.SetUniversityTypes(*education.UniversityTypes)
 			}
 			updater.SetUpdatedAt(time.Now())
 
@@ -838,14 +890,17 @@ func (u *ResumeUsecase) updateEducations(ctx context.Context, tx *db.Tx, resumeI
 			if education.Major != nil {
 				creator.SetMajor(*education.Major)
 			}
+			if education.GPA != nil {
+				creator.SetGpa(*education.GPA)
+			}
 			if education.StartDate != nil {
 				creator.SetStartDate(*education.StartDate)
 			}
 			if education.EndDate != nil {
 				creator.SetEndDate(*education.EndDate)
 			}
-			if education.UniversityType != nil {
-				creator.SetUniversityType(*education.UniversityType)
+			if education.UniversityTypes != nil {
+				creator.SetUniversityTypes(*education.UniversityTypes)
 			}
 
 			if _, err := creator.Save(ctx); err != nil {
@@ -895,6 +950,9 @@ func (u *ResumeUsecase) updateExperiences(ctx context.Context, tx *db.Tx, resume
 			if experience.Title != nil {
 				updater.SetTitle(*experience.Title)
 			}
+			if experience.ExperienceType != nil {
+				updater.SetExperienceType(*experience.ExperienceType)
+			}
 			if experience.StartDate != nil {
 				updater.SetStartDate(*experience.StartDate)
 			}
@@ -924,6 +982,9 @@ func (u *ResumeUsecase) updateExperiences(ctx context.Context, tx *db.Tx, resume
 			}
 			if experience.Title != nil {
 				creator.SetTitle(*experience.Title)
+			}
+			if experience.ExperienceType != nil {
+				creator.SetExperienceType(*experience.ExperienceType)
 			}
 			if experience.StartDate != nil {
 				creator.SetStartDate(*experience.StartDate)

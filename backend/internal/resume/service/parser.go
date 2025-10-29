@@ -18,20 +18,24 @@ import (
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/chaitin/WhaleHire/backend/pkg/docparser"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/resumeparser"
+	resumeparsergraph "github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/resumeparser"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
+	"github.com/cloudwego/eino/compose"
 	"github.com/google/uuid"
 )
 
 type ParserService struct {
-	modelFactory   *models.ModelFactory
-	config         *config.Config
-	logger         *slog.Logger
-	documentParser *docparser.DocumentParserService
-	resumeRepo     domain.ResumeRepo
+	modelFactory        *models.ModelFactory
+	config              *config.Config
+	logger              *slog.Logger
+	documentParser      *docparser.DocumentParserService
+	resumeRepo          domain.ResumeRepo
+	resumeParseRunnable compose.Runnable[*resumeparser.ResumeParseInput, *resumeparser.ResumeParseResult]
+	resumeParseGraph    *resumeparsergraph.ResumeParseGraph
 }
 
 // NewParserService 创建解析服务
-func NewParserService(config *config.Config, logger *slog.Logger, resumeRepo domain.ResumeRepo) domain.ParserService {
+func NewParserService(config *config.Config, logger *slog.Logger, resumeRepo domain.ResumeRepo) (domain.ParserService, error) {
 	factory := models.NewModelFactory()
 
 	// 注册OpenAI模型
@@ -50,13 +54,40 @@ func NewParserService(config *config.Config, logger *slog.Logger, resumeRepo dom
 		documentParser = docparser.NewDocumentParserServiceFromConfig(config)
 	}
 
-	return &ParserService{
-		modelFactory:   factory,
-		config:         config,
-		logger:         logger,
-		documentParser: documentParser,
-		resumeRepo:     resumeRepo,
+	// 创建并初始化简历解析图
+	ctx := context.Background()
+	chatModel, err := factory.GetModel(ctx, models.ModelTypeOpenAI, config.GeneralAgent.LLM.ModelName)
+	if err != nil {
+		logger.Error("failed to get model during initialization", "error", err)
+		// 返回一个没有 runnable 的服务，在 ParseResume 时会报错
+		return nil, err
 	}
+
+	// 创建简历解析图
+	graph, err := resumeparsergraph.NewResumeParseGraph(ctx, config, chatModel, logger)
+	if err != nil {
+		logger.Error("failed to create resume parser graph during initialization", "error", err)
+		// 返回一个没有 runnable 的服务，在 ParseResume 时会报错
+		return nil, err
+	}
+
+	// 编译图
+	runnable, err := graph.Compile(ctx)
+	if err != nil {
+		logger.Error("failed to compile resume parser graph during initialization", "error", err)
+		// 返回一个没有 runnable 的服务，在 ParseResume 时会报错
+		return nil, err
+	}
+
+	return &ParserService{
+		modelFactory:        factory,
+		config:              config,
+		logger:              logger,
+		documentParser:      documentParser,
+		resumeRepo:          resumeRepo,
+		resumeParseRunnable: runnable,
+		resumeParseGraph:    graph,
+	}, nil
 }
 
 // downloadFile 下载文件到临时目录
@@ -187,25 +218,10 @@ func (s *ParserService) downloadFile(ctx context.Context, fileURL string, fileTy
 
 // ParseResume 解析简历内容
 func (s *ParserService) ParseResume(ctx context.Context, resumeID string, fileURL string, fileType string) (*domain.ParsedResumeData, error) {
-	// 获取模型
-	chatModel, err := s.modelFactory.GetModel(ctx, models.ModelTypeOpenAI, s.config.GeneralAgent.LLM.ModelName)
-	if err != nil {
-		s.logger.Error("failed to get model", "error", err)
-		return nil, fmt.Errorf("获取模型失败: %w", err)
-	}
-
-	// 创建简历解析链
-	chain, err := resumeparser.NewResumeParserChain(ctx, chatModel)
-	if err != nil {
-		s.logger.Error("failed to create resume parser chain", "error", err)
-		return nil, fmt.Errorf("创建解析链失败: %w", err)
-	}
-
-	// 编译链
-	runnable, err := chain.Compile(ctx)
-	if err != nil {
-		s.logger.Error("failed to compile resume parser chain", "error", err)
-		return nil, fmt.Errorf("编译解析链失败: %w", err)
+	// 检查 runnable 是否已初始化
+	if s.resumeParseRunnable == nil {
+		s.logger.Error("resume parse runnable not initialized", "resumeID", resumeID)
+		return nil, fmt.Errorf("简历解析服务未正确初始化")
 	}
 
 	var resumeContent string
@@ -215,7 +231,7 @@ func (s *ParserService) ParseResume(ctx context.Context, resumeID string, fileUR
 		// 下载文件到临时目录
 		tempFilePath, downloadErr := s.downloadFile(ctx, fileURL, fileType)
 		if downloadErr != nil {
-			s.logger.Error("下载文件失败", "error", err, "fileURL", fileURL)
+			s.logger.Error("下载文件失败", "error", downloadErr, "fileURL", fileURL)
 			return nil, fmt.Errorf("下载文件失败: %w", downloadErr)
 		}
 
@@ -237,7 +253,7 @@ func (s *ParserService) ParseResume(ctx context.Context, resumeID string, fileUR
 		s.logger.Info("文档解析成功", "fileURL", fileURL, "contentLength", len(resumeContent))
 
 		// 保存docparser的解析结果到数据库
-		if err = s.saveDocumentParseResult(ctx, resumeID, parseResult); err != nil {
+		if err := s.saveDocumentParseResult(ctx, resumeID, parseResult); err != nil {
 			s.logger.Error("保存文档解析结果失败", "error", err, "resumeID", resumeID)
 			// 这里不返回错误，因为主要的解析流程应该继续
 		}
@@ -246,13 +262,14 @@ func (s *ParserService) ParseResume(ctx context.Context, resumeID string, fileUR
 		s.logger.Error("文档解析服务未配置，无法解析简历文件", "fileURL", fileURL)
 		return nil, fmt.Errorf("文档解析服务未配置，无法解析简历文件")
 	}
+
 	// 准备输入
 	input := &resumeparser.ResumeParseInput{
 		Resume: resumeContent,
 	}
 
-	// 执行解析 - 现在直接返回 domain.ParsedResumeData，无需转换
-	result, err := runnable.Invoke(ctx, input)
+	// 执行解析 - 使用预编译的 runnable
+	result, err := s.resumeParseRunnable.Invoke(ctx, input)
 	if err != nil {
 		s.logger.Error("failed to parse resume", "error", err, "fileURL", fileURL)
 		return nil, fmt.Errorf("解析简历失败: %w", err)

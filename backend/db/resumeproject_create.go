@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeproject"
 	"github.com/google/uuid"
@@ -186,15 +187,15 @@ func (rpc *ResumeProjectCreate) SetNillableProjectURL(s *string) *ResumeProjectC
 }
 
 // SetProjectType sets the "project_type" field.
-func (rpc *ResumeProjectCreate) SetProjectType(s string) *ResumeProjectCreate {
-	rpc.mutation.SetProjectType(s)
+func (rpc *ResumeProjectCreate) SetProjectType(ct consts.ProjectType) *ResumeProjectCreate {
+	rpc.mutation.SetProjectType(ct)
 	return rpc
 }
 
 // SetNillableProjectType sets the "project_type" field if the given value is not nil.
-func (rpc *ResumeProjectCreate) SetNillableProjectType(s *string) *ResumeProjectCreate {
-	if s != nil {
-		rpc.SetProjectType(*s)
+func (rpc *ResumeProjectCreate) SetNillableProjectType(ct *consts.ProjectType) *ResumeProjectCreate {
+	if ct != nil {
+		rpc.SetProjectType(*ct)
 	}
 	return rpc
 }
@@ -693,7 +694,7 @@ func (u *ResumeProjectUpsert) ClearProjectURL() *ResumeProjectUpsert {
 }
 
 // SetProjectType sets the "project_type" field.
-func (u *ResumeProjectUpsert) SetProjectType(v string) *ResumeProjectUpsert {
+func (u *ResumeProjectUpsert) SetProjectType(v consts.ProjectType) *ResumeProjectUpsert {
 	u.Set(resumeproject.FieldProjectType, v)
 	return u
 }
@@ -1028,7 +1029,7 @@ func (u *ResumeProjectUpsertOne) ClearProjectURL() *ResumeProjectUpsertOne {
 }
 
 // SetProjectType sets the "project_type" field.
-func (u *ResumeProjectUpsertOne) SetProjectType(v string) *ResumeProjectUpsertOne {
+func (u *ResumeProjectUpsertOne) SetProjectType(v consts.ProjectType) *ResumeProjectUpsertOne {
 	return u.Update(func(s *ResumeProjectUpsert) {
 		s.SetProjectType(v)
 	})
@@ -1537,7 +1538,7 @@ func (u *ResumeProjectUpsertBulk) ClearProjectURL() *ResumeProjectUpsertBulk {
 }
 
 // SetProjectType sets the "project_type" field.
-func (u *ResumeProjectUpsertBulk) SetProjectType(v string) *ResumeProjectUpsertBulk {
+func (u *ResumeProjectUpsertBulk) SetProjectType(v consts.ProjectType) *ResumeProjectUpsertBulk {
 	return u.Update(func(s *ResumeProjectUpsert) {
 		s.SetProjectType(v)
 	})

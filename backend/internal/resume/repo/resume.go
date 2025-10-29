@@ -327,8 +327,8 @@ func (r *ResumeRepo) CreateEducation(ctx context.Context, education *db.ResumeEd
 		SetDegree(education.Degree).
 		SetMajor(education.Major)
 
-	if education.UniversityType != "" {
-		creator = creator.SetUniversityType(education.UniversityType)
+	if len(education.UniversityTypes) > 0 {
+		creator = creator.SetUniversityTypes(education.UniversityTypes)
 	}
 
 	if !education.StartDate.IsZero() {

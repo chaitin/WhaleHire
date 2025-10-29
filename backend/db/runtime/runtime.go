@@ -492,19 +492,19 @@ func init() {
 	resumeFields := schema.Resume{}.Fields()
 	_ = resumeFields
 	// resumeDescHighestEducation is the schema descriptor for highest_education field.
-	resumeDescHighestEducation := resumeFields[8].Descriptor()
+	resumeDescHighestEducation := resumeFields[9].Descriptor()
 	// resume.HighestEducationValidator is a validator for the "highest_education" field. It is called by the builders before save.
 	resume.HighestEducationValidator = resumeDescHighestEducation.Validators[0].(func(string) error)
 	// resumeDescStatus is the schema descriptor for status field.
-	resumeDescStatus := resumeFields[11].Descriptor()
+	resumeDescStatus := resumeFields[18].Descriptor()
 	// resume.DefaultStatus holds the default value on creation for the status field.
 	resume.DefaultStatus = resumeDescStatus.Default.(string)
 	// resumeDescCreatedAt is the schema descriptor for created_at field.
-	resumeDescCreatedAt := resumeFields[14].Descriptor()
+	resumeDescCreatedAt := resumeFields[21].Descriptor()
 	// resume.DefaultCreatedAt holds the default value on creation for the created_at field.
 	resume.DefaultCreatedAt = resumeDescCreatedAt.Default.(func() time.Time)
 	// resumeDescUpdatedAt is the schema descriptor for updated_at field.
-	resumeDescUpdatedAt := resumeFields[15].Descriptor()
+	resumeDescUpdatedAt := resumeFields[22].Descriptor()
 	// resume.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	resume.DefaultUpdatedAt = resumeDescUpdatedAt.Default.(func() time.Time)
 	// resume.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -546,11 +546,11 @@ func init() {
 	resumeeducationFields := schema.ResumeEducation{}.Fields()
 	_ = resumeeducationFields
 	// resumeeducationDescCreatedAt is the schema descriptor for created_at field.
-	resumeeducationDescCreatedAt := resumeeducationFields[8].Descriptor()
+	resumeeducationDescCreatedAt := resumeeducationFields[9].Descriptor()
 	// resumeeducation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	resumeeducation.DefaultCreatedAt = resumeeducationDescCreatedAt.Default.(func() time.Time)
 	// resumeeducationDescUpdatedAt is the schema descriptor for updated_at field.
-	resumeeducationDescUpdatedAt := resumeeducationFields[9].Descriptor()
+	resumeeducationDescUpdatedAt := resumeeducationFields[10].Descriptor()
 	// resumeeducation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	resumeeducation.DefaultUpdatedAt = resumeeducationDescUpdatedAt.Default.(func() time.Time)
 	// resumeeducation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -567,11 +567,11 @@ func init() {
 	resumeexperienceFields := schema.ResumeExperience{}.Fields()
 	_ = resumeexperienceFields
 	// resumeexperienceDescCreatedAt is the schema descriptor for created_at field.
-	resumeexperienceDescCreatedAt := resumeexperienceFields[8].Descriptor()
+	resumeexperienceDescCreatedAt := resumeexperienceFields[9].Descriptor()
 	// resumeexperience.DefaultCreatedAt holds the default value on creation for the created_at field.
 	resumeexperience.DefaultCreatedAt = resumeexperienceDescCreatedAt.Default.(func() time.Time)
 	// resumeexperienceDescUpdatedAt is the schema descriptor for updated_at field.
-	resumeexperienceDescUpdatedAt := resumeexperienceFields[9].Descriptor()
+	resumeexperienceDescUpdatedAt := resumeexperienceFields[10].Descriptor()
 	// resumeexperience.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	resumeexperience.DefaultUpdatedAt = resumeexperienceDescUpdatedAt.Default.(func() time.Time)
 	// resumeexperience.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

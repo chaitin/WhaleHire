@@ -40,11 +40,18 @@ func (Resume) Fields() []ent.Field {
 		field.String("name").Optional(),
 		field.String("gender").Optional(),
 		field.Time("birthday").Optional(), // 生日
+		field.Int("age").Optional(),       // 年龄
 		field.String("email").Optional(),
 		field.String("phone").Optional(),
 		field.String("current_city").Optional(),                 //当前城市
 		field.String("highest_education").Optional().MaxLen(50), // 最高教育等级
 		field.Float("years_experience").Optional(),              // 工作年限
+		field.Text("personal_summary").Optional(),               // 个人简介（自我评价）
+		field.String("expected_salary").Optional(),              // 期望薪资
+		field.String("expected_city").Optional(),                // 期望城市
+		field.Time("available_date").Optional(),                 // 到岗时间
+		field.Text("honors_certificates").Optional(),            // 荣誉与资格证书
+		field.Text("other_info").Optional(),                     // 其它信息
 		field.String("resume_file_url").Optional(),
 		field.String("status").Default("pending"), // pending, processing, completed, failed, archived
 		field.String("error_message").Optional(),
