@@ -157,7 +157,7 @@ type UpdateResumeReq struct {
 	PersonalSummary    *string                   `json:"personal_summary,omitempty"`    // 个人总结
 	ExpectedSalary     *string                   `json:"expected_salary,omitempty"`     // 期望薪资
 	ExpectedCity       *string                   `json:"expected_city,omitempty"`       // 期望工作城市
-	AvailableDate      *time.Time                `json:"available_date,omitempty"`      // 可入职时间
+	EmploymentStatus   *consts.EmploymentStatus  `json:"employment_status,omitempty"`   // 职业状态：在职employed、离职unemployed、求职中job_seeking
 	HonorsCertificates *string                   `json:"honors_certificates,omitempty"` // 荣誉证书
 	OtherInfo          *string                   `json:"other_info,omitempty"`          // 其他信息
 	Educations         []*UpdateResumeEducation  `json:"educations,omitempty"`
@@ -223,31 +223,31 @@ type UpdateResumeProject struct {
 
 // Resume 简历基本信息
 type Resume struct {
-	ID                 string            `json:"id"`
-	UploaderID         string            `json:"uploader_id"`
-	UploaderName       string            `json:"uploader_name"`
-	Name               string            `json:"name"`
-	Gender             string            `json:"gender"`
-	Birthday           *time.Time        `json:"birthday,omitempty"`
-	Age                *int              `json:"age,omitempty"` // 年龄
-	Email              string            `json:"email"`
-	Phone              string            `json:"phone"`
-	CurrentCity        string            `json:"current_city"`
-	HighestEducation   string            `json:"highest_education"`
-	YearsExperience    float64           `json:"years_experience"`
-	PersonalSummary    string            `json:"personal_summary,omitempty"`    // 个人总结
-	ExpectedSalary     string            `json:"expected_salary,omitempty"`     // 期望薪资
-	ExpectedCity       string            `json:"expected_city,omitempty"`       // 期望工作城市
-	AvailableDate      *time.Time        `json:"available_date,omitempty"`      // 可入职时间
-	HonorsCertificates string            `json:"honors_certificates,omitempty"` // 荣誉证书
-	OtherInfo          string            `json:"other_info,omitempty"`          // 其他信息
-	ResumeFileURL      string            `json:"resume_file_url"`
-	Status             ResumeStatus      `json:"status"`
-	ErrorMessage       string            `json:"error_message,omitempty"`
-	ParsedAt           *time.Time        `json:"parsed_at,omitempty"`
-	JobPositions       []*JobApplication `json:"job_positions,omitempty"` // 关联的岗位信息
-	CreatedAt          int64             `json:"created_at"`
-	UpdatedAt          int64             `json:"updated_at"`
+	ID                 string                   `json:"id"`
+	UploaderID         string                   `json:"uploader_id"`
+	UploaderName       string                   `json:"uploader_name"`
+	Name               string                   `json:"name"`
+	Gender             string                   `json:"gender"`
+	Birthday           *time.Time               `json:"birthday,omitempty"`
+	Age                *int                     `json:"age,omitempty"` // 年龄
+	Email              string                   `json:"email"`
+	Phone              string                   `json:"phone"`
+	CurrentCity        string                   `json:"current_city"`
+	HighestEducation   string                   `json:"highest_education"`
+	YearsExperience    float64                  `json:"years_experience"`
+	PersonalSummary    string                   `json:"personal_summary,omitempty"`    // 个人总结
+	ExpectedSalary     string                   `json:"expected_salary,omitempty"`     // 期望薪资
+	ExpectedCity       string                   `json:"expected_city,omitempty"`       // 期望工作城市
+	EmploymentStatus   *consts.EmploymentStatus `json:"employment_status,omitempty"`   // 职业状态：在职employed、离职unemployed、求职中job_seeking
+	HonorsCertificates string                   `json:"honors_certificates,omitempty"` // 荣誉证书
+	OtherInfo          string                   `json:"other_info,omitempty"`          // 其他信息
+	ResumeFileURL      string                   `json:"resume_file_url"`
+	Status             ResumeStatus             `json:"status"`
+	ErrorMessage       string                   `json:"error_message,omitempty"`
+	ParsedAt           *time.Time               `json:"parsed_at,omitempty"`
+	JobPositions       []*JobApplication        `json:"job_positions,omitempty"` // 关联的岗位信息
+	CreatedAt          int64                    `json:"created_at"`
+	UpdatedAt          int64                    `json:"updated_at"`
 }
 
 func (r *Resume) From(e *db.Resume) *Resume {
@@ -274,8 +274,8 @@ func (r *Resume) From(e *db.Resume) *Resume {
 	r.PersonalSummary = e.PersonalSummary
 	r.ExpectedSalary = e.ExpectedSalary
 	r.ExpectedCity = e.ExpectedCity
-	if !e.AvailableDate.IsZero() {
-		r.AvailableDate = &e.AvailableDate
+	if e.EmploymentStatus != "" {
+		r.EmploymentStatus = &e.EmploymentStatus
 	}
 	r.HonorsCertificates = e.HonorsCertificates
 	r.OtherInfo = e.OtherInfo
@@ -524,21 +524,21 @@ type ParsedResumeData struct {
 
 // ParsedBasicInfo 解析的基本信息
 type ParsedBasicInfo struct {
-	Name               string     `json:"name"`
-	Phone              string     `json:"phone"`
-	Email              string     `json:"email"`
-	Gender             string     `json:"gender"`
-	Birthday           *time.Time `json:"birthday,omitempty"`
-	Age                int        `json:"age,omitempty"` // 年龄
-	CurrentCity        string     `json:"current_city"`
-	HighestEducation   string     `json:"highest_education"`
-	YearsExperience    float64    `json:"years_experience"`
-	PersonalSummary    string     `json:"personal_summary,omitempty"`    // 个人总结
-	ExpectedSalary     string     `json:"expected_salary,omitempty"`     // 期望薪资
-	ExpectedCity       string     `json:"expected_city,omitempty"`       // 期望工作城市
-	AvailableDate      *time.Time `json:"available_date,omitempty"`      // 可入职时间
-	HonorsCertificates string     `json:"honors_certificates,omitempty"` // 荣誉证书
-	OtherInfo          string     `json:"other_info,omitempty"`          // 其他信息
+	Name               string                   `json:"name"`
+	Phone              string                   `json:"phone"`
+	Email              string                   `json:"email"`
+	Gender             string                   `json:"gender"`
+	Birthday           *time.Time               `json:"birthday,omitempty"`
+	Age                int                      `json:"age,omitempty"` // 年龄
+	CurrentCity        string                   `json:"current_city"`
+	HighestEducation   string                   `json:"highest_education"`
+	YearsExperience    float64                  `json:"years_experience"`
+	PersonalSummary    string                   `json:"personal_summary,omitempty"`    // 个人总结
+	ExpectedSalary     string                   `json:"expected_salary,omitempty"`     // 期望薪资
+	ExpectedCity       string                   `json:"expected_city,omitempty"`       // 期望工作城市
+	EmploymentStatus   *consts.EmploymentStatus `json:"employment_status,omitempty"`   // 职业状态：在职employed、离职unemployed、求职中job_seeking
+	HonorsCertificates string                   `json:"honors_certificates,omitempty"` // 荣誉证书
+	OtherInfo          string                   `json:"other_info,omitempty"`          // 其他信息
 }
 
 // ParsedEducation 解析的教育经历

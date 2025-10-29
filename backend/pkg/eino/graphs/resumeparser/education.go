@@ -80,12 +80,6 @@ func newEducationNode(ctx context.Context, db *sql.DB, cfg *config.Config, logge
 	}, nil
 }
 
-func (n *educationNode) close() {
-	if closer, ok := n.retriever.(interface{ Close() error }); ok {
-		_ = closer.Close()
-	}
-}
-
 func (n *educationNode) enrich(ctx context.Context, data *EducationEnrichmentInput) (*EducationEnrichmentResult, error) {
 	if data == nil || len(data.Educations) == 0 {
 		return &EducationEnrichmentResult{Educations: []*domain.ParsedEducation{}}, nil

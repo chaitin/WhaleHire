@@ -122,8 +122,36 @@ func (e ExperienceType) IsValid() bool {
 	return false
 }
 
+// EmploymentStatus 职业状态枚举
+type EmploymentStatus string
+
 const (
-	// 批量上传相关Redis键值
+	EmploymentStatusEmployed   EmploymentStatus = "employed"    // 在职
+	EmploymentStatusUnemployed EmploymentStatus = "unemployed"  // 离职
+	EmploymentStatusJobSeeking EmploymentStatus = "job_seeking" // 求职中
+)
+
+// Values 返回所有职业状态值
+func (EmploymentStatus) Values() []EmploymentStatus {
+	return []EmploymentStatus{
+		EmploymentStatusEmployed,
+		EmploymentStatusUnemployed,
+		EmploymentStatusJobSeeking,
+	}
+}
+
+// IsValid 检查职业状态是否有效
+func (e EmploymentStatus) IsValid() bool {
+	for _, v := range EmploymentStatus("").Values() {
+		if e == v {
+			return true
+		}
+	}
+	return false
+}
+
+const (
+	// Redis keys
 	BatchUploadTaskKeyFmt = "batch_upload:task:%s"
 	BatchUploadItemKeyFmt = "batch_upload:item:%s:%s" // taskID:itemID
 )

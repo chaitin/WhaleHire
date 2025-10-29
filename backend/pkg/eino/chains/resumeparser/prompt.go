@@ -37,9 +37,9 @@ var systemPrompt = `
   - highest_education：最高学历，如“本科”“硕士”；缺失为空字符串。
   - years_experience：总工作年限（单位年，支持小数），估不出时为 null。
   - personal_summary：个人概要、自我评价，若无则空字符串。
-  - expected_salary：期望薪资描述（如“20-30K”“面议”），若无则空字符串。
+  - expected_salary：期望薪资描述（如"20-30K""面议"），若无则空字符串。
   - expected_city：意向工作城市，若无则空字符串。
-  - available_date：可入职日期，转换为 RFC3339；无法确定时为 null。
+  - employment_status：职业状态: 取值 employed/unemployed/job_seeking，若无法确定则为 null。
   - honors_certificates：荣誉、证书或奖励列表，可合并为一句描述，若无则空字符串。
   - other_info：其余未能归入其他字段的有效信息，若无则空字符串。
 * educations（数组，按时间倒序）
@@ -78,7 +78,7 @@ var systemPrompt = `
 4. 严格使用 RFC3339（UTC）日期，例如 "2021-07-01T00:00:00Z"；无法确定则用 null。
 
 ### 示例（仅演示格式，字段值需按实际简历填写）
-{"basic_info":{"name":"李雷","phone":"13800138000","email":"lilei@example.com","gender":"男","birthday":"1994-05-01T00:00:00Z","age":30,"current_city":"北京市","highest_education":"硕士","years_experience":4.5,"personal_summary":"热爱数据智能，具备良好的跨团队沟通能力","expected_salary":"25-30K","expected_city":"北京","available_date":null,"honors_certificates":"2023年度优秀员工, CET-6","other_info":"持有驾照C1，个人主页：https://lilei.dev"},"educations":[{"school":"清华大学","major":"计算机科学","degree":"硕士","start_date":"2016-09-01T00:00:00Z","end_date":"2018-07-01T00:00:00Z","gpa":"3.7/4.0"}],"experiences":[{"company":"字节跳动","position":"后端工程师","start_date":"2019-03-01T00:00:00Z","end_date":null,"description":"负责推荐系统服务端开发，维护高并发接口","achievements":"将核心接口延迟降低30%","experience_type":"work"}],"skills":[{"name":"Go","level":"精通","description":"5年服务端开发经验"}],"projects":[{"name":"推荐系统排序优化","role":"核心开发","company":"字节跳动","description":"改进排序策略以提升点击率","responsibilities":"负责特征工程与在线服务实现","achievements":"整体点击率提升7%","technologies":"Go, gRPC, Redis","project_url":"","project_type":"team","start_date":"2022-01-01T00:00:00Z","end_date":"2022-07-01T00:00:00Z"}]}
+{"basic_info":{"name":"李雷","phone":"13800138000","email":"lilei@example.com","gender":"男","birthday":"1994-05-01T00:00:00Z","age":30,"current_city":"北京市","highest_education":"硕士","years_experience":4.5,"personal_summary":"热爱数据智能，具备良好的跨团队沟通能力","expected_salary":"25-30K","expected_city":"北京","employment_status":"在职","honors_certificates":"2023年度优秀员工, CET-6","other_info":"持有驾照C1，个人主页：https://lilei.dev"},"educations":[{"school":"清华大学","major":"计算机科学","degree":"硕士","start_date":"2016-09-01T00:00:00Z","end_date":"2018-07-01T00:00:00Z","gpa":"3.7/4.0"}],"experiences":[{"company":"字节跳动","position":"后端工程师","start_date":"2019-03-01T00:00:00Z","end_date":null,"description":"负责推荐系统服务端开发，维护高并发接口","achievements":"将核心接口延迟降低30%","experience_type":"work"}],"skills":[{"name":"Go","level":"精通","description":"5年服务端开发经验"}],"projects":[{"name":"推荐系统排序优化","role":"核心开发","company":"字节跳动","description":"改进排序策略以提升点击率","responsibilities":"负责特征工程与在线服务实现","achievements":"整体点击率提升7%","technologies":"Go, gRPC, Redis","project_url":"","project_type":"team","start_date":"2022-01-01T00:00:00Z","end_date":"2022-07-01T00:00:00Z"}]}
 
 请逐条审慎核对提取结果，确保输出的 JSON 与上述 schema 完全一致。
 `

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
@@ -328,23 +329,23 @@ func (ru *ResumeUpdate) ClearExpectedCity() *ResumeUpdate {
 	return ru
 }
 
-// SetAvailableDate sets the "available_date" field.
-func (ru *ResumeUpdate) SetAvailableDate(t time.Time) *ResumeUpdate {
-	ru.mutation.SetAvailableDate(t)
+// SetEmploymentStatus sets the "employment_status" field.
+func (ru *ResumeUpdate) SetEmploymentStatus(cs consts.EmploymentStatus) *ResumeUpdate {
+	ru.mutation.SetEmploymentStatus(cs)
 	return ru
 }
 
-// SetNillableAvailableDate sets the "available_date" field if the given value is not nil.
-func (ru *ResumeUpdate) SetNillableAvailableDate(t *time.Time) *ResumeUpdate {
-	if t != nil {
-		ru.SetAvailableDate(*t)
+// SetNillableEmploymentStatus sets the "employment_status" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableEmploymentStatus(cs *consts.EmploymentStatus) *ResumeUpdate {
+	if cs != nil {
+		ru.SetEmploymentStatus(*cs)
 	}
 	return ru
 }
 
-// ClearAvailableDate clears the value of the "available_date" field.
-func (ru *ResumeUpdate) ClearAvailableDate() *ResumeUpdate {
-	ru.mutation.ClearAvailableDate()
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (ru *ResumeUpdate) ClearEmploymentStatus() *ResumeUpdate {
+	ru.mutation.ClearEmploymentStatus()
 	return ru
 }
 
@@ -985,11 +986,11 @@ func (ru *ResumeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if ru.mutation.ExpectedCityCleared() {
 		_spec.ClearField(resume.FieldExpectedCity, field.TypeString)
 	}
-	if value, ok := ru.mutation.AvailableDate(); ok {
-		_spec.SetField(resume.FieldAvailableDate, field.TypeTime, value)
+	if value, ok := ru.mutation.EmploymentStatus(); ok {
+		_spec.SetField(resume.FieldEmploymentStatus, field.TypeString, value)
 	}
-	if ru.mutation.AvailableDateCleared() {
-		_spec.ClearField(resume.FieldAvailableDate, field.TypeTime)
+	if ru.mutation.EmploymentStatusCleared() {
+		_spec.ClearField(resume.FieldEmploymentStatus, field.TypeString)
 	}
 	if value, ok := ru.mutation.HonorsCertificates(); ok {
 		_spec.SetField(resume.FieldHonorsCertificates, field.TypeString, value)
@@ -1774,23 +1775,23 @@ func (ruo *ResumeUpdateOne) ClearExpectedCity() *ResumeUpdateOne {
 	return ruo
 }
 
-// SetAvailableDate sets the "available_date" field.
-func (ruo *ResumeUpdateOne) SetAvailableDate(t time.Time) *ResumeUpdateOne {
-	ruo.mutation.SetAvailableDate(t)
+// SetEmploymentStatus sets the "employment_status" field.
+func (ruo *ResumeUpdateOne) SetEmploymentStatus(cs consts.EmploymentStatus) *ResumeUpdateOne {
+	ruo.mutation.SetEmploymentStatus(cs)
 	return ruo
 }
 
-// SetNillableAvailableDate sets the "available_date" field if the given value is not nil.
-func (ruo *ResumeUpdateOne) SetNillableAvailableDate(t *time.Time) *ResumeUpdateOne {
-	if t != nil {
-		ruo.SetAvailableDate(*t)
+// SetNillableEmploymentStatus sets the "employment_status" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableEmploymentStatus(cs *consts.EmploymentStatus) *ResumeUpdateOne {
+	if cs != nil {
+		ruo.SetEmploymentStatus(*cs)
 	}
 	return ruo
 }
 
-// ClearAvailableDate clears the value of the "available_date" field.
-func (ruo *ResumeUpdateOne) ClearAvailableDate() *ResumeUpdateOne {
-	ruo.mutation.ClearAvailableDate()
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (ruo *ResumeUpdateOne) ClearEmploymentStatus() *ResumeUpdateOne {
+	ruo.mutation.ClearEmploymentStatus()
 	return ruo
 }
 
@@ -2461,11 +2462,11 @@ func (ruo *ResumeUpdateOne) sqlSave(ctx context.Context) (_node *Resume, err err
 	if ruo.mutation.ExpectedCityCleared() {
 		_spec.ClearField(resume.FieldExpectedCity, field.TypeString)
 	}
-	if value, ok := ruo.mutation.AvailableDate(); ok {
-		_spec.SetField(resume.FieldAvailableDate, field.TypeTime, value)
+	if value, ok := ruo.mutation.EmploymentStatus(); ok {
+		_spec.SetField(resume.FieldEmploymentStatus, field.TypeString, value)
 	}
-	if ruo.mutation.AvailableDateCleared() {
-		_spec.ClearField(resume.FieldAvailableDate, field.TypeTime)
+	if ruo.mutation.EmploymentStatusCleared() {
+		_spec.ClearField(resume.FieldEmploymentStatus, field.TypeString)
 	}
 	if value, ok := ruo.mutation.HonorsCertificates(); ok {
 		_spec.SetField(resume.FieldHonorsCertificates, field.TypeString, value)

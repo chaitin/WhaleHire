@@ -34,7 +34,7 @@ type rawParsedBasicInfo struct {
 	PersonalSummary  string   `json:"personal_summary"`
 	ExpectedSalary   string   `json:"expected_salary"`
 	ExpectedCity     string   `json:"expected_city"`
-	AvailableDate    *string  `json:"available_date"`
+	EmploymentStatus *string  `json:"employment_status"`
 	Honors           string   `json:"honors_certificates"`
 	OtherInfo        string   `json:"other_info"`
 }
@@ -112,8 +112,9 @@ func decodeResumeParseResult(data []byte) (*ResumeParseResult, error) {
 		if raw.BasicInfo.YearsExperience != nil {
 			basic.YearsExperience = *raw.BasicInfo.YearsExperience
 		}
-		if raw.BasicInfo.AvailableDate != nil {
-			basic.AvailableDate = parseFlexibleTime(raw.BasicInfo.AvailableDate)
+		if raw.BasicInfo.EmploymentStatus != nil {
+			status := consts.EmploymentStatus(*raw.BasicInfo.EmploymentStatus)
+			basic.EmploymentStatus = &status
 		}
 		result.BasicInfo = basic
 	}
@@ -266,17 +267,4 @@ func normalizeDateString(s string) string {
 	)
 	normalized := replacer.Replace(strings.TrimSpace(s))
 	return strings.Trim(normalized, "-")
-}
-
-func normalizeUniversityType(value string) consts.UniversityType {
-	switch strings.ToLower(strings.TrimSpace(value)) {
-	case string(consts.UniversityType211):
-		return consts.UniversityType211
-	case string(consts.UniversityType985):
-		return consts.UniversityType985
-	case string(consts.UniversityTypeOrdinary):
-		return consts.UniversityTypeOrdinary
-	default:
-		return consts.UniversityType(value)
-	}
 }

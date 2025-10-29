@@ -44,8 +44,8 @@ const (
 	FieldExpectedSalary = "expected_salary"
 	// FieldExpectedCity holds the string denoting the expected_city field in the database.
 	FieldExpectedCity = "expected_city"
-	// FieldAvailableDate holds the string denoting the available_date field in the database.
-	FieldAvailableDate = "available_date"
+	// FieldEmploymentStatus holds the string denoting the employment_status field in the database.
+	FieldEmploymentStatus = "employment_status"
 	// FieldHonorsCertificates holds the string denoting the honors_certificates field in the database.
 	FieldHonorsCertificates = "honors_certificates"
 	// FieldOtherInfo holds the string denoting the other_info field in the database.
@@ -173,7 +173,7 @@ var Columns = []string{
 	FieldPersonalSummary,
 	FieldExpectedSalary,
 	FieldExpectedCity,
-	FieldAvailableDate,
+	FieldEmploymentStatus,
 	FieldHonorsCertificates,
 	FieldOtherInfo,
 	FieldResumeFileURL,
@@ -294,9 +294,9 @@ func ByExpectedCity(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExpectedCity, opts...).ToFunc()
 }
 
-// ByAvailableDate orders the results by the available_date field.
-func ByAvailableDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAvailableDate, opts...).ToFunc()
+// ByEmploymentStatus orders the results by the employment_status field.
+func ByEmploymentStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmploymentStatus, opts...).ToFunc()
 }
 
 // ByHonorsCertificates orders the results by the honors_certificates field.

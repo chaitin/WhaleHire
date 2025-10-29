@@ -603,7 +603,7 @@ var (
 		{Name: "personal_summary", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "expected_salary", Type: field.TypeString, Nullable: true},
 		{Name: "expected_city", Type: field.TypeString, Nullable: true},
-		{Name: "available_date", Type: field.TypeTime, Nullable: true},
+		{Name: "employment_status", Type: field.TypeString, Nullable: true},
 		{Name: "honors_certificates", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "other_info", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "resume_file_url", Type: field.TypeString, Nullable: true},

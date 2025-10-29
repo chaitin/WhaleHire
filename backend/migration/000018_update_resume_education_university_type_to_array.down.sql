@@ -16,7 +16,7 @@ ALTER TABLE resumes DROP COLUMN IF EXISTS age,
     DROP COLUMN IF EXISTS personal_summary,
     DROP COLUMN IF EXISTS expected_salary,
     DROP COLUMN IF EXISTS expected_city,
-    DROP COLUMN IF EXISTS available_date,
+    DROP COLUMN IF EXISTS employment_status,
     DROP COLUMN IF EXISTS honors_certificates,
     DROP COLUMN IF EXISTS other_info;
 -- 删除 resume_educations 表的新字段

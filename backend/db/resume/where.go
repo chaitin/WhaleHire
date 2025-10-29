@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -126,9 +127,10 @@ func ExpectedCity(v string) predicate.Resume {
 	return predicate.Resume(sql.FieldEQ(FieldExpectedCity, v))
 }
 
-// AvailableDate applies equality check predicate on the "available_date" field. It's identical to AvailableDateEQ.
-func AvailableDate(v time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldEQ(FieldAvailableDate, v))
+// EmploymentStatus applies equality check predicate on the "employment_status" field. It's identical to EmploymentStatusEQ.
+func EmploymentStatus(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldEQ(FieldEmploymentStatus, vc))
 }
 
 // HonorsCertificates applies equality check predicate on the "honors_certificates" field. It's identical to HonorsCertificatesEQ.
@@ -1066,54 +1068,98 @@ func ExpectedCityContainsFold(v string) predicate.Resume {
 	return predicate.Resume(sql.FieldContainsFold(FieldExpectedCity, v))
 }
 
-// AvailableDateEQ applies the EQ predicate on the "available_date" field.
-func AvailableDateEQ(v time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldEQ(FieldAvailableDate, v))
+// EmploymentStatusEQ applies the EQ predicate on the "employment_status" field.
+func EmploymentStatusEQ(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldEQ(FieldEmploymentStatus, vc))
 }
 
-// AvailableDateNEQ applies the NEQ predicate on the "available_date" field.
-func AvailableDateNEQ(v time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldNEQ(FieldAvailableDate, v))
+// EmploymentStatusNEQ applies the NEQ predicate on the "employment_status" field.
+func EmploymentStatusNEQ(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldNEQ(FieldEmploymentStatus, vc))
 }
 
-// AvailableDateIn applies the In predicate on the "available_date" field.
-func AvailableDateIn(vs ...time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldIn(FieldAvailableDate, vs...))
+// EmploymentStatusIn applies the In predicate on the "employment_status" field.
+func EmploymentStatusIn(vs ...consts.EmploymentStatus) predicate.Resume {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Resume(sql.FieldIn(FieldEmploymentStatus, v...))
 }
 
-// AvailableDateNotIn applies the NotIn predicate on the "available_date" field.
-func AvailableDateNotIn(vs ...time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldNotIn(FieldAvailableDate, vs...))
+// EmploymentStatusNotIn applies the NotIn predicate on the "employment_status" field.
+func EmploymentStatusNotIn(vs ...consts.EmploymentStatus) predicate.Resume {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Resume(sql.FieldNotIn(FieldEmploymentStatus, v...))
 }
 
-// AvailableDateGT applies the GT predicate on the "available_date" field.
-func AvailableDateGT(v time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldGT(FieldAvailableDate, v))
+// EmploymentStatusGT applies the GT predicate on the "employment_status" field.
+func EmploymentStatusGT(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldGT(FieldEmploymentStatus, vc))
 }
 
-// AvailableDateGTE applies the GTE predicate on the "available_date" field.
-func AvailableDateGTE(v time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldGTE(FieldAvailableDate, v))
+// EmploymentStatusGTE applies the GTE predicate on the "employment_status" field.
+func EmploymentStatusGTE(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldGTE(FieldEmploymentStatus, vc))
 }
 
-// AvailableDateLT applies the LT predicate on the "available_date" field.
-func AvailableDateLT(v time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldLT(FieldAvailableDate, v))
+// EmploymentStatusLT applies the LT predicate on the "employment_status" field.
+func EmploymentStatusLT(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldLT(FieldEmploymentStatus, vc))
 }
 
-// AvailableDateLTE applies the LTE predicate on the "available_date" field.
-func AvailableDateLTE(v time.Time) predicate.Resume {
-	return predicate.Resume(sql.FieldLTE(FieldAvailableDate, v))
+// EmploymentStatusLTE applies the LTE predicate on the "employment_status" field.
+func EmploymentStatusLTE(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldLTE(FieldEmploymentStatus, vc))
 }
 
-// AvailableDateIsNil applies the IsNil predicate on the "available_date" field.
-func AvailableDateIsNil() predicate.Resume {
-	return predicate.Resume(sql.FieldIsNull(FieldAvailableDate))
+// EmploymentStatusContains applies the Contains predicate on the "employment_status" field.
+func EmploymentStatusContains(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldContains(FieldEmploymentStatus, vc))
 }
 
-// AvailableDateNotNil applies the NotNil predicate on the "available_date" field.
-func AvailableDateNotNil() predicate.Resume {
-	return predicate.Resume(sql.FieldNotNull(FieldAvailableDate))
+// EmploymentStatusHasPrefix applies the HasPrefix predicate on the "employment_status" field.
+func EmploymentStatusHasPrefix(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldHasPrefix(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusHasSuffix applies the HasSuffix predicate on the "employment_status" field.
+func EmploymentStatusHasSuffix(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldHasSuffix(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusIsNil applies the IsNil predicate on the "employment_status" field.
+func EmploymentStatusIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldEmploymentStatus))
+}
+
+// EmploymentStatusNotNil applies the NotNil predicate on the "employment_status" field.
+func EmploymentStatusNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldEmploymentStatus))
+}
+
+// EmploymentStatusEqualFold applies the EqualFold predicate on the "employment_status" field.
+func EmploymentStatusEqualFold(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldEqualFold(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusContainsFold applies the ContainsFold predicate on the "employment_status" field.
+func EmploymentStatusContainsFold(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldContainsFold(FieldEmploymentStatus, vc))
 }
 
 // HonorsCertificatesEQ applies the EQ predicate on the "honors_certificates" field.

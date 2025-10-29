@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/google/uuid"
@@ -47,8 +48,8 @@ type Resume struct {
 	ExpectedSalary string `json:"expected_salary,omitempty"`
 	// ExpectedCity holds the value of the "expected_city" field.
 	ExpectedCity string `json:"expected_city,omitempty"`
-	// AvailableDate holds the value of the "available_date" field.
-	AvailableDate time.Time `json:"available_date,omitempty"`
+	// EmploymentStatus holds the value of the "employment_status" field.
+	EmploymentStatus consts.EmploymentStatus `json:"employment_status,omitempty"`
 	// HonorsCertificates holds the value of the "honors_certificates" field.
 	HonorsCertificates string `json:"honors_certificates,omitempty"`
 	// OtherInfo holds the value of the "other_info" field.
@@ -199,9 +200,9 @@ func (*Resume) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case resume.FieldAge:
 			values[i] = new(sql.NullInt64)
-		case resume.FieldName, resume.FieldGender, resume.FieldEmail, resume.FieldPhone, resume.FieldCurrentCity, resume.FieldHighestEducation, resume.FieldPersonalSummary, resume.FieldExpectedSalary, resume.FieldExpectedCity, resume.FieldHonorsCertificates, resume.FieldOtherInfo, resume.FieldResumeFileURL, resume.FieldStatus, resume.FieldErrorMessage:
+		case resume.FieldName, resume.FieldGender, resume.FieldEmail, resume.FieldPhone, resume.FieldCurrentCity, resume.FieldHighestEducation, resume.FieldPersonalSummary, resume.FieldExpectedSalary, resume.FieldExpectedCity, resume.FieldEmploymentStatus, resume.FieldHonorsCertificates, resume.FieldOtherInfo, resume.FieldResumeFileURL, resume.FieldStatus, resume.FieldErrorMessage:
 			values[i] = new(sql.NullString)
-		case resume.FieldDeletedAt, resume.FieldBirthday, resume.FieldAvailableDate, resume.FieldParsedAt, resume.FieldCreatedAt, resume.FieldUpdatedAt:
+		case resume.FieldDeletedAt, resume.FieldBirthday, resume.FieldParsedAt, resume.FieldCreatedAt, resume.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case resume.FieldID, resume.FieldUploaderID:
 			values[i] = new(uuid.UUID)
@@ -310,11 +311,11 @@ func (r *Resume) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.ExpectedCity = value.String
 			}
-		case resume.FieldAvailableDate:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field available_date", values[i])
+		case resume.FieldEmploymentStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field employment_status", values[i])
 			} else if value.Valid {
-				r.AvailableDate = value.Time
+				r.EmploymentStatus = consts.EmploymentStatus(value.String)
 			}
 		case resume.FieldHonorsCertificates:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -492,8 +493,8 @@ func (r *Resume) String() string {
 	builder.WriteString("expected_city=")
 	builder.WriteString(r.ExpectedCity)
 	builder.WriteString(", ")
-	builder.WriteString("available_date=")
-	builder.WriteString(r.AvailableDate.Format(time.ANSIC))
+	builder.WriteString("employment_status=")
+	builder.WriteString(fmt.Sprintf("%v", r.EmploymentStatus))
 	builder.WriteString(", ")
 	builder.WriteString("honors_certificates=")
 	builder.WriteString(r.HonorsCertificates)

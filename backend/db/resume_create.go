@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
@@ -222,16 +223,16 @@ func (rc *ResumeCreate) SetNillableExpectedCity(s *string) *ResumeCreate {
 	return rc
 }
 
-// SetAvailableDate sets the "available_date" field.
-func (rc *ResumeCreate) SetAvailableDate(t time.Time) *ResumeCreate {
-	rc.mutation.SetAvailableDate(t)
+// SetEmploymentStatus sets the "employment_status" field.
+func (rc *ResumeCreate) SetEmploymentStatus(cs consts.EmploymentStatus) *ResumeCreate {
+	rc.mutation.SetEmploymentStatus(cs)
 	return rc
 }
 
-// SetNillableAvailableDate sets the "available_date" field if the given value is not nil.
-func (rc *ResumeCreate) SetNillableAvailableDate(t *time.Time) *ResumeCreate {
-	if t != nil {
-		rc.SetAvailableDate(*t)
+// SetNillableEmploymentStatus sets the "employment_status" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillableEmploymentStatus(cs *consts.EmploymentStatus) *ResumeCreate {
+	if cs != nil {
+		rc.SetEmploymentStatus(*cs)
 	}
 	return rc
 }
@@ -683,9 +684,9 @@ func (rc *ResumeCreate) createSpec() (*Resume, *sqlgraph.CreateSpec) {
 		_spec.SetField(resume.FieldExpectedCity, field.TypeString, value)
 		_node.ExpectedCity = value
 	}
-	if value, ok := rc.mutation.AvailableDate(); ok {
-		_spec.SetField(resume.FieldAvailableDate, field.TypeTime, value)
-		_node.AvailableDate = value
+	if value, ok := rc.mutation.EmploymentStatus(); ok {
+		_spec.SetField(resume.FieldEmploymentStatus, field.TypeString, value)
+		_node.EmploymentStatus = value
 	}
 	if value, ok := rc.mutation.HonorsCertificates(); ok {
 		_spec.SetField(resume.FieldHonorsCertificates, field.TypeString, value)
@@ -1190,21 +1191,21 @@ func (u *ResumeUpsert) ClearExpectedCity() *ResumeUpsert {
 	return u
 }
 
-// SetAvailableDate sets the "available_date" field.
-func (u *ResumeUpsert) SetAvailableDate(v time.Time) *ResumeUpsert {
-	u.Set(resume.FieldAvailableDate, v)
+// SetEmploymentStatus sets the "employment_status" field.
+func (u *ResumeUpsert) SetEmploymentStatus(v consts.EmploymentStatus) *ResumeUpsert {
+	u.Set(resume.FieldEmploymentStatus, v)
 	return u
 }
 
-// UpdateAvailableDate sets the "available_date" field to the value that was provided on create.
-func (u *ResumeUpsert) UpdateAvailableDate() *ResumeUpsert {
-	u.SetExcluded(resume.FieldAvailableDate)
+// UpdateEmploymentStatus sets the "employment_status" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateEmploymentStatus() *ResumeUpsert {
+	u.SetExcluded(resume.FieldEmploymentStatus)
 	return u
 }
 
-// ClearAvailableDate clears the value of the "available_date" field.
-func (u *ResumeUpsert) ClearAvailableDate() *ResumeUpsert {
-	u.SetNull(resume.FieldAvailableDate)
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (u *ResumeUpsert) ClearEmploymentStatus() *ResumeUpsert {
+	u.SetNull(resume.FieldEmploymentStatus)
 	return u
 }
 
@@ -1683,24 +1684,24 @@ func (u *ResumeUpsertOne) ClearExpectedCity() *ResumeUpsertOne {
 	})
 }
 
-// SetAvailableDate sets the "available_date" field.
-func (u *ResumeUpsertOne) SetAvailableDate(v time.Time) *ResumeUpsertOne {
+// SetEmploymentStatus sets the "employment_status" field.
+func (u *ResumeUpsertOne) SetEmploymentStatus(v consts.EmploymentStatus) *ResumeUpsertOne {
 	return u.Update(func(s *ResumeUpsert) {
-		s.SetAvailableDate(v)
+		s.SetEmploymentStatus(v)
 	})
 }
 
-// UpdateAvailableDate sets the "available_date" field to the value that was provided on create.
-func (u *ResumeUpsertOne) UpdateAvailableDate() *ResumeUpsertOne {
+// UpdateEmploymentStatus sets the "employment_status" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateEmploymentStatus() *ResumeUpsertOne {
 	return u.Update(func(s *ResumeUpsert) {
-		s.UpdateAvailableDate()
+		s.UpdateEmploymentStatus()
 	})
 }
 
-// ClearAvailableDate clears the value of the "available_date" field.
-func (u *ResumeUpsertOne) ClearAvailableDate() *ResumeUpsertOne {
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (u *ResumeUpsertOne) ClearEmploymentStatus() *ResumeUpsertOne {
 	return u.Update(func(s *ResumeUpsert) {
-		s.ClearAvailableDate()
+		s.ClearEmploymentStatus()
 	})
 }
 
@@ -2367,24 +2368,24 @@ func (u *ResumeUpsertBulk) ClearExpectedCity() *ResumeUpsertBulk {
 	})
 }
 
-// SetAvailableDate sets the "available_date" field.
-func (u *ResumeUpsertBulk) SetAvailableDate(v time.Time) *ResumeUpsertBulk {
+// SetEmploymentStatus sets the "employment_status" field.
+func (u *ResumeUpsertBulk) SetEmploymentStatus(v consts.EmploymentStatus) *ResumeUpsertBulk {
 	return u.Update(func(s *ResumeUpsert) {
-		s.SetAvailableDate(v)
+		s.SetEmploymentStatus(v)
 	})
 }
 
-// UpdateAvailableDate sets the "available_date" field to the value that was provided on create.
-func (u *ResumeUpsertBulk) UpdateAvailableDate() *ResumeUpsertBulk {
+// UpdateEmploymentStatus sets the "employment_status" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateEmploymentStatus() *ResumeUpsertBulk {
 	return u.Update(func(s *ResumeUpsert) {
-		s.UpdateAvailableDate()
+		s.UpdateEmploymentStatus()
 	})
 }
 
-// ClearAvailableDate clears the value of the "available_date" field.
-func (u *ResumeUpsertBulk) ClearAvailableDate() *ResumeUpsertBulk {
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (u *ResumeUpsertBulk) ClearEmploymentStatus() *ResumeUpsertBulk {
 	return u.Update(func(s *ResumeUpsert) {
-		s.ClearAvailableDate()
+		s.ClearEmploymentStatus()
 	})
 }
 

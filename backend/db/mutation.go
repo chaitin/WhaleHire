@@ -16676,7 +16676,7 @@ type ResumeMutation struct {
 	personal_summary              *string
 	expected_salary               *string
 	expected_city                 *string
-	available_date                *time.Time
+	employment_status             *consts.EmploymentStatus
 	honors_certificates           *string
 	other_info                    *string
 	resume_file_url               *string
@@ -17539,53 +17539,53 @@ func (m *ResumeMutation) ResetExpectedCity() {
 	delete(m.clearedFields, resume.FieldExpectedCity)
 }
 
-// SetAvailableDate sets the "available_date" field.
-func (m *ResumeMutation) SetAvailableDate(t time.Time) {
-	m.available_date = &t
+// SetEmploymentStatus sets the "employment_status" field.
+func (m *ResumeMutation) SetEmploymentStatus(cs consts.EmploymentStatus) {
+	m.employment_status = &cs
 }
 
-// AvailableDate returns the value of the "available_date" field in the mutation.
-func (m *ResumeMutation) AvailableDate() (r time.Time, exists bool) {
-	v := m.available_date
+// EmploymentStatus returns the value of the "employment_status" field in the mutation.
+func (m *ResumeMutation) EmploymentStatus() (r consts.EmploymentStatus, exists bool) {
+	v := m.employment_status
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldAvailableDate returns the old "available_date" field's value of the Resume entity.
+// OldEmploymentStatus returns the old "employment_status" field's value of the Resume entity.
 // If the Resume object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeMutation) OldAvailableDate(ctx context.Context) (v time.Time, err error) {
+func (m *ResumeMutation) OldEmploymentStatus(ctx context.Context) (v consts.EmploymentStatus, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAvailableDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldEmploymentStatus is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAvailableDate requires an ID field in the mutation")
+		return v, errors.New("OldEmploymentStatus requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAvailableDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldEmploymentStatus: %w", err)
 	}
-	return oldValue.AvailableDate, nil
+	return oldValue.EmploymentStatus, nil
 }
 
-// ClearAvailableDate clears the value of the "available_date" field.
-func (m *ResumeMutation) ClearAvailableDate() {
-	m.available_date = nil
-	m.clearedFields[resume.FieldAvailableDate] = struct{}{}
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (m *ResumeMutation) ClearEmploymentStatus() {
+	m.employment_status = nil
+	m.clearedFields[resume.FieldEmploymentStatus] = struct{}{}
 }
 
-// AvailableDateCleared returns if the "available_date" field was cleared in this mutation.
-func (m *ResumeMutation) AvailableDateCleared() bool {
-	_, ok := m.clearedFields[resume.FieldAvailableDate]
+// EmploymentStatusCleared returns if the "employment_status" field was cleared in this mutation.
+func (m *ResumeMutation) EmploymentStatusCleared() bool {
+	_, ok := m.clearedFields[resume.FieldEmploymentStatus]
 	return ok
 }
 
-// ResetAvailableDate resets all changes to the "available_date" field.
-func (m *ResumeMutation) ResetAvailableDate() {
-	m.available_date = nil
-	delete(m.clearedFields, resume.FieldAvailableDate)
+// ResetEmploymentStatus resets all changes to the "employment_status" field.
+func (m *ResumeMutation) ResetEmploymentStatus() {
+	m.employment_status = nil
+	delete(m.clearedFields, resume.FieldEmploymentStatus)
 }
 
 // SetHonorsCertificates sets the "honors_certificates" field.
@@ -18544,8 +18544,8 @@ func (m *ResumeMutation) Fields() []string {
 	if m.expected_city != nil {
 		fields = append(fields, resume.FieldExpectedCity)
 	}
-	if m.available_date != nil {
-		fields = append(fields, resume.FieldAvailableDate)
+	if m.employment_status != nil {
+		fields = append(fields, resume.FieldEmploymentStatus)
 	}
 	if m.honors_certificates != nil {
 		fields = append(fields, resume.FieldHonorsCertificates)
@@ -18607,8 +18607,8 @@ func (m *ResumeMutation) Field(name string) (ent.Value, bool) {
 		return m.ExpectedSalary()
 	case resume.FieldExpectedCity:
 		return m.ExpectedCity()
-	case resume.FieldAvailableDate:
-		return m.AvailableDate()
+	case resume.FieldEmploymentStatus:
+		return m.EmploymentStatus()
 	case resume.FieldHonorsCertificates:
 		return m.HonorsCertificates()
 	case resume.FieldOtherInfo:
@@ -18662,8 +18662,8 @@ func (m *ResumeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldExpectedSalary(ctx)
 	case resume.FieldExpectedCity:
 		return m.OldExpectedCity(ctx)
-	case resume.FieldAvailableDate:
-		return m.OldAvailableDate(ctx)
+	case resume.FieldEmploymentStatus:
+		return m.OldEmploymentStatus(ctx)
 	case resume.FieldHonorsCertificates:
 		return m.OldHonorsCertificates(ctx)
 	case resume.FieldOtherInfo:
@@ -18787,12 +18787,12 @@ func (m *ResumeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetExpectedCity(v)
 		return nil
-	case resume.FieldAvailableDate:
-		v, ok := value.(time.Time)
+	case resume.FieldEmploymentStatus:
+		v, ok := value.(consts.EmploymentStatus)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetAvailableDate(v)
+		m.SetEmploymentStatus(v)
 		return nil
 	case resume.FieldHonorsCertificates:
 		v, ok := value.(string)
@@ -18946,8 +18946,8 @@ func (m *ResumeMutation) ClearedFields() []string {
 	if m.FieldCleared(resume.FieldExpectedCity) {
 		fields = append(fields, resume.FieldExpectedCity)
 	}
-	if m.FieldCleared(resume.FieldAvailableDate) {
-		fields = append(fields, resume.FieldAvailableDate)
+	if m.FieldCleared(resume.FieldEmploymentStatus) {
+		fields = append(fields, resume.FieldEmploymentStatus)
 	}
 	if m.FieldCleared(resume.FieldHonorsCertificates) {
 		fields = append(fields, resume.FieldHonorsCertificates)
@@ -19017,8 +19017,8 @@ func (m *ResumeMutation) ClearField(name string) error {
 	case resume.FieldExpectedCity:
 		m.ClearExpectedCity()
 		return nil
-	case resume.FieldAvailableDate:
-		m.ClearAvailableDate()
+	case resume.FieldEmploymentStatus:
+		m.ClearEmploymentStatus()
 		return nil
 	case resume.FieldHonorsCertificates:
 		m.ClearHonorsCertificates()
@@ -19085,8 +19085,8 @@ func (m *ResumeMutation) ResetField(name string) error {
 	case resume.FieldExpectedCity:
 		m.ResetExpectedCity()
 		return nil
-	case resume.FieldAvailableDate:
-		m.ResetAvailableDate()
+	case resume.FieldEmploymentStatus:
+		m.ResetEmploymentStatus()
 		return nil
 	case resume.FieldHonorsCertificates:
 		m.ResetHonorsCertificates()

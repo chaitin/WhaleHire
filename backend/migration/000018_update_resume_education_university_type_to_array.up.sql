@@ -17,7 +17,7 @@ ADD COLUMN age INTEGER,
     ADD COLUMN personal_summary TEXT,
     ADD COLUMN expected_salary VARCHAR(255),
     ADD COLUMN expected_city VARCHAR(255),
-    ADD COLUMN available_date TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN employment_status VARCHAR(255),
     ADD COLUMN honors_certificates TEXT,
     ADD COLUMN other_info TEXT;
 -- 为 resume_educations 表添加新字段
@@ -31,7 +31,7 @@ COMMENT ON COLUMN resumes.age IS '年龄';
 COMMENT ON COLUMN resumes.personal_summary IS '个人简介（自我评价）';
 COMMENT ON COLUMN resumes.expected_salary IS '期望薪资';
 COMMENT ON COLUMN resumes.expected_city IS '期望城市';
-COMMENT ON COLUMN resumes.available_date IS '到岗时间';
+COMMENT ON COLUMN resumes.employment_status IS '就业状态: 在职, 离职, 在校';
 COMMENT ON COLUMN resumes.honors_certificates IS '荣誉与资格证书';
 COMMENT ON COLUMN resumes.other_info IS '其它信息';
 COMMENT ON COLUMN resume_educations.gpa IS '在校学分绩点';

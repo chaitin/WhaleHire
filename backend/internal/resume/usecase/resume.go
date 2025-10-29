@@ -262,8 +262,8 @@ func (u *ResumeUsecase) Update(ctx context.Context, req *domain.UpdateResumeReq)
 		if req.ExpectedCity != nil {
 			updateOne.SetExpectedCity(*req.ExpectedCity)
 		}
-		if req.AvailableDate != nil {
-			updateOne.SetAvailableDate(*req.AvailableDate)
+		if req.EmploymentStatus != nil {
+			updateOne.SetEmploymentStatus(*req.EmploymentStatus)
 		}
 		if req.HonorsCertificates != nil {
 			updateOne.SetHonorsCertificates(*req.HonorsCertificates)
@@ -616,8 +616,8 @@ func (u *ResumeUsecase) updateParsedData(ctx context.Context, resumeID string, d
 			if data.BasicInfo.ExpectedCity != "" {
 				updateOne.SetExpectedCity(data.BasicInfo.ExpectedCity)
 			}
-			if data.BasicInfo.AvailableDate != nil {
-				updateOne.SetAvailableDate(*data.BasicInfo.AvailableDate)
+			if data.BasicInfo.EmploymentStatus != nil {
+				updateOne.SetEmploymentStatus(*data.BasicInfo.EmploymentStatus)
 			}
 			if data.BasicInfo.HonorsCertificates != "" {
 				updateOne.SetHonorsCertificates(data.BasicInfo.HonorsCertificates)
