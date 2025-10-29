@@ -67,6 +67,9 @@ export function CreateJobModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
 
+  // 追踪是否已识别过内容(用于控制编辑模式下职责区域的可编辑性)
+  const [hasParsed, setHasParsed] = useState(false);
+
   // AI模式相关状态
   const [aiPrompt, setAiPrompt] = useState('');
   const [isPolishing, setIsPolishing] = useState(false);
@@ -161,6 +164,7 @@ export function CreateJobModal({
     setSkills([]);
     setResponsibilities([{ content: '', id: '1' }]);
     setEditingIds({}); // 清空编辑ID
+    setHasParsed(false); // 重置识别状态
 
     // 重置AI编辑模式的状态
     setEditMode('manual'); // 默认选中手动编辑模式
@@ -253,6 +257,8 @@ export function CreateJobModal({
           // 手动模式
           console.log('>>> 设置为手动编辑模式');
           setEditMode('manual');
+          // 编辑手动模式时,默认设置为未识别状态,需要重新识别
+          setHasParsed(false);
           // 填充手动模式表单数据
           setFormData({
             description: editingJob.description || '',
@@ -289,7 +295,7 @@ export function CreateJobModal({
             editingJob.skills?.map((s) => ({
               id: s.id, // 保留技能id用于更新
               skill_id: s.skill_id || '',
-              skill_name: s.skill || '',
+              skill_name: s.skill_name || s.skill || '', // 优先使用skill_name,否则使用skill
               type: (s.type || 'required') as 'required' | 'bonus',
             })) || [];
           setSkills(jobSkills);
@@ -582,6 +588,8 @@ export function CreateJobModal({
         }
 
         toast.success('岗位描述解析完成');
+        // 解析成功后,标记为已识别,允许编辑职责区域
+        setHasParsed(true);
       }
     } catch (error) {
       console.error('解析失败:', error);
@@ -1387,7 +1395,13 @@ export function CreateJobModal({
                       {/* 新增按钮 - 黑色字体,带边框 */}
                       <button
                         onClick={addResponsibility}
-                        className="h-7 px-2 text-[13px] text-gray-900 hover:bg-gray-100 flex items-center gap-1 border border-gray-300 rounded"
+                        disabled={!!editingJob && !hasParsed}
+                        className={cn(
+                          'h-7 px-2 text-[13px] flex items-center gap-1 border rounded',
+                          !!editingJob && !hasParsed
+                            ? 'text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed'
+                            : 'text-gray-900 border-gray-300 hover:bg-gray-100'
+                        )}
                       >
                         + 新增
                       </button>
@@ -1403,7 +1417,13 @@ export function CreateJobModal({
                             onChange={(e) =>
                               updateResponsibility(resp.id, e.target.value)
                             }
-                            className="w-full min-h-[100px] text-[14px] border border-gray-300 rounded-lg p-3 pr-12 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 bg-white"
+                            disabled={!!editingJob && !hasParsed}
+                            className={cn(
+                              'w-full min-h-[100px] text-[14px] border rounded-lg p-3 pr-12 focus:outline-none',
+                              !!editingJob && !hasParsed
+                                ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                            )}
                             style={{ resize: 'vertical' }}
                           />
                           {/* 删除按钮 - 只在第二个及以后的框体显示 */}
@@ -2184,14 +2204,6 @@ export function CreateJobModal({
                   ? '#a0d1ff'
                   : 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
               }}
-              onMouseEnter={(e) =>
-                !isSubmitting && (e.currentTarget.style.background = '#6aa8ee')
-              }
-              onMouseLeave={(e) =>
-                !isSubmitting &&
-                (e.currentTarget.style.background =
-                  'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)')
-              }
             >
               {isSubmitting ? '发布中...' : '保存发布'}
             </Button>

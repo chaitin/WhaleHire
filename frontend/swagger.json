@@ -1912,6 +1912,52 @@
                 }
             }
         },
+        "/api/v1/job-profiles/generate-by-prompt": {
+            "post": {
+                "description": "根据输入的岗位描述 Prompt，返回生成的结构化岗位画像数据",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "JobProfile"
+                ],
+                "summary": "基于润色后的 Prompt 生成岗位画像",
+                "parameters": [
+                    {
+                        "description": "生成请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GenerateJobProfileReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.GenerateJobProfileResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/job-profiles/parse": {
             "post": {
                 "description": "根据输入的岗位描述文本，返回解析后的结构化岗位画像数据",
@@ -1949,6 +1995,52 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/domain.ParseJobProfileResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/job-profiles/polish-prompt": {
+            "post": {
+                "description": "根据输入的岗位需求想法，返回润色后的专业岗位描述",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "JobProfile"
+                ],
+                "summary": "AI 润色岗位需求描述",
+                "parameters": [
+                    {
+                        "description": "润色请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.PolishJobPromptReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.PolishJobPromptResp"
                                         }
                                     }
                                 }
@@ -4918,6 +5010,406 @@
                 }
             }
         },
+        "/api/v1/universities": {
+            "get": {
+                "description": "分页获取高校列表，支持筛选条件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "University"
+                ],
+                "summary": "获取高校列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "高校名称关键词",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "国家",
+                        "name": "country",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否双一流高校",
+                        "name": "is_double_first_class",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否985高校",
+                        "name": "is_project_985",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否211高校",
+                        "name": "is_project_211",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否QS Top 100高校",
+                        "name": "is_qs_top100",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListUniversityResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建一个新的高校",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "University"
+                ],
+                "summary": "创建高校",
+                "parameters": [
+                    {
+                        "description": "高校信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateUniversityReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.University"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/universities/batch-match": {
+            "post": {
+                "description": "批量匹配高校名称",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "高校管理"
+                ],
+                "summary": "批量匹配高校",
+                "parameters": [
+                    {
+                        "description": "匹配请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_university_handler_v1.BatchMatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.UniversityMatch"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/universities/import-csv": {
+            "post": {
+                "description": "从上传的CSV文件导入高校数据",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "University"
+                ],
+                "summary": "从CSV文件导入高校数据",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ImportResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/universities/search": {
+            "get": {
+                "description": "根据名称搜索高校",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "University"
+                ],
+                "summary": "搜索高校",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "返回数量限制",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.University"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/universities/{id}": {
+            "get": {
+                "description": "根据 ID 获取高校详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "University"
+                ],
+                "summary": "获取高校详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "高校 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.University"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据 ID 更新高校信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "University"
+                ],
+                "summary": "更新高校",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "高校 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "高校信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateUniversityReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.University"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据 ID 删除高校",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "University"
+                ],
+                "summary": "删除高校",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "高校 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/delete": {
             "delete": {
                 "description": "删除用户",
@@ -5508,6 +6000,27 @@
                 "AuditLogStatusFailed"
             ]
         },
+        "consts.ExperienceType": {
+            "type": "string",
+            "enum": [
+                "work",
+                "organization",
+                "volunteer",
+                "internship"
+            ],
+            "x-enum-comments": {
+                "ExperienceTypeInternship": "实习经历",
+                "ExperienceTypeOrganization": "社团组织",
+                "ExperienceTypeVolunteer": "志愿服务",
+                "ExperienceTypeWork": "工作经历"
+            },
+            "x-enum-varnames": [
+                "ExperienceTypeWork",
+                "ExperienceTypeOrganization",
+                "ExperienceTypeVolunteer",
+                "ExperienceTypeInternship"
+            ]
+        },
         "consts.LoginSource": {
             "type": "string",
             "enum": [
@@ -5596,6 +6109,30 @@
             "x-enum-varnames": [
                 "OperatorTypeUser",
                 "OperatorTypeAdmin"
+            ]
+        },
+        "consts.ProjectType": {
+            "type": "string",
+            "enum": [
+                "personal",
+                "team",
+                "opensource",
+                "paper",
+                "other"
+            ],
+            "x-enum-comments": {
+                "ProjectTypeOpenSource": "开源项目",
+                "ProjectTypeOther": "其他类型",
+                "ProjectTypePaper": "论文发表",
+                "ProjectTypePersonal": "个人项目",
+                "ProjectTypeTeam": "团队项目"
+            },
+            "x-enum-varnames": [
+                "ProjectTypePersonal",
+                "ProjectTypeTeam",
+                "ProjectTypeOpenSource",
+                "ProjectTypePaper",
+                "ProjectTypeOther"
             ]
         },
         "consts.ResourceType": {
@@ -5723,17 +6260,23 @@
             "enum": [
                 "ordinary",
                 "211",
-                "985"
+                "985",
+                "double_first_class",
+                "qs_top100"
             ],
             "x-enum-comments": {
                 "UniversityType211": "211工程学校",
                 "UniversityType985": "985工程学校",
-                "UniversityTypeOrdinary": "普通学校"
+                "UniversityTypeDoubleFirstClass": "双一流学校",
+                "UniversityTypeOrdinary": "普通学校",
+                "UniversityTypeQSTop100": "QS Top 100"
             },
             "x-enum-varnames": [
                 "UniversityTypeOrdinary",
                 "UniversityType211",
-                "UniversityType985"
+                "UniversityType985",
+                "UniversityTypeDoubleFirstClass",
+                "UniversityTypeQSTop100"
             ]
         },
         "consts.UserPlatform": {
@@ -6739,6 +7282,44 @@
                 }
             }
         },
+        "domain.CreateUniversityReq": {
+            "type": "object",
+            "required": [
+                "name_cn"
+            ],
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "is_double_first_class": {
+                    "type": "boolean"
+                },
+                "is_project_211": {
+                    "type": "boolean"
+                },
+                "is_project_985": {
+                    "type": "boolean"
+                },
+                "is_qs_top100": {
+                    "type": "boolean"
+                },
+                "name_cn": {
+                    "type": "string"
+                },
+                "name_en": {
+                    "type": "string"
+                },
+                "overall_score": {
+                    "type": "number"
+                },
+                "rank_qs": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.CustomOAuth": {
             "type": "object",
             "properties": {
@@ -7025,6 +7606,43 @@
                 }
             }
         },
+        "domain.GenerateJobProfileReq": {
+            "description": "使用润色后的 Prompt 生成完整的岗位画像",
+            "type": "object",
+            "required": [
+                "prompt"
+            ],
+            "properties": {
+                "department_id": {
+                    "description": "生成时可提前绑定部门",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "prompt": {
+                    "description": "已润色的 Prompt",
+                    "type": "string",
+                    "example": "我们正在寻找一名经验丰富的数据分析师..."
+                }
+            }
+        },
+        "domain.GenerateJobProfileResp": {
+            "description": "AI 生成的完整岗位画像，包含结构化数据和 Markdown 描述",
+            "type": "object",
+            "properties": {
+                "description_markdown": {
+                    "description": "Markdown 格式的岗位描述",
+                    "type": "string"
+                },
+                "profile": {
+                    "description": "结构化岗位画像",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.ParseJobProfileResp"
+                        }
+                    ]
+                }
+            }
+        },
         "domain.GenerateReq": {
             "type": "object",
             "properties": {
@@ -7288,6 +7906,26 @@
                 },
                 "success_count": {
                     "description": "成功数量",
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ImportResult": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "integer"
+                },
+                "total": {
                     "type": "integer"
                 }
             }
@@ -8115,6 +8753,26 @@
                 }
             }
         },
+        "domain.ListUniversityResp": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.University"
+                    }
+                },
+                "next_token": {
+                    "type": "string"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.ListUserResp": {
             "type": "object",
             "properties": {
@@ -8590,6 +9248,69 @@
                 }
             }
         },
+        "domain.PolishJobPromptReq": {
+            "description": "用户输入的原始岗位需求，用于 AI 润色和结构化",
+            "type": "object",
+            "required": [
+                "idea"
+            ],
+            "properties": {
+                "idea": {
+                    "description": "用户原始想法或一句话描述",
+                    "type": "string",
+                    "example": "我们需要招聘一名数据分析师"
+                }
+            }
+        },
+        "domain.PolishJobPromptResp": {
+            "description": "AI 润色后返回的结构化 Prompt 和建议",
+            "type": "object",
+            "properties": {
+                "bonus_tips": {
+                    "description": "加分项提示",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"有机器学习经验\"",
+                        "\"熟悉Python\"]"
+                    ]
+                },
+                "polished_prompt": {
+                    "description": "完整且可直接用于生成链的 Prompt",
+                    "type": "string",
+                    "example": "我们正在寻找一名经验丰富的数据分析师..."
+                },
+                "requirement_tips": {
+                    "description": "任职要求提示",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"熟练使用SQL\"",
+                        "\"具备统计学基础\"]"
+                    ]
+                },
+                "responsibility_tips": {
+                    "description": "岗位职责提示",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"负责数据收集和清洗\"",
+                        "\"制作数据报表\"]"
+                    ]
+                },
+                "suggested_title": {
+                    "description": "AI 推荐的岗位标题",
+                    "type": "string",
+                    "example": "数据分析师"
+                }
+            }
+        },
         "domain.PositionMatchInfo": {
             "type": "object",
             "properties": {
@@ -8697,6 +9418,14 @@
         "domain.Resume": {
             "type": "object",
             "properties": {
+                "age": {
+                    "description": "年龄",
+                    "type": "integer"
+                },
+                "available_date": {
+                    "description": "可入职时间",
+                    "type": "string"
+                },
                 "birthday": {
                     "type": "string"
                 },
@@ -8712,10 +9441,22 @@
                 "error_message": {
                     "type": "string"
                 },
+                "expected_city": {
+                    "description": "期望工作城市",
+                    "type": "string"
+                },
+                "expected_salary": {
+                    "description": "期望薪资",
+                    "type": "string"
+                },
                 "gender": {
                     "type": "string"
                 },
                 "highest_education": {
+                    "type": "string"
+                },
+                "honors_certificates": {
+                    "description": "荣誉证书",
                     "type": "string"
                 },
                 "id": {
@@ -8731,7 +9472,15 @@
                 "name": {
                     "type": "string"
                 },
+                "other_info": {
+                    "description": "其他信息",
+                    "type": "string"
+                },
                 "parsed_at": {
+                    "type": "string"
+                },
+                "personal_summary": {
+                    "description": "个人总结",
                     "type": "string"
                 },
                 "phone": {
@@ -8760,6 +9509,14 @@
         "domain.ResumeDetail": {
             "type": "object",
             "properties": {
+                "age": {
+                    "description": "年龄",
+                    "type": "integer"
+                },
+                "available_date": {
+                    "description": "可入职时间",
+                    "type": "string"
+                },
                 "birthday": {
                     "type": "string"
                 },
@@ -8781,6 +9538,14 @@
                 "error_message": {
                     "type": "string"
                 },
+                "expected_city": {
+                    "description": "期望工作城市",
+                    "type": "string"
+                },
+                "expected_salary": {
+                    "description": "期望薪资",
+                    "type": "string"
+                },
                 "experiences": {
                     "type": "array",
                     "items": {
@@ -8791,6 +9556,10 @@
                     "type": "string"
                 },
                 "highest_education": {
+                    "type": "string"
+                },
+                "honors_certificates": {
+                    "description": "荣誉证书",
                     "type": "string"
                 },
                 "id": {
@@ -8812,7 +9581,15 @@
                 "name": {
                     "type": "string"
                 },
+                "other_info": {
+                    "description": "其他信息",
+                    "type": "string"
+                },
                 "parsed_at": {
+                    "type": "string"
+                },
+                "personal_summary": {
+                    "description": "个人总结",
                     "type": "string"
                 },
                 "phone": {
@@ -8862,6 +9639,10 @@
                 "end_date": {
                     "type": "string"
                 },
+                "gpa": {
+                    "description": "在校学分绩点",
+                    "type": "number"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -8877,8 +9658,11 @@
                 "start_date": {
                     "type": "string"
                 },
-                "university_type": {
-                    "$ref": "#/definitions/consts.UniversityType"
+                "university_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/consts.UniversityType"
+                    }
                 },
                 "updated_at": {
                     "type": "integer"
@@ -8899,6 +9683,14 @@
                 },
                 "end_date": {
                     "type": "string"
+                },
+                "experience_type": {
+                    "description": "work, organization, volunteer, internship",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.ExperienceType"
+                        }
+                    ]
                 },
                 "id": {
                     "type": "string"
@@ -9149,7 +9941,12 @@
                     "type": "string"
                 },
                 "project_type": {
-                    "type": "string"
+                    "description": "项目类型: personal/team/opensource/paper/other",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.ProjectType"
+                        }
+                    ]
                 },
                 "project_url": {
                     "type": "string"
@@ -9972,6 +10769,71 @@
                 }
             }
         },
+        "domain.University": {
+            "type": "object",
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_double_first_class": {
+                    "type": "boolean"
+                },
+                "is_project_211": {
+                    "type": "boolean"
+                },
+                "is_project_985": {
+                    "type": "boolean"
+                },
+                "is_qs_top100": {
+                    "type": "boolean"
+                },
+                "name_cn": {
+                    "type": "string"
+                },
+                "name_en": {
+                    "type": "string"
+                },
+                "overall_score": {
+                    "type": "number"
+                },
+                "rank_qs": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "integer"
+                },
+                "vector_content": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UniversityMatch": {
+            "type": "object",
+            "properties": {
+                "match_type": {
+                    "description": "exact, fuzzy, vector",
+                    "type": "string"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                },
+                "university": {
+                    "$ref": "#/definitions/domain.University"
+                }
+            }
+        },
         "domain.UpdateDepartmentReq": {
             "type": "object",
             "required": [
@@ -10112,6 +10974,10 @@
                     "description": "结束时间",
                     "type": "string"
                 },
+                "gpa": {
+                    "description": "在校学分绩点",
+                    "type": "number"
+                },
                 "id": {
                     "description": "教育经历ID，更新时必填",
                     "type": "string"
@@ -10128,13 +10994,12 @@
                     "description": "开始时间",
                     "type": "string"
                 },
-                "university_type": {
+                "university_types": {
                     "description": "学校类型",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/consts.UniversityType"
-                        }
-                    ]
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/consts.UniversityType"
+                    }
                 }
             }
         },
@@ -10156,6 +11021,14 @@
                 "end_date": {
                     "description": "结束时间",
                     "type": "string"
+                },
+                "experience_type": {
+                    "description": "经历类型：work, organization, volunteer, internship",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.ExperienceType"
+                        }
+                    ]
                 },
                 "id": {
                     "description": "工作经历ID，更新时必填",
@@ -10284,8 +11157,12 @@
                     "type": "string"
                 },
                 "project_type": {
-                    "description": "项目类型",
-                    "type": "string"
+                    "description": "项目类型: personal/team/opensource/paper/other",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.ProjectType"
+                        }
+                    ]
                 },
                 "project_url": {
                     "description": "项目链接",
@@ -10312,6 +11189,14 @@
         "domain.UpdateResumeReq": {
             "type": "object",
             "properties": {
+                "age": {
+                    "description": "年龄",
+                    "type": "integer"
+                },
+                "available_date": {
+                    "description": "可入职时间",
+                    "type": "string"
+                },
                 "birthday": {
                     "type": "string"
                 },
@@ -10327,6 +11212,14 @@
                 "email": {
                     "type": "string"
                 },
+                "expected_city": {
+                    "description": "期望工作城市",
+                    "type": "string"
+                },
+                "expected_salary": {
+                    "description": "期望薪资",
+                    "type": "string"
+                },
                 "experiences": {
                     "type": "array",
                     "items": {
@@ -10337,6 +11230,10 @@
                     "type": "string"
                 },
                 "highest_education": {
+                    "type": "string"
+                },
+                "honors_certificates": {
+                    "description": "荣誉证书",
                     "type": "string"
                 },
                 "job_applications": {
@@ -10354,6 +11251,14 @@
                     }
                 },
                 "name": {
+                    "type": "string"
+                },
+                "other_info": {
+                    "description": "其他信息",
+                    "type": "string"
+                },
+                "personal_summary": {
+                    "description": "个人总结",
                     "type": "string"
                 },
                 "phone": {
@@ -10477,6 +11382,47 @@
                     "default": 300,
                     "maximum": 300,
                     "minimum": 1
+                }
+            }
+        },
+        "domain.UpdateUniversityReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_double_first_class": {
+                    "type": "boolean"
+                },
+                "is_project_211": {
+                    "type": "boolean"
+                },
+                "is_project_985": {
+                    "type": "boolean"
+                },
+                "is_qs_top100": {
+                    "type": "boolean"
+                },
+                "name_cn": {
+                    "type": "string"
+                },
+                "name_en": {
+                    "type": "string"
+                },
+                "overall_score": {
+                    "type": "number"
+                },
+                "rank_qs": {
+                    "type": "integer"
                 }
             }
         },
@@ -10657,6 +11603,21 @@
                 }
             }
         },
+        "internal_university_handler_v1.BatchMatchRequest": {
+            "type": "object",
+            "required": [
+                "names"
+            ],
+            "properties": {
+                "names": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "time.Duration": {
             "type": "integer",
             "enum": [
@@ -10673,12 +11634,12 @@
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000,
                 1,
                 1000,
                 1000000,
                 1000000000,
-                60000000000
+                60000000000,
+                3600000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -10694,12 +11655,12 @@
                 "Millisecond",
                 "Second",
                 "Minute",
-                "Hour",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
-                "Minute"
+                "Minute",
+                "Hour"
             ]
         }
     }
