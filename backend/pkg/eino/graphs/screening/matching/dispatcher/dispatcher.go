@@ -105,5 +105,5 @@ func (a *Dispatcher) GetAgentType() string {
 
 // GetVersion 返回Agent版本
 func (a *Dispatcher) GetVersion() string {
-	return "1.0.0"
+	return "1.1.0"
 }

@@ -56,7 +56,12 @@ func (c *Context) Page() *Pagination {
 }
 
 func (c *Context) ErrMsg(id ErrorID, data map[string]any) (string, error) {
-	return c.locale.Message(c.Request().Header.Get("Accept-Language"), string(id), data)
+	lang := c.Request().Header.Get("Accept-Language")
+	// 如果没有指定语言，默认使用中文
+	if lang == "" {
+		lang = "zh"
+	}
+	return c.locale.Message(lang, string(id), data)
 }
 
 func (c *Context) Failed(code int, id ErrorID, err error) error {

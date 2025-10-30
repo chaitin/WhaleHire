@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
@@ -359,7 +360,7 @@ func (a *AggregatorAgent) GetAgentType() string {
 
 // GetVersion 返回Agent版本
 func (a *AggregatorAgent) GetVersion() string {
-	return "1.0.0"
+	return "1.1.0"
 }
 
 func collectDimensionScores(input *AggregatorInput) map[string]float64 {
@@ -534,6 +535,20 @@ func collectMissingInfo(input *AggregatorInput) []string {
 		}
 	}
 
+	if input.EducationMatch != nil {
+		for _, school := range input.EducationMatch.SchoolMatches {
+			if school == nil {
+				continue
+			}
+			if len(school.UniversityTypes) == 0 && school.School != "" {
+				missing = append(missing, fmt.Sprintf("院校[%s]缺少类型标签，请人工确认", school.School))
+			}
+			if school.GPA == nil && school.School != "" {
+				missing = append(missing, fmt.Sprintf("院校[%s]未提供GPA信息", school.School))
+			}
+		}
+	}
+
 	if input.BasicMatch != nil {
 		for _, evidence := range input.BasicMatch.Evidence {
 			if containsMissingHint(evidence) {
@@ -685,7 +700,11 @@ func extractExperienceHighlights(exp *domain.ExperienceMatchDetail) []string {
 	}
 	for _, pos := range exp.PositionMatches {
 		if pos != nil && pos.Position != "" {
-			highlights = append(highlights, fmt.Sprintf("相关职位：%s（相关度%.0f分）", pos.Position, pos.Score))
+			label := fmt.Sprintf("相关职位：%s（相关度%.0f分）", pos.Position, pos.Score)
+			if pos.ExperienceType != "" && pos.ExperienceType != string(consts.ExperienceTypeWork) {
+				label += fmt.Sprintf("，来源：%s", translateExperienceType(pos.ExperienceType))
+			}
+			highlights = append(highlights, label)
 		}
 	}
 	return highlights
@@ -716,7 +735,18 @@ func extractEducationHighlights(edu *domain.EducationMatchDetail) []string {
 	}
 	for _, school := range edu.SchoolMatches {
 		if school != nil && school.School != "" {
-			highlights = append(highlights, fmt.Sprintf("院校：%s（声誉%.0f分）", school.School, school.Score))
+			var detailParts []string
+			if len(school.UniversityTypes) > 0 {
+				detailParts = append(detailParts, fmt.Sprintf("类型：%s", strings.Join(translateUniversityTypes(school.UniversityTypes), "/")))
+			}
+			if school.GPA != nil && *school.GPA > 0 {
+				detailParts = append(detailParts, fmt.Sprintf("GPA %.2f", *school.GPA))
+			}
+			detail := ""
+			if len(detailParts) > 0 {
+				detail = "，" + strings.Join(detailParts, "，")
+			}
+			highlights = append(highlights, fmt.Sprintf("院校：%s（声誉%.0f分%s）", school.School, school.Score, detail))
 		}
 	}
 	return highlights
@@ -727,9 +757,26 @@ func extractEducationRisks(edu *domain.EducationMatchDetail) []string {
 		return nil
 	}
 	var risks []string
+	if edu.DegreeMatch != nil && !edu.DegreeMatch.Meets {
+		risks = append(risks, fmt.Sprintf("学历不满足要求：需要%s，实际%s", edu.DegreeMatch.RequiredDegree, edu.DegreeMatch.ActualDegree))
+	}
 	for _, major := range edu.MajorMatches {
 		if major != nil && major.Relevance < 70 {
 			risks = append(risks, fmt.Sprintf("专业相关性低：%s（%.0f分）", major.Major, major.Relevance))
+		}
+	}
+	for _, school := range edu.SchoolMatches {
+		if school == nil || school.School == "" {
+			continue
+		}
+		if school.Score < 70 {
+			risks = append(risks, fmt.Sprintf("院校匹配偏低：%s（%.0f分）", school.School, school.Score))
+		}
+		if len(school.UniversityTypes) == 0 {
+			risks = append(risks, fmt.Sprintf("院校[%s]缺少类型信息", school.School))
+		}
+		if school.GPA == nil {
+			risks = append(risks, fmt.Sprintf("院校[%s]未提供GPA", school.School))
 		}
 	}
 	return risks
@@ -821,4 +868,49 @@ func nonEmptySlice(items []string) []string {
 		return nil
 	}
 	return items
+}
+
+func translateUniversityTypes(types []consts.UniversityType) []string {
+	if len(types) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(types))
+	for _, t := range types {
+		if label := translateUniversityType(t); label != "" {
+			result = append(result, label)
+		}
+	}
+	return result
+}
+
+func translateUniversityType(t consts.UniversityType) string {
+	switch t {
+	case consts.UniversityType985:
+		return "985"
+	case consts.UniversityType211:
+		return "211"
+	case consts.UniversityTypeDoubleFirstClass:
+		return "双一流"
+	case consts.UniversityTypeQSTop100:
+		return "QS前100"
+	case consts.UniversityTypeOrdinary:
+		return "普通高校"
+	default:
+		return string(t)
+	}
+}
+
+func translateExperienceType(t string) string {
+	switch t {
+	case string(consts.ExperienceTypeWork):
+		return "全职"
+	case string(consts.ExperienceTypeInternship):
+		return "实习"
+	case string(consts.ExperienceTypeOrganization):
+		return "组织/社团"
+	case string(consts.ExperienceTypeVolunteer):
+		return "志愿"
+	default:
+		return t
+	}
 }

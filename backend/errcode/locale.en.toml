@@ -55,6 +55,9 @@ other = "Invalid Param: {{.message}}"
 [err-jobprofile-has-resumes]
 other = "Job profile has associated resumes"
 
+[err-jobprofile-polish-min-length]
+other = "Job profile description input validation error: {{.message}}"
+
 [err-screening-task-not-found]
 other = "Screening task not found"
 

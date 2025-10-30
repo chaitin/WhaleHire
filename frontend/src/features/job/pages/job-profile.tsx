@@ -67,6 +67,7 @@ export function JobProfilePage() {
   const [activeSearchKeyword, setActiveSearchKeyword] = useState<string>(''); // 当前生效的搜索关键词
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0); // API返回的总数
 
   // 参数转换映射函数
   const convertEducationRequirement = (education: string): string => {
@@ -116,6 +117,8 @@ export function JobProfilePage() {
           departmentFilter !== 'all' ? departmentFilter : undefined,
       });
       setJobProfiles(response.items);
+      // 设置总数，API直接返回total_count
+      setTotalCount(response.total_count || 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取岗位画像列表失败');
     } finally {
@@ -207,27 +210,25 @@ export function JobProfilePage() {
   const [skillsNextToken, setSkillsNextToken] = useState<string | undefined>();
   const [skillsKeyword, setSkillsKeyword] = useState<string>('');
 
-  // 统计数据
-  const totalJobs = jobProfiles.length;
+  // 统计数据（使用API返回的总数）
+  const totalJobs = totalCount; // 所有岗位的总数
   const publishedJobs = jobProfiles.filter(
     (job) => job.status === 'published'
   ).length;
   const draftJobs = jobProfiles.filter((job) => job.status === 'draft').length;
 
-  // 筛选后的数据（API已处理搜索，这里只需要处理状态和部门筛选）
+  // 筛选后的数据（API已处理搜索和department，这里只需要处理状态筛选）
+  // 注意：由于API不支持status参数，这里的筛选只作用于当前页的数据
   const filteredJobs = jobProfiles.filter((job) => {
     const statusMatch = statusFilter === 'all' || job.status === statusFilter;
-    const departmentMatch =
-      departmentFilter === 'all' || job.department === departmentFilter;
-
-    return statusMatch && departmentMatch;
+    return statusMatch;
   });
 
-  // 分页数据
-  const totalPages = Math.ceil(filteredJobs.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentJobs = filteredJobs.slice(startIndex, endIndex);
+  // 分页数据 - 使用API返回的分页信息
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalCount);
+  const currentJobs = filteredJobs; // 显示当前页筛选后的结果
 
   // 处理搜索
   const handleSearch = () => {
@@ -1072,7 +1073,13 @@ export function JobProfilePage() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {/* 状态筛选 */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1); // 筛选时重置到第一页
+              }}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="所有状态" />
               </SelectTrigger>
@@ -1086,7 +1093,10 @@ export function JobProfilePage() {
             {/* 部门筛选 */}
             <Select
               value={departmentFilter}
-              onValueChange={setDepartmentFilter}
+              onValueChange={(value) => {
+                setDepartmentFilter(value);
+                setCurrentPage(1); // 筛选时重置到第一页
+              }}
             >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="所属部门" />
@@ -1142,7 +1152,7 @@ export function JobProfilePage() {
         {/* 表格标题 */}
         <div className="border-b border-[#E5E7EB] px-6 py-4">
           <h3 className="text-lg font-semibold text-gray-900">
-            岗位列表 ({filteredJobs.length})
+            岗位列表 ({totalJobs})
           </h3>
         </div>
 
@@ -1305,19 +1315,35 @@ export function JobProfilePage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
               <div className="text-sm text-[#6B7280]">
-                显示
-                <span className="text-[#6B7280]">
-                  {filteredJobs.length > 0 ? startIndex + 1 : 0}
-                </span>{' '}
-                到{' '}
-                <span className="text-[#6B7280]">
-                  {filteredJobs.length > 0
-                    ? Math.min(endIndex, filteredJobs.length)
-                    : 0}
-                </span>{' '}
-                条，共{' '}
-                <span className="text-[#6B7280]">{filteredJobs.length}</span>{' '}
-                条结果
+                {statusFilter === 'all' ? (
+                  <>
+                    显示第{' '}
+                    <span className="text-[#111827] font-medium">
+                      {startIndex}
+                    </span>{' '}
+                    -{' '}
+                    <span className="text-[#111827] font-medium">
+                      {endIndex}
+                    </span>{' '}
+                    条，共{' '}
+                    <span className="text-[#111827] font-medium">
+                      {totalCount}
+                    </span>{' '}
+                    条结果
+                  </>
+                ) : (
+                  <>
+                    当前页显示{' '}
+                    <span className="text-[#111827] font-medium">
+                      {filteredJobs.length}
+                    </span>{' '}
+                    条筛选结果（共{' '}
+                    <span className="text-[#111827] font-medium">
+                      {totalCount}
+                    </span>{' '}
+                    条数据）
+                  </>
+                )}
               </div>
 
               {/* 每页条数选择器 */}

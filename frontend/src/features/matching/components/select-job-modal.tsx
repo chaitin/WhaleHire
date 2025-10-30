@@ -184,13 +184,13 @@ export function SelectJobModal({
 
       console.log('📋 岗位列表响应:', response);
       console.log('📋 response.items:', response.items);
-      console.log('📋 response.page_info:', response.page_info);
+      console.log('📋 response.total_count:', response.total_count);
 
       const items = response.items || [];
       setJobs(items);
 
-      // 优先使用 page_info.total_count，如果不存在则使用当前页的items长度作为总数
-      const totalCount = response.page_info?.total_count || items.length;
+      // API直接返回total_count
+      const totalCount = response.total_count || 0;
       const calculatedTotalPages =
         totalCount > 0 ? Math.ceil(totalCount / pageSize) : 1;
 

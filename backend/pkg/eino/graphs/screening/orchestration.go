@@ -239,7 +239,7 @@ func NewScreeningChatGraph(ctx context.Context, chatModel model.ToolCallingChatM
 
 	return &ScreeningChatGraph{
 		graph:               g,
-		version:             "1.0.0",
+		version:             "1.1.0",
 		basicInfoAgent:      baseinfoAgent,
 		educationAgent:      educationAgent,
 		experienceAgent:     experienceAgent,

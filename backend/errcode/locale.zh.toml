@@ -55,6 +55,9 @@ other = "无效参数请检查: {{.message}}"
 [err-jobprofile-has-resumes]
 other = "岗位画像已关联简历"
 
+[err-jobprofile-polish-min-length]
+other = "岗位画像描述输入校验错误: {{.message}}"
+
 [err-screening-task-not-found]
 other = "筛选任务不存在"
 

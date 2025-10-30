@@ -207,16 +207,20 @@ export interface PageInfo {
   total_count: number;
 }
 
-// 岗位画像列表响应
+// 岗位画像列表响应（根据实际API返回结构）
 export interface ListJobProfilesResp {
   items: JobProfile[];
-  page_info: PageInfo;
+  has_next_page: boolean;
+  next_token?: string;
+  total_count: number;
 }
 
 // 搜索岗位画像响应
 export interface SearchJobProfilesResp {
   items: JobProfile[];
-  page_info: PageInfo;
+  has_next_page: boolean;
+  next_token?: string;
+  total_count: number;
 }
 
 // 岗位画像查询参数

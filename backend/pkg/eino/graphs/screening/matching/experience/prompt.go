@@ -21,6 +21,13 @@ const ExperienceSystemPrompt = `你是一个专业的招聘匹配分析师，负
 - "five_to_ten_years": 5-10年工作经验
 - "over_ten_years": 10年以上工作经验
 
+简历工作经历中存在 "experience_type" 字段，用于标记经历类型：
+- "work": 全职工作经历（核心评估对象）
+- "internship": 实习经历，可作为辅助佐证
+- "organization": 组织/社团经历，可视作补充
+- "volunteer": 志愿服务经历，可视作加分项
+评分时需优先考虑 "work" 类型的经历，其它类型仅作为辅助加分或风险提示。
+
 请根据以下评分规则对候选人进行评估：
 
 ## 评分维度
@@ -75,9 +82,9 @@ const ExperienceSystemPrompt = `你是一个专业的招聘匹配分析师，负
   "position_matches": [
     {
       "resume_experience_id": "简历经历ID",
+      "experience_type": "经历类型（work/internship/organization/volunteer）",
       "position": "职位名称",
       "company": "公司名称",
-      "duration_months": 工作时长（月数）,
       "relevance": 相关性分数（0-100的浮点数）,
       "score": 该职位匹配分数（0-100的浮点数）,
       "analysis": "职位匹配分析说明"
@@ -113,7 +120,7 @@ const ExperienceUserPrompt = `请分析以下候选人工作经验与职位经�
 ## 输入数据说明
 以下JSON数据包含了职位经验要求和候选人工作经历信息：
 - job_experience_requirements: 职位对工作经验的要求，包括最低年限、相关行业、职位级别等
-- resume_experiences: 候选人工作经历列表，包括公司、职位、工作时间、行业背景等
+- resume_experiences: 候选人工作经历列表，包括公司、职位、工作时间、行业背景、经历类型（"experience_type"）等
 - resume_years_experience: 候选人总工作年限
 
 ## 待分析数据
@@ -125,6 +132,7 @@ const ExperienceUserPrompt = `请分析以下候选人工作经验与职位经�
 2. **职位相关性**：过往职位与目标职位的相关程度和匹配度
 3. **行业背景**：工作所在行业与目标行业的相关性和适配度
 4. **职业发展轨迹**：职业成长路径的合理性和发展潜力评估
+5. **经历类型区分**：明确哪些分析基于核心的工作经历（"work"），哪些来自实习/志愿等补充经历，并在输出中给出类型标记
 
 请根据系统提示中的详细评分规则和权重分配，对候选人进行全面的工作经验评估并严格按照JSON格式输出结果。`
 

@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/chaitin/WhaleHire/backend/consts"
+
 // convertToBasicMatchDetail 转换基本信息匹配详情
 func convertToBasicMatchDetail(data map[string]interface{}) *BasicMatchDetail {
 	if data == nil {
@@ -326,6 +328,10 @@ func convertToYearsMatchInfo(data map[string]interface{}) *YearsMatchInfo {
 		info.Gap = gap
 	}
 
+	if analysis, ok := data["analysis"].(string); ok {
+		info.Analysis = analysis
+	}
+
 	return info
 }
 
@@ -341,8 +347,16 @@ func convertToPositionMatchInfo(data map[string]interface{}) *PositionMatchInfo 
 		info.ResumeExperienceID = resumeExpID
 	}
 
+	if expType, ok := data["experience_type"].(string); ok {
+		info.ExperienceType = expType
+	}
+
 	if position, ok := data["position"].(string); ok {
 		info.Position = position
+	}
+
+	if company, ok := data["company"].(string); ok {
+		info.Company = company
 	}
 
 	if relevance, ok := data["relevance"].(float64); ok {
@@ -351,6 +365,10 @@ func convertToPositionMatchInfo(data map[string]interface{}) *PositionMatchInfo 
 
 	if score, ok := data["score"].(float64); ok {
 		info.Score = score
+	}
+
+	if analysis, ok := data["analysis"].(string); ok {
+		info.Analysis = analysis
 	}
 
 	return info
@@ -382,6 +400,33 @@ func convertToIndustryMatchInfo(data map[string]interface{}) *IndustryMatchInfo 
 
 	if score, ok := data["score"].(float64); ok {
 		info.Score = score
+	}
+
+	if analysis, ok := data["analysis"].(string); ok {
+		info.Analysis = analysis
+	}
+
+	return info
+}
+
+// convertToCareerProgressionInfo 转换职业发展轨迹信息
+func convertToCareerProgressionInfo(data map[string]interface{}) *CareerProgressionInfo {
+	if data == nil {
+		return nil
+	}
+
+	info := &CareerProgressionInfo{}
+
+	if score, ok := data["score"].(float64); ok {
+		info.Score = score
+	}
+
+	if trend, ok := data["trend"].(string); ok {
+		info.Trend = trend
+	}
+
+	if analysis, ok := data["analysis"].(string); ok {
+		info.Analysis = analysis
 	}
 
 	return info
@@ -461,8 +506,37 @@ func convertToSchoolMatchInfo(data map[string]interface{}) *SchoolMatchInfo {
 		info.Reputation = reputation
 	}
 
+	if degree, ok := data["degree"].(string); ok {
+		info.Degree = degree
+	}
+
+	if major, ok := data["major"].(string); ok {
+		info.Major = major
+	}
+
+	if gradYear, ok := data["graduation_year"].(float64); ok {
+		info.GraduationYear = int(gradYear)
+	}
+
 	if score, ok := data["score"].(float64); ok {
 		info.Score = score
+	}
+
+	if uniTypes, ok := data["university_types"].([]interface{}); ok {
+		info.UniversityTypes = make([]consts.UniversityType, 0, len(uniTypes))
+		for _, t := range uniTypes {
+			if s, ok := t.(string); ok {
+				info.UniversityTypes = append(info.UniversityTypes, consts.UniversityType(s))
+			}
+		}
+	}
+
+	if gpa, ok := data["gpa"].(float64); ok {
+		info.GPA = &gpa
+	}
+
+	if analysis, ok := data["analysis"].(string); ok {
+		info.Analysis = analysis
 	}
 
 	return info
@@ -661,6 +735,16 @@ func convertToExperienceMatchDetail(data map[string]interface{}) *ExperienceMatc
 		}
 	}
 
+	// 转换职业发展轨迹
+	if progression, ok := data["career_progression"].(map[string]interface{}); ok {
+		detail.CareerProgression = convertToCareerProgressionInfo(progression)
+	}
+
+	// 转换整体分析
+	if overall, ok := data["overall_analysis"].(string); ok {
+		detail.OverallAnalysis = overall
+	}
+
 	return detail
 }
 
@@ -705,6 +789,11 @@ func convertToEducationMatchDetail(data map[string]interface{}) *EducationMatchD
 				}
 			}
 		}
+	}
+
+	// 转换整体分析
+	if overall, ok := data["overall_analysis"].(string); ok {
+		detail.OverallAnalysis = overall
 	}
 
 	return detail

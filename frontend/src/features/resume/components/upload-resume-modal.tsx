@@ -788,7 +788,7 @@ export function UploadResumeModal({
                         : 'text-gray-600'
                   }`}
                 >
-                  预览内容
+                  解析中
                 </div>
               </div>
             </div>
@@ -1147,7 +1147,7 @@ export function UploadResumeModal({
                     <div className="mb-3">
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-xs font-medium text-gray-700">
-                          上传进度
+                          解析进度
                         </span>
                         <span className="text-xs font-medium text-[#7bb8ff]">
                           {uploadProgress}%

@@ -34,9 +34,10 @@ var (
 	// 预留简历相关错误码
 
 	// ========== 职位管理模块 (40000-49999) ==========
-	ErrJobProfileRequired   = web.NewBadRequestBusinessErr(40000, "err-jobprofile-required")
-	ErrJobSkillMetaRequired = web.NewBadRequestBusinessErr(40001, "err-jobskillmeta-required")
-	ErrJobProfileHasResumes = web.NewBadRequestBusinessErr(40002, "err-jobprofile-has-resumes")
+	ErrJobProfileRequired        = web.NewBadRequestBusinessErr(40000, "err-jobprofile-required")
+	ErrJobSkillMetaRequired      = web.NewBadRequestBusinessErr(40001, "err-jobskillmeta-required")
+	ErrJobProfileHasResumes      = web.NewBadRequestBusinessErr(40002, "err-jobprofile-has-resumes")
+	ErrJobProfilePolishMinLength = web.NewBadRequestBusinessErr(40003, "err-jobprofile-polish-min-length")
 
 	// ========== 求职申请模块 (50000-59999) ==========
 	// 预留求职申请相关错误码

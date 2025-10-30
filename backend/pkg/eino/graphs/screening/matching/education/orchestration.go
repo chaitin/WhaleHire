@@ -164,6 +164,12 @@ func (a *EducationAgent) validateOutput(output *domain.EducationMatchDetail) err
 		if schoolMatch.Reputation < 0 || schoolMatch.Reputation > 100 {
 			return fmt.Errorf("school reputation must be between 0 and 100, got %f", schoolMatch.Reputation)
 		}
+		if schoolMatch.GraduationYear < 0 {
+			return fmt.Errorf("school graduation_year must be non-negative, got %d", schoolMatch.GraduationYear)
+		}
+		if schoolMatch.GPA != nil && *schoolMatch.GPA < 0 {
+			return fmt.Errorf("school gpa must be non-negative, got %f", *schoolMatch.GPA)
+		}
 	}
 
 	return nil
@@ -176,5 +182,5 @@ func (a *EducationAgent) GetAgentType() string {
 
 // GetVersion 返回Agent版本
 func (a *EducationAgent) GetVersion() string {
-	return "1.0.0"
+	return "1.1.0"
 }
