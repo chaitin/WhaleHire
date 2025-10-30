@@ -13,6 +13,9 @@ export enum ResumeStatus {
 
 // ==================== 实体类型 ====================
 
+// 职业状态枚举
+export type EmploymentStatus = 'employed' | 'unemployed' | 'job_seeking';
+
 // 简历基础信息
 export interface Resume {
   id: string;
@@ -24,6 +27,7 @@ export interface Resume {
   current_city?: string;
   highest_education?: string;
   years_experience?: number;
+  employment_status?: EmploymentStatus; // 职业状态：employed(在职)、unemployed(离职)、job_seeking(求职中)
   status: ResumeStatus;
   resume_file_url?: string;
   parsed_at?: string;

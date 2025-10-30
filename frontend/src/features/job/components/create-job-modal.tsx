@@ -608,6 +608,12 @@ export function CreateJobModal({
       return;
     }
 
+    // 检查字符长度
+    if (aiPrompt.trim().length < 5) {
+      toast.error('至少输入5个字符才可进行提示词优化');
+      return;
+    }
+
     setIsPolishing(true);
     try {
       const result = await polishPrompt(aiPrompt);
@@ -1468,10 +1474,10 @@ export function CreateJobModal({
                       <button
                         onClick={handlePolish}
                         disabled={isPolishing || !aiPrompt.trim()}
-                        className="flex items-center justify-center w-6 h-6 rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center w-7 h-7 rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={isPolishing ? '优化中...' : '优化提示词'}
                       >
-                        <Wand2 className="w-3 h-3 text-purple-600" />
+                        <Wand2 className="w-3.5 h-3.5 text-purple-600" />
                       </button>
                       {/* 生成按钮 - 渐变色,只显示icon */}
                       <button

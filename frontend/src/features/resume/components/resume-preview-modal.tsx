@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   X,
-  Download,
+  // Download, // 已注释 - 下载按钮已隐藏
   // Edit, // 已注释 - 编辑按钮已隐藏
   Mail,
   Phone,
@@ -20,14 +20,20 @@ import {
   FolderGit2,
   Award,
   Info,
+  Edit2,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/ui/dialog';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Textarea } from '@/ui/textarea';
 import { ResumeDetail } from '@/types/resume';
-import { getResumeDetail, downloadResumeFile } from '@/services/resume';
+import {
+  getResumeDetail,
+  /* downloadResumeFile, */ updateResume,
+} from '@/services/resume';
 import { toast } from '@/ui/toast';
+import { MultiSelect, Option } from '@/ui/multi-select';
+import { listJobProfiles } from '@/services/job-profile';
 
 interface ResumePreviewModalProps {
   isOpen: boolean;
@@ -46,9 +52,16 @@ export function ResumePreviewModal({
 }: ResumePreviewModalProps) {
   const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  // const [isDownloading, setIsDownloading] = useState(false); // 已注释 - 下载功能已隐藏
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<ResumeDetail | null>(null);
+
+  // 岗位编辑相关状态
+  const [isEditingJob, setIsEditingJob] = useState(false);
+  const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
+  const [jobOptions, setJobOptions] = useState<Option[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [savingJobs, setSavingJobs] = useState(false);
 
   // 获取简历详情
   useEffect(() => {
@@ -57,6 +70,14 @@ export function ResumePreviewModal({
       try {
         const detail = await getResumeDetail(resumeId);
         setResumeDetail(detail);
+        // 初始化已选岗位
+        if (detail.job_positions && detail.job_positions.length > 0) {
+          setSelectedJobIds(
+            detail.job_positions.map((jp) => jp.job_position_id)
+          );
+        } else {
+          setSelectedJobIds([]);
+        }
       } catch (error) {
         console.error('获取简历详情失败:', error);
         toast.error('获取简历详情失败');
@@ -70,24 +91,56 @@ export function ResumePreviewModal({
     }
   }, [isOpen, resumeId]);
 
-  // 下载简历
-  const handleDownload = async () => {
-    if (!resumeDetail?.resume_file_url) {
-      toast.error('简历文件不存在');
-      return;
-    }
+  // 获取岗位列表
+  useEffect(() => {
+    const fetchJobProfiles = async () => {
+      if (!isOpen) return;
 
-    setIsDownloading(true);
-    try {
-      await downloadResumeFile(resumeDetail, resumeDetail.name);
-      toast.success('简历下载成功');
-    } catch (error) {
-      console.error('下载简历失败:', error);
-      toast.error('下载简历失败');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
+      setLoadingJobs(true);
+      try {
+        const response = await listJobProfiles({
+          page: 1,
+          page_size: 100,
+        });
+
+        // 只显示发布状态的岗位
+        const publishedJobs = response.items.filter(
+          (job) => job.status === 'published'
+        );
+
+        const options: Option[] = publishedJobs.map((job) => ({
+          value: job.id,
+          label: job.name,
+        }));
+        setJobOptions(options);
+      } catch (err) {
+        console.error('获取岗位列表失败:', err);
+      } finally {
+        setLoadingJobs(false);
+      }
+    };
+
+    fetchJobProfiles();
+  }, [isOpen]);
+
+  // 下载简历 - 已注释
+  // const handleDownload = async () => {
+  //   if (!resumeDetail?.resume_file_url) {
+  //     toast.error('简历文件不存在');
+  //     return;
+  //   }
+
+  //   setIsDownloading(true);
+  //   try {
+  //     await downloadResumeFile(resumeDetail, resumeDetail.name);
+  //     toast.success('简历下载成功');
+  //   } catch (error) {
+  //     console.error('下载简历失败:', error);
+  //     toast.error('下载简历失败');
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
 
   // 查看原始简历
   const handleViewOriginal = () => {
@@ -134,6 +187,52 @@ export function ResumePreviewModal({
       ...editedData,
       [field]: value,
     });
+  };
+
+  // 打开岗位编辑弹窗
+  const handleOpenJobEdit = () => {
+    setIsEditingJob(true);
+  };
+
+  // 取消岗位编辑
+  const handleCancelJobEdit = () => {
+    setIsEditingJob(false);
+    // 恢复原始选择
+    if (resumeDetail?.job_positions && resumeDetail.job_positions.length > 0) {
+      setSelectedJobIds(
+        resumeDetail.job_positions.map((jp) => jp.job_position_id)
+      );
+    } else {
+      setSelectedJobIds([]);
+    }
+  };
+
+  // 保存岗位选择
+  const handleSaveJobs = async () => {
+    if (!resumeDetail || selectedJobIds.length === 0) {
+      toast.error('请至少选择一个岗位');
+      return;
+    }
+
+    setSavingJobs(true);
+    try {
+      // 调用更新API
+      await updateResume(resumeDetail.id, {
+        job_position_ids: selectedJobIds,
+      });
+
+      // 重新获取简历详情以更新界面
+      const updatedDetail = await getResumeDetail(resumeDetail.id);
+      setResumeDetail(updatedDetail);
+
+      setIsEditingJob(false);
+      toast.success('岗位更新成功');
+    } catch (error) {
+      console.error('更新岗位失败:', error);
+      toast.error('更新岗位失败');
+    } finally {
+      setSavingJobs(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -227,31 +326,41 @@ export function ResumePreviewModal({
                       {/* 岗位名称展示 - 从job_positions获取,加粗 */}
                       {displayData.job_positions &&
                         displayData.job_positions.length > 0 && (
-                          <div className="relative group">
-                            <span className="text-sm font-semibold text-white/90">
-                              {displayData.job_positions.length === 1
-                                ? displayData.job_positions[0].job_title
-                                : `${displayData.job_positions[0].job_title} 等${displayData.job_positions.length}个岗位`}
-                            </span>
-                            {/* Hover展示所有岗位 */}
-                            {displayData.job_positions.length > 1 && (
-                              <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-10">
-                                <div className="bg-white rounded-lg shadow-lg p-3 min-w-[200px]">
-                                  <div className="space-y-1">
-                                    {displayData.job_positions.map(
-                                      (jobPos, idx) => (
-                                        <div
-                                          key={jobPos.id || idx}
-                                          className="text-sm text-[#1E293B] py-1"
-                                        >
-                                          {jobPos.job_title}
-                                        </div>
-                                      )
-                                    )}
+                          <div className="flex items-center gap-2">
+                            <div className="relative group">
+                              <span className="text-sm font-semibold text-white/90">
+                                {displayData.job_positions.length === 1
+                                  ? displayData.job_positions[0].job_title
+                                  : `${displayData.job_positions[0].job_title} 等${displayData.job_positions.length}个岗位`}
+                              </span>
+                              {/* Hover展示所有岗位 */}
+                              {displayData.job_positions.length > 1 && (
+                                <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-10">
+                                  <div className="bg-white rounded-lg shadow-lg p-3 min-w-[200px]">
+                                    <div className="space-y-1">
+                                      {displayData.job_positions.map(
+                                        (jobPos, idx) => (
+                                          <div
+                                            key={jobPos.id || idx}
+                                            className="text-sm text-[#1E293B] py-1"
+                                          >
+                                            {jobPos.job_title}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
+                            {/* 编辑岗位图标 */}
+                            <button
+                              onClick={handleOpenJobEdit}
+                              className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/20 transition-colors"
+                              title="编辑岗位"
+                            >
+                              <Edit2 className="w-3.5 h-3.5 text-white/80 hover:text-white" />
+                            </button>
                           </div>
                         )}
                     </div>
@@ -287,7 +396,8 @@ export function ResumePreviewModal({
                       <Edit className="w-3 h-3 mr-1" />
                       <span className="text-xs font-medium">编辑</span>
                     </Button> */}
-                    <Button
+                    {/* 下载按钮 - 已注释 */}
+                    {/* <Button
                       variant="outline"
                       className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
                       onClick={handleDownload}
@@ -295,7 +405,7 @@ export function ResumePreviewModal({
                     >
                       <Download className="w-3 h-3 mr-1" />
                       <span className="text-xs font-medium">下载</span>
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
 
@@ -501,6 +611,111 @@ export function ResumePreviewModal({
           )}
         </div>
       </DialogContent>
+
+      {/* 岗位编辑弹窗 */}
+      {isEditingJob && (
+        <Dialog open={isEditingJob} onOpenChange={handleCancelJobEdit}>
+          <DialogContent className="max-w-md">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              编辑岗位
+            </DialogTitle>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  选择岗位 <span className="text-red-500">*</span>
+                </label>
+                <MultiSelect
+                  options={jobOptions}
+                  selected={selectedJobIds}
+                  onChange={setSelectedJobIds}
+                  placeholder={loadingJobs ? '加载岗位中...' : '请选择岗位'}
+                  multiple={true}
+                  searchPlaceholder="搜索岗位名称..."
+                  disabled={loadingJobs || savingJobs}
+                  selectCountLabel="岗位"
+                />
+              </div>
+
+              {/* 已选择岗位展示 */}
+              {selectedJobIds.length > 0 && (
+                <div className="bg-gray-50 rounded-lg px-3 py-2">
+                  <div className="text-sm text-gray-700">
+                    {selectedJobIds.length === 1 ? (
+                      <span>
+                        已选择：
+                        <span className="font-medium text-gray-900">
+                          {jobOptions.find(
+                            (job) => job.value === selectedJobIds[0]
+                          )?.label || '未知岗位'}
+                        </span>
+                      </span>
+                    ) : (
+                      <span>
+                        已选择：
+                        <span className="font-medium text-gray-900">
+                          {jobOptions.find(
+                            (job) => job.value === selectedJobIds[0]
+                          )?.label || '未知岗位'}
+                        </span>
+                        等
+                        <span className="relative font-medium text-[#7bb8ff] cursor-pointer group">
+                          {selectedJobIds.length}
+                          {/* Hover 提示框 */}
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 w-max max-w-xs">
+                            <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg">
+                              <div className="font-medium mb-1.5">
+                                已选择的岗位：
+                              </div>
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                                {selectedJobIds.map((jobId, index) => (
+                                  <div key={jobId} className="text-gray-200">
+                                    {index + 1}.{' '}
+                                    {jobOptions.find(
+                                      (job) => job.value === jobId
+                                    )?.label || '未知岗位'}
+                                  </div>
+                                ))}
+                              </div>
+                              {/* 小三角 */}
+                              <div className="absolute left-4 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                          </div>
+                        </span>
+                        个岗位
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 底部按钮 */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={handleCancelJobEdit}
+                disabled={savingJobs}
+                className="px-4"
+              >
+                取消
+              </Button>
+              <Button
+                onClick={handleSaveJobs}
+                disabled={savingJobs || selectedJobIds.length === 0}
+                className="px-4 text-white"
+                style={{
+                  background: savingJobs
+                    ? '#D1D5DB'
+                    : 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
+              >
+                {savingJobs ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
@@ -605,8 +820,17 @@ function JobIntentionSection({
     resumeDetail as unknown as { expected_salary?: string }
   ).expected_salary;
   const expectedCity = resumeDetail.current_city;
-  const availableDate = (resumeDetail as unknown as { available_date?: string })
-    .available_date;
+  const employmentStatus = resumeDetail.employment_status;
+
+  // 格式化职业状态显示
+  const getEmploymentStatusText = (status?: string) => {
+    const statusMap: Record<string, string> = {
+      employed: '在职',
+      unemployed: '离职',
+      job_seeking: '求职中',
+    };
+    return status ? statusMap[status] || status : '--';
+  };
 
   return (
     <div className="space-y-3">
@@ -662,22 +886,13 @@ function JobIntentionSection({
           )}
         </div>
 
-        {/* 到岗时间 */}
+        {/* 职业状态 */}
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-[#9CA3AF]" />
-          <span className="text-sm font-medium text-[#64748B]">到岗时间</span>
-          {isEditMode ? (
-            <Input
-              value={availableDate || ''}
-              onChange={(e) => onDataChange?.('available_date', e.target.value)}
-              className="text-sm font-medium text-[#64748B] h-7 w-32"
-              placeholder="--"
-            />
-          ) : (
-            <span className="text-sm font-medium text-[#64748B]">
-              {availableDate || '--'}
-            </span>
-          )}
+          <span className="text-sm font-medium text-[#64748B]">职业状态</span>
+          <span className="text-sm font-medium text-[#64748B]">
+            {getEmploymentStatusText(employmentStatus)}
+          </span>
         </div>
       </div>
     </div>
@@ -1072,6 +1287,7 @@ function SkillsSection({
   ) => void;
 }) {
   const skills = resumeDetail.skills || [];
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (skills.length === 0) {
     return null;
@@ -1106,6 +1322,17 @@ function SkillsSection({
     (s) => (s as { category?: string }).category === 'other'
   );
 
+  // 计算技能显示行数（每行3个）
+  const skillsPerRow = 3;
+  const maxRowsBeforeCollapse = 3;
+  const maxSkillsBeforeCollapse = skillsPerRow * maxRowsBeforeCollapse;
+  const shouldShowExpandButton =
+    technicalSkills.length > maxSkillsBeforeCollapse;
+  const displayedSkills =
+    shouldShowExpandButton && !isExpanded
+      ? technicalSkills.slice(0, maxSkillsBeforeCollapse)
+      : technicalSkills;
+
   return (
     <div className="space-y-6">
       {/* 标题区 - 带左侧蓝色装饰条和右侧延伸线 */}
@@ -1125,7 +1352,7 @@ function SkillsSection({
         <div className="space-y-3">
           {/* 每行3个技能 */}
           <div className="grid grid-cols-3 gap-x-6 gap-y-4">
-            {technicalSkills.map((skill) => (
+            {displayedSkills.map((skill) => (
               <div key={skill.id} className="space-y-2">
                 {/* 技能名称 + 等级 */}
                 <div className="flex items-center justify-between gap-2">
@@ -1172,6 +1399,33 @@ function SkillsSection({
               </div>
             ))}
           </div>
+
+          {/* 展开/收起按钮 */}
+          {shouldShowExpandButton && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#7bb8ff] hover:text-[#6aa8ee] hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <span>
+                  {isExpanded ? '收起' : `展开全部 (${technicalSkills.length})`}
+                </span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1439,9 +1693,9 @@ function CertificatesSection({
     return null;
   }
 
-  // 将内容按中文逗号"，"、中文分号"；"、顿号"、"分割成数组，并过滤掉软件著作相关内容
+  // 将内容按中文逗号"，"、英文逗号","、中文分号"；"、顿号"、"分割成数组，并过滤掉软件著作相关内容
   const honorsList = honorsContent
-    .split(/[，；、]/)
+    .split(/[，,；、]/)
     .filter((item) => item.trim())
     .map((item) => item.trim())
     .filter((item) => !item.includes('软件著作')); // 过滤掉包含"软件著作"的内容

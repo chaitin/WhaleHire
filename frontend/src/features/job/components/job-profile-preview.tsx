@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Dialog, DialogContent } from '@/ui/dialog';
 import { Button } from '@/ui/button';
 import {
@@ -7,13 +8,12 @@ import {
   GraduationCap,
   Share2,
   Clock,
-  Building2,
   Sparkles,
-  BarChart3,
-  Grid,
   Target,
   CheckCircle2,
   Star,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import type { JobProfileDetail } from '@/types/job-profile';
 
@@ -65,6 +65,9 @@ export function JobProfilePreview({
   onOpenChange,
   jobProfile,
 }: JobProfilePreviewProps) {
+  // 加分项展开/收起状态
+  const [isBonusExpanded, setIsBonusExpanded] = useState(false);
+
   if (!jobProfile) return null;
 
   // 格式化薪资范围
@@ -168,11 +171,17 @@ export function JobProfilePreview({
                   </div>
 
                   <div className="flex items-center justify-between flex-1 gap-3">
-                    {/* 左侧:岗位名称和状态标签 */}
+                    {/* 左侧:岗位名称、部门和状态标签 */}
                     <div className="flex items-center gap-2">
                       <h1 className="text-xl font-semibold text-white">
                         {jobProfile.name}
                       </h1>
+                      {/* 部门显示 */}
+                      {jobProfile.department && (
+                        <span className="text-sm text-white/90">
+                          {jobProfile.department}
+                        </span>
+                      )}
                       {/* 状态标签 - 字体加大加粗 */}
                       <div className="relative inline-flex items-center">
                         <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded blur-[1px] opacity-50"></div>
@@ -196,15 +205,6 @@ export function JobProfilePreview({
 
               {/* 关键信息标签 - 简化显示:只显示icon+内容 */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
-                {/* 所属部门 */}
-                {jobProfile.department && (
-                  <div className="flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-white" />
-                    <span className="text-sm text-white">
-                      {jobProfile.department}
-                    </span>
-                  </div>
-                )}
                 {/* 工作地点 */}
                 {jobProfile.location && (
                   <div className="flex items-center gap-1.5">
@@ -243,8 +243,8 @@ export function JobProfilePreview({
 
               {/* 操作按钮 - 放在框体的右下角 */}
               <div className="absolute bottom-0 right-0 flex items-center gap-1">
-                {/* 结构体 - 可点击 */}
-                <Button
+                {/* 结构体 - 可点击（已注释，不展示） */}
+                {/* <Button
                   variant="outline"
                   className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
                   onClick={() => {
@@ -253,7 +253,7 @@ export function JobProfilePreview({
                 >
                   <Grid className="w-3 h-3 mr-1" />
                   <span className="text-xs font-medium">结构体</span>
-                </Button>
+                </Button> */}
                 {/* AI关联 - 置灰 */}
                 <Button
                   variant="outline"
@@ -262,15 +262,6 @@ export function JobProfilePreview({
                 >
                   <Sparkles className="w-3 h-3 mr-1" />
                   <span className="text-xs font-medium">AI关联</span>
-                </Button>
-                {/* 进度概览 - 置灰 */}
-                <Button
-                  variant="outline"
-                  className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30 opacity-50 cursor-not-allowed"
-                  disabled
-                >
-                  <BarChart3 className="w-3 h-3 mr-1" />
-                  <span className="text-xs font-medium">进度概览</span>
                 </Button>
                 {/* 分享 - 置灰 */}
                 <Button
@@ -378,20 +369,52 @@ export function JobProfilePreview({
                   <div className="flex-1 h-px bg-gradient-to-r from-yellow-300 via-amber-200 to-transparent"></div>
                 </div>
                 {/* 标签展示区域 */}
-                <div className="flex flex-wrap gap-2 pl-3">
-                  {bonusSkills.map((skill, index) => (
-                    <span
-                      key={skill.id || index}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-sm font-medium"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
-                      }}
+                <div className="pl-3 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      // 每行大约可以显示5-6个标签，三行约15个标签
+                      const maxItemsBeforeCollapse = 15;
+                      const shouldShowExpandButton =
+                        bonusSkills.length > maxItemsBeforeCollapse;
+                      const displayedSkills =
+                        shouldShowExpandButton && !isBonusExpanded
+                          ? bonusSkills.slice(0, maxItemsBeforeCollapse)
+                          : bonusSkills;
+
+                      return displayedSkills.map((skill, index) => (
+                        <span
+                          key={skill.id || index}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-sm font-medium"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                          }}
+                        >
+                          <Star className="w-3.5 h-3.5" />
+                          {skill.skill || skill.skill_name || ''}
+                        </span>
+                      ));
+                    })()}
+                  </div>
+                  {/* 展开/收起按钮 */}
+                  {bonusSkills.length > 15 && (
+                    <button
+                      onClick={() => setIsBonusExpanded(!isBonusExpanded)}
+                      className="flex items-center gap-1 text-sm text-[#7bb8ff] hover:text-[#6aa8ee] transition-colors"
                     >
-                      <Star className="w-3.5 h-3.5" />
-                      {skill.skill || skill.skill_name || ''}
-                    </span>
-                  ))}
+                      {isBonusExpanded ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          <span>收起</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          <span>展开</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
