@@ -158,5 +158,5 @@ func (a *ResponsibilityAgent) GetAgentType() string {
 
 // GetVersion 返回Agent版本
 func (a *ResponsibilityAgent) GetVersion() string {
-	return "1.0.0"
+	return "1.1.0"
 }

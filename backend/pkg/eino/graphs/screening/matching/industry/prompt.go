@@ -55,6 +55,7 @@ const IndustrySystemPrompt = `你是一个专业的招聘匹配分析师，负�
       "industry": "行业名称",
       "relevance": 相关性分数（0-100的浮点数）,
       "score": 该行业匹配分数（0-100的浮点数）
+      "analysis": "行业匹配分析说明"
     }
   ],
   "company_matches": [

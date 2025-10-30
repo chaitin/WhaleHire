@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
@@ -151,7 +154,7 @@ func (a *BasicInfoAgent) GetAgentType() string {
 
 // GetVersion 返回Agent版本
 func (a *BasicInfoAgent) GetVersion() string {
-	return "1.0.0"
+	return "1.1.0"
 }
 
 type jobBasicInfo struct {
@@ -165,9 +168,16 @@ type jobBasicInfo struct {
 
 type resumeBasicInfo struct {
 	Name              string              `json:"name,omitempty"`
+	Age               *int                `json:"age,omitempty"`
 	CurrentCity       string              `json:"current_city,omitempty"`
+	ExpectedCity      string              `json:"expected_city,omitempty"`
 	YearsExperience   *float64            `json:"years_experience,omitempty"`
 	ExpectedSalary    *salaryRange        `json:"expected_salary,omitempty"`
+	ExpectedSalaryRaw string              `json:"expected_salary_raw,omitempty"`
+	EmploymentStatus  string              `json:"employment_status,omitempty"`
+	PersonalSummary   string              `json:"personal_summary,omitempty"`
+	Honors            []string            `json:"honors,omitempty"`
+	OtherInfo         string              `json:"other_info,omitempty"`
 	RecentExperiences []experienceSummary `json:"recent_experiences,omitempty"`
 	Notes             []string            `json:"notes,omitempty"`
 }
@@ -178,12 +188,13 @@ type salaryRange struct {
 }
 
 type experienceSummary struct {
-	Company     string `json:"company,omitempty"`
-	Position    string `json:"position,omitempty"`
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
-	Start       string `json:"start,omitempty"`
-	End         string `json:"end,omitempty"`
+	Company        string `json:"company,omitempty"`
+	Position       string `json:"position,omitempty"`
+	ExperienceType string `json:"experience_type,omitempty"`
+	Title          string `json:"title,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Start          string `json:"start,omitempty"`
+	End            string `json:"end,omitempty"`
 }
 
 func buildJobBasicInfo(detail *domain.JobProfileDetail) jobBasicInfo {
@@ -224,13 +235,26 @@ func buildResumeBasicInfo(detail *domain.ResumeDetail) resumeBasicInfo {
 	base := detail.Resume
 	info.Name = base.Name
 	info.CurrentCity = base.CurrentCity
+	info.ExpectedCity = base.ExpectedCity
+	info.PersonalSummary = strings.TrimSpace(base.PersonalSummary)
+	info.OtherInfo = strings.TrimSpace(base.OtherInfo)
+	if base.Age != nil && *base.Age > 0 {
+		info.Age = base.Age
+	}
+
+	if base.EmploymentStatus != nil {
+		info.EmploymentStatus = string(*base.EmploymentStatus)
+	}
 
 	if base.YearsExperience > 0 {
 		info.YearsExperience = float64Ptr(base.YearsExperience)
 	}
 
-	if expected := extractExpectedSalary(detail); expected != nil {
-		info.ExpectedSalary = expected
+	if expectedRange, raw := extractExpectedSalary(detail); expectedRange != nil {
+		info.ExpectedSalary = expectedRange
+		info.ExpectedSalaryRaw = raw
+	} else if raw != "" {
+		info.ExpectedSalaryRaw = raw
 	}
 
 	info.RecentExperiences = summarizeExperiences(detail.Experiences, 3)
@@ -238,8 +262,23 @@ func buildResumeBasicInfo(detail *domain.ResumeDetail) resumeBasicInfo {
 	if strings.TrimSpace(base.CurrentCity) == "" {
 		info.Notes = append(info.Notes, "简历未提供当前城市信息")
 	}
-	if info.ExpectedSalary == nil {
+	if strings.TrimSpace(base.ExpectedCity) == "" {
+		info.Notes = append(info.Notes, "简历未提供明确的期望城市")
+	}
+	switch {
+	case info.ExpectedSalary != nil:
+		// no-op
+	case strings.TrimSpace(base.ExpectedSalary) == "":
 		info.Notes = append(info.Notes, "简历未提供明确的期望薪资信息")
+	default:
+		info.Notes = append(info.Notes, "期望薪资格式暂未解析，请人工确认")
+	}
+	if info.EmploymentStatus == "" {
+		info.Notes = append(info.Notes, "简历未提供当前工作状态")
+	}
+
+	if strings.TrimSpace(base.HonorsCertificates) != "" {
+		info.Honors = splitAndTrim(base.HonorsCertificates)
 	}
 
 	return info
@@ -254,6 +293,18 @@ func summarizeExperiences(exps []*domain.ResumeExperience, limit int) []experien
 	sorted = append(sorted, exps...)
 
 	sort.Slice(sorted, func(i, j int) bool {
+		typeWeight := func(exp *domain.ResumeExperience) int {
+			if exp == nil {
+				return 1
+			}
+			if exp.ExperienceType == consts.ExperienceTypeWork {
+				return 0
+			}
+			return 1
+		}
+		if wI, wJ := typeWeight(sorted[i]), typeWeight(sorted[j]); wI != wJ {
+			return wI < wJ
+		}
 		startI := comparableTime(sorted[i])
 		startJ := comparableTime(sorted[j])
 		if startI.Equal(startJ) {
@@ -272,9 +323,10 @@ func summarizeExperiences(exps []*domain.ResumeExperience, limit int) []experien
 			continue
 		}
 		item := experienceSummary{
-			Company:  strings.TrimSpace(exp.Company),
-			Position: strings.TrimSpace(exp.Position),
-			Title:    strings.TrimSpace(exp.Title),
+			Company:        strings.TrimSpace(exp.Company),
+			Position:       strings.TrimSpace(exp.Position),
+			ExperienceType: string(exp.ExperienceType),
+			Title:          strings.TrimSpace(exp.Title),
 		}
 		if desc := strings.TrimSpace(exp.Description); desc != "" {
 			item.Description = truncateText(desc, 120)
@@ -292,12 +344,21 @@ func summarizeExperiences(exps []*domain.ResumeExperience, limit int) []experien
 	return result
 }
 
-func extractExpectedSalary(detail *domain.ResumeDetail) *salaryRange {
+func extractExpectedSalary(detail *domain.ResumeDetail) (*salaryRange, string) {
 	if detail == nil {
-		return nil
+		return nil, ""
 	}
-	// 暂无明确的期望薪资字段，预留扩展
-	return nil
+	if detail.Resume == nil {
+		return nil, ""
+	}
+	raw := strings.TrimSpace(detail.Resume.ExpectedSalary)
+	if raw == "" {
+		return nil, ""
+	}
+	if rng := parseExpectedSalaryRange(raw); rng != nil {
+		return rng, raw
+	}
+	return nil, raw
 }
 
 func comparableTime(exp *domain.ResumeExperience) time.Time {
@@ -336,4 +397,84 @@ func truncateText(s string, limit int) string {
 
 func float64Ptr(v float64) *float64 {
 	return &v
+}
+
+var salaryNumberPattern = regexp.MustCompile(`\d+(?:\.\d+)?`)
+
+func parseExpectedSalaryRange(value string) *salaryRange {
+	if value = strings.TrimSpace(value); value == "" {
+		return nil
+	}
+	normalized := strings.ToLower(value)
+	multiplier := 1.0
+	switch {
+	case strings.Contains(normalized, "k"):
+		multiplier = 1000
+	case strings.Contains(normalized, "千"):
+		multiplier = 1000
+	case strings.Contains(normalized, "万"):
+		multiplier = 10000
+	}
+
+	matches := salaryNumberPattern.FindAllString(normalized, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+
+	parse := func(s string) (float64, bool) {
+		num, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return 0, false
+		}
+		return num * multiplier, true
+	}
+
+	var minVal, maxVal float64
+	var ok bool
+	if minVal, ok = parse(matches[0]); !ok {
+		return nil
+	}
+	if len(matches) > 1 {
+		if maxVal, ok = parse(matches[1]); !ok {
+			return nil
+		}
+	} else {
+		maxVal = minVal
+		if strings.Contains(normalized, "上") || strings.Contains(normalized, "以上") {
+			maxVal = minVal
+		}
+	}
+
+	if maxVal < minVal {
+		maxVal, minVal = minVal, maxVal
+	}
+
+	return &salaryRange{
+		Min: float64Ptr(minVal),
+		Max: float64Ptr(maxVal),
+	}
+}
+
+func splitAndTrim(text string) []string {
+	parts := strings.FieldsFunc(text, func(r rune) bool {
+		switch r {
+		case '\n', ',', '，', ';', '；':
+			return true
+		default:
+			return false
+		}
+	})
+	if len(parts) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }

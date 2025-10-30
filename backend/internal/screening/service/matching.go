@@ -82,7 +82,7 @@ func NewMatchingService(cfg *config.Config, logger *slog.Logger, nodeRunRepo dom
 		logger:        logger,
 		cfg:           cfg,
 		factory:       factory,
-		version:       "1.0.0",
+		version:       "1.1.0",
 		nodeRunRepo:   nodeRunRepo,
 		screeningRepo: screeningRepo,
 	}, nil

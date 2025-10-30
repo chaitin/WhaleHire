@@ -2,6 +2,8 @@ package domain
 
 import (
 	"time"
+
+	"github.com/chaitin/WhaleHire/backend/consts"
 )
 
 const (
@@ -173,6 +175,10 @@ type ExperienceMatchDetail struct {
 	PositionMatches []*PositionMatchInfo `json:"position_matches"`
 	// IndustryMatches 行业匹配列表
 	IndustryMatches []*IndustryMatchInfo `json:"industry_matches"`
+	// CareerProgression 职业发展轨迹
+	CareerProgression *CareerProgressionInfo `json:"career_progression,omitempty"`
+	// OverallAnalysis 整体工作经验匹配度分析总结
+	OverallAnalysis string `json:"overall_analysis,omitempty"`
 }
 
 // YearsMatchInfo 年限匹配信息
@@ -185,18 +191,26 @@ type YearsMatchInfo struct {
 	Score float64 `json:"score" example:"95.0"`
 	// Gap 年限差距（正数表示超出要求，负数表示不足）
 	Gap float64 `json:"gap" example:"1.5"`
+	// Analysis 年限匹配分析说明
+	Analysis string `json:"analysis,omitempty" example:"候选人总年限满足岗位要求"`
 }
 
 // PositionMatchInfo 职位匹配信息
 type PositionMatchInfo struct {
 	// ResumeExperienceID 简历工作经历ID
 	ResumeExperienceID string `json:"resume_experience_id" example:"exp_001"`
+	// ExperienceType 简历经历类型（work/organization/volunteer/internship）
+	ExperienceType string `json:"experience_type,omitempty" example:"work"`
 	// Position 职位名称
 	Position string `json:"position" example:"高级软件工程师"`
+	// Company 公司名称
+	Company string `json:"company,omitempty" example:"阿里巴巴"`
 	// Relevance 相关度 (0-1)
 	Relevance float64 `json:"relevance" example:"0.85"`
 	// Score 职位匹配得分 (0-100)
 	Score float64 `json:"score" example:"85.0"`
+	// Analysis 职位匹配分析说明
+	Analysis string `json:"analysis,omitempty" example:"核心职责与目标岗位高度一致"`
 }
 
 // IndustryMatchInfo 行业匹配信息
@@ -211,6 +225,18 @@ type IndustryMatchInfo struct {
 	Relevance float64 `json:"relevance" example:"0.90"`
 	// Score 行业匹配得分 (0-100)
 	Score float64 `json:"score" example:"90.0"`
+	// Analysis 行业匹配分析说明
+	Analysis string `json:"analysis,omitempty" example:"行业业务模式与目标岗位高度一致"`
+}
+
+// CareerProgressionInfo 职业发展轨迹信息
+type CareerProgressionInfo struct {
+	// Score 职业发展轨迹得分 (0-100)
+	Score float64 `json:"score" example:"85.0"`
+	// Trend 职业发展趋势
+	Trend string `json:"trend,omitempty" example:"上升"`
+	// Analysis 职业发展轨迹分析说明
+	Analysis string `json:"analysis,omitempty" example:"从初级到高级岗位稳步晋升"`
 }
 
 // EducationMatchDetail 教育匹配详情
@@ -224,6 +250,8 @@ type EducationMatchDetail struct {
 	MajorMatches []*MajorMatchInfo `json:"major_matches"`
 	// SchoolMatches 学校匹配列表
 	SchoolMatches []*SchoolMatchInfo `json:"school_matches"`
+	// OverallAnalysis 整体教育背景匹配度分析总结
+	OverallAnalysis string `json:"overall_analysis,omitempty"`
 }
 
 // DegreeMatchInfo 学历匹配信息
@@ -244,8 +272,8 @@ type MajorMatchInfo struct {
 	ResumeEducationID string `json:"resume_education_id" example:"edu_001"`
 	// Major 专业名称
 	Major string `json:"major" example:"计算机科学与技术"`
-	// Relevance 相关度 (0-1)
-	Relevance float64 `json:"relevance" example:"0.95"`
+	// Relevance 相关度 (0-100)
+	Relevance float64 `json:"relevance" example:"95.0"`
 	// Score 专业匹配得分 (0-100)
 	Score float64 `json:"score" example:"95.0"`
 }
@@ -256,10 +284,22 @@ type SchoolMatchInfo struct {
 	ResumeEducationID string `json:"resume_education_id" example:"edu_001"`
 	// School 学校名称
 	School string `json:"school" example:"清华大学"`
-	// Reputation 学校声誉评分 (0-1)
-	Reputation float64 `json:"reputation" example:"0.98"`
+	// Degree 学位等级
+	Degree string `json:"degree,omitempty" example:"硕士"`
+	// Major 专业名称
+	Major string `json:"major,omitempty" example:"计算机科学与技术"`
+	// GraduationYear 毕业年份
+	GraduationYear int `json:"graduation_year,omitempty" example:"2022"`
+	// Reputation 学校声誉评分 (0-100)
+	Reputation float64 `json:"reputation" example:"98.0"`
 	// Score 学校匹配得分 (0-100)
 	Score float64 `json:"score" example:"98.0"`
+	// UniversityTypes 学校类型标签，如 985/211/QS Top 等
+	UniversityTypes []consts.UniversityType `json:"university_types,omitempty" example:"[\"985\",\"double_first_class\"]"`
+	// GPA 候选人在该学校的绩点
+	GPA *float64 `json:"gpa,omitempty" example:"3.8"`
+	// Analysis 学校匹配分析说明
+	Analysis string `json:"analysis,omitempty" example:"院校声誉与岗位期望高度吻合"`
 }
 
 // IndustryMatchDetail 行业匹配详情

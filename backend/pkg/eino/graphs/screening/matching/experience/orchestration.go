@@ -167,6 +167,13 @@ func (a *ExperienceAgent) validateOutput(output *domain.ExperienceMatchDetail) e
 		}
 	}
 
+	// 验证职业发展轨迹
+	if output.CareerProgression != nil {
+		if output.CareerProgression.Score < 0 || output.CareerProgression.Score > 100 {
+			return fmt.Errorf("career progression score must be between 0 and 100, got %f", output.CareerProgression.Score)
+		}
+	}
+
 	return nil
 }
 
@@ -177,5 +184,5 @@ func (a *ExperienceAgent) GetAgentType() string {
 
 // GetVersion 返回Agent版本
 func (a *ExperienceAgent) GetVersion() string {
-	return "1.0.0"
+	return "1.1.0"
 }
