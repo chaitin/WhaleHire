@@ -8,6 +8,7 @@ import (
 
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/domain"
+	"github.com/chaitin/WhaleHire/backend/errcode"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/jobprofilegenerator"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/jobprofileparser"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/chains/jobprofilepolisher"
@@ -94,17 +95,17 @@ func (s *JobProfilePromptService) initializeChains(ctx context.Context) error {
 func (s *JobProfilePromptService) PolishPrompt(ctx context.Context, req *domain.PolishJobPromptReq) (*domain.PolishJobPromptResp, error) {
 	// 参数校验
 	if req == nil {
-		return nil, fmt.Errorf("request is required")
+		return nil, errcode.ErrInvalidParam.WithData("message", "request is required")
 	}
 
 	idea := strings.TrimSpace(req.Idea)
 	if idea == "" {
-		return nil, fmt.Errorf("idea is required")
+		return nil, errcode.ErrJobProfilePolishMinLength.WithData("message", "idea is required")
 	}
 
-	// 长度限制检查（5-500个字符）
-	if len([]rune(idea)) < 5 || len([]rune(idea)) > 500 {
-		return nil, fmt.Errorf("idea length must be between 5 and 500 characters")
+	// 长度限制检查（5-1000个字符）
+	if len([]rune(idea)) < 5 || len([]rune(idea)) > 1000 {
+		return nil, errcode.ErrJobProfilePolishMinLength.WithData("message", "idea length must be between 5 and 1000 characters")
 	}
 
 	// 检查 Chain 是否已初始化
