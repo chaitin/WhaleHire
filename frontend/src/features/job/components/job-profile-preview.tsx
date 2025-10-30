@@ -173,11 +173,11 @@ export function JobProfilePreview({
                       <h1 className="text-xl font-semibold text-white">
                         {jobProfile.name}
                       </h1>
-                      {/* 状态标签 - 继续缩小 */}
+                      {/* 状态标签 - 字体加大加粗 */}
                       <div className="relative inline-flex items-center">
                         <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded blur-[1px] opacity-50"></div>
-                        <div className="relative px-1.5 py-[1px] bg-gradient-to-r from-green-400 to-emerald-500 rounded">
-                          <span className="text-[8px] font-semibold text-white tracking-wide">
+                        <div className="relative px-1.5 py-[2px] bg-gradient-to-r from-green-400 to-emerald-500 rounded">
+                          <span className="text-[9px] font-bold text-white tracking-wide">
                             已发布
                           </span>
                         </div>

@@ -41,7 +41,8 @@ func (ResumeEducation) Fields() []ent.Field {
 		field.String("school").Optional(),
 		field.String("degree").Optional(),
 		field.String("major").Optional(),
-		field.String("university_type").GoType(consts.UniversityType("")).Optional(),
+		field.Float("gpa").Optional(), // 在校学分绩点
+		field.JSON("university_types", []consts.UniversityType{}).Optional(),
 		field.Time("start_date").Optional(),
 		field.Time("end_date").Optional(),
 		field.Time("created_at").Default(time.Now),

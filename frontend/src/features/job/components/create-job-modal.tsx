@@ -67,6 +67,9 @@ export function CreateJobModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
 
+  // 追踪是否已识别过内容(用于控制编辑模式下职责区域的可编辑性)
+  const [hasParsed, setHasParsed] = useState(false);
+
   // AI模式相关状态
   const [aiPrompt, setAiPrompt] = useState('');
   const [isPolishing, setIsPolishing] = useState(false);
@@ -102,9 +105,17 @@ export function CreateJobModal({
     workExperience: '',
   });
 
+  // 保存编辑时的各项ID
+  const [editingIds, setEditingIds] = useState<{
+    educationId?: string;
+    experienceId?: string;
+    industryId?: string;
+  }>({});
+
   // 技能列表 - 存储完整的技能对象
   const [skills, setSkills] = useState<
     Array<{
+      id?: string; // 编辑时保留技能id
       skill_id: string;
       skill_name: string;
       type: 'required' | 'bonus';
@@ -131,7 +142,7 @@ export function CreateJobModal({
 
   // 岗位职责列表
   const [responsibilities, setResponsibilities] = useState<
-    Array<{ content: string; id: string }>
+    Array<{ content: string; id: string; dbId?: string }> // dbId用于保存数据库中的id
   >([{ content: '', id: '1' }]);
 
   // 重置表单
@@ -152,6 +163,8 @@ export function CreateJobModal({
     });
     setSkills([]);
     setResponsibilities([{ content: '', id: '1' }]);
+    setEditingIds({}); // 清空编辑ID
+    setHasParsed(false); // 重置识别状态
 
     // 重置AI编辑模式的状态
     setEditMode('manual'); // 默认选中手动编辑模式
@@ -244,6 +257,8 @@ export function CreateJobModal({
           // 手动模式
           console.log('>>> 设置为手动编辑模式');
           setEditMode('manual');
+          // 编辑手动模式时,默认设置为未识别状态,需要重新识别
+          setHasParsed(false);
           // 填充手动模式表单数据
           setFormData({
             description: editingJob.description || '',
@@ -262,17 +277,25 @@ export function CreateJobModal({
             workExperience:
               editingJob.experience_requirements?.[0]?.experience_type || '',
           });
+          // 保存各项的ID
+          setEditingIds({
+            educationId: editingJob.education_requirements?.[0]?.id,
+            experienceId: editingJob.experience_requirements?.[0]?.id,
+            industryId: editingJob.industry_requirements?.[0]?.id,
+          });
           // 填充职责
-          const respList = editingJob.responsibilities?.map((r, idx) => ({
+          const respList = editingJob.responsibilities?.map((r) => ({
             content: r.responsibility,
-            id: `resp-${idx}`,
+            id: r.id, // 保留原始id用于更新
+            dbId: r.id, // 单独保存数据库id
           })) || [{ content: '', id: 'resp-0' }];
           setResponsibilities(respList);
           // 填充技能
           const jobSkills =
             editingJob.skills?.map((s) => ({
+              id: s.id, // 保留技能id用于更新
               skill_id: s.skill_id || '',
-              skill_name: s.skill || '',
+              skill_name: s.skill_name || s.skill || '', // 优先使用skill_name,否则使用skill
               type: (s.type || 'required') as 'required' | 'bonus',
             })) || [];
           setSkills(jobSkills);
@@ -565,6 +588,8 @@ export function CreateJobModal({
         }
 
         toast.success('岗位描述解析完成');
+        // 解析成功后,标记为已识别,允许编辑职责区域
+        setHasParsed(true);
       }
     } catch (error) {
       console.error('解析失败:', error);
@@ -730,6 +755,7 @@ export function CreateJobModal({
         ) {
           requestData.education_requirements =
             selectedProfile.education_requirements.map((edu) => ({
+              ...(edu.id && { id: edu.id }), // 编辑时保留id
               education_type: edu.education_type,
             }));
         }
@@ -741,6 +767,7 @@ export function CreateJobModal({
         ) {
           requestData.experience_requirements =
             selectedProfile.experience_requirements.map((exp) => ({
+              ...(exp.id && { id: exp.id }), // 编辑时保留id
               experience_type: exp.experience_type,
             }));
         }
@@ -752,6 +779,7 @@ export function CreateJobModal({
         ) {
           requestData.industry_requirements =
             selectedProfile.industry_requirements.map((req) => ({
+              ...(req.id && { id: req.id }), // 编辑时保留id
               industry: req.industry || '',
               company_name: req.company_name || '',
             }));
@@ -760,6 +788,7 @@ export function CreateJobModal({
         // 添加技能要求
         if (selectedProfile.skills && selectedProfile.skills.length > 0) {
           requestData.skills = selectedProfile.skills.map((skill) => ({
+            ...(skill.id && { id: skill.id }), // 编辑时保留id
             skill_id: skill.skill_id || '',
             skill_name:
               'skill_name' in skill && skill.skill_name
@@ -776,6 +805,7 @@ export function CreateJobModal({
         ) {
           requestData.responsibilities = selectedProfile.responsibilities.map(
             (resp) => ({
+              ...(typeof resp !== 'string' && resp.id && { id: resp.id }), // 编辑时保留id
               responsibility:
                 typeof resp === 'string' ? resp : resp.responsibility,
             })
@@ -804,6 +834,7 @@ export function CreateJobModal({
         if (formData.educationRequirement) {
           requestData.education_requirements = [
             {
+              ...(editingIds.educationId && { id: editingIds.educationId }), // 编辑时保留id
               education_type: formData.educationRequirement,
             },
           ];
@@ -813,6 +844,7 @@ export function CreateJobModal({
         if (formData.workExperience) {
           requestData.experience_requirements = [
             {
+              ...(editingIds.experienceId && { id: editingIds.experienceId }), // 编辑时保留id
               experience_type: formData.workExperience,
             },
           ];
@@ -824,16 +856,19 @@ export function CreateJobModal({
           // 如果两者都有，合并为一个对象
           if (formData.industryRequirement && formData.companyRequirement) {
             requestData.industry_requirements.push({
+              ...(editingIds.industryId && { id: editingIds.industryId }), // 编辑时保留id
               industry: formData.industryRequirement,
               company_name: formData.companyRequirement,
             });
           } else if (formData.industryRequirement) {
             requestData.industry_requirements.push({
+              ...(editingIds.industryId && { id: editingIds.industryId }), // 编辑时保留id
               industry: formData.industryRequirement,
               company_name: '', // 提供默认值
             });
           } else if (formData.companyRequirement) {
             requestData.industry_requirements.push({
+              ...(editingIds.industryId && { id: editingIds.industryId }), // 编辑时保留id
               industry: '', // 提供默认值
               company_name: formData.companyRequirement,
             });
@@ -843,6 +878,7 @@ export function CreateJobModal({
         // 添加技能要求（按照API格式传递完整的技能对象）
         if (skills.length > 0) {
           requestData.skills = skills.map((skill) => ({
+            ...(skill.id && { id: skill.id }), // 编辑时保留id
             skill_id: skill.skill_id,
             skill_name: skill.skill_name,
             type: skill.type,
@@ -855,6 +891,7 @@ export function CreateJobModal({
         );
         if (validResponsibilities.length > 0) {
           requestData.responsibilities = validResponsibilities.map((r) => ({
+            ...(r.dbId && { id: r.dbId }), // 编辑时保留id
             responsibility: r.content,
           }));
         }
@@ -1358,7 +1395,13 @@ export function CreateJobModal({
                       {/* 新增按钮 - 黑色字体,带边框 */}
                       <button
                         onClick={addResponsibility}
-                        className="h-7 px-2 text-[13px] text-gray-900 hover:bg-gray-100 flex items-center gap-1 border border-gray-300 rounded"
+                        disabled={!!editingJob && !hasParsed}
+                        className={cn(
+                          'h-7 px-2 text-[13px] flex items-center gap-1 border rounded',
+                          !!editingJob && !hasParsed
+                            ? 'text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed'
+                            : 'text-gray-900 border-gray-300 hover:bg-gray-100'
+                        )}
                       >
                         + 新增
                       </button>
@@ -1374,7 +1417,13 @@ export function CreateJobModal({
                             onChange={(e) =>
                               updateResponsibility(resp.id, e.target.value)
                             }
-                            className="w-full min-h-[100px] text-[14px] border border-gray-300 rounded-lg p-3 pr-12 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 bg-white"
+                            disabled={!!editingJob && !hasParsed}
+                            className={cn(
+                              'w-full min-h-[100px] text-[14px] border rounded-lg p-3 pr-12 focus:outline-none',
+                              !!editingJob && !hasParsed
+                                ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                            )}
                             style={{ resize: 'vertical' }}
                           />
                           {/* 删除按钮 - 只在第二个及以后的框体显示 */}
@@ -1746,20 +1795,26 @@ export function CreateJobModal({
                                   }
                                   title="点击修改所属部门"
                                 >
+                                  <span>所属部门：</span>
                                   <Building2 className="w-3.5 h-3.5" />
                                   <span>{selectedProfile.department}</span>
                                 </div>
                               ) : (
-                                // 未选择部门,显示图标按钮
-                                <button
-                                  onClick={() =>
-                                    setIsDepartmentSelectModalOpen(true)
-                                  }
-                                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                  title="选择所属部门"
-                                >
-                                  <Building2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                                </button>
+                                // 未选择部门,显示文字+图标按钮
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[13px] text-gray-600">
+                                    所属部门：
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      setIsDepartmentSelectModalOpen(true)
+                                    }
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                    title="选择所属部门"
+                                  >
+                                    <Building2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                  </button>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -2155,14 +2210,6 @@ export function CreateJobModal({
                   ? '#a0d1ff'
                   : 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
               }}
-              onMouseEnter={(e) =>
-                !isSubmitting && (e.currentTarget.style.background = '#6aa8ee')
-              }
-              onMouseLeave={(e) =>
-                !isSubmitting &&
-                (e.currentTarget.style.background =
-                  'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)')
-              }
             >
               {isSubmitting ? '发布中...' : '保存发布'}
             </Button>
@@ -2423,7 +2470,8 @@ export function CreateJobModal({
                 }}
                 className="text-[14px] text-white"
                 style={{
-                  backgroundColor: '#2563EB',
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
                 }}
               >
                 确定

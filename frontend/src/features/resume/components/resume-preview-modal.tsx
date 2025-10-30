@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   X,
   Download,
-  Edit,
+  // Edit, // 已注释 - 编辑按钮已隐藏
   Mail,
   Phone,
   MapPin,
@@ -18,8 +18,10 @@ import {
   Users,
   Briefcase,
   FolderGit2,
+  Award,
+  Info,
 } from 'lucide-react';
-import { Dialog, DialogContent } from '@/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/ui/dialog';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Textarea } from '@/ui/textarea';
@@ -101,11 +103,11 @@ export function ResumePreviewModal({
     toast.info('AI分析功能开发中');
   };
 
-  // 进入编辑模式
-  const handleEdit = () => {
-    setIsEditMode(true);
-    setEditedData(resumeDetail);
-  };
+  // 进入编辑模式 - 已注释
+  // const handleEdit = () => {
+  //   setIsEditMode(true);
+  //   setEditedData(resumeDetail);
+  // };
 
   // 取消编辑
   const handleCancelEdit = () => {
@@ -141,6 +143,7 @@ export function ResumePreviewModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[700px] h-[90vh] overflow-hidden p-0 gap-0">
+        <DialogTitle className="sr-only">简历预览</DialogTitle>
         {/* 单一框体 */}
         <div className="bg-white rounded-xl overflow-hidden flex flex-col h-full">
           {/* 顶部标题栏 */}
@@ -274,7 +277,8 @@ export function ResumePreviewModal({
                       <Eye className="w-3 h-3 mr-1" />
                       <span className="text-xs font-medium">查看</span>
                     </Button>
-                    <Button
+                    {/* 编辑按钮 - 已注释 */}
+                    {/* <Button
                       variant="outline"
                       className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
                       onClick={handleEdit}
@@ -282,7 +286,7 @@ export function ResumePreviewModal({
                     >
                       <Edit className="w-3 h-3 mr-1" />
                       <span className="text-xs font-medium">编辑</span>
-                    </Button>
+                    </Button> */}
                     <Button
                       variant="outline"
                       className="h-6 px-2 bg-white/20 border-white/30 text-white hover:bg-white/30"
@@ -359,7 +363,10 @@ export function ResumePreviewModal({
                       )}
                     </div>
                   )}
-                  {(displayData.gender || isEditMode) && (
+                  {/* 性别 - 只展示"男"或"女" */}
+                  {(displayData.gender === '男' ||
+                    displayData.gender === '女' ||
+                    isEditMode) && (
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-white" />
                       {isEditMode ? (
@@ -400,10 +407,10 @@ export function ResumePreviewModal({
                 </div>
               </div>
 
-              {/* 内容区域 - 所有内容垂直滚动展示,添加科技感线条 */}
+              {/* 内容区域 - 所有内容垂直滚动展示 */}
               <div className="flex-1 overflow-y-auto px-6 py-4 bg-white space-y-6 relative">
-                {/* 科技感装饰线条 - 提高透明度使其更清晰 */}
-                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                {/* 科技感装饰线条 - 弱化背景线条 */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none">
                   <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
                   <div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
                   <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
@@ -412,6 +419,13 @@ export function ResumePreviewModal({
                 </div>
                 {/* 求职意向 */}
                 <JobIntentionSection
+                  resumeDetail={displayData}
+                  isEditMode={isEditMode}
+                  onDataChange={handleDataChange}
+                />
+
+                {/* 个人简介 */}
+                <IntroSection
                   resumeDetail={displayData}
                   isEditMode={isEditMode}
                   onDataChange={handleDataChange}
@@ -426,13 +440,6 @@ export function ResumePreviewModal({
 
                 {/* 工作经验 */}
                 <ExperienceSection
-                  resumeDetail={displayData}
-                  isEditMode={isEditMode}
-                  onDataChange={handleDataChange}
-                />
-
-                {/* 个人简介 */}
-                <IntroSection
                   resumeDetail={displayData}
                   isEditMode={isEditMode}
                   onDataChange={handleDataChange}
@@ -547,23 +554,34 @@ function IntroSection({
             background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
           }}
         />
-        <h3 className="text-xl font-bold text-[#1E293B]">个人简介</h3>
+        <h3 className="text-lg font-bold text-[#1E293B]">个人简介</h3>
         <div className="flex-1 h-px bg-gradient-to-r from-blue-300 via-purple-200 to-transparent"></div>
       </div>
 
       {/* 内容区 */}
-      <div className="space-y-3">
+      <div className="relative pl-8">
+        {/* 左侧装饰 */}
+        <div className="absolute left-0 top-0">
+          {/* 圆形图标 - 渐变色背景 */}
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
+          >
+            <User className="w-3.5 h-3.5 text-white" />
+          </div>
+        </div>
+
         {isEditMode ? (
           <Textarea
             value={(hasDescription as string) || ''}
             onChange={(e) => handleChange(e.target.value)}
-            className="text-base leading-[1.625] text-[#1E293B] min-h-[100px]"
+            className="text-sm font-medium text-[#64748B] min-h-[100px]"
             placeholder="请输入个人简介..."
           />
         ) : (
-          <p className="text-base leading-[1.625] text-[#1E293B]">
-            {hasDescription}
-          </p>
+          <p className="text-sm font-medium text-[#64748B]">{hasDescription}</p>
         )}
       </div>
     </div>
@@ -777,13 +795,18 @@ function ExperienceSection({
                     </>
                   )}
                 </div>
-                {/* 时间右对齐 */}
-                <div className="text-sm text-[#64748B] whitespace-nowrap">
-                  {exp.start_date?.split('-').slice(0, 2).join('年') + '月'} -{' '}
-                  {exp.end_date
-                    ? exp.end_date.split('-').slice(0, 2).join('年') + '月'
-                    : '至今'}
-                </div>
+                {/* 时间右对齐 - 过滤undefined */}
+                {exp.start_date &&
+                  !exp.start_date.includes('undefined') &&
+                  (!exp.end_date || !exp.end_date.includes('undefined')) && (
+                    <div className="text-sm text-[#64748B] whitespace-nowrap">
+                      {exp.start_date.split('-').slice(0, 2).join('年') + '月'}{' '}
+                      -{' '}
+                      {exp.end_date
+                        ? exp.end_date.split('-').slice(0, 2).join('年') + '月'
+                        : '至今'}
+                    </div>
+                  )}
               </div>
 
               {/* 工作经验内容 */}
@@ -837,6 +860,37 @@ function EducationSection({
     junior_college: '大专',
   };
 
+  // 大学类型映射
+  const universityTypeMap: Record<string, string> = {
+    '211': '211',
+    '985': '985',
+    double_first_class: '双一流',
+    qs_top100: 'QS排名前100',
+  };
+
+  // 大学类型排序优先级（QS排名前100 > 双一流 > 985 > 211）
+  const universityTypePriority: Record<string, number> = {
+    qs_top100: 4,
+    double_first_class: 3,
+    '985': 2,
+    '211': 1,
+    ordinary: 0,
+  };
+
+  // 获取排序后的大学类型标签
+  const getSortedUniversityTypes = (
+    types?: Array<
+      'ordinary' | '211' | '985' | 'double_first_class' | 'qs_top100'
+    >
+  ): string[] => {
+    if (!types || types.length === 0) return [];
+    // 过滤掉ordinary类型，按优先级排序，然后映射为显示文本
+    return types
+      .filter((type) => type !== 'ordinary')
+      .sort((a, b) => universityTypePriority[b] - universityTypePriority[a])
+      .map((type) => universityTypeMap[type] || type);
+  };
+
   if (educations.length === 0) {
     return null;
   }
@@ -885,43 +939,67 @@ function EducationSection({
               </div>
 
               <div className="space-y-3">
-                {/* 学校名称 + 就读时间 */}
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-[#1E293B]">
-                    {edu.school}
-                  </p>
-                  <div className="text-sm text-[#64748B] whitespace-nowrap">
-                    {edu.start_date?.split('-').slice(0, 2).join('年') + '月'} -{' '}
-                    {edu.end_date?.split('-').slice(0, 2).join('年') + '月'}
+                {/* 学校名称 + 大学类型标签 + 就读时间 */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 flex-wrap flex-1">
+                    <p className="text-sm font-bold text-[#1E293B]">
+                      {edu.school}
+                    </p>
+                    {/* 大学类型标签 */}
+                    {getSortedUniversityTypes(edu.university_types).map(
+                      (typeLabel, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-block px-2.5 py-0.5 text-xs rounded text-white font-medium"
+                          style={{
+                            background:
+                              'linear-gradient(to right, #1181C7, #647094)',
+                          }}
+                        >
+                          {typeLabel}
+                        </span>
+                      )
+                    )}
                   </div>
+                  {/* 就读时间 - 过滤undefined */}
+                  {edu.start_date &&
+                    edu.end_date &&
+                    !edu.start_date.includes('undefined') &&
+                    !edu.end_date.includes('undefined') && (
+                      <div className="text-sm text-[#64748B] whitespace-nowrap">
+                        {edu.start_date.split('-').slice(0, 2).join('年') +
+                          '月'}{' '}
+                        -{' '}
+                        {edu.end_date.split('-').slice(0, 2).join('年') + '月'}
+                      </div>
+                    )}
                 </div>
 
-                {/* 专业 + 学历标签 */}
+                {/* 专业 + 学历标签 + GPA */}
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-medium text-[#64748B]">
                     {edu.major}
                   </h4>
                   {/* 学历标签 */}
-                  <span className="inline-block px-2.5 py-0.5 text-xs bg-[#EFF6FF] text-[#3B82F6] rounded-full">
+                  <span
+                    className="inline-block px-2.5 py-0.5 text-xs rounded text-white font-medium"
+                    style={{
+                      background: 'linear-gradient(to right, #51B3F0, #59799D)',
+                    }}
+                  >
                     {degreeMap[edu.degree] || edu.degree}
                   </span>
+                  {/* GPA展示 - 在学历标签后面一行展示 */}
+                  {eduExtended.gpa && (
+                    <>
+                      <GraduationCap className="w-4 h-4 text-[#9CA3AF]" />
+                      <span className="text-sm font-bold text-[#1E293B]">
+                        GPA {eduExtended.gpa}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
-
-              {/* GPA展示 */}
-              {eduExtended.gpa && (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-[#3B82F6]" />
-                    <span className="text-sm font-medium text-[#64748B]">
-                      GPA
-                    </span>
-                  </div>
-                  <p className="text-base text-[#1E293B] pl-6">
-                    {eduExtended.gpa}
-                  </p>
-                </div>
-              )}
 
               {/* 论文发表 */}
               {eduExtended.papers && (
@@ -1050,11 +1128,16 @@ function SkillsSection({
             {technicalSkills.map((skill) => (
               <div key={skill.id} className="space-y-2">
                 {/* 技能名称 + 等级 */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-[#64748B]">
-                    {skill.skill_name}
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="text-sm font-medium text-[#64748B] truncate flex-1"
+                    title={skill.skill_name}
+                  >
+                    {skill.skill_name && skill.skill_name.length > 10
+                      ? skill.skill_name.substring(0, 10) + '...'
+                      : skill.skill_name}
                   </span>
-                  <span className="text-sm font-medium text-[#64748B]">
+                  <span className="text-sm font-medium text-[#64748B] flex-shrink-0">
                     {skill.level || '精通'}
                   </span>
                 </div>
@@ -1206,16 +1289,21 @@ function ProjectsSection({
                       </span>
                     )}
                   </div>
-                  {/* 时间右对齐 */}
-                  <div className="text-sm text-[#64748B] whitespace-nowrap">
-                    {project.start_date?.split('-').slice(0, 2).join('年') +
-                      '月'}{' '}
-                    -{' '}
-                    {project.end_date
-                      ? project.end_date.split('-').slice(0, 2).join('年') +
-                        '月'
-                      : '至今'}
-                  </div>
+                  {/* 时间右对齐 - 过滤undefined */}
+                  {project.start_date &&
+                    !project.start_date.includes('undefined') &&
+                    (!project.end_date ||
+                      !project.end_date.includes('undefined')) && (
+                      <div className="text-sm text-[#64748B] whitespace-nowrap">
+                        {project.start_date.split('-').slice(0, 2).join('年') +
+                          '月'}{' '}
+                        -{' '}
+                        {project.end_date
+                          ? project.end_date.split('-').slice(0, 2).join('年') +
+                            '月'
+                          : '至今'}
+                      </div>
+                    )}
                 </div>
 
                 {/* 公司名称 */}
@@ -1291,11 +1379,9 @@ function ProjectsSection({
                       // 如果是数组，直接使用
                       techArray = techData.filter((t) => t && t.trim());
                     } else if (typeof techData === 'string') {
-                      // 如果是字符串，支持多种分隔符：逗号、顿号、分号
-                      // 先统一替换为逗号，再分隔
-                      const normalizedData = techData.replace(/[、；;]/g, ',');
-                      techArray = normalizedData
-                        .split(',')
+                      // 如果是字符串，使用中文逗号"，"、英文逗号","、顿号"、"作为分隔符
+                      techArray = techData
+                        .split(/[，,、]/)
                         .map((t) => t.trim())
                         .filter((t) => t);
                     }
@@ -1342,56 +1428,26 @@ function CertificatesSection({
   ) => void;
 }) {
   const certificatesData = resumeDetail as unknown as {
-    certificates?:
-      | Array<{
-          id: string;
-          name: string;
-          issuer?: string;
-          date?: string;
-        }>
-      | string;
-    honors?: string;
+    honors_certificates?: string; // 使用honors_certificates字段
   };
 
-  // 处理证书数据
-  let certificates: Array<{
-    id: string;
-    name: string;
-    issuer?: string;
-    date?: string;
-  }> = [];
+  // 获取荣誉与资格证书内容
+  const honorsContent = certificatesData.honors_certificates;
 
-  if (Array.isArray(certificatesData.certificates)) {
-    certificates = certificatesData.certificates;
-  } else if (
-    typeof certificatesData.certificates === 'string' &&
-    certificatesData.certificates.trim()
-  ) {
-    // 如果是字符串，将其转换为数组
-    certificates = certificatesData.certificates
-      .split('\n')
-      .filter((c) => c.trim())
-      .map((cert, idx) => ({
-        id: `cert-${idx}`,
-        name: cert.trim(),
-      }));
+  // 如果没有内容，不显示此区域
+  if (!honorsContent || !honorsContent.trim()) {
+    return null;
   }
 
-  // 如果有honors字段也添加进来
-  if (certificatesData.honors && typeof certificatesData.honors === 'string') {
-    const honorsList = certificatesData.honors
-      .split('\n')
-      .filter((h) => h.trim());
-    honorsList.forEach((honor, idx) => {
-      certificates.push({
-        id: `honor-${idx}`,
-        name: honor.trim(),
-      });
-    });
-  }
+  // 将内容按中文逗号"，"、中文分号"；"、顿号"、"分割成数组，并过滤掉软件著作相关内容
+  const honorsList = honorsContent
+    .split(/[，；、]/)
+    .filter((item) => item.trim())
+    .map((item) => item.trim())
+    .filter((item) => !item.includes('软件著作')); // 过滤掉包含"软件著作"的内容
 
-  // 如果没有证书或荣誉，不显示此区域
-  if (certificates.length === 0) {
+  // 如果过滤后没有内容，不显示此区域
+  if (honorsList.length === 0) {
     return null;
   }
 
@@ -1405,43 +1461,28 @@ function CertificatesSection({
             background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
           }}
         />
-        <h3 className="text-xl font-bold text-[#1E293B]">荣誉与资格证书</h3>
+        <h3 className="text-lg font-bold text-[#1E293B]">荣誉与资格证书</h3>
         <div className="flex-1 h-px bg-gradient-to-r from-yellow-300 via-amber-200 to-transparent"></div>
       </div>
 
-      {/* 证书卡片列表 */}
-      <div className="space-y-3">
-        {certificates.map((cert) => (
-          <div
-            key={cert.id}
-            className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow"
-          >
-            {/* 图标 */}
-            <div className="w-9 h-10 bg-blue-50/60 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg
-                className="w-5 h-4 text-[#3B82F6]"
-                fill="none"
-                viewBox="0 0 20 16"
+      {/* 内容列表 - 每行展示两个 */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+        {honorsList.map((honor, index) => (
+          <div key={index} className="relative pl-8">
+            {/* 左侧装饰 */}
+            <div className="absolute left-0 top-0">
+              {/* 圆形图标 - 渐变色背景 */}
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
               >
-                <path
-                  fill="currentColor"
-                  d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 2h12v12H4V2zm2 2v2h8V4H6zm0 4v2h8V8H6zm0 4v2h5v-2H6z"
-                />
-              </svg>
+                <Award className="w-3.5 h-3.5 text-white" />
+              </div>
             </div>
-
-            {/* 证书信息 */}
-            <div className="flex-1">
-              <h4 className="text-base font-semibold text-[#1E293B] mb-1">
-                {cert.name}
-              </h4>
-              {cert.issuer && (
-                <p className="text-sm text-[#64748B] mb-0.5">{cert.issuer}</p>
-              )}
-              {cert.date && (
-                <p className="text-sm text-[#64748B]">{cert.date}</p>
-              )}
-            </div>
+            <p className="text-sm font-medium text-[#64748B]">{honor}</p>
           </div>
         ))}
       </div>
@@ -1452,8 +1493,6 @@ function CertificatesSection({
 // 其他
 function OtherSection({
   resumeDetail,
-  isEditMode,
-  onDataChange,
 }: {
   resumeDetail: ResumeDetail;
   isEditMode?: boolean;
@@ -1463,31 +1502,40 @@ function OtherSection({
   ) => void;
 }) {
   const otherData = resumeDetail as unknown as {
-    other?: string;
-    additional_info?: string;
-    remarks?: string;
+    other_info?: string; // 使用other_info字段
+    honors_certificates?: string; // 用于提取软件著作内容
   };
 
-  // 合并所有"其他"相关字段
-  const otherContent = [
-    otherData.other,
-    otherData.additional_info,
-    otherData.remarks,
-  ]
-    .filter((content) => content && content.trim())
-    .join('\n\n');
+  // 获取其他信息内容
+  const otherContent = otherData.other_info;
+  const honorsContent = otherData.honors_certificates;
 
-  // 如果没有内容且不是编辑模式，不显示此区域
-  if (!otherContent && !isEditMode) {
-    return null;
+  // 从other_info按中文分号"；"分割
+  let otherList: string[] = [];
+  if (otherContent && otherContent.trim()) {
+    otherList = otherContent
+      .split('；')
+      .filter((item) => item.trim())
+      .map((item) => item.trim())
+      .filter((item) => !item.startsWith('求职意向')); // 过滤掉以"求职意向"开头的内容
   }
 
-  const handleOtherChange = (value: string) => {
-    if (onDataChange) {
-      // 更新 other 字段作为主要字段
-      onDataChange('other', value);
-    }
-  };
+  // 从honors_certificates中提取软件著作相关内容
+  if (honorsContent && honorsContent.trim()) {
+    const softwareWorks = honorsContent
+      .split(/[，；、]/)
+      .filter((item) => item.trim())
+      .map((item) => item.trim())
+      .filter((item) => item.includes('软件著作')); // 只保留包含"软件著作"的内容
+
+    // 将软件著作内容添加到otherList
+    otherList = [...otherList, ...softwareWorks];
+  }
+
+  // 如果过滤后没有内容，不显示此区域
+  if (otherList.length === 0) {
+    return null;
+  }
 
   return (
     <div className="space-y-3">
@@ -1499,24 +1547,30 @@ function OtherSection({
             background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
           }}
         />
-        <h3 className="text-xl font-bold text-[#1E293B]">其他</h3>
+        <h3 className="text-lg font-bold text-[#1E293B]">其他</h3>
         <div className="flex-1 h-px bg-gradient-to-r from-gray-300 via-slate-200 to-transparent"></div>
       </div>
 
-      {/* 内容区 */}
-      <div className="space-y-2">
-        {isEditMode ? (
-          <Textarea
-            value={otherContent || ''}
-            onChange={(e) => handleOtherChange(e.target.value)}
-            className="text-base leading-relaxed text-[#1E293B] min-h-[80px]"
-            placeholder="请输入其他信息..."
-          />
-        ) : (
-          <p className="text-base leading-relaxed text-[#1E293B] whitespace-pre-wrap">
-            {otherContent}
-          </p>
-        )}
+      {/* 内容列表 */}
+      <div className="space-y-3">
+        {otherList.map((item, index) => (
+          <div key={index} className="relative pl-8">
+            {/* 左侧装饰 */}
+            <div className="absolute left-0 top-0">
+              {/* 圆形图标 - 渐变色背景 */}
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                }}
+              >
+                <Info className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-[#64748B]">{item}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

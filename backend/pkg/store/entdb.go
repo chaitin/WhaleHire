@@ -41,24 +41,66 @@ func NewEntDB(cfg *config.Config, logger *slog.Logger) (*db.Client, error) {
 	return c, nil
 }
 
-func RecoverMigrate16(m *migrate.Migrate, logger *slog.Logger) {
-	logger = logger.With("fn", "RecoverMigrate16")
-	logger.Info("recover migrate 16")
+// ProblematicMigration 定义有问题的迁移版本及其恢复策略
+type ProblematicMigration struct {
+	Version        int    // 有问题的版本号
+	ForceToVersion int    // 强制回退到的版本号
+	Description    string // 问题描述
+}
+
+// getProblematicMigrations 返回已知有问题的迁移版本列表
+func getProblematicMigrations() []ProblematicMigration {
+	return []ProblematicMigration{
+		// 未来如果发现其他有问题的迁移版本，可以在这里添加
+		// {
+		//     Version:        XX,
+		//     ForceToVersion: XX-1,
+		//     Description:    "description of the issue",
+		// },
+	}
+}
+
+// RecoverMigration 通用的迁移恢复函数，处理已知有问题的迁移版本
+func RecoverMigration(m *migrate.Migrate, logger *slog.Logger) {
+	logger = logger.With("fn", "RecoverMigration")
+	logger.Info("starting migration recovery check")
+
 	version, dirty, err := m.Version()
 	if err != nil {
 		logger.With("err", err).Error("get version failed")
 		return
 	}
 
-	logger.With("version", version, "dirty", dirty).Info("get schema_migrations")
-	if version == 16 && dirty {
-		if err := m.Force(15); err != nil {
-			logger.With("err", err).Error("force migrate 15 failed")
+	logger.With("version", version, "dirty", dirty).Info("current migration status")
+
+	// 如果迁移状态不是dirty，则无需恢复
+	if !dirty {
+		logger.Info("migration is clean, no recovery needed")
+		return
+	}
+
+	// 检查当前版本是否在已知问题列表中
+	problematicMigrations := getProblematicMigrations()
+	for _, pm := range problematicMigrations {
+		if int(version) == pm.Version {
+			logger.With("version", version, "description", pm.Description).
+				Warn("found problematic migration, attempting recovery")
+
+			if err := m.Force(pm.ForceToVersion); err != nil {
+				logger.With("err", err, "force_to_version", pm.ForceToVersion).
+					Error("force migration failed")
+				return
+			}
+
+			logger.With("version", version, "forced_to", pm.ForceToVersion).
+				Info("migration recovery successful")
 			return
 		}
 	}
 
-	logger.Info("recover migrate 16 success")
+	// 如果当前版本不在已知问题列表中，记录警告但不进行强制恢复
+	logger.With("version", version).
+		Warn("migration is dirty but not in known problematic list, manual intervention may be required")
 }
 
 func MigrateSQL(cfg *config.Config, logger *slog.Logger) error {
@@ -77,7 +119,7 @@ func MigrateSQL(cfg *config.Config, logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
-	RecoverMigrate16(m, logger)
+	RecoverMigration(m, logger)
 	if err := m.Up(); err != nil {
 		logger.With("component", "db").With("err", err).Warn("migrate db failed")
 	}

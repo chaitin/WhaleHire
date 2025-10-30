@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
@@ -134,6 +135,33 @@ func (ru *ResumeUpdate) ClearBirthday() *ResumeUpdate {
 	return ru
 }
 
+// SetAge sets the "age" field.
+func (ru *ResumeUpdate) SetAge(i int) *ResumeUpdate {
+	ru.mutation.ResetAge()
+	ru.mutation.SetAge(i)
+	return ru
+}
+
+// SetNillableAge sets the "age" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableAge(i *int) *ResumeUpdate {
+	if i != nil {
+		ru.SetAge(*i)
+	}
+	return ru
+}
+
+// AddAge adds i to the "age" field.
+func (ru *ResumeUpdate) AddAge(i int) *ResumeUpdate {
+	ru.mutation.AddAge(i)
+	return ru
+}
+
+// ClearAge clears the value of the "age" field.
+func (ru *ResumeUpdate) ClearAge() *ResumeUpdate {
+	ru.mutation.ClearAge()
+	return ru
+}
+
 // SetEmail sets the "email" field.
 func (ru *ResumeUpdate) SetEmail(s string) *ResumeUpdate {
 	ru.mutation.SetEmail(s)
@@ -238,6 +266,126 @@ func (ru *ResumeUpdate) AddYearsExperience(f float64) *ResumeUpdate {
 // ClearYearsExperience clears the value of the "years_experience" field.
 func (ru *ResumeUpdate) ClearYearsExperience() *ResumeUpdate {
 	ru.mutation.ClearYearsExperience()
+	return ru
+}
+
+// SetPersonalSummary sets the "personal_summary" field.
+func (ru *ResumeUpdate) SetPersonalSummary(s string) *ResumeUpdate {
+	ru.mutation.SetPersonalSummary(s)
+	return ru
+}
+
+// SetNillablePersonalSummary sets the "personal_summary" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillablePersonalSummary(s *string) *ResumeUpdate {
+	if s != nil {
+		ru.SetPersonalSummary(*s)
+	}
+	return ru
+}
+
+// ClearPersonalSummary clears the value of the "personal_summary" field.
+func (ru *ResumeUpdate) ClearPersonalSummary() *ResumeUpdate {
+	ru.mutation.ClearPersonalSummary()
+	return ru
+}
+
+// SetExpectedSalary sets the "expected_salary" field.
+func (ru *ResumeUpdate) SetExpectedSalary(s string) *ResumeUpdate {
+	ru.mutation.SetExpectedSalary(s)
+	return ru
+}
+
+// SetNillableExpectedSalary sets the "expected_salary" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableExpectedSalary(s *string) *ResumeUpdate {
+	if s != nil {
+		ru.SetExpectedSalary(*s)
+	}
+	return ru
+}
+
+// ClearExpectedSalary clears the value of the "expected_salary" field.
+func (ru *ResumeUpdate) ClearExpectedSalary() *ResumeUpdate {
+	ru.mutation.ClearExpectedSalary()
+	return ru
+}
+
+// SetExpectedCity sets the "expected_city" field.
+func (ru *ResumeUpdate) SetExpectedCity(s string) *ResumeUpdate {
+	ru.mutation.SetExpectedCity(s)
+	return ru
+}
+
+// SetNillableExpectedCity sets the "expected_city" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableExpectedCity(s *string) *ResumeUpdate {
+	if s != nil {
+		ru.SetExpectedCity(*s)
+	}
+	return ru
+}
+
+// ClearExpectedCity clears the value of the "expected_city" field.
+func (ru *ResumeUpdate) ClearExpectedCity() *ResumeUpdate {
+	ru.mutation.ClearExpectedCity()
+	return ru
+}
+
+// SetEmploymentStatus sets the "employment_status" field.
+func (ru *ResumeUpdate) SetEmploymentStatus(cs consts.EmploymentStatus) *ResumeUpdate {
+	ru.mutation.SetEmploymentStatus(cs)
+	return ru
+}
+
+// SetNillableEmploymentStatus sets the "employment_status" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableEmploymentStatus(cs *consts.EmploymentStatus) *ResumeUpdate {
+	if cs != nil {
+		ru.SetEmploymentStatus(*cs)
+	}
+	return ru
+}
+
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (ru *ResumeUpdate) ClearEmploymentStatus() *ResumeUpdate {
+	ru.mutation.ClearEmploymentStatus()
+	return ru
+}
+
+// SetHonorsCertificates sets the "honors_certificates" field.
+func (ru *ResumeUpdate) SetHonorsCertificates(s string) *ResumeUpdate {
+	ru.mutation.SetHonorsCertificates(s)
+	return ru
+}
+
+// SetNillableHonorsCertificates sets the "honors_certificates" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableHonorsCertificates(s *string) *ResumeUpdate {
+	if s != nil {
+		ru.SetHonorsCertificates(*s)
+	}
+	return ru
+}
+
+// ClearHonorsCertificates clears the value of the "honors_certificates" field.
+func (ru *ResumeUpdate) ClearHonorsCertificates() *ResumeUpdate {
+	ru.mutation.ClearHonorsCertificates()
+	return ru
+}
+
+// SetOtherInfo sets the "other_info" field.
+func (ru *ResumeUpdate) SetOtherInfo(s string) *ResumeUpdate {
+	ru.mutation.SetOtherInfo(s)
+	return ru
+}
+
+// SetNillableOtherInfo sets the "other_info" field if the given value is not nil.
+func (ru *ResumeUpdate) SetNillableOtherInfo(s *string) *ResumeUpdate {
+	if s != nil {
+		ru.SetOtherInfo(*s)
+	}
+	return ru
+}
+
+// ClearOtherInfo clears the value of the "other_info" field.
+func (ru *ResumeUpdate) ClearOtherInfo() *ResumeUpdate {
+	ru.mutation.ClearOtherInfo()
 	return ru
 }
 
@@ -778,6 +926,15 @@ func (ru *ResumeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if ru.mutation.BirthdayCleared() {
 		_spec.ClearField(resume.FieldBirthday, field.TypeTime)
 	}
+	if value, ok := ru.mutation.Age(); ok {
+		_spec.SetField(resume.FieldAge, field.TypeInt, value)
+	}
+	if value, ok := ru.mutation.AddedAge(); ok {
+		_spec.AddField(resume.FieldAge, field.TypeInt, value)
+	}
+	if ru.mutation.AgeCleared() {
+		_spec.ClearField(resume.FieldAge, field.TypeInt)
+	}
 	if value, ok := ru.mutation.Email(); ok {
 		_spec.SetField(resume.FieldEmail, field.TypeString, value)
 	}
@@ -810,6 +967,42 @@ func (ru *ResumeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.YearsExperienceCleared() {
 		_spec.ClearField(resume.FieldYearsExperience, field.TypeFloat64)
+	}
+	if value, ok := ru.mutation.PersonalSummary(); ok {
+		_spec.SetField(resume.FieldPersonalSummary, field.TypeString, value)
+	}
+	if ru.mutation.PersonalSummaryCleared() {
+		_spec.ClearField(resume.FieldPersonalSummary, field.TypeString)
+	}
+	if value, ok := ru.mutation.ExpectedSalary(); ok {
+		_spec.SetField(resume.FieldExpectedSalary, field.TypeString, value)
+	}
+	if ru.mutation.ExpectedSalaryCleared() {
+		_spec.ClearField(resume.FieldExpectedSalary, field.TypeString)
+	}
+	if value, ok := ru.mutation.ExpectedCity(); ok {
+		_spec.SetField(resume.FieldExpectedCity, field.TypeString, value)
+	}
+	if ru.mutation.ExpectedCityCleared() {
+		_spec.ClearField(resume.FieldExpectedCity, field.TypeString)
+	}
+	if value, ok := ru.mutation.EmploymentStatus(); ok {
+		_spec.SetField(resume.FieldEmploymentStatus, field.TypeString, value)
+	}
+	if ru.mutation.EmploymentStatusCleared() {
+		_spec.ClearField(resume.FieldEmploymentStatus, field.TypeString)
+	}
+	if value, ok := ru.mutation.HonorsCertificates(); ok {
+		_spec.SetField(resume.FieldHonorsCertificates, field.TypeString, value)
+	}
+	if ru.mutation.HonorsCertificatesCleared() {
+		_spec.ClearField(resume.FieldHonorsCertificates, field.TypeString)
+	}
+	if value, ok := ru.mutation.OtherInfo(); ok {
+		_spec.SetField(resume.FieldOtherInfo, field.TypeString, value)
+	}
+	if ru.mutation.OtherInfoCleared() {
+		_spec.ClearField(resume.FieldOtherInfo, field.TypeString)
 	}
 	if value, ok := ru.mutation.ResumeFileURL(); ok {
 		_spec.SetField(resume.FieldResumeFileURL, field.TypeString, value)
@@ -1388,6 +1581,33 @@ func (ruo *ResumeUpdateOne) ClearBirthday() *ResumeUpdateOne {
 	return ruo
 }
 
+// SetAge sets the "age" field.
+func (ruo *ResumeUpdateOne) SetAge(i int) *ResumeUpdateOne {
+	ruo.mutation.ResetAge()
+	ruo.mutation.SetAge(i)
+	return ruo
+}
+
+// SetNillableAge sets the "age" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableAge(i *int) *ResumeUpdateOne {
+	if i != nil {
+		ruo.SetAge(*i)
+	}
+	return ruo
+}
+
+// AddAge adds i to the "age" field.
+func (ruo *ResumeUpdateOne) AddAge(i int) *ResumeUpdateOne {
+	ruo.mutation.AddAge(i)
+	return ruo
+}
+
+// ClearAge clears the value of the "age" field.
+func (ruo *ResumeUpdateOne) ClearAge() *ResumeUpdateOne {
+	ruo.mutation.ClearAge()
+	return ruo
+}
+
 // SetEmail sets the "email" field.
 func (ruo *ResumeUpdateOne) SetEmail(s string) *ResumeUpdateOne {
 	ruo.mutation.SetEmail(s)
@@ -1492,6 +1712,126 @@ func (ruo *ResumeUpdateOne) AddYearsExperience(f float64) *ResumeUpdateOne {
 // ClearYearsExperience clears the value of the "years_experience" field.
 func (ruo *ResumeUpdateOne) ClearYearsExperience() *ResumeUpdateOne {
 	ruo.mutation.ClearYearsExperience()
+	return ruo
+}
+
+// SetPersonalSummary sets the "personal_summary" field.
+func (ruo *ResumeUpdateOne) SetPersonalSummary(s string) *ResumeUpdateOne {
+	ruo.mutation.SetPersonalSummary(s)
+	return ruo
+}
+
+// SetNillablePersonalSummary sets the "personal_summary" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillablePersonalSummary(s *string) *ResumeUpdateOne {
+	if s != nil {
+		ruo.SetPersonalSummary(*s)
+	}
+	return ruo
+}
+
+// ClearPersonalSummary clears the value of the "personal_summary" field.
+func (ruo *ResumeUpdateOne) ClearPersonalSummary() *ResumeUpdateOne {
+	ruo.mutation.ClearPersonalSummary()
+	return ruo
+}
+
+// SetExpectedSalary sets the "expected_salary" field.
+func (ruo *ResumeUpdateOne) SetExpectedSalary(s string) *ResumeUpdateOne {
+	ruo.mutation.SetExpectedSalary(s)
+	return ruo
+}
+
+// SetNillableExpectedSalary sets the "expected_salary" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableExpectedSalary(s *string) *ResumeUpdateOne {
+	if s != nil {
+		ruo.SetExpectedSalary(*s)
+	}
+	return ruo
+}
+
+// ClearExpectedSalary clears the value of the "expected_salary" field.
+func (ruo *ResumeUpdateOne) ClearExpectedSalary() *ResumeUpdateOne {
+	ruo.mutation.ClearExpectedSalary()
+	return ruo
+}
+
+// SetExpectedCity sets the "expected_city" field.
+func (ruo *ResumeUpdateOne) SetExpectedCity(s string) *ResumeUpdateOne {
+	ruo.mutation.SetExpectedCity(s)
+	return ruo
+}
+
+// SetNillableExpectedCity sets the "expected_city" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableExpectedCity(s *string) *ResumeUpdateOne {
+	if s != nil {
+		ruo.SetExpectedCity(*s)
+	}
+	return ruo
+}
+
+// ClearExpectedCity clears the value of the "expected_city" field.
+func (ruo *ResumeUpdateOne) ClearExpectedCity() *ResumeUpdateOne {
+	ruo.mutation.ClearExpectedCity()
+	return ruo
+}
+
+// SetEmploymentStatus sets the "employment_status" field.
+func (ruo *ResumeUpdateOne) SetEmploymentStatus(cs consts.EmploymentStatus) *ResumeUpdateOne {
+	ruo.mutation.SetEmploymentStatus(cs)
+	return ruo
+}
+
+// SetNillableEmploymentStatus sets the "employment_status" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableEmploymentStatus(cs *consts.EmploymentStatus) *ResumeUpdateOne {
+	if cs != nil {
+		ruo.SetEmploymentStatus(*cs)
+	}
+	return ruo
+}
+
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (ruo *ResumeUpdateOne) ClearEmploymentStatus() *ResumeUpdateOne {
+	ruo.mutation.ClearEmploymentStatus()
+	return ruo
+}
+
+// SetHonorsCertificates sets the "honors_certificates" field.
+func (ruo *ResumeUpdateOne) SetHonorsCertificates(s string) *ResumeUpdateOne {
+	ruo.mutation.SetHonorsCertificates(s)
+	return ruo
+}
+
+// SetNillableHonorsCertificates sets the "honors_certificates" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableHonorsCertificates(s *string) *ResumeUpdateOne {
+	if s != nil {
+		ruo.SetHonorsCertificates(*s)
+	}
+	return ruo
+}
+
+// ClearHonorsCertificates clears the value of the "honors_certificates" field.
+func (ruo *ResumeUpdateOne) ClearHonorsCertificates() *ResumeUpdateOne {
+	ruo.mutation.ClearHonorsCertificates()
+	return ruo
+}
+
+// SetOtherInfo sets the "other_info" field.
+func (ruo *ResumeUpdateOne) SetOtherInfo(s string) *ResumeUpdateOne {
+	ruo.mutation.SetOtherInfo(s)
+	return ruo
+}
+
+// SetNillableOtherInfo sets the "other_info" field if the given value is not nil.
+func (ruo *ResumeUpdateOne) SetNillableOtherInfo(s *string) *ResumeUpdateOne {
+	if s != nil {
+		ruo.SetOtherInfo(*s)
+	}
+	return ruo
+}
+
+// ClearOtherInfo clears the value of the "other_info" field.
+func (ruo *ResumeUpdateOne) ClearOtherInfo() *ResumeUpdateOne {
+	ruo.mutation.ClearOtherInfo()
 	return ruo
 }
 
@@ -2062,6 +2402,15 @@ func (ruo *ResumeUpdateOne) sqlSave(ctx context.Context) (_node *Resume, err err
 	if ruo.mutation.BirthdayCleared() {
 		_spec.ClearField(resume.FieldBirthday, field.TypeTime)
 	}
+	if value, ok := ruo.mutation.Age(); ok {
+		_spec.SetField(resume.FieldAge, field.TypeInt, value)
+	}
+	if value, ok := ruo.mutation.AddedAge(); ok {
+		_spec.AddField(resume.FieldAge, field.TypeInt, value)
+	}
+	if ruo.mutation.AgeCleared() {
+		_spec.ClearField(resume.FieldAge, field.TypeInt)
+	}
 	if value, ok := ruo.mutation.Email(); ok {
 		_spec.SetField(resume.FieldEmail, field.TypeString, value)
 	}
@@ -2094,6 +2443,42 @@ func (ruo *ResumeUpdateOne) sqlSave(ctx context.Context) (_node *Resume, err err
 	}
 	if ruo.mutation.YearsExperienceCleared() {
 		_spec.ClearField(resume.FieldYearsExperience, field.TypeFloat64)
+	}
+	if value, ok := ruo.mutation.PersonalSummary(); ok {
+		_spec.SetField(resume.FieldPersonalSummary, field.TypeString, value)
+	}
+	if ruo.mutation.PersonalSummaryCleared() {
+		_spec.ClearField(resume.FieldPersonalSummary, field.TypeString)
+	}
+	if value, ok := ruo.mutation.ExpectedSalary(); ok {
+		_spec.SetField(resume.FieldExpectedSalary, field.TypeString, value)
+	}
+	if ruo.mutation.ExpectedSalaryCleared() {
+		_spec.ClearField(resume.FieldExpectedSalary, field.TypeString)
+	}
+	if value, ok := ruo.mutation.ExpectedCity(); ok {
+		_spec.SetField(resume.FieldExpectedCity, field.TypeString, value)
+	}
+	if ruo.mutation.ExpectedCityCleared() {
+		_spec.ClearField(resume.FieldExpectedCity, field.TypeString)
+	}
+	if value, ok := ruo.mutation.EmploymentStatus(); ok {
+		_spec.SetField(resume.FieldEmploymentStatus, field.TypeString, value)
+	}
+	if ruo.mutation.EmploymentStatusCleared() {
+		_spec.ClearField(resume.FieldEmploymentStatus, field.TypeString)
+	}
+	if value, ok := ruo.mutation.HonorsCertificates(); ok {
+		_spec.SetField(resume.FieldHonorsCertificates, field.TypeString, value)
+	}
+	if ruo.mutation.HonorsCertificatesCleared() {
+		_spec.ClearField(resume.FieldHonorsCertificates, field.TypeString)
+	}
+	if value, ok := ruo.mutation.OtherInfo(); ok {
+		_spec.SetField(resume.FieldOtherInfo, field.TypeString, value)
+	}
+	if ruo.mutation.OtherInfoCleared() {
+		_spec.ClearField(resume.FieldOtherInfo, field.TypeString)
 	}
 	if value, ok := ruo.mutation.ResumeFileURL(); ok {
 		_spec.SetField(resume.FieldResumeFileURL, field.TypeString, value)

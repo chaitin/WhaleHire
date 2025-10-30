@@ -88,17 +88,23 @@ func (rec *ResumeEducationCreate) SetNillableMajor(s *string) *ResumeEducationCr
 	return rec
 }
 
-// SetUniversityType sets the "university_type" field.
-func (rec *ResumeEducationCreate) SetUniversityType(ct consts.UniversityType) *ResumeEducationCreate {
-	rec.mutation.SetUniversityType(ct)
+// SetGpa sets the "gpa" field.
+func (rec *ResumeEducationCreate) SetGpa(f float64) *ResumeEducationCreate {
+	rec.mutation.SetGpa(f)
 	return rec
 }
 
-// SetNillableUniversityType sets the "university_type" field if the given value is not nil.
-func (rec *ResumeEducationCreate) SetNillableUniversityType(ct *consts.UniversityType) *ResumeEducationCreate {
-	if ct != nil {
-		rec.SetUniversityType(*ct)
+// SetNillableGpa sets the "gpa" field if the given value is not nil.
+func (rec *ResumeEducationCreate) SetNillableGpa(f *float64) *ResumeEducationCreate {
+	if f != nil {
+		rec.SetGpa(*f)
 	}
+	return rec
+}
+
+// SetUniversityTypes sets the "university_types" field.
+func (rec *ResumeEducationCreate) SetUniversityTypes(ct []consts.UniversityType) *ResumeEducationCreate {
+	rec.mutation.SetUniversityTypes(ct)
 	return rec
 }
 
@@ -304,9 +310,13 @@ func (rec *ResumeEducationCreate) createSpec() (*ResumeEducation, *sqlgraph.Crea
 		_spec.SetField(resumeeducation.FieldMajor, field.TypeString, value)
 		_node.Major = value
 	}
-	if value, ok := rec.mutation.UniversityType(); ok {
-		_spec.SetField(resumeeducation.FieldUniversityType, field.TypeString, value)
-		_node.UniversityType = value
+	if value, ok := rec.mutation.Gpa(); ok {
+		_spec.SetField(resumeeducation.FieldGpa, field.TypeFloat64, value)
+		_node.Gpa = value
+	}
+	if value, ok := rec.mutation.UniversityTypes(); ok {
+		_spec.SetField(resumeeducation.FieldUniversityTypes, field.TypeJSON, value)
+		_node.UniversityTypes = value
 	}
 	if value, ok := rec.mutation.StartDate(); ok {
 		_spec.SetField(resumeeducation.FieldStartDate, field.TypeTime, value)
@@ -477,21 +487,45 @@ func (u *ResumeEducationUpsert) ClearMajor() *ResumeEducationUpsert {
 	return u
 }
 
-// SetUniversityType sets the "university_type" field.
-func (u *ResumeEducationUpsert) SetUniversityType(v consts.UniversityType) *ResumeEducationUpsert {
-	u.Set(resumeeducation.FieldUniversityType, v)
+// SetGpa sets the "gpa" field.
+func (u *ResumeEducationUpsert) SetGpa(v float64) *ResumeEducationUpsert {
+	u.Set(resumeeducation.FieldGpa, v)
 	return u
 }
 
-// UpdateUniversityType sets the "university_type" field to the value that was provided on create.
-func (u *ResumeEducationUpsert) UpdateUniversityType() *ResumeEducationUpsert {
-	u.SetExcluded(resumeeducation.FieldUniversityType)
+// UpdateGpa sets the "gpa" field to the value that was provided on create.
+func (u *ResumeEducationUpsert) UpdateGpa() *ResumeEducationUpsert {
+	u.SetExcluded(resumeeducation.FieldGpa)
 	return u
 }
 
-// ClearUniversityType clears the value of the "university_type" field.
-func (u *ResumeEducationUpsert) ClearUniversityType() *ResumeEducationUpsert {
-	u.SetNull(resumeeducation.FieldUniversityType)
+// AddGpa adds v to the "gpa" field.
+func (u *ResumeEducationUpsert) AddGpa(v float64) *ResumeEducationUpsert {
+	u.Add(resumeeducation.FieldGpa, v)
+	return u
+}
+
+// ClearGpa clears the value of the "gpa" field.
+func (u *ResumeEducationUpsert) ClearGpa() *ResumeEducationUpsert {
+	u.SetNull(resumeeducation.FieldGpa)
+	return u
+}
+
+// SetUniversityTypes sets the "university_types" field.
+func (u *ResumeEducationUpsert) SetUniversityTypes(v []consts.UniversityType) *ResumeEducationUpsert {
+	u.Set(resumeeducation.FieldUniversityTypes, v)
+	return u
+}
+
+// UpdateUniversityTypes sets the "university_types" field to the value that was provided on create.
+func (u *ResumeEducationUpsert) UpdateUniversityTypes() *ResumeEducationUpsert {
+	u.SetExcluded(resumeeducation.FieldUniversityTypes)
+	return u
+}
+
+// ClearUniversityTypes clears the value of the "university_types" field.
+func (u *ResumeEducationUpsert) ClearUniversityTypes() *ResumeEducationUpsert {
+	u.SetNull(resumeeducation.FieldUniversityTypes)
 	return u
 }
 
@@ -701,24 +735,52 @@ func (u *ResumeEducationUpsertOne) ClearMajor() *ResumeEducationUpsertOne {
 	})
 }
 
-// SetUniversityType sets the "university_type" field.
-func (u *ResumeEducationUpsertOne) SetUniversityType(v consts.UniversityType) *ResumeEducationUpsertOne {
+// SetGpa sets the "gpa" field.
+func (u *ResumeEducationUpsertOne) SetGpa(v float64) *ResumeEducationUpsertOne {
 	return u.Update(func(s *ResumeEducationUpsert) {
-		s.SetUniversityType(v)
+		s.SetGpa(v)
 	})
 }
 
-// UpdateUniversityType sets the "university_type" field to the value that was provided on create.
-func (u *ResumeEducationUpsertOne) UpdateUniversityType() *ResumeEducationUpsertOne {
+// AddGpa adds v to the "gpa" field.
+func (u *ResumeEducationUpsertOne) AddGpa(v float64) *ResumeEducationUpsertOne {
 	return u.Update(func(s *ResumeEducationUpsert) {
-		s.UpdateUniversityType()
+		s.AddGpa(v)
 	})
 }
 
-// ClearUniversityType clears the value of the "university_type" field.
-func (u *ResumeEducationUpsertOne) ClearUniversityType() *ResumeEducationUpsertOne {
+// UpdateGpa sets the "gpa" field to the value that was provided on create.
+func (u *ResumeEducationUpsertOne) UpdateGpa() *ResumeEducationUpsertOne {
 	return u.Update(func(s *ResumeEducationUpsert) {
-		s.ClearUniversityType()
+		s.UpdateGpa()
+	})
+}
+
+// ClearGpa clears the value of the "gpa" field.
+func (u *ResumeEducationUpsertOne) ClearGpa() *ResumeEducationUpsertOne {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.ClearGpa()
+	})
+}
+
+// SetUniversityTypes sets the "university_types" field.
+func (u *ResumeEducationUpsertOne) SetUniversityTypes(v []consts.UniversityType) *ResumeEducationUpsertOne {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.SetUniversityTypes(v)
+	})
+}
+
+// UpdateUniversityTypes sets the "university_types" field to the value that was provided on create.
+func (u *ResumeEducationUpsertOne) UpdateUniversityTypes() *ResumeEducationUpsertOne {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.UpdateUniversityTypes()
+	})
+}
+
+// ClearUniversityTypes clears the value of the "university_types" field.
+func (u *ResumeEducationUpsertOne) ClearUniversityTypes() *ResumeEducationUpsertOne {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.ClearUniversityTypes()
 	})
 }
 
@@ -1105,24 +1167,52 @@ func (u *ResumeEducationUpsertBulk) ClearMajor() *ResumeEducationUpsertBulk {
 	})
 }
 
-// SetUniversityType sets the "university_type" field.
-func (u *ResumeEducationUpsertBulk) SetUniversityType(v consts.UniversityType) *ResumeEducationUpsertBulk {
+// SetGpa sets the "gpa" field.
+func (u *ResumeEducationUpsertBulk) SetGpa(v float64) *ResumeEducationUpsertBulk {
 	return u.Update(func(s *ResumeEducationUpsert) {
-		s.SetUniversityType(v)
+		s.SetGpa(v)
 	})
 }
 
-// UpdateUniversityType sets the "university_type" field to the value that was provided on create.
-func (u *ResumeEducationUpsertBulk) UpdateUniversityType() *ResumeEducationUpsertBulk {
+// AddGpa adds v to the "gpa" field.
+func (u *ResumeEducationUpsertBulk) AddGpa(v float64) *ResumeEducationUpsertBulk {
 	return u.Update(func(s *ResumeEducationUpsert) {
-		s.UpdateUniversityType()
+		s.AddGpa(v)
 	})
 }
 
-// ClearUniversityType clears the value of the "university_type" field.
-func (u *ResumeEducationUpsertBulk) ClearUniversityType() *ResumeEducationUpsertBulk {
+// UpdateGpa sets the "gpa" field to the value that was provided on create.
+func (u *ResumeEducationUpsertBulk) UpdateGpa() *ResumeEducationUpsertBulk {
 	return u.Update(func(s *ResumeEducationUpsert) {
-		s.ClearUniversityType()
+		s.UpdateGpa()
+	})
+}
+
+// ClearGpa clears the value of the "gpa" field.
+func (u *ResumeEducationUpsertBulk) ClearGpa() *ResumeEducationUpsertBulk {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.ClearGpa()
+	})
+}
+
+// SetUniversityTypes sets the "university_types" field.
+func (u *ResumeEducationUpsertBulk) SetUniversityTypes(v []consts.UniversityType) *ResumeEducationUpsertBulk {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.SetUniversityTypes(v)
+	})
+}
+
+// UpdateUniversityTypes sets the "university_types" field to the value that was provided on create.
+func (u *ResumeEducationUpsertBulk) UpdateUniversityTypes() *ResumeEducationUpsertBulk {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.UpdateUniversityTypes()
+	})
+}
+
+// ClearUniversityTypes clears the value of the "university_types" field.
+func (u *ResumeEducationUpsertBulk) ClearUniversityTypes() *ResumeEducationUpsertBulk {
+	return u.Update(func(s *ResumeEducationUpsert) {
+		s.ClearUniversityTypes()
 	})
 }
 

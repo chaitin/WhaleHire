@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumeexperience"
 	"github.com/google/uuid"
@@ -35,6 +36,8 @@ type ResumeExperience struct {
 	EndDate time.Time `json:"end_date,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// ExperienceType holds the value of the "experience_type" field.
+	ExperienceType consts.ExperienceType `json:"experience_type,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -70,7 +73,7 @@ func (*ResumeExperience) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case resumeexperience.FieldCompany, resumeexperience.FieldPosition, resumeexperience.FieldTitle, resumeexperience.FieldDescription:
+		case resumeexperience.FieldCompany, resumeexperience.FieldPosition, resumeexperience.FieldTitle, resumeexperience.FieldDescription, resumeexperience.FieldExperienceType:
 			values[i] = new(sql.NullString)
 		case resumeexperience.FieldDeletedAt, resumeexperience.FieldStartDate, resumeexperience.FieldEndDate, resumeexperience.FieldCreatedAt, resumeexperience.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -144,6 +147,12 @@ func (re *ResumeExperience) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				re.Description = value.String
+			}
+		case resumeexperience.FieldExperienceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field experience_type", values[i])
+			} else if value.Valid {
+				re.ExperienceType = consts.ExperienceType(value.String)
 			}
 		case resumeexperience.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -221,6 +230,9 @@ func (re *ResumeExperience) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(re.Description)
+	builder.WriteString(", ")
+	builder.WriteString("experience_type=")
+	builder.WriteString(fmt.Sprintf("%v", re.ExperienceType))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(re.CreatedAt.Format(time.ANSIC))

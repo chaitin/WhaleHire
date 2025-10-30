@@ -2,6 +2,9 @@ package resumeparser
 
 import (
 	"encoding/json"
+	"math"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,28 +27,35 @@ type rawParsedBasicInfo struct {
 	Email            string   `json:"email"`
 	Gender           string   `json:"gender"`
 	Birthday         *string  `json:"birthday"`
+	Age              *float64 `json:"age"`
 	CurrentCity      string   `json:"current_city"`
 	HighestEducation string   `json:"highest_education"`
 	YearsExperience  *float64 `json:"years_experience"`
+	PersonalSummary  string   `json:"personal_summary"`
+	ExpectedSalary   string   `json:"expected_salary"`
+	ExpectedCity     string   `json:"expected_city"`
+	EmploymentStatus *string  `json:"employment_status"`
+	Honors           string   `json:"honors_certificates"`
+	OtherInfo        string   `json:"other_info"`
 }
 
 type rawParsedEducation struct {
-	School         string  `json:"school"`
-	Major          string  `json:"major"`
-	Degree         string  `json:"degree"`
-	UniversityType string  `json:"university_type"`
-	StartDate      *string `json:"start_date"`
-	EndDate        *string `json:"end_date"`
-	GPA            string  `json:"gpa"`
+	School    string  `json:"school"`
+	Major     string  `json:"major"`
+	Degree    string  `json:"degree"`
+	StartDate *string `json:"start_date"`
+	EndDate   *string `json:"end_date"`
+	GPA       string  `json:"gpa"`
 }
 
 type rawParsedExperience struct {
-	Company      string  `json:"company"`
-	Position     string  `json:"position"`
-	StartDate    *string `json:"start_date"`
-	EndDate      *string `json:"end_date"`
-	Description  string  `json:"description"`
-	Achievements string  `json:"achievements"`
+	Company        string  `json:"company"`
+	Position       string  `json:"position"`
+	StartDate      *string `json:"start_date"`
+	EndDate        *string `json:"end_date"`
+	Description    string  `json:"description"`
+	Achievements   string  `json:"achievements"`
+	ExperienceType string  `json:"experience_type,omitempty"` // work, organization, volunteer, internship
 }
 
 type rawParsedSkill struct {
@@ -78,18 +88,33 @@ func decodeResumeParseResult(data []byte) (*ResumeParseResult, error) {
 
 	if raw.BasicInfo != nil {
 		basic := &domain.ParsedBasicInfo{
-			Name:             strings.TrimSpace(raw.BasicInfo.Name),
-			Phone:            strings.TrimSpace(raw.BasicInfo.Phone),
-			Email:            strings.TrimSpace(raw.BasicInfo.Email),
-			Gender:           strings.TrimSpace(raw.BasicInfo.Gender),
-			CurrentCity:      strings.TrimSpace(raw.BasicInfo.CurrentCity),
-			HighestEducation: strings.TrimSpace(raw.BasicInfo.HighestEducation),
+			Name:               strings.TrimSpace(raw.BasicInfo.Name),
+			Phone:              strings.TrimSpace(raw.BasicInfo.Phone),
+			Email:              strings.TrimSpace(raw.BasicInfo.Email),
+			Gender:             strings.TrimSpace(raw.BasicInfo.Gender),
+			CurrentCity:        strings.TrimSpace(raw.BasicInfo.CurrentCity),
+			HighestEducation:   strings.TrimSpace(raw.BasicInfo.HighestEducation),
+			PersonalSummary:    strings.TrimSpace(raw.BasicInfo.PersonalSummary),
+			ExpectedSalary:     strings.TrimSpace(raw.BasicInfo.ExpectedSalary),
+			ExpectedCity:       strings.TrimSpace(raw.BasicInfo.ExpectedCity),
+			HonorsCertificates: strings.TrimSpace(raw.BasicInfo.Honors),
+			OtherInfo:          strings.TrimSpace(raw.BasicInfo.OtherInfo),
 		}
 		if raw.BasicInfo.Birthday != nil {
 			basic.Birthday = parseFlexibleTime(raw.BasicInfo.Birthday)
 		}
+		if raw.BasicInfo.Age != nil {
+			age := int(math.Round(*raw.BasicInfo.Age))
+			if age > 0 {
+				basic.Age = age
+			}
+		}
 		if raw.BasicInfo.YearsExperience != nil {
 			basic.YearsExperience = *raw.BasicInfo.YearsExperience
+		}
+		if raw.BasicInfo.EmploymentStatus != nil {
+			status := consts.EmploymentStatus(*raw.BasicInfo.EmploymentStatus)
+			basic.EmploymentStatus = &status
 		}
 		result.BasicInfo = basic
 	}
@@ -101,12 +126,9 @@ func decodeResumeParseResult(data []byte) (*ResumeParseResult, error) {
 				School:    strings.TrimSpace(item.School),
 				Major:     strings.TrimSpace(item.Major),
 				Degree:    strings.TrimSpace(item.Degree),
-				GPA:       strings.TrimSpace(item.GPA),
+				GPA:       parseGPA(item.GPA),
 				StartDate: parseFlexibleTime(item.StartDate),
 				EndDate:   parseFlexibleTime(item.EndDate),
-			}
-			if val := strings.TrimSpace(item.UniversityType); val != "" {
-				edu.UniversityType = normalizeUniversityType(val)
 			}
 			result.Educations = append(result.Educations, edu)
 		}
@@ -116,12 +138,13 @@ func decodeResumeParseResult(data []byte) (*ResumeParseResult, error) {
 		result.Experiences = make([]*domain.ParsedExperience, 0, len(raw.Experiences))
 		for _, item := range raw.Experiences {
 			exp := &domain.ParsedExperience{
-				Company:      strings.TrimSpace(item.Company),
-				Position:     strings.TrimSpace(item.Position),
-				Description:  strings.TrimSpace(item.Description),
-				Achievements: strings.TrimSpace(item.Achievements),
-				StartDate:    parseFlexibleTime(item.StartDate),
-				EndDate:      parseFlexibleTime(item.EndDate),
+				Company:        strings.TrimSpace(item.Company),
+				Position:       strings.TrimSpace(item.Position),
+				Description:    strings.TrimSpace(item.Description),
+				Achievements:   strings.TrimSpace(item.Achievements),
+				ExperienceType: consts.ExperienceType(strings.TrimSpace(item.ExperienceType)),
+				StartDate:      parseFlexibleTime(item.StartDate),
+				EndDate:        parseFlexibleTime(item.EndDate),
 			}
 			result.Experiences = append(result.Experiences, exp)
 		}
@@ -151,7 +174,7 @@ func decodeResumeParseResult(data []byte) (*ResumeParseResult, error) {
 				Achievements:     strings.TrimSpace(item.Achievements),
 				Technologies:     strings.TrimSpace(item.Technologies),
 				ProjectURL:       strings.TrimSpace(item.ProjectURL),
-				ProjectType:      strings.TrimSpace(item.ProjectType),
+				ProjectType:      consts.ProjectType(strings.TrimSpace(item.ProjectType)),
 				StartDate:        parseFlexibleTime(item.StartDate),
 				EndDate:          parseFlexibleTime(item.EndDate),
 			}
@@ -160,6 +183,30 @@ func decodeResumeParseResult(data []byte) (*ResumeParseResult, error) {
 	}
 
 	return result, nil
+}
+
+var gpaNumberPattern = regexp.MustCompile(`[-+]?\d+(?:\.\d+)?`)
+
+func parseGPA(raw string) *float64 {
+	clean := strings.TrimSpace(raw)
+	if clean == "" {
+		return nil
+	}
+
+	if value, err := strconv.ParseFloat(clean, 64); err == nil {
+		return &value
+	}
+
+	match := gpaNumberPattern.FindString(clean)
+	if match == "" {
+		return nil
+	}
+
+	if value, err := strconv.ParseFloat(match, 64); err == nil {
+		return &value
+	}
+
+	return nil
 }
 
 // parseFlexibleTime 尝试解析多种日期格式，无法解析时返回nil以避免整个流程失败
@@ -220,17 +267,4 @@ func normalizeDateString(s string) string {
 	)
 	normalized := replacer.Replace(strings.TrimSpace(s))
 	return strings.Trim(normalized, "-")
-}
-
-func normalizeUniversityType(value string) consts.UniversityType {
-	switch strings.ToLower(strings.TrimSpace(value)) {
-	case string(consts.UniversityType211):
-		return consts.UniversityType211
-	case string(consts.UniversityType985):
-		return consts.UniversityType985
-	case string(consts.UniversityTypeOrdinary):
-		return consts.UniversityTypeOrdinary
-	default:
-		return consts.UniversityType(value)
-	}
 }

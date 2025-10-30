@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
@@ -126,23 +127,48 @@ func (reu *ResumeEducationUpdate) ClearMajor() *ResumeEducationUpdate {
 	return reu
 }
 
-// SetUniversityType sets the "university_type" field.
-func (reu *ResumeEducationUpdate) SetUniversityType(ct consts.UniversityType) *ResumeEducationUpdate {
-	reu.mutation.SetUniversityType(ct)
+// SetGpa sets the "gpa" field.
+func (reu *ResumeEducationUpdate) SetGpa(f float64) *ResumeEducationUpdate {
+	reu.mutation.ResetGpa()
+	reu.mutation.SetGpa(f)
 	return reu
 }
 
-// SetNillableUniversityType sets the "university_type" field if the given value is not nil.
-func (reu *ResumeEducationUpdate) SetNillableUniversityType(ct *consts.UniversityType) *ResumeEducationUpdate {
-	if ct != nil {
-		reu.SetUniversityType(*ct)
+// SetNillableGpa sets the "gpa" field if the given value is not nil.
+func (reu *ResumeEducationUpdate) SetNillableGpa(f *float64) *ResumeEducationUpdate {
+	if f != nil {
+		reu.SetGpa(*f)
 	}
 	return reu
 }
 
-// ClearUniversityType clears the value of the "university_type" field.
-func (reu *ResumeEducationUpdate) ClearUniversityType() *ResumeEducationUpdate {
-	reu.mutation.ClearUniversityType()
+// AddGpa adds f to the "gpa" field.
+func (reu *ResumeEducationUpdate) AddGpa(f float64) *ResumeEducationUpdate {
+	reu.mutation.AddGpa(f)
+	return reu
+}
+
+// ClearGpa clears the value of the "gpa" field.
+func (reu *ResumeEducationUpdate) ClearGpa() *ResumeEducationUpdate {
+	reu.mutation.ClearGpa()
+	return reu
+}
+
+// SetUniversityTypes sets the "university_types" field.
+func (reu *ResumeEducationUpdate) SetUniversityTypes(ct []consts.UniversityType) *ResumeEducationUpdate {
+	reu.mutation.SetUniversityTypes(ct)
+	return reu
+}
+
+// AppendUniversityTypes appends ct to the "university_types" field.
+func (reu *ResumeEducationUpdate) AppendUniversityTypes(ct []consts.UniversityType) *ResumeEducationUpdate {
+	reu.mutation.AppendUniversityTypes(ct)
+	return reu
+}
+
+// ClearUniversityTypes clears the value of the "university_types" field.
+func (reu *ResumeEducationUpdate) ClearUniversityTypes() *ResumeEducationUpdate {
+	reu.mutation.ClearUniversityTypes()
 	return reu
 }
 
@@ -314,11 +340,25 @@ func (reu *ResumeEducationUpdate) sqlSave(ctx context.Context) (n int, err error
 	if reu.mutation.MajorCleared() {
 		_spec.ClearField(resumeeducation.FieldMajor, field.TypeString)
 	}
-	if value, ok := reu.mutation.UniversityType(); ok {
-		_spec.SetField(resumeeducation.FieldUniversityType, field.TypeString, value)
+	if value, ok := reu.mutation.Gpa(); ok {
+		_spec.SetField(resumeeducation.FieldGpa, field.TypeFloat64, value)
 	}
-	if reu.mutation.UniversityTypeCleared() {
-		_spec.ClearField(resumeeducation.FieldUniversityType, field.TypeString)
+	if value, ok := reu.mutation.AddedGpa(); ok {
+		_spec.AddField(resumeeducation.FieldGpa, field.TypeFloat64, value)
+	}
+	if reu.mutation.GpaCleared() {
+		_spec.ClearField(resumeeducation.FieldGpa, field.TypeFloat64)
+	}
+	if value, ok := reu.mutation.UniversityTypes(); ok {
+		_spec.SetField(resumeeducation.FieldUniversityTypes, field.TypeJSON, value)
+	}
+	if value, ok := reu.mutation.AppendedUniversityTypes(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, resumeeducation.FieldUniversityTypes, value)
+		})
+	}
+	if reu.mutation.UniversityTypesCleared() {
+		_spec.ClearField(resumeeducation.FieldUniversityTypes, field.TypeJSON)
 	}
 	if value, ok := reu.mutation.StartDate(); ok {
 		_spec.SetField(resumeeducation.FieldStartDate, field.TypeTime, value)
@@ -483,23 +523,48 @@ func (reuo *ResumeEducationUpdateOne) ClearMajor() *ResumeEducationUpdateOne {
 	return reuo
 }
 
-// SetUniversityType sets the "university_type" field.
-func (reuo *ResumeEducationUpdateOne) SetUniversityType(ct consts.UniversityType) *ResumeEducationUpdateOne {
-	reuo.mutation.SetUniversityType(ct)
+// SetGpa sets the "gpa" field.
+func (reuo *ResumeEducationUpdateOne) SetGpa(f float64) *ResumeEducationUpdateOne {
+	reuo.mutation.ResetGpa()
+	reuo.mutation.SetGpa(f)
 	return reuo
 }
 
-// SetNillableUniversityType sets the "university_type" field if the given value is not nil.
-func (reuo *ResumeEducationUpdateOne) SetNillableUniversityType(ct *consts.UniversityType) *ResumeEducationUpdateOne {
-	if ct != nil {
-		reuo.SetUniversityType(*ct)
+// SetNillableGpa sets the "gpa" field if the given value is not nil.
+func (reuo *ResumeEducationUpdateOne) SetNillableGpa(f *float64) *ResumeEducationUpdateOne {
+	if f != nil {
+		reuo.SetGpa(*f)
 	}
 	return reuo
 }
 
-// ClearUniversityType clears the value of the "university_type" field.
-func (reuo *ResumeEducationUpdateOne) ClearUniversityType() *ResumeEducationUpdateOne {
-	reuo.mutation.ClearUniversityType()
+// AddGpa adds f to the "gpa" field.
+func (reuo *ResumeEducationUpdateOne) AddGpa(f float64) *ResumeEducationUpdateOne {
+	reuo.mutation.AddGpa(f)
+	return reuo
+}
+
+// ClearGpa clears the value of the "gpa" field.
+func (reuo *ResumeEducationUpdateOne) ClearGpa() *ResumeEducationUpdateOne {
+	reuo.mutation.ClearGpa()
+	return reuo
+}
+
+// SetUniversityTypes sets the "university_types" field.
+func (reuo *ResumeEducationUpdateOne) SetUniversityTypes(ct []consts.UniversityType) *ResumeEducationUpdateOne {
+	reuo.mutation.SetUniversityTypes(ct)
+	return reuo
+}
+
+// AppendUniversityTypes appends ct to the "university_types" field.
+func (reuo *ResumeEducationUpdateOne) AppendUniversityTypes(ct []consts.UniversityType) *ResumeEducationUpdateOne {
+	reuo.mutation.AppendUniversityTypes(ct)
+	return reuo
+}
+
+// ClearUniversityTypes clears the value of the "university_types" field.
+func (reuo *ResumeEducationUpdateOne) ClearUniversityTypes() *ResumeEducationUpdateOne {
+	reuo.mutation.ClearUniversityTypes()
 	return reuo
 }
 
@@ -701,11 +766,25 @@ func (reuo *ResumeEducationUpdateOne) sqlSave(ctx context.Context) (_node *Resum
 	if reuo.mutation.MajorCleared() {
 		_spec.ClearField(resumeeducation.FieldMajor, field.TypeString)
 	}
-	if value, ok := reuo.mutation.UniversityType(); ok {
-		_spec.SetField(resumeeducation.FieldUniversityType, field.TypeString, value)
+	if value, ok := reuo.mutation.Gpa(); ok {
+		_spec.SetField(resumeeducation.FieldGpa, field.TypeFloat64, value)
 	}
-	if reuo.mutation.UniversityTypeCleared() {
-		_spec.ClearField(resumeeducation.FieldUniversityType, field.TypeString)
+	if value, ok := reuo.mutation.AddedGpa(); ok {
+		_spec.AddField(resumeeducation.FieldGpa, field.TypeFloat64, value)
+	}
+	if reuo.mutation.GpaCleared() {
+		_spec.ClearField(resumeeducation.FieldGpa, field.TypeFloat64)
+	}
+	if value, ok := reuo.mutation.UniversityTypes(); ok {
+		_spec.SetField(resumeeducation.FieldUniversityTypes, field.TypeJSON, value)
+	}
+	if value, ok := reuo.mutation.AppendedUniversityTypes(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, resumeeducation.FieldUniversityTypes, value)
+		})
+	}
+	if reuo.mutation.UniversityTypesCleared() {
+		_spec.ClearField(resumeeducation.FieldUniversityTypes, field.TypeJSON)
 	}
 	if value, ok := reuo.mutation.StartDate(); ok {
 		_spec.SetField(resumeeducation.FieldStartDate, field.TypeTime, value)

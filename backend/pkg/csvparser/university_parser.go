@@ -53,7 +53,7 @@ func (p *UniversityCSVParser) ParseCSV(reader io.Reader) ([]*domain.CreateUniver
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert record at line %d: %w", i+2, err)
 		}
-		
+
 		if university != nil {
 			universities = append(universities, university)
 		}
@@ -125,7 +125,7 @@ func (p *UniversityCSVParser) parseBooleanField(value string) *bool {
 	if value == "" || value == "N/A" {
 		return nil
 	}
-	
+
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "true", "1", "yes", "y":
 		result := true

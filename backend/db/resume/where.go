@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -81,6 +82,11 @@ func Birthday(v time.Time) predicate.Resume {
 	return predicate.Resume(sql.FieldEQ(FieldBirthday, v))
 }
 
+// Age applies equality check predicate on the "age" field. It's identical to AgeEQ.
+func Age(v int) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldAge, v))
+}
+
 // Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
 func Email(v string) predicate.Resume {
 	return predicate.Resume(sql.FieldEQ(FieldEmail, v))
@@ -104,6 +110,37 @@ func HighestEducation(v string) predicate.Resume {
 // YearsExperience applies equality check predicate on the "years_experience" field. It's identical to YearsExperienceEQ.
 func YearsExperience(v float64) predicate.Resume {
 	return predicate.Resume(sql.FieldEQ(FieldYearsExperience, v))
+}
+
+// PersonalSummary applies equality check predicate on the "personal_summary" field. It's identical to PersonalSummaryEQ.
+func PersonalSummary(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldPersonalSummary, v))
+}
+
+// ExpectedSalary applies equality check predicate on the "expected_salary" field. It's identical to ExpectedSalaryEQ.
+func ExpectedSalary(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldExpectedSalary, v))
+}
+
+// ExpectedCity applies equality check predicate on the "expected_city" field. It's identical to ExpectedCityEQ.
+func ExpectedCity(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldExpectedCity, v))
+}
+
+// EmploymentStatus applies equality check predicate on the "employment_status" field. It's identical to EmploymentStatusEQ.
+func EmploymentStatus(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldEQ(FieldEmploymentStatus, vc))
+}
+
+// HonorsCertificates applies equality check predicate on the "honors_certificates" field. It's identical to HonorsCertificatesEQ.
+func HonorsCertificates(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldHonorsCertificates, v))
+}
+
+// OtherInfo applies equality check predicate on the "other_info" field. It's identical to OtherInfoEQ.
+func OtherInfo(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldOtherInfo, v))
 }
 
 // ResumeFileURL applies equality check predicate on the "resume_file_url" field. It's identical to ResumeFileURLEQ.
@@ -404,6 +441,56 @@ func BirthdayIsNil() predicate.Resume {
 // BirthdayNotNil applies the NotNil predicate on the "birthday" field.
 func BirthdayNotNil() predicate.Resume {
 	return predicate.Resume(sql.FieldNotNull(FieldBirthday))
+}
+
+// AgeEQ applies the EQ predicate on the "age" field.
+func AgeEQ(v int) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldAge, v))
+}
+
+// AgeNEQ applies the NEQ predicate on the "age" field.
+func AgeNEQ(v int) predicate.Resume {
+	return predicate.Resume(sql.FieldNEQ(FieldAge, v))
+}
+
+// AgeIn applies the In predicate on the "age" field.
+func AgeIn(vs ...int) predicate.Resume {
+	return predicate.Resume(sql.FieldIn(FieldAge, vs...))
+}
+
+// AgeNotIn applies the NotIn predicate on the "age" field.
+func AgeNotIn(vs ...int) predicate.Resume {
+	return predicate.Resume(sql.FieldNotIn(FieldAge, vs...))
+}
+
+// AgeGT applies the GT predicate on the "age" field.
+func AgeGT(v int) predicate.Resume {
+	return predicate.Resume(sql.FieldGT(FieldAge, v))
+}
+
+// AgeGTE applies the GTE predicate on the "age" field.
+func AgeGTE(v int) predicate.Resume {
+	return predicate.Resume(sql.FieldGTE(FieldAge, v))
+}
+
+// AgeLT applies the LT predicate on the "age" field.
+func AgeLT(v int) predicate.Resume {
+	return predicate.Resume(sql.FieldLT(FieldAge, v))
+}
+
+// AgeLTE applies the LTE predicate on the "age" field.
+func AgeLTE(v int) predicate.Resume {
+	return predicate.Resume(sql.FieldLTE(FieldAge, v))
+}
+
+// AgeIsNil applies the IsNil predicate on the "age" field.
+func AgeIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldAge))
+}
+
+// AgeNotNil applies the NotNil predicate on the "age" field.
+func AgeNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldAge))
 }
 
 // EmailEQ applies the EQ predicate on the "email" field.
@@ -754,6 +841,475 @@ func YearsExperienceIsNil() predicate.Resume {
 // YearsExperienceNotNil applies the NotNil predicate on the "years_experience" field.
 func YearsExperienceNotNil() predicate.Resume {
 	return predicate.Resume(sql.FieldNotNull(FieldYearsExperience))
+}
+
+// PersonalSummaryEQ applies the EQ predicate on the "personal_summary" field.
+func PersonalSummaryEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryNEQ applies the NEQ predicate on the "personal_summary" field.
+func PersonalSummaryNEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldNEQ(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryIn applies the In predicate on the "personal_summary" field.
+func PersonalSummaryIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldIn(FieldPersonalSummary, vs...))
+}
+
+// PersonalSummaryNotIn applies the NotIn predicate on the "personal_summary" field.
+func PersonalSummaryNotIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldNotIn(FieldPersonalSummary, vs...))
+}
+
+// PersonalSummaryGT applies the GT predicate on the "personal_summary" field.
+func PersonalSummaryGT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGT(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryGTE applies the GTE predicate on the "personal_summary" field.
+func PersonalSummaryGTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGTE(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryLT applies the LT predicate on the "personal_summary" field.
+func PersonalSummaryLT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLT(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryLTE applies the LTE predicate on the "personal_summary" field.
+func PersonalSummaryLTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLTE(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryContains applies the Contains predicate on the "personal_summary" field.
+func PersonalSummaryContains(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContains(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryHasPrefix applies the HasPrefix predicate on the "personal_summary" field.
+func PersonalSummaryHasPrefix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasPrefix(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryHasSuffix applies the HasSuffix predicate on the "personal_summary" field.
+func PersonalSummaryHasSuffix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasSuffix(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryIsNil applies the IsNil predicate on the "personal_summary" field.
+func PersonalSummaryIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldPersonalSummary))
+}
+
+// PersonalSummaryNotNil applies the NotNil predicate on the "personal_summary" field.
+func PersonalSummaryNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldPersonalSummary))
+}
+
+// PersonalSummaryEqualFold applies the EqualFold predicate on the "personal_summary" field.
+func PersonalSummaryEqualFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEqualFold(FieldPersonalSummary, v))
+}
+
+// PersonalSummaryContainsFold applies the ContainsFold predicate on the "personal_summary" field.
+func PersonalSummaryContainsFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContainsFold(FieldPersonalSummary, v))
+}
+
+// ExpectedSalaryEQ applies the EQ predicate on the "expected_salary" field.
+func ExpectedSalaryEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryNEQ applies the NEQ predicate on the "expected_salary" field.
+func ExpectedSalaryNEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldNEQ(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryIn applies the In predicate on the "expected_salary" field.
+func ExpectedSalaryIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldIn(FieldExpectedSalary, vs...))
+}
+
+// ExpectedSalaryNotIn applies the NotIn predicate on the "expected_salary" field.
+func ExpectedSalaryNotIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldNotIn(FieldExpectedSalary, vs...))
+}
+
+// ExpectedSalaryGT applies the GT predicate on the "expected_salary" field.
+func ExpectedSalaryGT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGT(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryGTE applies the GTE predicate on the "expected_salary" field.
+func ExpectedSalaryGTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGTE(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryLT applies the LT predicate on the "expected_salary" field.
+func ExpectedSalaryLT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLT(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryLTE applies the LTE predicate on the "expected_salary" field.
+func ExpectedSalaryLTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLTE(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryContains applies the Contains predicate on the "expected_salary" field.
+func ExpectedSalaryContains(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContains(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryHasPrefix applies the HasPrefix predicate on the "expected_salary" field.
+func ExpectedSalaryHasPrefix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasPrefix(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryHasSuffix applies the HasSuffix predicate on the "expected_salary" field.
+func ExpectedSalaryHasSuffix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasSuffix(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryIsNil applies the IsNil predicate on the "expected_salary" field.
+func ExpectedSalaryIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldExpectedSalary))
+}
+
+// ExpectedSalaryNotNil applies the NotNil predicate on the "expected_salary" field.
+func ExpectedSalaryNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldExpectedSalary))
+}
+
+// ExpectedSalaryEqualFold applies the EqualFold predicate on the "expected_salary" field.
+func ExpectedSalaryEqualFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEqualFold(FieldExpectedSalary, v))
+}
+
+// ExpectedSalaryContainsFold applies the ContainsFold predicate on the "expected_salary" field.
+func ExpectedSalaryContainsFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContainsFold(FieldExpectedSalary, v))
+}
+
+// ExpectedCityEQ applies the EQ predicate on the "expected_city" field.
+func ExpectedCityEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldExpectedCity, v))
+}
+
+// ExpectedCityNEQ applies the NEQ predicate on the "expected_city" field.
+func ExpectedCityNEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldNEQ(FieldExpectedCity, v))
+}
+
+// ExpectedCityIn applies the In predicate on the "expected_city" field.
+func ExpectedCityIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldIn(FieldExpectedCity, vs...))
+}
+
+// ExpectedCityNotIn applies the NotIn predicate on the "expected_city" field.
+func ExpectedCityNotIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldNotIn(FieldExpectedCity, vs...))
+}
+
+// ExpectedCityGT applies the GT predicate on the "expected_city" field.
+func ExpectedCityGT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGT(FieldExpectedCity, v))
+}
+
+// ExpectedCityGTE applies the GTE predicate on the "expected_city" field.
+func ExpectedCityGTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGTE(FieldExpectedCity, v))
+}
+
+// ExpectedCityLT applies the LT predicate on the "expected_city" field.
+func ExpectedCityLT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLT(FieldExpectedCity, v))
+}
+
+// ExpectedCityLTE applies the LTE predicate on the "expected_city" field.
+func ExpectedCityLTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLTE(FieldExpectedCity, v))
+}
+
+// ExpectedCityContains applies the Contains predicate on the "expected_city" field.
+func ExpectedCityContains(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContains(FieldExpectedCity, v))
+}
+
+// ExpectedCityHasPrefix applies the HasPrefix predicate on the "expected_city" field.
+func ExpectedCityHasPrefix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasPrefix(FieldExpectedCity, v))
+}
+
+// ExpectedCityHasSuffix applies the HasSuffix predicate on the "expected_city" field.
+func ExpectedCityHasSuffix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasSuffix(FieldExpectedCity, v))
+}
+
+// ExpectedCityIsNil applies the IsNil predicate on the "expected_city" field.
+func ExpectedCityIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldExpectedCity))
+}
+
+// ExpectedCityNotNil applies the NotNil predicate on the "expected_city" field.
+func ExpectedCityNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldExpectedCity))
+}
+
+// ExpectedCityEqualFold applies the EqualFold predicate on the "expected_city" field.
+func ExpectedCityEqualFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEqualFold(FieldExpectedCity, v))
+}
+
+// ExpectedCityContainsFold applies the ContainsFold predicate on the "expected_city" field.
+func ExpectedCityContainsFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContainsFold(FieldExpectedCity, v))
+}
+
+// EmploymentStatusEQ applies the EQ predicate on the "employment_status" field.
+func EmploymentStatusEQ(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldEQ(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusNEQ applies the NEQ predicate on the "employment_status" field.
+func EmploymentStatusNEQ(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldNEQ(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusIn applies the In predicate on the "employment_status" field.
+func EmploymentStatusIn(vs ...consts.EmploymentStatus) predicate.Resume {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Resume(sql.FieldIn(FieldEmploymentStatus, v...))
+}
+
+// EmploymentStatusNotIn applies the NotIn predicate on the "employment_status" field.
+func EmploymentStatusNotIn(vs ...consts.EmploymentStatus) predicate.Resume {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Resume(sql.FieldNotIn(FieldEmploymentStatus, v...))
+}
+
+// EmploymentStatusGT applies the GT predicate on the "employment_status" field.
+func EmploymentStatusGT(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldGT(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusGTE applies the GTE predicate on the "employment_status" field.
+func EmploymentStatusGTE(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldGTE(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusLT applies the LT predicate on the "employment_status" field.
+func EmploymentStatusLT(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldLT(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusLTE applies the LTE predicate on the "employment_status" field.
+func EmploymentStatusLTE(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldLTE(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusContains applies the Contains predicate on the "employment_status" field.
+func EmploymentStatusContains(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldContains(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusHasPrefix applies the HasPrefix predicate on the "employment_status" field.
+func EmploymentStatusHasPrefix(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldHasPrefix(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusHasSuffix applies the HasSuffix predicate on the "employment_status" field.
+func EmploymentStatusHasSuffix(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldHasSuffix(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusIsNil applies the IsNil predicate on the "employment_status" field.
+func EmploymentStatusIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldEmploymentStatus))
+}
+
+// EmploymentStatusNotNil applies the NotNil predicate on the "employment_status" field.
+func EmploymentStatusNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldEmploymentStatus))
+}
+
+// EmploymentStatusEqualFold applies the EqualFold predicate on the "employment_status" field.
+func EmploymentStatusEqualFold(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldEqualFold(FieldEmploymentStatus, vc))
+}
+
+// EmploymentStatusContainsFold applies the ContainsFold predicate on the "employment_status" field.
+func EmploymentStatusContainsFold(v consts.EmploymentStatus) predicate.Resume {
+	vc := string(v)
+	return predicate.Resume(sql.FieldContainsFold(FieldEmploymentStatus, vc))
+}
+
+// HonorsCertificatesEQ applies the EQ predicate on the "honors_certificates" field.
+func HonorsCertificatesEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesNEQ applies the NEQ predicate on the "honors_certificates" field.
+func HonorsCertificatesNEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldNEQ(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesIn applies the In predicate on the "honors_certificates" field.
+func HonorsCertificatesIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldIn(FieldHonorsCertificates, vs...))
+}
+
+// HonorsCertificatesNotIn applies the NotIn predicate on the "honors_certificates" field.
+func HonorsCertificatesNotIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldNotIn(FieldHonorsCertificates, vs...))
+}
+
+// HonorsCertificatesGT applies the GT predicate on the "honors_certificates" field.
+func HonorsCertificatesGT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGT(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesGTE applies the GTE predicate on the "honors_certificates" field.
+func HonorsCertificatesGTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGTE(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesLT applies the LT predicate on the "honors_certificates" field.
+func HonorsCertificatesLT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLT(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesLTE applies the LTE predicate on the "honors_certificates" field.
+func HonorsCertificatesLTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLTE(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesContains applies the Contains predicate on the "honors_certificates" field.
+func HonorsCertificatesContains(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContains(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesHasPrefix applies the HasPrefix predicate on the "honors_certificates" field.
+func HonorsCertificatesHasPrefix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasPrefix(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesHasSuffix applies the HasSuffix predicate on the "honors_certificates" field.
+func HonorsCertificatesHasSuffix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasSuffix(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesIsNil applies the IsNil predicate on the "honors_certificates" field.
+func HonorsCertificatesIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldHonorsCertificates))
+}
+
+// HonorsCertificatesNotNil applies the NotNil predicate on the "honors_certificates" field.
+func HonorsCertificatesNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldHonorsCertificates))
+}
+
+// HonorsCertificatesEqualFold applies the EqualFold predicate on the "honors_certificates" field.
+func HonorsCertificatesEqualFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEqualFold(FieldHonorsCertificates, v))
+}
+
+// HonorsCertificatesContainsFold applies the ContainsFold predicate on the "honors_certificates" field.
+func HonorsCertificatesContainsFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContainsFold(FieldHonorsCertificates, v))
+}
+
+// OtherInfoEQ applies the EQ predicate on the "other_info" field.
+func OtherInfoEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEQ(FieldOtherInfo, v))
+}
+
+// OtherInfoNEQ applies the NEQ predicate on the "other_info" field.
+func OtherInfoNEQ(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldNEQ(FieldOtherInfo, v))
+}
+
+// OtherInfoIn applies the In predicate on the "other_info" field.
+func OtherInfoIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldIn(FieldOtherInfo, vs...))
+}
+
+// OtherInfoNotIn applies the NotIn predicate on the "other_info" field.
+func OtherInfoNotIn(vs ...string) predicate.Resume {
+	return predicate.Resume(sql.FieldNotIn(FieldOtherInfo, vs...))
+}
+
+// OtherInfoGT applies the GT predicate on the "other_info" field.
+func OtherInfoGT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGT(FieldOtherInfo, v))
+}
+
+// OtherInfoGTE applies the GTE predicate on the "other_info" field.
+func OtherInfoGTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldGTE(FieldOtherInfo, v))
+}
+
+// OtherInfoLT applies the LT predicate on the "other_info" field.
+func OtherInfoLT(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLT(FieldOtherInfo, v))
+}
+
+// OtherInfoLTE applies the LTE predicate on the "other_info" field.
+func OtherInfoLTE(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldLTE(FieldOtherInfo, v))
+}
+
+// OtherInfoContains applies the Contains predicate on the "other_info" field.
+func OtherInfoContains(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContains(FieldOtherInfo, v))
+}
+
+// OtherInfoHasPrefix applies the HasPrefix predicate on the "other_info" field.
+func OtherInfoHasPrefix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasPrefix(FieldOtherInfo, v))
+}
+
+// OtherInfoHasSuffix applies the HasSuffix predicate on the "other_info" field.
+func OtherInfoHasSuffix(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldHasSuffix(FieldOtherInfo, v))
+}
+
+// OtherInfoIsNil applies the IsNil predicate on the "other_info" field.
+func OtherInfoIsNil() predicate.Resume {
+	return predicate.Resume(sql.FieldIsNull(FieldOtherInfo))
+}
+
+// OtherInfoNotNil applies the NotNil predicate on the "other_info" field.
+func OtherInfoNotNil() predicate.Resume {
+	return predicate.Resume(sql.FieldNotNull(FieldOtherInfo))
+}
+
+// OtherInfoEqualFold applies the EqualFold predicate on the "other_info" field.
+func OtherInfoEqualFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldEqualFold(FieldOtherInfo, v))
+}
+
+// OtherInfoContainsFold applies the ContainsFold predicate on the "other_info" field.
+func OtherInfoContainsFold(v string) predicate.Resume {
+	return predicate.Resume(sql.FieldContainsFold(FieldOtherInfo, v))
 }
 
 // ResumeFileURLEQ applies the EQ predicate on the "resume_file_url" field.

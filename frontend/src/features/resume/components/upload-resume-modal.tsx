@@ -709,12 +709,15 @@ export function UploadResumeModal({
                     : isStepActive('upload')
                       ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
-                }
+                }`}
                 style={
                   isStepCompleted('upload') || isStepActive('upload')
-                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }
                     : undefined
-                }`}
+                }
               >
                 {isStepCompleted('upload') ? (
                   <CheckCircle className="h-5 w-5" />
@@ -759,12 +762,15 @@ export function UploadResumeModal({
                     : isStepActive('preview')
                       ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
-                }
+                }`}
                 style={
                   isStepCompleted('preview') || isStepActive('preview')
-                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }
                     : undefined
-                }`}
+                }
               >
                 {isStepCompleted('preview') ? (
                   <CheckCircle className="h-5 w-5" />
@@ -809,12 +815,15 @@ export function UploadResumeModal({
                     : isStepActive('complete')
                       ? 'text-white'
                       : 'bg-gray-200 text-gray-600'
-                }
+                }`}
                 style={
                   isStepCompleted('complete') || isStepActive('complete')
-                    ? { background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)' }
+                    ? {
+                        background:
+                          'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+                      }
                     : undefined
-                }`}
+                }
               >
                 {isStepCompleted('complete') ? (
                   <CheckCircle className="h-5 w-5" />

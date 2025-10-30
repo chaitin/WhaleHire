@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/predicate"
 	"github.com/google/uuid"
 )
@@ -117,8 +118,9 @@ func ProjectURL(v string) predicate.ResumeProject {
 }
 
 // ProjectType applies equality check predicate on the "project_type" field. It's identical to ProjectTypeEQ.
-func ProjectType(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldEQ(FieldProjectType, v))
+func ProjectType(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldEQ(FieldProjectType, vc))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -902,58 +904,75 @@ func ProjectURLContainsFold(v string) predicate.ResumeProject {
 }
 
 // ProjectTypeEQ applies the EQ predicate on the "project_type" field.
-func ProjectTypeEQ(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldEQ(FieldProjectType, v))
+func ProjectTypeEQ(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldEQ(FieldProjectType, vc))
 }
 
 // ProjectTypeNEQ applies the NEQ predicate on the "project_type" field.
-func ProjectTypeNEQ(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldNEQ(FieldProjectType, v))
+func ProjectTypeNEQ(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldNEQ(FieldProjectType, vc))
 }
 
 // ProjectTypeIn applies the In predicate on the "project_type" field.
-func ProjectTypeIn(vs ...string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldIn(FieldProjectType, vs...))
+func ProjectTypeIn(vs ...consts.ProjectType) predicate.ResumeProject {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.ResumeProject(sql.FieldIn(FieldProjectType, v...))
 }
 
 // ProjectTypeNotIn applies the NotIn predicate on the "project_type" field.
-func ProjectTypeNotIn(vs ...string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldNotIn(FieldProjectType, vs...))
+func ProjectTypeNotIn(vs ...consts.ProjectType) predicate.ResumeProject {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.ResumeProject(sql.FieldNotIn(FieldProjectType, v...))
 }
 
 // ProjectTypeGT applies the GT predicate on the "project_type" field.
-func ProjectTypeGT(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldGT(FieldProjectType, v))
+func ProjectTypeGT(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldGT(FieldProjectType, vc))
 }
 
 // ProjectTypeGTE applies the GTE predicate on the "project_type" field.
-func ProjectTypeGTE(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldGTE(FieldProjectType, v))
+func ProjectTypeGTE(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldGTE(FieldProjectType, vc))
 }
 
 // ProjectTypeLT applies the LT predicate on the "project_type" field.
-func ProjectTypeLT(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldLT(FieldProjectType, v))
+func ProjectTypeLT(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldLT(FieldProjectType, vc))
 }
 
 // ProjectTypeLTE applies the LTE predicate on the "project_type" field.
-func ProjectTypeLTE(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldLTE(FieldProjectType, v))
+func ProjectTypeLTE(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldLTE(FieldProjectType, vc))
 }
 
 // ProjectTypeContains applies the Contains predicate on the "project_type" field.
-func ProjectTypeContains(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldContains(FieldProjectType, v))
+func ProjectTypeContains(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldContains(FieldProjectType, vc))
 }
 
 // ProjectTypeHasPrefix applies the HasPrefix predicate on the "project_type" field.
-func ProjectTypeHasPrefix(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldHasPrefix(FieldProjectType, v))
+func ProjectTypeHasPrefix(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldHasPrefix(FieldProjectType, vc))
 }
 
 // ProjectTypeHasSuffix applies the HasSuffix predicate on the "project_type" field.
-func ProjectTypeHasSuffix(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldHasSuffix(FieldProjectType, v))
+func ProjectTypeHasSuffix(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldHasSuffix(FieldProjectType, vc))
 }
 
 // ProjectTypeIsNil applies the IsNil predicate on the "project_type" field.
@@ -967,13 +986,15 @@ func ProjectTypeNotNil() predicate.ResumeProject {
 }
 
 // ProjectTypeEqualFold applies the EqualFold predicate on the "project_type" field.
-func ProjectTypeEqualFold(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldEqualFold(FieldProjectType, v))
+func ProjectTypeEqualFold(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldEqualFold(FieldProjectType, vc))
 }
 
 // ProjectTypeContainsFold applies the ContainsFold predicate on the "project_type" field.
-func ProjectTypeContainsFold(v string) predicate.ResumeProject {
-	return predicate.ResumeProject(sql.FieldContainsFold(FieldProjectType, v))
+func ProjectTypeContainsFold(v consts.ProjectType) predicate.ResumeProject {
+	vc := string(v)
+	return predicate.ResumeProject(sql.FieldContainsFold(FieldProjectType, vc))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

@@ -61,7 +61,10 @@ export interface ResumeEducation {
   degree: string;
   start_date: string;
   end_date: string;
-  university_type?: 'ordinary' | '211' | '985'; // 大学类型：普通学校、211工程、985工程
+  university_type?: 'ordinary' | '211' | '985'; // 大学类型：普通学校、211工程、985工程（已废弃，使用university_types）
+  university_types?: Array<
+    'ordinary' | '211' | '985' | 'double_first_class' | 'qs_top100'
+  >; // 大学类型列表
   created_at: number;
   updated_at: number;
 }

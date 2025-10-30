@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/db/resume"
 	"github.com/chaitin/WhaleHire/backend/db/resumedocumentparse"
 	"github.com/chaitin/WhaleHire/backend/db/resumeeducation"
@@ -96,6 +97,20 @@ func (rc *ResumeCreate) SetNillableBirthday(t *time.Time) *ResumeCreate {
 	return rc
 }
 
+// SetAge sets the "age" field.
+func (rc *ResumeCreate) SetAge(i int) *ResumeCreate {
+	rc.mutation.SetAge(i)
+	return rc
+}
+
+// SetNillableAge sets the "age" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillableAge(i *int) *ResumeCreate {
+	if i != nil {
+		rc.SetAge(*i)
+	}
+	return rc
+}
+
 // SetEmail sets the "email" field.
 func (rc *ResumeCreate) SetEmail(s string) *ResumeCreate {
 	rc.mutation.SetEmail(s)
@@ -162,6 +177,90 @@ func (rc *ResumeCreate) SetYearsExperience(f float64) *ResumeCreate {
 func (rc *ResumeCreate) SetNillableYearsExperience(f *float64) *ResumeCreate {
 	if f != nil {
 		rc.SetYearsExperience(*f)
+	}
+	return rc
+}
+
+// SetPersonalSummary sets the "personal_summary" field.
+func (rc *ResumeCreate) SetPersonalSummary(s string) *ResumeCreate {
+	rc.mutation.SetPersonalSummary(s)
+	return rc
+}
+
+// SetNillablePersonalSummary sets the "personal_summary" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillablePersonalSummary(s *string) *ResumeCreate {
+	if s != nil {
+		rc.SetPersonalSummary(*s)
+	}
+	return rc
+}
+
+// SetExpectedSalary sets the "expected_salary" field.
+func (rc *ResumeCreate) SetExpectedSalary(s string) *ResumeCreate {
+	rc.mutation.SetExpectedSalary(s)
+	return rc
+}
+
+// SetNillableExpectedSalary sets the "expected_salary" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillableExpectedSalary(s *string) *ResumeCreate {
+	if s != nil {
+		rc.SetExpectedSalary(*s)
+	}
+	return rc
+}
+
+// SetExpectedCity sets the "expected_city" field.
+func (rc *ResumeCreate) SetExpectedCity(s string) *ResumeCreate {
+	rc.mutation.SetExpectedCity(s)
+	return rc
+}
+
+// SetNillableExpectedCity sets the "expected_city" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillableExpectedCity(s *string) *ResumeCreate {
+	if s != nil {
+		rc.SetExpectedCity(*s)
+	}
+	return rc
+}
+
+// SetEmploymentStatus sets the "employment_status" field.
+func (rc *ResumeCreate) SetEmploymentStatus(cs consts.EmploymentStatus) *ResumeCreate {
+	rc.mutation.SetEmploymentStatus(cs)
+	return rc
+}
+
+// SetNillableEmploymentStatus sets the "employment_status" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillableEmploymentStatus(cs *consts.EmploymentStatus) *ResumeCreate {
+	if cs != nil {
+		rc.SetEmploymentStatus(*cs)
+	}
+	return rc
+}
+
+// SetHonorsCertificates sets the "honors_certificates" field.
+func (rc *ResumeCreate) SetHonorsCertificates(s string) *ResumeCreate {
+	rc.mutation.SetHonorsCertificates(s)
+	return rc
+}
+
+// SetNillableHonorsCertificates sets the "honors_certificates" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillableHonorsCertificates(s *string) *ResumeCreate {
+	if s != nil {
+		rc.SetHonorsCertificates(*s)
+	}
+	return rc
+}
+
+// SetOtherInfo sets the "other_info" field.
+func (rc *ResumeCreate) SetOtherInfo(s string) *ResumeCreate {
+	rc.mutation.SetOtherInfo(s)
+	return rc
+}
+
+// SetNillableOtherInfo sets the "other_info" field if the given value is not nil.
+func (rc *ResumeCreate) SetNillableOtherInfo(s *string) *ResumeCreate {
+	if s != nil {
+		rc.SetOtherInfo(*s)
 	}
 	return rc
 }
@@ -549,6 +648,10 @@ func (rc *ResumeCreate) createSpec() (*Resume, *sqlgraph.CreateSpec) {
 		_spec.SetField(resume.FieldBirthday, field.TypeTime, value)
 		_node.Birthday = value
 	}
+	if value, ok := rc.mutation.Age(); ok {
+		_spec.SetField(resume.FieldAge, field.TypeInt, value)
+		_node.Age = value
+	}
 	if value, ok := rc.mutation.Email(); ok {
 		_spec.SetField(resume.FieldEmail, field.TypeString, value)
 		_node.Email = value
@@ -568,6 +671,30 @@ func (rc *ResumeCreate) createSpec() (*Resume, *sqlgraph.CreateSpec) {
 	if value, ok := rc.mutation.YearsExperience(); ok {
 		_spec.SetField(resume.FieldYearsExperience, field.TypeFloat64, value)
 		_node.YearsExperience = value
+	}
+	if value, ok := rc.mutation.PersonalSummary(); ok {
+		_spec.SetField(resume.FieldPersonalSummary, field.TypeString, value)
+		_node.PersonalSummary = value
+	}
+	if value, ok := rc.mutation.ExpectedSalary(); ok {
+		_spec.SetField(resume.FieldExpectedSalary, field.TypeString, value)
+		_node.ExpectedSalary = value
+	}
+	if value, ok := rc.mutation.ExpectedCity(); ok {
+		_spec.SetField(resume.FieldExpectedCity, field.TypeString, value)
+		_node.ExpectedCity = value
+	}
+	if value, ok := rc.mutation.EmploymentStatus(); ok {
+		_spec.SetField(resume.FieldEmploymentStatus, field.TypeString, value)
+		_node.EmploymentStatus = value
+	}
+	if value, ok := rc.mutation.HonorsCertificates(); ok {
+		_spec.SetField(resume.FieldHonorsCertificates, field.TypeString, value)
+		_node.HonorsCertificates = value
+	}
+	if value, ok := rc.mutation.OtherInfo(); ok {
+		_spec.SetField(resume.FieldOtherInfo, field.TypeString, value)
+		_node.OtherInfo = value
 	}
 	if value, ok := rc.mutation.ResumeFileURL(); ok {
 		_spec.SetField(resume.FieldResumeFileURL, field.TypeString, value)
@@ -890,6 +1017,30 @@ func (u *ResumeUpsert) ClearBirthday() *ResumeUpsert {
 	return u
 }
 
+// SetAge sets the "age" field.
+func (u *ResumeUpsert) SetAge(v int) *ResumeUpsert {
+	u.Set(resume.FieldAge, v)
+	return u
+}
+
+// UpdateAge sets the "age" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateAge() *ResumeUpsert {
+	u.SetExcluded(resume.FieldAge)
+	return u
+}
+
+// AddAge adds v to the "age" field.
+func (u *ResumeUpsert) AddAge(v int) *ResumeUpsert {
+	u.Add(resume.FieldAge, v)
+	return u
+}
+
+// ClearAge clears the value of the "age" field.
+func (u *ResumeUpsert) ClearAge() *ResumeUpsert {
+	u.SetNull(resume.FieldAge)
+	return u
+}
+
 // SetEmail sets the "email" field.
 func (u *ResumeUpsert) SetEmail(v string) *ResumeUpsert {
 	u.Set(resume.FieldEmail, v)
@@ -983,6 +1134,114 @@ func (u *ResumeUpsert) AddYearsExperience(v float64) *ResumeUpsert {
 // ClearYearsExperience clears the value of the "years_experience" field.
 func (u *ResumeUpsert) ClearYearsExperience() *ResumeUpsert {
 	u.SetNull(resume.FieldYearsExperience)
+	return u
+}
+
+// SetPersonalSummary sets the "personal_summary" field.
+func (u *ResumeUpsert) SetPersonalSummary(v string) *ResumeUpsert {
+	u.Set(resume.FieldPersonalSummary, v)
+	return u
+}
+
+// UpdatePersonalSummary sets the "personal_summary" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdatePersonalSummary() *ResumeUpsert {
+	u.SetExcluded(resume.FieldPersonalSummary)
+	return u
+}
+
+// ClearPersonalSummary clears the value of the "personal_summary" field.
+func (u *ResumeUpsert) ClearPersonalSummary() *ResumeUpsert {
+	u.SetNull(resume.FieldPersonalSummary)
+	return u
+}
+
+// SetExpectedSalary sets the "expected_salary" field.
+func (u *ResumeUpsert) SetExpectedSalary(v string) *ResumeUpsert {
+	u.Set(resume.FieldExpectedSalary, v)
+	return u
+}
+
+// UpdateExpectedSalary sets the "expected_salary" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateExpectedSalary() *ResumeUpsert {
+	u.SetExcluded(resume.FieldExpectedSalary)
+	return u
+}
+
+// ClearExpectedSalary clears the value of the "expected_salary" field.
+func (u *ResumeUpsert) ClearExpectedSalary() *ResumeUpsert {
+	u.SetNull(resume.FieldExpectedSalary)
+	return u
+}
+
+// SetExpectedCity sets the "expected_city" field.
+func (u *ResumeUpsert) SetExpectedCity(v string) *ResumeUpsert {
+	u.Set(resume.FieldExpectedCity, v)
+	return u
+}
+
+// UpdateExpectedCity sets the "expected_city" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateExpectedCity() *ResumeUpsert {
+	u.SetExcluded(resume.FieldExpectedCity)
+	return u
+}
+
+// ClearExpectedCity clears the value of the "expected_city" field.
+func (u *ResumeUpsert) ClearExpectedCity() *ResumeUpsert {
+	u.SetNull(resume.FieldExpectedCity)
+	return u
+}
+
+// SetEmploymentStatus sets the "employment_status" field.
+func (u *ResumeUpsert) SetEmploymentStatus(v consts.EmploymentStatus) *ResumeUpsert {
+	u.Set(resume.FieldEmploymentStatus, v)
+	return u
+}
+
+// UpdateEmploymentStatus sets the "employment_status" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateEmploymentStatus() *ResumeUpsert {
+	u.SetExcluded(resume.FieldEmploymentStatus)
+	return u
+}
+
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (u *ResumeUpsert) ClearEmploymentStatus() *ResumeUpsert {
+	u.SetNull(resume.FieldEmploymentStatus)
+	return u
+}
+
+// SetHonorsCertificates sets the "honors_certificates" field.
+func (u *ResumeUpsert) SetHonorsCertificates(v string) *ResumeUpsert {
+	u.Set(resume.FieldHonorsCertificates, v)
+	return u
+}
+
+// UpdateHonorsCertificates sets the "honors_certificates" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateHonorsCertificates() *ResumeUpsert {
+	u.SetExcluded(resume.FieldHonorsCertificates)
+	return u
+}
+
+// ClearHonorsCertificates clears the value of the "honors_certificates" field.
+func (u *ResumeUpsert) ClearHonorsCertificates() *ResumeUpsert {
+	u.SetNull(resume.FieldHonorsCertificates)
+	return u
+}
+
+// SetOtherInfo sets the "other_info" field.
+func (u *ResumeUpsert) SetOtherInfo(v string) *ResumeUpsert {
+	u.Set(resume.FieldOtherInfo, v)
+	return u
+}
+
+// UpdateOtherInfo sets the "other_info" field to the value that was provided on create.
+func (u *ResumeUpsert) UpdateOtherInfo() *ResumeUpsert {
+	u.SetExcluded(resume.FieldOtherInfo)
+	return u
+}
+
+// ClearOtherInfo clears the value of the "other_info" field.
+func (u *ResumeUpsert) ClearOtherInfo() *ResumeUpsert {
+	u.SetNull(resume.FieldOtherInfo)
 	return u
 }
 
@@ -1222,6 +1481,34 @@ func (u *ResumeUpsertOne) ClearBirthday() *ResumeUpsertOne {
 	})
 }
 
+// SetAge sets the "age" field.
+func (u *ResumeUpsertOne) SetAge(v int) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetAge(v)
+	})
+}
+
+// AddAge adds v to the "age" field.
+func (u *ResumeUpsertOne) AddAge(v int) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.AddAge(v)
+	})
+}
+
+// UpdateAge sets the "age" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateAge() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateAge()
+	})
+}
+
+// ClearAge clears the value of the "age" field.
+func (u *ResumeUpsertOne) ClearAge() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearAge()
+	})
+}
+
 // SetEmail sets the "email" field.
 func (u *ResumeUpsertOne) SetEmail(v string) *ResumeUpsertOne {
 	return u.Update(func(s *ResumeUpsert) {
@@ -1331,6 +1618,132 @@ func (u *ResumeUpsertOne) UpdateYearsExperience() *ResumeUpsertOne {
 func (u *ResumeUpsertOne) ClearYearsExperience() *ResumeUpsertOne {
 	return u.Update(func(s *ResumeUpsert) {
 		s.ClearYearsExperience()
+	})
+}
+
+// SetPersonalSummary sets the "personal_summary" field.
+func (u *ResumeUpsertOne) SetPersonalSummary(v string) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetPersonalSummary(v)
+	})
+}
+
+// UpdatePersonalSummary sets the "personal_summary" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdatePersonalSummary() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdatePersonalSummary()
+	})
+}
+
+// ClearPersonalSummary clears the value of the "personal_summary" field.
+func (u *ResumeUpsertOne) ClearPersonalSummary() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearPersonalSummary()
+	})
+}
+
+// SetExpectedSalary sets the "expected_salary" field.
+func (u *ResumeUpsertOne) SetExpectedSalary(v string) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetExpectedSalary(v)
+	})
+}
+
+// UpdateExpectedSalary sets the "expected_salary" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateExpectedSalary() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateExpectedSalary()
+	})
+}
+
+// ClearExpectedSalary clears the value of the "expected_salary" field.
+func (u *ResumeUpsertOne) ClearExpectedSalary() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearExpectedSalary()
+	})
+}
+
+// SetExpectedCity sets the "expected_city" field.
+func (u *ResumeUpsertOne) SetExpectedCity(v string) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetExpectedCity(v)
+	})
+}
+
+// UpdateExpectedCity sets the "expected_city" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateExpectedCity() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateExpectedCity()
+	})
+}
+
+// ClearExpectedCity clears the value of the "expected_city" field.
+func (u *ResumeUpsertOne) ClearExpectedCity() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearExpectedCity()
+	})
+}
+
+// SetEmploymentStatus sets the "employment_status" field.
+func (u *ResumeUpsertOne) SetEmploymentStatus(v consts.EmploymentStatus) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetEmploymentStatus(v)
+	})
+}
+
+// UpdateEmploymentStatus sets the "employment_status" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateEmploymentStatus() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateEmploymentStatus()
+	})
+}
+
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (u *ResumeUpsertOne) ClearEmploymentStatus() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearEmploymentStatus()
+	})
+}
+
+// SetHonorsCertificates sets the "honors_certificates" field.
+func (u *ResumeUpsertOne) SetHonorsCertificates(v string) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetHonorsCertificates(v)
+	})
+}
+
+// UpdateHonorsCertificates sets the "honors_certificates" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateHonorsCertificates() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateHonorsCertificates()
+	})
+}
+
+// ClearHonorsCertificates clears the value of the "honors_certificates" field.
+func (u *ResumeUpsertOne) ClearHonorsCertificates() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearHonorsCertificates()
+	})
+}
+
+// SetOtherInfo sets the "other_info" field.
+func (u *ResumeUpsertOne) SetOtherInfo(v string) *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetOtherInfo(v)
+	})
+}
+
+// UpdateOtherInfo sets the "other_info" field to the value that was provided on create.
+func (u *ResumeUpsertOne) UpdateOtherInfo() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateOtherInfo()
+	})
+}
+
+// ClearOtherInfo clears the value of the "other_info" field.
+func (u *ResumeUpsertOne) ClearOtherInfo() *ResumeUpsertOne {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearOtherInfo()
 	})
 }
 
@@ -1752,6 +2165,34 @@ func (u *ResumeUpsertBulk) ClearBirthday() *ResumeUpsertBulk {
 	})
 }
 
+// SetAge sets the "age" field.
+func (u *ResumeUpsertBulk) SetAge(v int) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetAge(v)
+	})
+}
+
+// AddAge adds v to the "age" field.
+func (u *ResumeUpsertBulk) AddAge(v int) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.AddAge(v)
+	})
+}
+
+// UpdateAge sets the "age" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateAge() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateAge()
+	})
+}
+
+// ClearAge clears the value of the "age" field.
+func (u *ResumeUpsertBulk) ClearAge() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearAge()
+	})
+}
+
 // SetEmail sets the "email" field.
 func (u *ResumeUpsertBulk) SetEmail(v string) *ResumeUpsertBulk {
 	return u.Update(func(s *ResumeUpsert) {
@@ -1861,6 +2302,132 @@ func (u *ResumeUpsertBulk) UpdateYearsExperience() *ResumeUpsertBulk {
 func (u *ResumeUpsertBulk) ClearYearsExperience() *ResumeUpsertBulk {
 	return u.Update(func(s *ResumeUpsert) {
 		s.ClearYearsExperience()
+	})
+}
+
+// SetPersonalSummary sets the "personal_summary" field.
+func (u *ResumeUpsertBulk) SetPersonalSummary(v string) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetPersonalSummary(v)
+	})
+}
+
+// UpdatePersonalSummary sets the "personal_summary" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdatePersonalSummary() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdatePersonalSummary()
+	})
+}
+
+// ClearPersonalSummary clears the value of the "personal_summary" field.
+func (u *ResumeUpsertBulk) ClearPersonalSummary() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearPersonalSummary()
+	})
+}
+
+// SetExpectedSalary sets the "expected_salary" field.
+func (u *ResumeUpsertBulk) SetExpectedSalary(v string) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetExpectedSalary(v)
+	})
+}
+
+// UpdateExpectedSalary sets the "expected_salary" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateExpectedSalary() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateExpectedSalary()
+	})
+}
+
+// ClearExpectedSalary clears the value of the "expected_salary" field.
+func (u *ResumeUpsertBulk) ClearExpectedSalary() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearExpectedSalary()
+	})
+}
+
+// SetExpectedCity sets the "expected_city" field.
+func (u *ResumeUpsertBulk) SetExpectedCity(v string) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetExpectedCity(v)
+	})
+}
+
+// UpdateExpectedCity sets the "expected_city" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateExpectedCity() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateExpectedCity()
+	})
+}
+
+// ClearExpectedCity clears the value of the "expected_city" field.
+func (u *ResumeUpsertBulk) ClearExpectedCity() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearExpectedCity()
+	})
+}
+
+// SetEmploymentStatus sets the "employment_status" field.
+func (u *ResumeUpsertBulk) SetEmploymentStatus(v consts.EmploymentStatus) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetEmploymentStatus(v)
+	})
+}
+
+// UpdateEmploymentStatus sets the "employment_status" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateEmploymentStatus() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateEmploymentStatus()
+	})
+}
+
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (u *ResumeUpsertBulk) ClearEmploymentStatus() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearEmploymentStatus()
+	})
+}
+
+// SetHonorsCertificates sets the "honors_certificates" field.
+func (u *ResumeUpsertBulk) SetHonorsCertificates(v string) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetHonorsCertificates(v)
+	})
+}
+
+// UpdateHonorsCertificates sets the "honors_certificates" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateHonorsCertificates() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateHonorsCertificates()
+	})
+}
+
+// ClearHonorsCertificates clears the value of the "honors_certificates" field.
+func (u *ResumeUpsertBulk) ClearHonorsCertificates() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearHonorsCertificates()
+	})
+}
+
+// SetOtherInfo sets the "other_info" field.
+func (u *ResumeUpsertBulk) SetOtherInfo(v string) *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.SetOtherInfo(v)
+	})
+}
+
+// UpdateOtherInfo sets the "other_info" field to the value that was provided on create.
+func (u *ResumeUpsertBulk) UpdateOtherInfo() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.UpdateOtherInfo()
+	})
+}
+
+// ClearOtherInfo clears the value of the "other_info" field.
+func (u *ResumeUpsertBulk) ClearOtherInfo() *ResumeUpsertBulk {
+	return u.Update(func(s *ResumeUpsert) {
+		s.ClearOtherInfo()
 	})
 }
 

@@ -16665,12 +16665,20 @@ type ResumeMutation struct {
 	name                          *string
 	gender                        *string
 	birthday                      *time.Time
+	age                           *int
+	addage                        *int
 	email                         *string
 	phone                         *string
 	current_city                  *string
 	highest_education             *string
 	years_experience              *float64
 	addyears_experience           *float64
+	personal_summary              *string
+	expected_salary               *string
+	expected_city                 *string
+	employment_status             *consts.EmploymentStatus
+	honors_certificates           *string
+	other_info                    *string
 	resume_file_url               *string
 	status                        *string
 	error_message                 *string
@@ -17048,6 +17056,76 @@ func (m *ResumeMutation) ResetBirthday() {
 	delete(m.clearedFields, resume.FieldBirthday)
 }
 
+// SetAge sets the "age" field.
+func (m *ResumeMutation) SetAge(i int) {
+	m.age = &i
+	m.addage = nil
+}
+
+// Age returns the value of the "age" field in the mutation.
+func (m *ResumeMutation) Age() (r int, exists bool) {
+	v := m.age
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAge returns the old "age" field's value of the Resume entity.
+// If the Resume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMutation) OldAge(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAge is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAge requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAge: %w", err)
+	}
+	return oldValue.Age, nil
+}
+
+// AddAge adds i to the "age" field.
+func (m *ResumeMutation) AddAge(i int) {
+	if m.addage != nil {
+		*m.addage += i
+	} else {
+		m.addage = &i
+	}
+}
+
+// AddedAge returns the value that was added to the "age" field in this mutation.
+func (m *ResumeMutation) AddedAge() (r int, exists bool) {
+	v := m.addage
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAge clears the value of the "age" field.
+func (m *ResumeMutation) ClearAge() {
+	m.age = nil
+	m.addage = nil
+	m.clearedFields[resume.FieldAge] = struct{}{}
+}
+
+// AgeCleared returns if the "age" field was cleared in this mutation.
+func (m *ResumeMutation) AgeCleared() bool {
+	_, ok := m.clearedFields[resume.FieldAge]
+	return ok
+}
+
+// ResetAge resets all changes to the "age" field.
+func (m *ResumeMutation) ResetAge() {
+	m.age = nil
+	m.addage = nil
+	delete(m.clearedFields, resume.FieldAge)
+}
+
 // SetEmail sets the "email" field.
 func (m *ResumeMutation) SetEmail(s string) {
 	m.email = &s
@@ -17312,6 +17390,300 @@ func (m *ResumeMutation) ResetYearsExperience() {
 	m.years_experience = nil
 	m.addyears_experience = nil
 	delete(m.clearedFields, resume.FieldYearsExperience)
+}
+
+// SetPersonalSummary sets the "personal_summary" field.
+func (m *ResumeMutation) SetPersonalSummary(s string) {
+	m.personal_summary = &s
+}
+
+// PersonalSummary returns the value of the "personal_summary" field in the mutation.
+func (m *ResumeMutation) PersonalSummary() (r string, exists bool) {
+	v := m.personal_summary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPersonalSummary returns the old "personal_summary" field's value of the Resume entity.
+// If the Resume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMutation) OldPersonalSummary(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPersonalSummary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPersonalSummary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPersonalSummary: %w", err)
+	}
+	return oldValue.PersonalSummary, nil
+}
+
+// ClearPersonalSummary clears the value of the "personal_summary" field.
+func (m *ResumeMutation) ClearPersonalSummary() {
+	m.personal_summary = nil
+	m.clearedFields[resume.FieldPersonalSummary] = struct{}{}
+}
+
+// PersonalSummaryCleared returns if the "personal_summary" field was cleared in this mutation.
+func (m *ResumeMutation) PersonalSummaryCleared() bool {
+	_, ok := m.clearedFields[resume.FieldPersonalSummary]
+	return ok
+}
+
+// ResetPersonalSummary resets all changes to the "personal_summary" field.
+func (m *ResumeMutation) ResetPersonalSummary() {
+	m.personal_summary = nil
+	delete(m.clearedFields, resume.FieldPersonalSummary)
+}
+
+// SetExpectedSalary sets the "expected_salary" field.
+func (m *ResumeMutation) SetExpectedSalary(s string) {
+	m.expected_salary = &s
+}
+
+// ExpectedSalary returns the value of the "expected_salary" field in the mutation.
+func (m *ResumeMutation) ExpectedSalary() (r string, exists bool) {
+	v := m.expected_salary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedSalary returns the old "expected_salary" field's value of the Resume entity.
+// If the Resume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMutation) OldExpectedSalary(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedSalary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedSalary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedSalary: %w", err)
+	}
+	return oldValue.ExpectedSalary, nil
+}
+
+// ClearExpectedSalary clears the value of the "expected_salary" field.
+func (m *ResumeMutation) ClearExpectedSalary() {
+	m.expected_salary = nil
+	m.clearedFields[resume.FieldExpectedSalary] = struct{}{}
+}
+
+// ExpectedSalaryCleared returns if the "expected_salary" field was cleared in this mutation.
+func (m *ResumeMutation) ExpectedSalaryCleared() bool {
+	_, ok := m.clearedFields[resume.FieldExpectedSalary]
+	return ok
+}
+
+// ResetExpectedSalary resets all changes to the "expected_salary" field.
+func (m *ResumeMutation) ResetExpectedSalary() {
+	m.expected_salary = nil
+	delete(m.clearedFields, resume.FieldExpectedSalary)
+}
+
+// SetExpectedCity sets the "expected_city" field.
+func (m *ResumeMutation) SetExpectedCity(s string) {
+	m.expected_city = &s
+}
+
+// ExpectedCity returns the value of the "expected_city" field in the mutation.
+func (m *ResumeMutation) ExpectedCity() (r string, exists bool) {
+	v := m.expected_city
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedCity returns the old "expected_city" field's value of the Resume entity.
+// If the Resume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMutation) OldExpectedCity(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedCity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedCity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedCity: %w", err)
+	}
+	return oldValue.ExpectedCity, nil
+}
+
+// ClearExpectedCity clears the value of the "expected_city" field.
+func (m *ResumeMutation) ClearExpectedCity() {
+	m.expected_city = nil
+	m.clearedFields[resume.FieldExpectedCity] = struct{}{}
+}
+
+// ExpectedCityCleared returns if the "expected_city" field was cleared in this mutation.
+func (m *ResumeMutation) ExpectedCityCleared() bool {
+	_, ok := m.clearedFields[resume.FieldExpectedCity]
+	return ok
+}
+
+// ResetExpectedCity resets all changes to the "expected_city" field.
+func (m *ResumeMutation) ResetExpectedCity() {
+	m.expected_city = nil
+	delete(m.clearedFields, resume.FieldExpectedCity)
+}
+
+// SetEmploymentStatus sets the "employment_status" field.
+func (m *ResumeMutation) SetEmploymentStatus(cs consts.EmploymentStatus) {
+	m.employment_status = &cs
+}
+
+// EmploymentStatus returns the value of the "employment_status" field in the mutation.
+func (m *ResumeMutation) EmploymentStatus() (r consts.EmploymentStatus, exists bool) {
+	v := m.employment_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmploymentStatus returns the old "employment_status" field's value of the Resume entity.
+// If the Resume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMutation) OldEmploymentStatus(ctx context.Context) (v consts.EmploymentStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmploymentStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmploymentStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmploymentStatus: %w", err)
+	}
+	return oldValue.EmploymentStatus, nil
+}
+
+// ClearEmploymentStatus clears the value of the "employment_status" field.
+func (m *ResumeMutation) ClearEmploymentStatus() {
+	m.employment_status = nil
+	m.clearedFields[resume.FieldEmploymentStatus] = struct{}{}
+}
+
+// EmploymentStatusCleared returns if the "employment_status" field was cleared in this mutation.
+func (m *ResumeMutation) EmploymentStatusCleared() bool {
+	_, ok := m.clearedFields[resume.FieldEmploymentStatus]
+	return ok
+}
+
+// ResetEmploymentStatus resets all changes to the "employment_status" field.
+func (m *ResumeMutation) ResetEmploymentStatus() {
+	m.employment_status = nil
+	delete(m.clearedFields, resume.FieldEmploymentStatus)
+}
+
+// SetHonorsCertificates sets the "honors_certificates" field.
+func (m *ResumeMutation) SetHonorsCertificates(s string) {
+	m.honors_certificates = &s
+}
+
+// HonorsCertificates returns the value of the "honors_certificates" field in the mutation.
+func (m *ResumeMutation) HonorsCertificates() (r string, exists bool) {
+	v := m.honors_certificates
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHonorsCertificates returns the old "honors_certificates" field's value of the Resume entity.
+// If the Resume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMutation) OldHonorsCertificates(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHonorsCertificates is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHonorsCertificates requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHonorsCertificates: %w", err)
+	}
+	return oldValue.HonorsCertificates, nil
+}
+
+// ClearHonorsCertificates clears the value of the "honors_certificates" field.
+func (m *ResumeMutation) ClearHonorsCertificates() {
+	m.honors_certificates = nil
+	m.clearedFields[resume.FieldHonorsCertificates] = struct{}{}
+}
+
+// HonorsCertificatesCleared returns if the "honors_certificates" field was cleared in this mutation.
+func (m *ResumeMutation) HonorsCertificatesCleared() bool {
+	_, ok := m.clearedFields[resume.FieldHonorsCertificates]
+	return ok
+}
+
+// ResetHonorsCertificates resets all changes to the "honors_certificates" field.
+func (m *ResumeMutation) ResetHonorsCertificates() {
+	m.honors_certificates = nil
+	delete(m.clearedFields, resume.FieldHonorsCertificates)
+}
+
+// SetOtherInfo sets the "other_info" field.
+func (m *ResumeMutation) SetOtherInfo(s string) {
+	m.other_info = &s
+}
+
+// OtherInfo returns the value of the "other_info" field in the mutation.
+func (m *ResumeMutation) OtherInfo() (r string, exists bool) {
+	v := m.other_info
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOtherInfo returns the old "other_info" field's value of the Resume entity.
+// If the Resume object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeMutation) OldOtherInfo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOtherInfo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOtherInfo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOtherInfo: %w", err)
+	}
+	return oldValue.OtherInfo, nil
+}
+
+// ClearOtherInfo clears the value of the "other_info" field.
+func (m *ResumeMutation) ClearOtherInfo() {
+	m.other_info = nil
+	m.clearedFields[resume.FieldOtherInfo] = struct{}{}
+}
+
+// OtherInfoCleared returns if the "other_info" field was cleared in this mutation.
+func (m *ResumeMutation) OtherInfoCleared() bool {
+	_, ok := m.clearedFields[resume.FieldOtherInfo]
+	return ok
+}
+
+// ResetOtherInfo resets all changes to the "other_info" field.
+func (m *ResumeMutation) ResetOtherInfo() {
+	m.other_info = nil
+	delete(m.clearedFields, resume.FieldOtherInfo)
 }
 
 // SetResumeFileURL sets the "resume_file_url" field.
@@ -18129,7 +18501,7 @@ func (m *ResumeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResumeMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 23)
 	if m.deleted_at != nil {
 		fields = append(fields, resume.FieldDeletedAt)
 	}
@@ -18145,6 +18517,9 @@ func (m *ResumeMutation) Fields() []string {
 	if m.birthday != nil {
 		fields = append(fields, resume.FieldBirthday)
 	}
+	if m.age != nil {
+		fields = append(fields, resume.FieldAge)
+	}
 	if m.email != nil {
 		fields = append(fields, resume.FieldEmail)
 	}
@@ -18159,6 +18534,24 @@ func (m *ResumeMutation) Fields() []string {
 	}
 	if m.years_experience != nil {
 		fields = append(fields, resume.FieldYearsExperience)
+	}
+	if m.personal_summary != nil {
+		fields = append(fields, resume.FieldPersonalSummary)
+	}
+	if m.expected_salary != nil {
+		fields = append(fields, resume.FieldExpectedSalary)
+	}
+	if m.expected_city != nil {
+		fields = append(fields, resume.FieldExpectedCity)
+	}
+	if m.employment_status != nil {
+		fields = append(fields, resume.FieldEmploymentStatus)
+	}
+	if m.honors_certificates != nil {
+		fields = append(fields, resume.FieldHonorsCertificates)
+	}
+	if m.other_info != nil {
+		fields = append(fields, resume.FieldOtherInfo)
 	}
 	if m.resume_file_url != nil {
 		fields = append(fields, resume.FieldResumeFileURL)
@@ -18196,6 +18589,8 @@ func (m *ResumeMutation) Field(name string) (ent.Value, bool) {
 		return m.Gender()
 	case resume.FieldBirthday:
 		return m.Birthday()
+	case resume.FieldAge:
+		return m.Age()
 	case resume.FieldEmail:
 		return m.Email()
 	case resume.FieldPhone:
@@ -18206,6 +18601,18 @@ func (m *ResumeMutation) Field(name string) (ent.Value, bool) {
 		return m.HighestEducation()
 	case resume.FieldYearsExperience:
 		return m.YearsExperience()
+	case resume.FieldPersonalSummary:
+		return m.PersonalSummary()
+	case resume.FieldExpectedSalary:
+		return m.ExpectedSalary()
+	case resume.FieldExpectedCity:
+		return m.ExpectedCity()
+	case resume.FieldEmploymentStatus:
+		return m.EmploymentStatus()
+	case resume.FieldHonorsCertificates:
+		return m.HonorsCertificates()
+	case resume.FieldOtherInfo:
+		return m.OtherInfo()
 	case resume.FieldResumeFileURL:
 		return m.ResumeFileURL()
 	case resume.FieldStatus:
@@ -18237,6 +18644,8 @@ func (m *ResumeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldGender(ctx)
 	case resume.FieldBirthday:
 		return m.OldBirthday(ctx)
+	case resume.FieldAge:
+		return m.OldAge(ctx)
 	case resume.FieldEmail:
 		return m.OldEmail(ctx)
 	case resume.FieldPhone:
@@ -18247,6 +18656,18 @@ func (m *ResumeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldHighestEducation(ctx)
 	case resume.FieldYearsExperience:
 		return m.OldYearsExperience(ctx)
+	case resume.FieldPersonalSummary:
+		return m.OldPersonalSummary(ctx)
+	case resume.FieldExpectedSalary:
+		return m.OldExpectedSalary(ctx)
+	case resume.FieldExpectedCity:
+		return m.OldExpectedCity(ctx)
+	case resume.FieldEmploymentStatus:
+		return m.OldEmploymentStatus(ctx)
+	case resume.FieldHonorsCertificates:
+		return m.OldHonorsCertificates(ctx)
+	case resume.FieldOtherInfo:
+		return m.OldOtherInfo(ctx)
 	case resume.FieldResumeFileURL:
 		return m.OldResumeFileURL(ctx)
 	case resume.FieldStatus:
@@ -18303,6 +18724,13 @@ func (m *ResumeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetBirthday(v)
 		return nil
+	case resume.FieldAge:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAge(v)
+		return nil
 	case resume.FieldEmail:
 		v, ok := value.(string)
 		if !ok {
@@ -18337,6 +18765,48 @@ func (m *ResumeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetYearsExperience(v)
+		return nil
+	case resume.FieldPersonalSummary:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPersonalSummary(v)
+		return nil
+	case resume.FieldExpectedSalary:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedSalary(v)
+		return nil
+	case resume.FieldExpectedCity:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedCity(v)
+		return nil
+	case resume.FieldEmploymentStatus:
+		v, ok := value.(consts.EmploymentStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmploymentStatus(v)
+		return nil
+	case resume.FieldHonorsCertificates:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHonorsCertificates(v)
+		return nil
+	case resume.FieldOtherInfo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOtherInfo(v)
 		return nil
 	case resume.FieldResumeFileURL:
 		v, ok := value.(string)
@@ -18388,6 +18858,9 @@ func (m *ResumeMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ResumeMutation) AddedFields() []string {
 	var fields []string
+	if m.addage != nil {
+		fields = append(fields, resume.FieldAge)
+	}
 	if m.addyears_experience != nil {
 		fields = append(fields, resume.FieldYearsExperience)
 	}
@@ -18399,6 +18872,8 @@ func (m *ResumeMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ResumeMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case resume.FieldAge:
+		return m.AddedAge()
 	case resume.FieldYearsExperience:
 		return m.AddedYearsExperience()
 	}
@@ -18410,6 +18885,13 @@ func (m *ResumeMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ResumeMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case resume.FieldAge:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAge(v)
+		return nil
 	case resume.FieldYearsExperience:
 		v, ok := value.(float64)
 		if !ok {
@@ -18437,6 +18919,9 @@ func (m *ResumeMutation) ClearedFields() []string {
 	if m.FieldCleared(resume.FieldBirthday) {
 		fields = append(fields, resume.FieldBirthday)
 	}
+	if m.FieldCleared(resume.FieldAge) {
+		fields = append(fields, resume.FieldAge)
+	}
 	if m.FieldCleared(resume.FieldEmail) {
 		fields = append(fields, resume.FieldEmail)
 	}
@@ -18451,6 +18936,24 @@ func (m *ResumeMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(resume.FieldYearsExperience) {
 		fields = append(fields, resume.FieldYearsExperience)
+	}
+	if m.FieldCleared(resume.FieldPersonalSummary) {
+		fields = append(fields, resume.FieldPersonalSummary)
+	}
+	if m.FieldCleared(resume.FieldExpectedSalary) {
+		fields = append(fields, resume.FieldExpectedSalary)
+	}
+	if m.FieldCleared(resume.FieldExpectedCity) {
+		fields = append(fields, resume.FieldExpectedCity)
+	}
+	if m.FieldCleared(resume.FieldEmploymentStatus) {
+		fields = append(fields, resume.FieldEmploymentStatus)
+	}
+	if m.FieldCleared(resume.FieldHonorsCertificates) {
+		fields = append(fields, resume.FieldHonorsCertificates)
+	}
+	if m.FieldCleared(resume.FieldOtherInfo) {
+		fields = append(fields, resume.FieldOtherInfo)
 	}
 	if m.FieldCleared(resume.FieldResumeFileURL) {
 		fields = append(fields, resume.FieldResumeFileURL)
@@ -18487,6 +18990,9 @@ func (m *ResumeMutation) ClearField(name string) error {
 	case resume.FieldBirthday:
 		m.ClearBirthday()
 		return nil
+	case resume.FieldAge:
+		m.ClearAge()
+		return nil
 	case resume.FieldEmail:
 		m.ClearEmail()
 		return nil
@@ -18501,6 +19007,24 @@ func (m *ResumeMutation) ClearField(name string) error {
 		return nil
 	case resume.FieldYearsExperience:
 		m.ClearYearsExperience()
+		return nil
+	case resume.FieldPersonalSummary:
+		m.ClearPersonalSummary()
+		return nil
+	case resume.FieldExpectedSalary:
+		m.ClearExpectedSalary()
+		return nil
+	case resume.FieldExpectedCity:
+		m.ClearExpectedCity()
+		return nil
+	case resume.FieldEmploymentStatus:
+		m.ClearEmploymentStatus()
+		return nil
+	case resume.FieldHonorsCertificates:
+		m.ClearHonorsCertificates()
+		return nil
+	case resume.FieldOtherInfo:
+		m.ClearOtherInfo()
 		return nil
 	case resume.FieldResumeFileURL:
 		m.ClearResumeFileURL()
@@ -18534,6 +19058,9 @@ func (m *ResumeMutation) ResetField(name string) error {
 	case resume.FieldBirthday:
 		m.ResetBirthday()
 		return nil
+	case resume.FieldAge:
+		m.ResetAge()
+		return nil
 	case resume.FieldEmail:
 		m.ResetEmail()
 		return nil
@@ -18548,6 +19075,24 @@ func (m *ResumeMutation) ResetField(name string) error {
 		return nil
 	case resume.FieldYearsExperience:
 		m.ResetYearsExperience()
+		return nil
+	case resume.FieldPersonalSummary:
+		m.ResetPersonalSummary()
+		return nil
+	case resume.FieldExpectedSalary:
+		m.ResetExpectedSalary()
+		return nil
+	case resume.FieldExpectedCity:
+		m.ResetExpectedCity()
+		return nil
+	case resume.FieldEmploymentStatus:
+		m.ResetEmploymentStatus()
+		return nil
+	case resume.FieldHonorsCertificates:
+		m.ResetHonorsCertificates()
+		return nil
+	case resume.FieldOtherInfo:
+		m.ResetOtherInfo()
 		return nil
 	case resume.FieldResumeFileURL:
 		m.ResetResumeFileURL()
@@ -20019,24 +20564,27 @@ func (m *ResumeDocumentParseMutation) ResetEdge(name string) error {
 // ResumeEducationMutation represents an operation that mutates the ResumeEducation nodes in the graph.
 type ResumeEducationMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *uuid.UUID
-	deleted_at      *time.Time
-	school          *string
-	degree          *string
-	major           *string
-	university_type *consts.UniversityType
-	start_date      *time.Time
-	end_date        *time.Time
-	created_at      *time.Time
-	updated_at      *time.Time
-	clearedFields   map[string]struct{}
-	resume          *uuid.UUID
-	clearedresume   bool
-	done            bool
-	oldValue        func(context.Context) (*ResumeEducation, error)
-	predicates      []predicate.ResumeEducation
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	deleted_at             *time.Time
+	school                 *string
+	degree                 *string
+	major                  *string
+	gpa                    *float64
+	addgpa                 *float64
+	university_types       *[]consts.UniversityType
+	appenduniversity_types []consts.UniversityType
+	start_date             *time.Time
+	end_date               *time.Time
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	resume                 *uuid.UUID
+	clearedresume          bool
+	done                   bool
+	oldValue               func(context.Context) (*ResumeEducation, error)
+	predicates             []predicate.ResumeEducation
 }
 
 var _ ent.Mutation = (*ResumeEducationMutation)(nil)
@@ -20375,53 +20923,139 @@ func (m *ResumeEducationMutation) ResetMajor() {
 	delete(m.clearedFields, resumeeducation.FieldMajor)
 }
 
-// SetUniversityType sets the "university_type" field.
-func (m *ResumeEducationMutation) SetUniversityType(ct consts.UniversityType) {
-	m.university_type = &ct
+// SetGpa sets the "gpa" field.
+func (m *ResumeEducationMutation) SetGpa(f float64) {
+	m.gpa = &f
+	m.addgpa = nil
 }
 
-// UniversityType returns the value of the "university_type" field in the mutation.
-func (m *ResumeEducationMutation) UniversityType() (r consts.UniversityType, exists bool) {
-	v := m.university_type
+// Gpa returns the value of the "gpa" field in the mutation.
+func (m *ResumeEducationMutation) Gpa() (r float64, exists bool) {
+	v := m.gpa
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldUniversityType returns the old "university_type" field's value of the ResumeEducation entity.
+// OldGpa returns the old "gpa" field's value of the ResumeEducation entity.
 // If the ResumeEducation object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeEducationMutation) OldUniversityType(ctx context.Context) (v consts.UniversityType, err error) {
+func (m *ResumeEducationMutation) OldGpa(ctx context.Context) (v float64, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUniversityType is only allowed on UpdateOne operations")
+		return v, errors.New("OldGpa is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUniversityType requires an ID field in the mutation")
+		return v, errors.New("OldGpa requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUniversityType: %w", err)
+		return v, fmt.Errorf("querying old value for OldGpa: %w", err)
 	}
-	return oldValue.UniversityType, nil
+	return oldValue.Gpa, nil
 }
 
-// ClearUniversityType clears the value of the "university_type" field.
-func (m *ResumeEducationMutation) ClearUniversityType() {
-	m.university_type = nil
-	m.clearedFields[resumeeducation.FieldUniversityType] = struct{}{}
+// AddGpa adds f to the "gpa" field.
+func (m *ResumeEducationMutation) AddGpa(f float64) {
+	if m.addgpa != nil {
+		*m.addgpa += f
+	} else {
+		m.addgpa = &f
+	}
 }
 
-// UniversityTypeCleared returns if the "university_type" field was cleared in this mutation.
-func (m *ResumeEducationMutation) UniversityTypeCleared() bool {
-	_, ok := m.clearedFields[resumeeducation.FieldUniversityType]
+// AddedGpa returns the value that was added to the "gpa" field in this mutation.
+func (m *ResumeEducationMutation) AddedGpa() (r float64, exists bool) {
+	v := m.addgpa
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearGpa clears the value of the "gpa" field.
+func (m *ResumeEducationMutation) ClearGpa() {
+	m.gpa = nil
+	m.addgpa = nil
+	m.clearedFields[resumeeducation.FieldGpa] = struct{}{}
+}
+
+// GpaCleared returns if the "gpa" field was cleared in this mutation.
+func (m *ResumeEducationMutation) GpaCleared() bool {
+	_, ok := m.clearedFields[resumeeducation.FieldGpa]
 	return ok
 }
 
-// ResetUniversityType resets all changes to the "university_type" field.
-func (m *ResumeEducationMutation) ResetUniversityType() {
-	m.university_type = nil
-	delete(m.clearedFields, resumeeducation.FieldUniversityType)
+// ResetGpa resets all changes to the "gpa" field.
+func (m *ResumeEducationMutation) ResetGpa() {
+	m.gpa = nil
+	m.addgpa = nil
+	delete(m.clearedFields, resumeeducation.FieldGpa)
+}
+
+// SetUniversityTypes sets the "university_types" field.
+func (m *ResumeEducationMutation) SetUniversityTypes(ct []consts.UniversityType) {
+	m.university_types = &ct
+	m.appenduniversity_types = nil
+}
+
+// UniversityTypes returns the value of the "university_types" field in the mutation.
+func (m *ResumeEducationMutation) UniversityTypes() (r []consts.UniversityType, exists bool) {
+	v := m.university_types
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUniversityTypes returns the old "university_types" field's value of the ResumeEducation entity.
+// If the ResumeEducation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeEducationMutation) OldUniversityTypes(ctx context.Context) (v []consts.UniversityType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUniversityTypes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUniversityTypes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUniversityTypes: %w", err)
+	}
+	return oldValue.UniversityTypes, nil
+}
+
+// AppendUniversityTypes adds ct to the "university_types" field.
+func (m *ResumeEducationMutation) AppendUniversityTypes(ct []consts.UniversityType) {
+	m.appenduniversity_types = append(m.appenduniversity_types, ct...)
+}
+
+// AppendedUniversityTypes returns the list of values that were appended to the "university_types" field in this mutation.
+func (m *ResumeEducationMutation) AppendedUniversityTypes() ([]consts.UniversityType, bool) {
+	if len(m.appenduniversity_types) == 0 {
+		return nil, false
+	}
+	return m.appenduniversity_types, true
+}
+
+// ClearUniversityTypes clears the value of the "university_types" field.
+func (m *ResumeEducationMutation) ClearUniversityTypes() {
+	m.university_types = nil
+	m.appenduniversity_types = nil
+	m.clearedFields[resumeeducation.FieldUniversityTypes] = struct{}{}
+}
+
+// UniversityTypesCleared returns if the "university_types" field was cleared in this mutation.
+func (m *ResumeEducationMutation) UniversityTypesCleared() bool {
+	_, ok := m.clearedFields[resumeeducation.FieldUniversityTypes]
+	return ok
+}
+
+// ResetUniversityTypes resets all changes to the "university_types" field.
+func (m *ResumeEducationMutation) ResetUniversityTypes() {
+	m.university_types = nil
+	m.appenduniversity_types = nil
+	delete(m.clearedFields, resumeeducation.FieldUniversityTypes)
 }
 
 // SetStartDate sets the "start_date" field.
@@ -20655,7 +21289,7 @@ func (m *ResumeEducationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResumeEducationMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.deleted_at != nil {
 		fields = append(fields, resumeeducation.FieldDeletedAt)
 	}
@@ -20671,8 +21305,11 @@ func (m *ResumeEducationMutation) Fields() []string {
 	if m.major != nil {
 		fields = append(fields, resumeeducation.FieldMajor)
 	}
-	if m.university_type != nil {
-		fields = append(fields, resumeeducation.FieldUniversityType)
+	if m.gpa != nil {
+		fields = append(fields, resumeeducation.FieldGpa)
+	}
+	if m.university_types != nil {
+		fields = append(fields, resumeeducation.FieldUniversityTypes)
 	}
 	if m.start_date != nil {
 		fields = append(fields, resumeeducation.FieldStartDate)
@@ -20704,8 +21341,10 @@ func (m *ResumeEducationMutation) Field(name string) (ent.Value, bool) {
 		return m.Degree()
 	case resumeeducation.FieldMajor:
 		return m.Major()
-	case resumeeducation.FieldUniversityType:
-		return m.UniversityType()
+	case resumeeducation.FieldGpa:
+		return m.Gpa()
+	case resumeeducation.FieldUniversityTypes:
+		return m.UniversityTypes()
 	case resumeeducation.FieldStartDate:
 		return m.StartDate()
 	case resumeeducation.FieldEndDate:
@@ -20733,8 +21372,10 @@ func (m *ResumeEducationMutation) OldField(ctx context.Context, name string) (en
 		return m.OldDegree(ctx)
 	case resumeeducation.FieldMajor:
 		return m.OldMajor(ctx)
-	case resumeeducation.FieldUniversityType:
-		return m.OldUniversityType(ctx)
+	case resumeeducation.FieldGpa:
+		return m.OldGpa(ctx)
+	case resumeeducation.FieldUniversityTypes:
+		return m.OldUniversityTypes(ctx)
 	case resumeeducation.FieldStartDate:
 		return m.OldStartDate(ctx)
 	case resumeeducation.FieldEndDate:
@@ -20787,12 +21428,19 @@ func (m *ResumeEducationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetMajor(v)
 		return nil
-	case resumeeducation.FieldUniversityType:
-		v, ok := value.(consts.UniversityType)
+	case resumeeducation.FieldGpa:
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetUniversityType(v)
+		m.SetGpa(v)
+		return nil
+	case resumeeducation.FieldUniversityTypes:
+		v, ok := value.([]consts.UniversityType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUniversityTypes(v)
 		return nil
 	case resumeeducation.FieldStartDate:
 		v, ok := value.(time.Time)
@@ -20829,13 +21477,21 @@ func (m *ResumeEducationMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *ResumeEducationMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addgpa != nil {
+		fields = append(fields, resumeeducation.FieldGpa)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *ResumeEducationMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case resumeeducation.FieldGpa:
+		return m.AddedGpa()
+	}
 	return nil, false
 }
 
@@ -20844,6 +21500,13 @@ func (m *ResumeEducationMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ResumeEducationMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case resumeeducation.FieldGpa:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGpa(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ResumeEducation numeric field %s", name)
 }
@@ -20864,8 +21527,11 @@ func (m *ResumeEducationMutation) ClearedFields() []string {
 	if m.FieldCleared(resumeeducation.FieldMajor) {
 		fields = append(fields, resumeeducation.FieldMajor)
 	}
-	if m.FieldCleared(resumeeducation.FieldUniversityType) {
-		fields = append(fields, resumeeducation.FieldUniversityType)
+	if m.FieldCleared(resumeeducation.FieldGpa) {
+		fields = append(fields, resumeeducation.FieldGpa)
+	}
+	if m.FieldCleared(resumeeducation.FieldUniversityTypes) {
+		fields = append(fields, resumeeducation.FieldUniversityTypes)
 	}
 	if m.FieldCleared(resumeeducation.FieldStartDate) {
 		fields = append(fields, resumeeducation.FieldStartDate)
@@ -20899,8 +21565,11 @@ func (m *ResumeEducationMutation) ClearField(name string) error {
 	case resumeeducation.FieldMajor:
 		m.ClearMajor()
 		return nil
-	case resumeeducation.FieldUniversityType:
-		m.ClearUniversityType()
+	case resumeeducation.FieldGpa:
+		m.ClearGpa()
+		return nil
+	case resumeeducation.FieldUniversityTypes:
+		m.ClearUniversityTypes()
 		return nil
 	case resumeeducation.FieldStartDate:
 		m.ClearStartDate()
@@ -20931,8 +21600,11 @@ func (m *ResumeEducationMutation) ResetField(name string) error {
 	case resumeeducation.FieldMajor:
 		m.ResetMajor()
 		return nil
-	case resumeeducation.FieldUniversityType:
-		m.ResetUniversityType()
+	case resumeeducation.FieldGpa:
+		m.ResetGpa()
+		return nil
+	case resumeeducation.FieldUniversityTypes:
+		m.ResetUniversityTypes()
 		return nil
 	case resumeeducation.FieldStartDate:
 		m.ResetStartDate()
@@ -21027,24 +21699,25 @@ func (m *ResumeEducationMutation) ResetEdge(name string) error {
 // ResumeExperienceMutation represents an operation that mutates the ResumeExperience nodes in the graph.
 type ResumeExperienceMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	deleted_at    *time.Time
-	company       *string
-	position      *string
-	title         *string
-	start_date    *time.Time
-	end_date      *time.Time
-	description   *string
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	resume        *uuid.UUID
-	clearedresume bool
-	done          bool
-	oldValue      func(context.Context) (*ResumeExperience, error)
-	predicates    []predicate.ResumeExperience
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	deleted_at      *time.Time
+	company         *string
+	position        *string
+	title           *string
+	start_date      *time.Time
+	end_date        *time.Time
+	description     *string
+	experience_type *consts.ExperienceType
+	created_at      *time.Time
+	updated_at      *time.Time
+	clearedFields   map[string]struct{}
+	resume          *uuid.UUID
+	clearedresume   bool
+	done            bool
+	oldValue        func(context.Context) (*ResumeExperience, error)
+	predicates      []predicate.ResumeExperience
 }
 
 var _ ent.Mutation = (*ResumeExperienceMutation)(nil)
@@ -21530,6 +22203,55 @@ func (m *ResumeExperienceMutation) ResetDescription() {
 	delete(m.clearedFields, resumeexperience.FieldDescription)
 }
 
+// SetExperienceType sets the "experience_type" field.
+func (m *ResumeExperienceMutation) SetExperienceType(ct consts.ExperienceType) {
+	m.experience_type = &ct
+}
+
+// ExperienceType returns the value of the "experience_type" field in the mutation.
+func (m *ResumeExperienceMutation) ExperienceType() (r consts.ExperienceType, exists bool) {
+	v := m.experience_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExperienceType returns the old "experience_type" field's value of the ResumeExperience entity.
+// If the ResumeExperience object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ResumeExperienceMutation) OldExperienceType(ctx context.Context) (v consts.ExperienceType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExperienceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExperienceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExperienceType: %w", err)
+	}
+	return oldValue.ExperienceType, nil
+}
+
+// ClearExperienceType clears the value of the "experience_type" field.
+func (m *ResumeExperienceMutation) ClearExperienceType() {
+	m.experience_type = nil
+	m.clearedFields[resumeexperience.FieldExperienceType] = struct{}{}
+}
+
+// ExperienceTypeCleared returns if the "experience_type" field was cleared in this mutation.
+func (m *ResumeExperienceMutation) ExperienceTypeCleared() bool {
+	_, ok := m.clearedFields[resumeexperience.FieldExperienceType]
+	return ok
+}
+
+// ResetExperienceType resets all changes to the "experience_type" field.
+func (m *ResumeExperienceMutation) ResetExperienceType() {
+	m.experience_type = nil
+	delete(m.clearedFields, resumeexperience.FieldExperienceType)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *ResumeExperienceMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -21663,7 +22385,7 @@ func (m *ResumeExperienceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ResumeExperienceMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.deleted_at != nil {
 		fields = append(fields, resumeexperience.FieldDeletedAt)
 	}
@@ -21687,6 +22409,9 @@ func (m *ResumeExperienceMutation) Fields() []string {
 	}
 	if m.description != nil {
 		fields = append(fields, resumeexperience.FieldDescription)
+	}
+	if m.experience_type != nil {
+		fields = append(fields, resumeexperience.FieldExperienceType)
 	}
 	if m.created_at != nil {
 		fields = append(fields, resumeexperience.FieldCreatedAt)
@@ -21718,6 +22443,8 @@ func (m *ResumeExperienceMutation) Field(name string) (ent.Value, bool) {
 		return m.EndDate()
 	case resumeexperience.FieldDescription:
 		return m.Description()
+	case resumeexperience.FieldExperienceType:
+		return m.ExperienceType()
 	case resumeexperience.FieldCreatedAt:
 		return m.CreatedAt()
 	case resumeexperience.FieldUpdatedAt:
@@ -21747,6 +22474,8 @@ func (m *ResumeExperienceMutation) OldField(ctx context.Context, name string) (e
 		return m.OldEndDate(ctx)
 	case resumeexperience.FieldDescription:
 		return m.OldDescription(ctx)
+	case resumeexperience.FieldExperienceType:
+		return m.OldExperienceType(ctx)
 	case resumeexperience.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case resumeexperience.FieldUpdatedAt:
@@ -21816,6 +22545,13 @@ func (m *ResumeExperienceMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetDescription(v)
 		return nil
+	case resumeexperience.FieldExperienceType:
+		v, ok := value.(consts.ExperienceType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExperienceType(v)
+		return nil
 	case resumeexperience.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -21881,6 +22617,9 @@ func (m *ResumeExperienceMutation) ClearedFields() []string {
 	if m.FieldCleared(resumeexperience.FieldDescription) {
 		fields = append(fields, resumeexperience.FieldDescription)
 	}
+	if m.FieldCleared(resumeexperience.FieldExperienceType) {
+		fields = append(fields, resumeexperience.FieldExperienceType)
+	}
 	return fields
 }
 
@@ -21916,6 +22655,9 @@ func (m *ResumeExperienceMutation) ClearField(name string) error {
 	case resumeexperience.FieldDescription:
 		m.ClearDescription()
 		return nil
+	case resumeexperience.FieldExperienceType:
+		m.ClearExperienceType()
+		return nil
 	}
 	return fmt.Errorf("unknown ResumeExperience nullable field %s", name)
 }
@@ -21947,6 +22689,9 @@ func (m *ResumeExperienceMutation) ResetField(name string) error {
 		return nil
 	case resumeexperience.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case resumeexperience.FieldExperienceType:
+		m.ResetExperienceType()
 		return nil
 	case resumeexperience.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -27192,7 +27937,7 @@ type ResumeProjectMutation struct {
 	achievements     *string
 	technologies     *string
 	project_url      *string
-	project_type     *string
+	project_type     *consts.ProjectType
 	created_at       *time.Time
 	updated_at       *time.Time
 	clearedFields    map[string]struct{}
@@ -27883,12 +28628,12 @@ func (m *ResumeProjectMutation) ResetProjectURL() {
 }
 
 // SetProjectType sets the "project_type" field.
-func (m *ResumeProjectMutation) SetProjectType(s string) {
-	m.project_type = &s
+func (m *ResumeProjectMutation) SetProjectType(ct consts.ProjectType) {
+	m.project_type = &ct
 }
 
 // ProjectType returns the value of the "project_type" field in the mutation.
-func (m *ResumeProjectMutation) ProjectType() (r string, exists bool) {
+func (m *ResumeProjectMutation) ProjectType() (r consts.ProjectType, exists bool) {
 	v := m.project_type
 	if v == nil {
 		return
@@ -27899,7 +28644,7 @@ func (m *ResumeProjectMutation) ProjectType() (r string, exists bool) {
 // OldProjectType returns the old "project_type" field's value of the ResumeProject entity.
 // If the ResumeProject object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ResumeProjectMutation) OldProjectType(ctx context.Context) (v string, err error) {
+func (m *ResumeProjectMutation) OldProjectType(ctx context.Context) (v consts.ProjectType, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldProjectType is only allowed on UpdateOne operations")
 	}
@@ -28281,7 +29026,7 @@ func (m *ResumeProjectMutation) SetField(name string, value ent.Value) error {
 		m.SetProjectURL(v)
 		return nil
 	case resumeproject.FieldProjectType:
-		v, ok := value.(string)
+		v, ok := value.(consts.ProjectType)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
