@@ -375,6 +375,17 @@ var DefaultDimensionWeights = DimensionWeights{
 	Basic:          0.03,
 }
 
+// WeightInferenceInput 权重推理输入
+type WeightInferenceInput struct {
+	JobProfile *JobProfileDetail `json:"job_profile"`
+}
+
+// WeightInferenceResult 权重推理输出
+type WeightInferenceResult struct {
+	Weights   DimensionWeights `json:"weights"`
+	Rationale []string         `json:"rationale,omitempty"`
+}
+
 // Agent数据结构
 
 // BasicInfoData 基本信息Agent数据

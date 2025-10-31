@@ -13,8 +13,10 @@ import (
 	"github.com/chaitin/WhaleHire/backend/config"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	screening "github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening"
+	"github.com/chaitin/WhaleHire/backend/pkg/eino/graphs/screening/matching/weights"
 	"github.com/chaitin/WhaleHire/backend/pkg/eino/models"
 	"github.com/cloudwego/eino-ext/callbacks/langsmith"
+	"github.com/cloudwego/eino/callbacks"
 )
 
 func main() {
@@ -25,24 +27,24 @@ func main() {
 		panic(err)
 	}
 
-	// cfgls := &langsmith.Config{
-	// 	APIKey: cfg.Langsmith.APIKey,
-	// }
-	// // ft := langsmith.NewFlowTrace(cfg)
-	// cbh, err := langsmith.NewLangsmithHandler(cfgls)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	cfgls := &langsmith.Config{
+		APIKey: cfg.Langsmith.APIKey,
+	}
+	// ft := langsmith.NewFlowTrace(cfg)
+	cbh, err := langsmith.NewLangsmithHandler(cfgls)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// // 设置全局上报handler
-	// callbacks.AppendGlobalHandlers(cbh)
+	// 设置全局上报handler
+	callbacks.AppendGlobalHandlers(cbh)
 
 	ctx := context.Background()
 	ctx = langsmith.SetTrace(ctx,
 		langsmith.WithSessionName("WhaleHire Screening"), // 设置langsmith上报项目名称
 	)
 
-	// 1.调用调试服务初始化函数
+	//1.调用调试服务初始化函数
 	// err := devops.Init(ctx)
 	// if err != nil {
 	// 	log.Fatalf("[eino dev] init failed, err=%v", err)
@@ -64,6 +66,29 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to get model: %v", err)
 	}
+	// 准备测试数据
+	matchInput := createTestMatchInput()
+
+	agent, err := weights.NewWeightPlannerAgent(ctx, chatModel)
+	if err != nil {
+		log.Fatalf("创建权重规划 Agent 失败: %v", err)
+	}
+
+	runnable, err := agent.Compile(ctx)
+	if err != nil {
+		log.Fatalf("编译权重规划链失败: %v", err)
+	}
+
+	resultWeight, err := runnable.Invoke(ctx, &domain.WeightInferenceInput{
+		JobProfile: matchInput.JobProfile,
+	})
+	if err != nil {
+		log.Fatalf("执行权重规划失败: %v", err)
+	}
+
+	fmt.Println("权重规划结果:", resultWeight)
+
+	matchInput.DimensionWeights = &resultWeight.Weights
 
 	// 创建screening图
 	screeningGraph, err := screening.NewScreeningChatGraph(ctx, chatModel, cfg)
@@ -79,9 +104,6 @@ func main() {
 	outputCollector := screening.NewAgentCallbackCollector()
 	outputCollector.EnableDetailedCallbacks() // 开启详细回调便于单独示例调试
 
-	// 准备测试数据
-	matchInput := createTestMatchInput()
-
 	fmt.Println("开始执行简历智能匹配...")
 	fmt.Printf("职位: %s\n", matchInput.JobProfile.Name)
 	fmt.Printf("候选人: %s\n", matchInput.Resume.Name)
@@ -95,7 +117,6 @@ func main() {
 
 	// 输出结果
 	fmt.Printf("匹配完成！综合得分: %.2f\n", result.OverallScore)
-	fmt.Printf("匹配等级: %s\n", domain.GetMatchLevel(result.OverallScore))
 	fmt.Println("----------------------------------------")
 
 	// 详细匹配结果
@@ -105,29 +126,6 @@ func main() {
 	if jsonData, err := json.MarshalIndent(result, "", "  "); err == nil {
 		fmt.Println("\n完整匹配结果JSON:")
 		fmt.Println(string(jsonData))
-	}
-
-	// 打印各 Agent 输出，便于回调调试
-	if basic, ok := outputCollector.BasicInfo(); ok {
-		fmt.Printf("\n[BasicInfoAgent] 匹配得分: %.2f\n", basic.Score)
-	}
-	if education, ok := outputCollector.Education(); ok {
-		fmt.Printf("[EducationAgent] 匹配得分: %.2f\n", education.Score)
-	}
-	if experience, ok := outputCollector.Experience(); ok {
-		fmt.Printf("[ExperienceAgent] 匹配得分: %.2f\n", experience.Score)
-	}
-	if industry, ok := outputCollector.Industry(); ok {
-		fmt.Printf("[IndustryAgent] 匹配得分: %.2f\n", industry.Score)
-	}
-	if responsibility, ok := outputCollector.Responsibility(); ok {
-		fmt.Printf("[ResponsibilityAgent] 匹配得分: %.2f\n", responsibility.Score)
-	}
-	if skill, ok := outputCollector.Skill(); ok {
-		fmt.Printf("[SkillAgent] 匹配得分: %.2f\n", skill.Score)
-	}
-	if aggregated, ok := outputCollector.AggregatedMatch(); ok {
-		fmt.Printf("[AggregatorAgent] 综合得分: %.2f\n", aggregated.OverallScore)
 	}
 
 	// 打印各 Agent 的 Token 消耗情况
