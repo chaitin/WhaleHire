@@ -420,12 +420,12 @@ func (h *ScreeningHandler) GetNodeRuns(c *web.Context) error {
 //
 //	@Tags			Screening
 //	@Summary		预览权重
-//	@Description	根据岗位信息自动推理维度权重，支持用户预览和确认
+//	@Description	根据岗位信息自动推理维度权重，支持用户预览和确认。返回三种不同评估角度的权重方案：默认方案（注重岗位职责+技能匹配）、应届方案（注重教育经历+技能匹配）、经验方案（注重工作经验+岗位职责匹配）
 //	@ID				preview-weights
 //	@Accept			json
 //	@Produce		json
-//	@Param			param	body		domain.PreviewWeightsReq	true	"预览权重参数"
-//	@Success		200		{object}	web.Resp{data=domain.PreviewWeightsResp}
+//	@Param			param	body		domain.PreviewWeightsReq					true	"预览权重参数"
+//	@Success		200		{object}	web.Resp{data=domain.PreviewWeightsResp}	"返回三种权重方案，每个方案包含type（方案类型标签）、weights（六个维度的权重对象）和rationale（推理说明数组）"
 //	@Router			/api/v1/screening/weights/preview [post]
 func (h *ScreeningHandler) PreviewWeights(c *web.Context, req domain.PreviewWeightsReq) error {
 	if req.JobPositionID == uuid.Nil {
@@ -518,9 +518,9 @@ func (h *ScreeningHandler) GetWeightTemplate(c *web.Context) error {
 //	@ID				list-weight-templates
 //	@Accept			json
 //	@Produce		json
-//	@Param			page		query		web.Pagination	true	"分页参数"
-//	@Param			name		query		string			false	"模板名称（模糊匹配）"
-//	@Success		200			{object}	web.Resp{data=domain.ListWeightTemplatesResp}
+//	@Param			page	query		web.Pagination	true	"分页参数"
+//	@Param			name	query		string			false	"模板名称（模糊匹配）"
+//	@Success		200		{object}	web.Resp{data=domain.ListWeightTemplatesResp}
 //	@Router			/api/v1/screening/weights/templates [get]
 func (h *ScreeningHandler) ListWeightTemplates(c *web.Context, req domain.ListWeightTemplatesReq) error {
 	user := middleware.GetUser(c)

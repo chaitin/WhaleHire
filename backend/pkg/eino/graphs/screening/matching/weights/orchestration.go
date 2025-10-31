@@ -18,7 +18,8 @@ type WeightPlannerAgent struct {
 	chain *compose.Chain[*domain.WeightInferenceInput, *domain.WeightInferenceResult]
 }
 
-type llmWeightOutput struct {
+// llmWeightSchemeOutput LLM 输出的单个权重方案
+type llmWeightSchemeOutput struct {
 	Skill          float64  `json:"skill"`
 	Responsibility float64  `json:"responsibility"`
 	Experience     float64  `json:"experience"`
@@ -26,6 +27,11 @@ type llmWeightOutput struct {
 	Industry       float64  `json:"industry"`
 	Basic          float64  `json:"basic"`
 	Rationale      []string `json:"rationale"`
+}
+
+// llmWeightOutput LLM 输出的完整权重结构
+type llmWeightOutput struct {
+	Schemes []llmWeightSchemeOutput `json:"schemes"`
 }
 
 // newInputLambda 将权重推理输入转换为模板变量
@@ -230,22 +236,44 @@ func newOutputLambda(ctx context.Context, msg *schema.Message, opts ...any) (*do
 		return nil, fmt.Errorf("解析模型输出失败: %w; raw=%s", err, msg.Content)
 	}
 
-	weights := domain.DimensionWeights{
-		Skill:          output.Skill,
-		Responsibility: output.Responsibility,
-		Experience:     output.Experience,
-		Education:      output.Education,
-		Industry:       output.Industry,
-		Basic:          output.Basic,
+	// 验证 schemes 数组长度
+	if len(output.Schemes) != 3 {
+		return nil, fmt.Errorf("权重方案数量不正确，期望3个方案，实际得到%d个; raw=%s", len(output.Schemes), msg.Content)
 	}
 
-	if err := validateWeights(weights); err != nil {
-		return nil, err
+	// 定义三种方案的类型标签
+	schemeTypes := []string{
+		domain.WeightSchemeTypeDefault,        // 第一个方案：注重岗位职责 + 技能匹配
+		domain.WeightSchemeTypeFreshGraduate,  // 第二个方案：注重教育经历 + 技能匹配
+		domain.WeightSchemeTypeExperienced,    // 第三个方案：注重工作经验 + 岗位职责匹配
+	}
+
+	var weightSchemes []domain.WeightScheme
+	for i, schemeOutput := range output.Schemes {
+		weights := domain.DimensionWeights{
+			Skill:          schemeOutput.Skill,
+			Responsibility: schemeOutput.Responsibility,
+			Experience:     schemeOutput.Experience,
+			Education:      schemeOutput.Education,
+			Industry:       schemeOutput.Industry,
+			Basic:          schemeOutput.Basic,
+		}
+
+		// 验证权重
+		if err := validateWeights(weights); err != nil {
+			return nil, fmt.Errorf("方案 %d (%s) 权重验证失败: %w", i+1, schemeTypes[i], err)
+		}
+
+		weightScheme := domain.WeightScheme{
+			Type:      schemeTypes[i],
+			Weights:   weights,
+			Rationale: schemeOutput.Rationale,
+		}
+		weightSchemes = append(weightSchemes, weightScheme)
 	}
 
 	result := &domain.WeightInferenceResult{
-		Weights:   weights,
-		Rationale: output.Rationale,
+		WeightSchemes: weightSchemes,
 	}
 	return result, nil
 }

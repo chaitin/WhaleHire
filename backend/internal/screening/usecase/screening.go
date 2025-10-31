@@ -864,20 +864,28 @@ func (u *ScreeningUsecase) PreviewWeights(ctx context.Context, req *domain.Previ
 	}
 
 	// 转换为响应格式
-	weights := map[string]float64{
-		"skill":          result.Weights.Skill,
-		"responsibility": result.Weights.Responsibility,
-		"experience":     result.Weights.Experience,
-		"education":      result.Weights.Education,
-		"industry":       result.Weights.Industry,
-		"basic":          result.Weights.Basic,
+	var weightSchemes []domain.WeightSchemeResp
+	for _, scheme := range result.WeightSchemes {
+		weights := map[string]float64{
+			"skill":          scheme.Weights.Skill,
+			"responsibility": scheme.Weights.Responsibility,
+			"experience":     scheme.Weights.Experience,
+			"education":      scheme.Weights.Education,
+			"industry":       scheme.Weights.Industry,
+			"basic":          scheme.Weights.Basic,
+		}
+
+		weightSchemes = append(weightSchemes, domain.WeightSchemeResp{
+			Type:      scheme.Type,
+			Weights:   weights,
+			Rationale: scheme.Rationale,
+		})
 	}
 
 	resp := &domain.PreviewWeightsResp{
-		Weights:    weights,
-		Rationale:  result.Rationale,
-		TokenUsage: tokenUsage,
-		Version:    version,
+		WeightSchemes: weightSchemes,
+		TokenUsage:    tokenUsage,
+		Version:       version,
 	}
 
 	return resp, nil

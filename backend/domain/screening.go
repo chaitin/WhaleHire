@@ -615,12 +615,20 @@ type PreviewWeightsReq struct {
 	LLMConfig map[string]any `json:"llm_config,omitempty"`
 }
 
+// WeightSchemeResp 权重方案响应结构
+type WeightSchemeResp struct {
+	// Type 方案类型标签，取值为：default（默认方案）、fresh_graduate（注重教育经历）、experienced（注重工作经验）
+	Type string `json:"type"`
+	// Weights 六个维度的权重对象
+	Weights map[string]float64 `json:"weights"`
+	// Rationale 推理说明数组，解释该方案的权重分配依据
+	Rationale []string `json:"rationale,omitempty"`
+}
+
 // PreviewWeightsResp 预览权重响应
 type PreviewWeightsResp struct {
-	// Weights 推理得到的维度权重配置
-	Weights map[string]float64 `json:"weights"`
-	// Rationale 推理说明，包含1-3条简短的权重分配理由
-	Rationale []string `json:"rationale,omitempty"`
+	// WeightSchemes 权重方案数组，包含三种不同评估角度的权重配置
+	WeightSchemes []WeightSchemeResp `json:"weight_schemes"`
 	// TokenUsage Token使用情况，包含输入和输出的token数量
 	TokenUsage map[string]int64 `json:"token_usage,omitempty"`
 	// Version Agent版本号

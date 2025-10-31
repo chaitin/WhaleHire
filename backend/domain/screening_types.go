@@ -375,15 +375,43 @@ var DefaultDimensionWeights = DimensionWeights{
 	Basic:          0.03,
 }
 
+// 权重方案类型常量
+const (
+	// WeightSchemeTypeDefault 默认方案：注重岗位职责 + 技能匹配
+	WeightSchemeTypeDefault = "default"
+	// WeightSchemeTypeFreshGraduate 应届方案：注重教育经历 + 技能匹配
+	WeightSchemeTypeFreshGraduate = "fresh_graduate"
+	// WeightSchemeTypeExperienced 经验方案：注重工作经验 + 岗位职责匹配
+	WeightSchemeTypeExperienced = "experienced"
+)
+
+// IsValidWeightSchemeType 验证权重方案类型是否有效
+func IsValidWeightSchemeType(weightType string) bool {
+	return weightType == WeightSchemeTypeDefault ||
+		weightType == WeightSchemeTypeFreshGraduate ||
+		weightType == WeightSchemeTypeExperienced
+}
+
 // WeightInferenceInput 权重推理输入
 type WeightInferenceInput struct {
 	JobProfile *JobProfileDetail `json:"job_profile"`
 }
 
+// WeightScheme 权重方案
+// @Description 代表一种评估角度的权重配置方案
+type WeightScheme struct {
+	// Type 方案类型标签，取值为：default（默认方案）、fresh_graduate（注重教育经历）、experienced（注重工作经验）
+	Type string `json:"type"`
+	// Weights 六个维度的权重配置
+	Weights DimensionWeights `json:"weights"`
+	// Rationale 推理说明数组，解释该方案的权重分配依据
+	Rationale []string `json:"rationale,omitempty"`
+}
+
 // WeightInferenceResult 权重推理输出
 type WeightInferenceResult struct {
-	Weights   DimensionWeights `json:"weights"`
-	Rationale []string         `json:"rationale,omitempty"`
+	// WeightSchemes 权重方案数组，包含三种不同评估角度的权重配置
+	WeightSchemes []WeightScheme `json:"weight_schemes"`
 }
 
 // Agent数据结构

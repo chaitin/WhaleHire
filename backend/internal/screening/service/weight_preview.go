@@ -93,16 +93,33 @@ func (s *weightPreviewService) PreviewWeights(ctx context.Context, jobProfile *d
 	result, err := runnable.Invoke(ctx, input, options...)
 	if err != nil {
 		s.logger.Warn("权重推理失败，回退到默认权重", "error", err, "job_id", jobProfile.JobProfile.ID)
-		// 推理失败时回退到默认权重
+		// 推理失败时回退到三种默认权重方案
 		return &domain.WeightInferenceResult{
-			Weights:   domain.DefaultDimensionWeights,
-			Rationale: []string{"推理失败，使用默认权重配置"},
+			WeightSchemes: []domain.WeightScheme{
+				{
+					Type:      domain.WeightSchemeTypeDefault,
+					Weights:   domain.DefaultDimensionWeights,
+					Rationale: []string{"推理失败，使用默认权重配置"},
+				},
+				{
+					Type:      domain.WeightSchemeTypeFreshGraduate,
+					Weights:   domain.DefaultDimensionWeights,
+					Rationale: []string{"推理失败，使用默认权重配置"},
+				},
+				{
+					Type:      domain.WeightSchemeTypeExperienced,
+					Weights:   domain.DefaultDimensionWeights,
+					Rationale: []string{"推理失败，使用默认权重配置"},
+				},
+			},
 		}, nil, s.version, nil
 	}
 
-	// 归一化权重
-	sanitizedWeights := sanitizeWeights(result.Weights)
-	result.Weights = sanitizedWeights
+	// 归一化每个方案的权重
+	for i := range result.WeightSchemes {
+		sanitizedWeights := sanitizeWeights(result.WeightSchemes[i].Weights)
+		result.WeightSchemes[i].Weights = sanitizedWeights
+	}
 
 	// 转换 token 使用情况
 	if collectedUsage != nil {
