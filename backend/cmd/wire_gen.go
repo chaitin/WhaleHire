@@ -132,7 +132,11 @@ func newServer() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	screeningUsecase := usecase8.NewScreeningUsecase(screeningRepo, screeningNodeRunRepo, jobProfileUsecase, resumeUsecase, userRepo, matchingService, notificationUsecase, configConfig, slogLogger)
+	weightPreviewService, err := service3.NewWeightPreviewService(configConfig, slogLogger)
+	if err != nil {
+		return nil, err
+	}
+	screeningUsecase := usecase8.NewScreeningUsecase(screeningRepo, screeningNodeRunRepo, jobProfileUsecase, resumeUsecase, userRepo, matchingService, weightPreviewService, notificationUsecase, configConfig, slogLogger)
 	screeningHandler := v1_7.NewScreeningHandler(web, screeningUsecase, authMiddleware, slogLogger)
 	universityRepo := repo10.NewUniversityRepo(client, configConfig)
 	universityUsecase := usecase9.NewUniversityUsecase(universityRepo)

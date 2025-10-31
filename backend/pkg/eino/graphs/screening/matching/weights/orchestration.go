@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/chaitin/WhaleHire/backend/consts"
 	"github.com/chaitin/WhaleHire/backend/domain"
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/compose"
@@ -35,25 +37,186 @@ func newInputLambda(ctx context.Context, input *domain.WeightInferenceInput, opt
 		return nil, fmt.Errorf("岗位信息不能为空")
 	}
 
-	payload := map[string]any{
-		"job_profile": map[string]any{
-			"base":             input.JobProfile.JobProfile,
-			"responsibilities": input.JobProfile.Responsibilities,
-			"skills":           input.JobProfile.Skills,
-			"experience":       input.JobProfile.ExperienceRequirements,
-			"education":        input.JobProfile.EducationRequirements,
-			"industry":         input.JobProfile.IndustryRequirements,
-		},
-	}
-
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("序列化岗位数据失败: %w", err)
-	}
+	// 将 JobProfile 转换为易理解的文档格式
+	jobProfileDoc := formatJobProfileAsDocument(input.JobProfile)
 
 	return map[string]any{
-		"job_profile_json": string(payloadJSON),
+		"job_profile_json": jobProfileDoc,
 	}, nil
+}
+
+// formatJobProfileAsDocument 将岗位画像转换为易理解的文档格式
+func formatJobProfileAsDocument(jobProfile *domain.JobProfileDetail) string {
+	var doc strings.Builder
+
+	// 基本信息
+	base := jobProfile.JobProfile
+	doc.WriteString("# 岗位信息\n\n")
+
+	doc.WriteString("## 基本信息\n")
+	doc.WriteString(fmt.Sprintf("- **岗位名称**: %s\n", base.Name))
+	if base.Department != "" {
+		doc.WriteString(fmt.Sprintf("- **所属部门**: %s\n", base.Department))
+	}
+	if base.WorkType != nil {
+		doc.WriteString(fmt.Sprintf("- **工作性质**: %s\n", translateWorkType(*base.WorkType)))
+	}
+	if base.Location != nil && *base.Location != "" {
+		doc.WriteString(fmt.Sprintf("- **工作地点**: %s\n", *base.Location))
+	}
+	if base.SalaryMin != nil && base.SalaryMax != nil {
+		doc.WriteString(fmt.Sprintf("- **薪资范围**: %.0f - %.0f 元/月\n", *base.SalaryMin, *base.SalaryMax))
+	} else if base.SalaryMin != nil {
+		doc.WriteString(fmt.Sprintf("- **最低薪资**: %.0f 元/月\n", *base.SalaryMin))
+	} else if base.SalaryMax != nil {
+		doc.WriteString(fmt.Sprintf("- **最高薪资**: %.0f 元/月\n", *base.SalaryMax))
+	}
+	if base.Description != nil && *base.Description != "" {
+		doc.WriteString(fmt.Sprintf("- **岗位描述**: %s\n", *base.Description))
+	}
+	doc.WriteString("\n")
+
+	// 岗位职责
+	if len(jobProfile.Responsibilities) > 0 {
+		doc.WriteString("## 岗位职责\n")
+		for i, resp := range jobProfile.Responsibilities {
+			doc.WriteString(fmt.Sprintf("%d. %s\n", i+1, resp.Responsibility))
+		}
+		doc.WriteString("\n")
+	}
+
+	// 技能要求
+	if len(jobProfile.Skills) > 0 {
+		doc.WriteString("## 技能要求\n")
+
+		// 必需技能
+		requiredSkills := []string{}
+		bonusSkills := []string{}
+		for _, skill := range jobProfile.Skills {
+			if skill.Type == string(consts.JobSkillTypeRequired) {
+				requiredSkills = append(requiredSkills, skill.Skill)
+			} else if skill.Type == string(consts.JobSkillTypeBonus) {
+				bonusSkills = append(bonusSkills, skill.Skill)
+			}
+		}
+
+		if len(requiredSkills) > 0 {
+			doc.WriteString("### 必需技能\n")
+			for i, skill := range requiredSkills {
+				doc.WriteString(fmt.Sprintf("%d. %s\n", i+1, skill))
+			}
+		}
+
+		if len(bonusSkills) > 0 {
+			doc.WriteString("### 加分技能\n")
+			for i, skill := range bonusSkills {
+				doc.WriteString(fmt.Sprintf("%d. %s\n", i+1, skill))
+			}
+		}
+		doc.WriteString("\n")
+	}
+
+	// 经验要求
+	if len(jobProfile.ExperienceRequirements) > 0 {
+		doc.WriteString("## 工作经验要求\n")
+		for i, exp := range jobProfile.ExperienceRequirements {
+			expText := translateExperienceType(exp.ExperienceType)
+			if exp.MinYears > 0 || exp.IdealYears > 0 {
+				if exp.MinYears > 0 && exp.IdealYears > 0 {
+					doc.WriteString(fmt.Sprintf("%d. %s（最少年限：%d年，理想年限：%d年）\n", i+1, expText, exp.MinYears, exp.IdealYears))
+				} else if exp.MinYears > 0 {
+					doc.WriteString(fmt.Sprintf("%d. %s（最少年限：%d年）\n", i+1, expText, exp.MinYears))
+				} else if exp.IdealYears > 0 {
+					doc.WriteString(fmt.Sprintf("%d. %s（理想年限：%d年）\n", i+1, expText, exp.IdealYears))
+				} else {
+					doc.WriteString(fmt.Sprintf("%d. %s\n", i+1, expText))
+				}
+			} else {
+				doc.WriteString(fmt.Sprintf("%d. %s\n", i+1, expText))
+			}
+		}
+		doc.WriteString("\n")
+	}
+
+	// 学历要求
+	if len(jobProfile.EducationRequirements) > 0 {
+		doc.WriteString("## 学历要求\n")
+		for i, edu := range jobProfile.EducationRequirements {
+			doc.WriteString(fmt.Sprintf("%d. %s\n", i+1, translateEducationType(edu.EducationType)))
+		}
+		doc.WriteString("\n")
+	}
+
+	// 行业要求
+	if len(jobProfile.IndustryRequirements) > 0 {
+		doc.WriteString("## 行业背景要求\n")
+		for i, industry := range jobProfile.IndustryRequirements {
+			if industry.CompanyName != nil && *industry.CompanyName != "" {
+				doc.WriteString(fmt.Sprintf("%d. %s（优先考虑有 %s 工作经验的候选人）\n", i+1, industry.Industry, *industry.CompanyName))
+			} else {
+				doc.WriteString(fmt.Sprintf("%d. %s\n", i+1, industry.Industry))
+			}
+		}
+		doc.WriteString("\n")
+	}
+
+	return doc.String()
+}
+
+// translateWorkType 翻译工作性质
+func translateWorkType(workType string) string {
+	switch consts.JobWorkType(workType) {
+	case consts.JobWorkTypeFullTime:
+		return "全职"
+	case consts.JobWorkTypePartTime:
+		return "兼职"
+	case consts.JobWorkTypeInternship:
+		return "实习"
+	case consts.JobWorkTypeOutsourcing:
+		return "外包"
+	default:
+		return workType
+	}
+}
+
+// translateExperienceType 翻译经验类型
+func translateExperienceType(expType string) string {
+	switch consts.JobExperienceType(expType) {
+	case consts.JobExperienceTypeUnlimited:
+		return "不限"
+	case consts.JobExperienceTypeFreshGraduate:
+		return "应届毕业生"
+	case consts.JobExperienceTypeUnderOneYear:
+		return "1年以下"
+	case consts.JobExperienceTypeOneToThree:
+		return "1-3年"
+	case consts.JobExperienceTypeThreeToFive:
+		return "3-5年"
+	case consts.JobExperienceTypeFiveToTen:
+		return "5-10年"
+	case consts.JobExperienceTypeOverTen:
+		return "10年以上"
+	default:
+		return expType
+	}
+}
+
+// translateEducationType 翻译学历类型
+func translateEducationType(eduType string) string {
+	switch consts.JobEducationType(eduType) {
+	case consts.JobEducationTypeUnlimited:
+		return "不限"
+	case consts.JobEducationTypeJunior:
+		return "大专"
+	case consts.JobEducationTypeBachelor:
+		return "本科"
+	case consts.JobEducationTypeMaster:
+		return "硕士"
+	case consts.JobEducationTypeDoctor:
+		return "博士"
+	default:
+		return eduType
+	}
 }
 
 // newOutputLambda 解析模型输出为结构化权重
