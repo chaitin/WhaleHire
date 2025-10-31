@@ -199,6 +199,15 @@ export const deleteJobProfile = async (id: string): Promise<void> => {
   return await apiDelete<void>(`/v1/job-profiles/${id}`);
 };
 
+// 复制岗位画像
+export const duplicateJobProfile = async (
+  id: string
+): Promise<JobProfileDetail> => {
+  return await apiPost<JobProfileDetail>(`/v1/job-profiles/${id}/duplicate`, {
+    source_job_id: id,
+  });
+};
+
 // 获取技能元数据列表
 export const listJobSkillMeta = async (
   params?: SkillMetaQueryParams

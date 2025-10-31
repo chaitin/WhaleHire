@@ -861,6 +861,7 @@ export function IntelligentMatchingPage() {
         onOpenChange={setIsConfigWeightModalOpen}
         onNext={handleWeightConfigured}
         onPrevious={handleBackToSelectResume}
+        selectedJobId={selectedJobIds[0] || ''}
       />
 
       {/* 创建任务模态框 - 匹配处理中 */}

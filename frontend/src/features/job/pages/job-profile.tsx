@@ -12,6 +12,7 @@ import {
   X,
   RefreshCw,
   Eye,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
@@ -34,6 +35,7 @@ import {
   createJobProfile,
   updateJobProfile,
   deleteJobProfile,
+  duplicateJobProfile,
   listJobSkillMeta,
   getJobProfile,
 } from '@/services/job-profile';
@@ -153,6 +155,11 @@ export function JobProfilePage() {
   // 删除错误提示弹窗状态
   const [deleteErrorOpen, setDeleteErrorOpen] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string>('');
+
+  // 复制岗位确认弹窗状态管理
+  const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
+  const [copyingJob, setCopyingJob] = useState<JobProfile | null>(null);
+  const [isCopying, setIsCopying] = useState(false);
 
   // 预览岗位画像弹窗状态
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -881,6 +888,33 @@ export function JobProfilePage() {
     setDeleteConfirmOpen(true);
   };
 
+  // 处理复制岗位按钮点击
+  const handleCopyJob = (job: JobProfile) => {
+    setCopyingJob(job);
+    setCopyConfirmOpen(true);
+  };
+
+  // 确认复制岗位
+  const handleCopyConfirm = async () => {
+    if (!copyingJob) return;
+
+    try {
+      setIsCopying(true);
+      await duplicateJobProfile(copyingJob.id);
+      toast.success(`岗位"${copyingJob.name}"复制成功`);
+      setCopyConfirmOpen(false);
+      setCopyingJob(null);
+      fetchJobProfiles(); // 重新获取列表以显示复制的岗位
+    } catch (err: unknown) {
+      console.error('复制岗位失败:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : '复制岗位失败，请重试';
+      toast.error(errorMessage);
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
   // 确认删除岗位
   const handleDeleteConfirm = async () => {
     if (!deletingJob) return;
@@ -1291,6 +1325,15 @@ export function JobProfilePage() {
                           title="编辑岗位"
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600"
+                          onClick={() => handleCopyJob(job)}
+                          title="复制岗位"
+                        >
+                          <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -2625,6 +2668,18 @@ export function JobProfilePage() {
         isOpen={isAddSkillModalOpen}
         onClose={() => setIsAddSkillModalOpen(false)}
         onSkillAdded={handleSkillAdded}
+      />
+
+      {/* 复制确认对话框 */}
+      <ConfirmDialog
+        open={copyConfirmOpen}
+        onOpenChange={setCopyConfirmOpen}
+        onConfirm={handleCopyConfirm}
+        title="复制岗位"
+        description={`确定要复制岗位"${copyingJob?.name}"吗？`}
+        confirmText="确定"
+        cancelText="取消"
+        loading={isCopying}
       />
 
       {/* 删除确认对话框 */}

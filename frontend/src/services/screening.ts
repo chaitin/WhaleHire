@@ -11,6 +11,8 @@ import {
   GetScreeningMetricsResp,
   GetScreeningResultResp,
   GetResumeProgressResp,
+  PreviewWeightsReq,
+  PreviewWeightsResp,
 } from '@/types/screening';
 
 // 创建筛选任务
@@ -133,6 +135,16 @@ export const getResumeProgress = async (
 ): Promise<GetResumeProgressResp> => {
   return apiGet<GetResumeProgressResp>(
     `/v1/screening/tasks/${taskId}/resumes/${resumeId}/progress`
+  );
+};
+
+// 预览权重 - 根据岗位信息自动推理维度权重
+export const previewWeights = async (
+  params: PreviewWeightsReq
+): Promise<PreviewWeightsResp> => {
+  return apiPost<PreviewWeightsResp>(
+    '/v1/screening/weights/preview',
+    params as unknown as Record<string, unknown>
   );
 };
 
