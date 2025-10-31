@@ -19,14 +19,15 @@ import (
 
 // ScreeningUsecase 筛选业务实现
 type ScreeningUsecase struct {
-	repo                domain.ScreeningRepo
-	nodeRunRepo         domain.ScreeningNodeRunRepo
-	jobUsecase          domain.JobProfileUsecase
-	resumeUsecase       domain.ResumeUsecase
-	matcher             service.MatchingService
-	notificationUsecase domain.NotificationUsecase
-	config              *config.Config
-	logger              *slog.Logger
+	repo                 domain.ScreeningRepo
+	nodeRunRepo          domain.ScreeningNodeRunRepo
+	jobUsecase           domain.JobProfileUsecase
+	resumeUsecase        domain.ResumeUsecase
+	matcher              service.MatchingService
+	weightPreviewService service.WeightPreviewService
+	notificationUsecase  domain.NotificationUsecase
+	config               *config.Config
+	logger               *slog.Logger
 	// 任务上下文管理器
 	taskContexts sync.Map // map[uuid.UUID]context.CancelFunc
 }
@@ -116,6 +117,7 @@ func NewScreeningUsecase(
 	resumeUsecase domain.ResumeUsecase,
 	userRepo domain.UserRepo,
 	matcher service.MatchingService,
+	weightPreviewService service.WeightPreviewService,
 	notificationUsecase domain.NotificationUsecase,
 	config *config.Config,
 	logger *slog.Logger,
@@ -124,14 +126,15 @@ func NewScreeningUsecase(
 		logger = slog.Default()
 	}
 	return &ScreeningUsecase{
-		repo:                repo,
-		nodeRunRepo:         nodeRunRepo,
-		jobUsecase:          jobUsecase,
-		resumeUsecase:       resumeUsecase,
-		matcher:             matcher,
-		notificationUsecase: notificationUsecase,
-		config:              config,
-		logger:              logger.With("module", "screening_usecase"),
+		repo:                 repo,
+		nodeRunRepo:          nodeRunRepo,
+		jobUsecase:           jobUsecase,
+		resumeUsecase:        resumeUsecase,
+		matcher:              matcher,
+		weightPreviewService: weightPreviewService,
+		notificationUsecase:  notificationUsecase,
+		config:               config,
+		logger:               logger.With("module", "screening_usecase"),
 	}
 }
 
@@ -831,4 +834,48 @@ func (u *ScreeningUsecase) publishScreeningTaskCompletedNotification(ctx context
 		// 记录错误但不影响主流程
 		u.logger.Error("Failed to publish screening task completed notification", slog.Any("error", err), slog.Any("task_id", task.ID))
 	}
+}
+
+// PreviewWeights 预览权重，根据岗位信息自动推理维度权重
+func (u *ScreeningUsecase) PreviewWeights(ctx context.Context, req *domain.PreviewWeightsReq) (*domain.PreviewWeightsResp, error) {
+	if req == nil {
+		return nil, fmt.Errorf("请求参数不能为空")
+	}
+	if req.JobPositionID == uuid.Nil {
+		return nil, fmt.Errorf("岗位ID不能为空")
+	}
+
+	// 获取岗位画像详情
+	jobProfile, err := u.jobUsecase.GetByID(ctx, req.JobPositionID.String())
+	if err != nil {
+		return nil, fmt.Errorf("获取岗位画像失败: %w", err)
+	}
+	if jobProfile == nil {
+		return nil, fmt.Errorf("岗位画像不存在")
+	}
+
+	// 调用权重预览服务
+	result, tokenUsage, version, err := u.weightPreviewService.PreviewWeights(ctx, jobProfile, req.LLMConfig)
+	if err != nil {
+		return nil, fmt.Errorf("权重推理失败: %w", err)
+	}
+
+	// 转换为响应格式
+	weights := map[string]float64{
+		"skill":          result.Weights.Skill,
+		"responsibility": result.Weights.Responsibility,
+		"experience":     result.Weights.Experience,
+		"education":      result.Weights.Education,
+		"industry":       result.Weights.Industry,
+		"basic":          result.Weights.Basic,
+	}
+
+	resp := &domain.PreviewWeightsResp{
+		Weights:    weights,
+		Rationale:  result.Rationale,
+		TokenUsage: tokenUsage,
+		Version:    version,
+	}
+
+	return resp, nil
 }

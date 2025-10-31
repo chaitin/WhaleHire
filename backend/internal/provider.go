@@ -111,6 +111,7 @@ var Provider = wire.NewSet(
 	screeningrepo.NewScreeningRepo,
 	screeningrepo.NewScreeningNodeRunRepo,
 	screeningservice.NewMatchingService,
+	screeningservice.NewWeightPreviewService,
 	screeningusecase.NewScreeningUsecase,
 	screeningV1.NewScreeningHandler,
 	universityV1.NewUniversityHandler,

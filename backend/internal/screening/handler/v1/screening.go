@@ -44,6 +44,7 @@ func NewScreeningHandler(
 	group.GET("/tasks/:task_id/resumes/:resume_id/progress", web.BaseHandler(handler.GetResumeProgress))
 	group.GET("/tasks/:task_id/resumes/:resume_id/node-runs", web.BaseHandler(handler.GetNodeRuns))
 	group.GET("/results", web.BindHandler(handler.ListResults, web.WithPage()))
+	group.POST("/weights/preview", web.BindHandler(handler.PreviewWeights))
 
 	return handler
 }
@@ -403,6 +404,30 @@ func (h *ScreeningHandler) GetNodeRuns(c *web.Context) error {
 	})
 	if err != nil {
 		h.logger.Error("获取节点运行记录失败", slog.Any("err", err), slog.Any("task_id", taskID), slog.Any("resume_id", resumeID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// PreviewWeights 预览权重
+//
+//	@Tags			Screening
+//	@Summary		预览权重
+//	@Description	根据岗位信息自动推理维度权重，支持用户预览和确认
+//	@ID				preview-weights
+//	@Accept			json
+//	@Produce		json
+//	@Param			param	body		domain.PreviewWeightsReq	true	"预览权重参数"
+//	@Success		200		{object}	web.Resp{data=domain.PreviewWeightsResp}
+//	@Router			/api/v1/screening/weights/preview [post]
+func (h *ScreeningHandler) PreviewWeights(c *web.Context, req domain.PreviewWeightsReq) error {
+	if req.JobPositionID == uuid.Nil {
+		return errcode.ErrInvalidParam.WithData("message", "岗位ID不能为空")
+	}
+
+	resp, err := h.usecase.PreviewWeights(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.Error("预览权重失败", slog.Any("err", err), slog.String("job_position_id", req.JobPositionID.String()))
 		return err
 	}
 	return c.Success(resp)

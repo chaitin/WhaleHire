@@ -24,6 +24,7 @@ type ScreeningUsecase interface {
 	GetTaskProgress(ctx context.Context, req *GetTaskProgressReq) (*GetTaskProgressResp, error)
 	GetResumeProgress(ctx context.Context, req *GetResumeProgressReq) (*GetResumeProgressResp, error)
 	GetNodeRuns(ctx context.Context, req *GetNodeRunsReq) (*GetNodeRunsResp, error)
+	PreviewWeights(ctx context.Context, req *PreviewWeightsReq) (*PreviewWeightsResp, error)
 }
 
 // ScreeningRepo 筛选数据访问接口
@@ -596,4 +597,26 @@ type ScreeningResultFilter struct {
 	MaxScore *float64
 	Page     int
 	PageSize int
+}
+
+// PreviewWeightsReq 预览权重请求
+type PreviewWeightsReq struct {
+	// JobPositionID 职位ID，用于获取岗位画像并推理权重
+	JobPositionID uuid.UUID `json:"job_position_id" validate:"required"`
+	// LLMConfig 用户自定义LLM配置，支持OpenAI等模型配置
+	// 示例: {"model_type": "openai", "model_name": "gpt-4", "api_key": "sk-xxx", "base_url": "https://api.openai.com/v1"}
+	// 如果不提供，系统将使用默认配置
+	LLMConfig map[string]any `json:"llm_config,omitempty"`
+}
+
+// PreviewWeightsResp 预览权重响应
+type PreviewWeightsResp struct {
+	// Weights 推理得到的维度权重配置
+	Weights map[string]float64 `json:"weights"`
+	// Rationale 推理说明，包含1-3条简短的权重分配理由
+	Rationale []string `json:"rationale,omitempty"`
+	// TokenUsage Token使用情况，包含输入和输出的token数量
+	TokenUsage map[string]int64 `json:"token_usage,omitempty"`
+	// Version Agent版本号
+	Version string `json:"version"`
 }
