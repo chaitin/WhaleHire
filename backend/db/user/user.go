@@ -46,6 +46,8 @@ const (
 	EdgeCreatedPositions = "created_positions"
 	// EdgeCreatedScreeningTasks holds the string denoting the created_screening_tasks edge name in mutations.
 	EdgeCreatedScreeningTasks = "created_screening_tasks"
+	// EdgeCreatedWeightTemplates holds the string denoting the created_weight_templates edge name in mutations.
+	EdgeCreatedWeightTemplates = "created_weight_templates"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// LoginHistoriesTable is the table that holds the login_histories relation/edge.
@@ -90,6 +92,13 @@ const (
 	CreatedScreeningTasksInverseTable = "screening_tasks"
 	// CreatedScreeningTasksColumn is the table column denoting the created_screening_tasks relation/edge.
 	CreatedScreeningTasksColumn = "created_by"
+	// CreatedWeightTemplatesTable is the table that holds the created_weight_templates relation/edge.
+	CreatedWeightTemplatesTable = "weight_template"
+	// CreatedWeightTemplatesInverseTable is the table name for the WeightTemplate entity.
+	// It exists in this package in order to avoid circular dependency with the "weighttemplate" package.
+	CreatedWeightTemplatesInverseTable = "weight_template"
+	// CreatedWeightTemplatesColumn is the table column denoting the created_weight_templates relation/edge.
+	CreatedWeightTemplatesColumn = "created_by"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -270,6 +279,20 @@ func ByCreatedScreeningTasks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOp
 		sqlgraph.OrderByNeighborTerms(s, newCreatedScreeningTasksStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCreatedWeightTemplatesCount orders the results by created_weight_templates count.
+func ByCreatedWeightTemplatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCreatedWeightTemplatesStep(), opts...)
+	}
+}
+
+// ByCreatedWeightTemplates orders the results by created_weight_templates terms.
+func ByCreatedWeightTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCreatedWeightTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newLoginHistoriesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -310,5 +333,12 @@ func newCreatedScreeningTasksStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CreatedScreeningTasksInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CreatedScreeningTasksTable, CreatedScreeningTasksColumn),
+	)
+}
+func newCreatedWeightTemplatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CreatedWeightTemplatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CreatedWeightTemplatesTable, CreatedWeightTemplatesColumn),
 	)
 }

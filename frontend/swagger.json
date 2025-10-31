@@ -2282,6 +2282,60 @@
                 }
             }
         },
+        "/api/v1/job-profiles/{id}/duplicate": {
+            "post": {
+                "description": "基于现有岗位创建新岗位，新岗位包含原岗位的所有信息（基本信息、职责、技能、学历要求、经验要求、行业要求）。新岗位状态默认为草稿，创建者为当前用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "JobProfile"
+                ],
+                "summary": "复制岗位画像",
+                "operationId": "duplicate-job-profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "源岗位ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "复制请求（可选的名称和部门ID）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.DuplicateJobProfileReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.JobProfileDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/job-skills/meta": {
             "get": {
                 "description": "获取岗位技能元信息列表，支持分页",
@@ -5010,6 +5064,292 @@
                 }
             }
         },
+        "/api/v1/screening/weights/preview": {
+            "post": {
+                "description": "根据岗位信息自动推理维度权重，支持用户预览和确认。返回三种不同评估角度的权重方案：默认方案（注重岗位职责+技能匹配）、应届方案（注重教育经历+技能匹配）、经验方案（注重工作经验+岗位职责匹配）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "预览权重",
+                "operationId": "preview-weights",
+                "parameters": [
+                    {
+                        "description": "预览权重参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.PreviewWeightsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回三种权重方案，每个方案包含type（方案类型标签）、weights（六个维度的权重对象）和rationale（推理说明数组）",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.PreviewWeightsResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/screening/weights/templates": {
+            "get": {
+                "description": "分页查询权重模板列表，支持按名称模糊搜索",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "查询权重模板列表",
+                "operationId": "list-weight-templates",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "下一页标识",
+                        "name": "next_token",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "分页",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页多少条记录",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "模板名称（模糊匹配）",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ListWeightTemplatesResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建权重配置模板，支持保存常用权重配置以便复用",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "创建权重模板",
+                "operationId": "create-weight-template",
+                "parameters": [
+                    {
+                        "description": "创建权重模板参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateWeightTemplateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.WeightTemplateResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/screening/weights/templates/{id}": {
+            "get": {
+                "description": "根据模板ID获取权重模板详情信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "获取权重模板详情",
+                "operationId": "get-weight-template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.WeightTemplateResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新权重模板信息，仅创建者可以修改",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "更新权重模板",
+                "operationId": "update-weight-template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新权重模板参数",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateWeightTemplateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.WeightTemplateResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除权重模板（软删除），仅创建者可以删除",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Screening"
+                ],
+                "summary": "删除权重模板",
+                "operationId": "delete-weight-template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_chaitin_WhaleHire_backend_pkg_web.Resp"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/universities": {
             "get": {
                 "description": "分页获取高校列表，支持筛选条件",
@@ -6000,6 +6340,24 @@
                 "AuditLogStatusFailed"
             ]
         },
+        "consts.EmploymentStatus": {
+            "type": "string",
+            "enum": [
+                "employed",
+                "unemployed",
+                "job_seeking"
+            ],
+            "x-enum-comments": {
+                "EmploymentStatusEmployed": "在职",
+                "EmploymentStatusJobSeeking": "求职中",
+                "EmploymentStatusUnemployed": "离职"
+            },
+            "x-enum-varnames": [
+                "EmploymentStatusEmployed",
+                "EmploymentStatusUnemployed",
+                "EmploymentStatusJobSeeking"
+            ]
+        },
         "consts.ExperienceType": {
             "type": "string",
             "enum": [
@@ -6801,6 +7159,26 @@
                 }
             }
         },
+        "domain.CareerProgressionInfo": {
+            "type": "object",
+            "properties": {
+                "analysis": {
+                    "description": "Analysis 职业发展轨迹分析说明",
+                    "type": "string",
+                    "example": "从初级到高级岗位稳步晋升"
+                },
+                "score": {
+                    "description": "Score 职业发展轨迹得分 (0-100)",
+                    "type": "number",
+                    "example": 85
+                },
+                "trend": {
+                    "description": "Trend 职业发展趋势",
+                    "type": "string",
+                    "example": "上升"
+                }
+            }
+        },
         "domain.CleanupOldLogsReq": {
             "type": "object",
             "required": [
@@ -7320,6 +7698,33 @@
                 }
             }
         },
+        "domain.CreateWeightTemplateReq": {
+            "type": "object",
+            "required": [
+                "name",
+                "weights"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Description 模板描述，可选，最大长度 500",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "description": "Name 模板名称，必填，最大长度 100",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "weights": {
+                    "description": "Weights 权重配置，必填，支持的维度包括: skill(技能), responsibility(职责), experience(经验),\neducation(教育), industry(行业), basic(基本信息)\n示例: {\"skill\": 0.35, \"responsibility\": 0.20, \"experience\": 0.20, \"education\": 0.15, \"industry\": 0.07, \"basic\": 0.03}",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.DimensionWeights"
+                        }
+                    ]
+                }
+            }
+        },
         "domain.CustomOAuth": {
             "type": "object",
             "properties": {
@@ -7506,6 +7911,36 @@
                 }
             }
         },
+        "domain.DimensionWeights": {
+            "description": "各个匹配维度的权重配置，用于计算综合匹配度",
+            "type": "object",
+            "properties": {
+                "basic": {
+                    "description": "Basic 基本信息权重，默认3%",
+                    "type": "number"
+                },
+                "education": {
+                    "description": "Education 教育背景权重，默认15%",
+                    "type": "number"
+                },
+                "experience": {
+                    "description": "Experience 工作经验权重，默认20%",
+                    "type": "number"
+                },
+                "industry": {
+                    "description": "Industry 行业背景权重，默认7%",
+                    "type": "number"
+                },
+                "responsibility": {
+                    "description": "Responsibility 职责匹配权重，默认20%",
+                    "type": "number"
+                },
+                "skill": {
+                    "description": "Skill 技能匹配权重，默认35%",
+                    "type": "number"
+                }
+            }
+        },
         "domain.DingtalkOAuth": {
             "type": "object",
             "properties": {
@@ -7540,6 +7975,27 @@
                 }
             }
         },
+        "domain.DuplicateJobProfileReq": {
+            "description": "基于现有岗位创建新岗位的请求参数",
+            "type": "object",
+            "required": [
+                "source_job_id"
+            ],
+            "properties": {
+                "department_id": {
+                    "description": "新岗位部门ID（可选，如未提供则使用原部门）",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "新岗位名称（可选，如未提供则使用原名称 + \"副本\"）",
+                    "type": "string"
+                },
+                "source_job_id": {
+                    "description": "源岗位ID（从路径参数获取）",
+                    "type": "string"
+                }
+            }
+        },
         "domain.EducationMatchDetail": {
             "description": "候选人教育背景与岗位教育要求的匹配分析结果，包含学历、专业和学校匹配",
             "type": "object",
@@ -7559,6 +8015,10 @@
                         "$ref": "#/definitions/domain.MajorMatchInfo"
                     }
                 },
+                "overall_analysis": {
+                    "description": "OverallAnalysis 整体教育背景匹配度分析总结",
+                    "type": "string"
+                },
                 "school_matches": {
                     "description": "SchoolMatches 学校匹配列表",
                     "type": "array",
@@ -7577,12 +8037,24 @@
             "description": "候选人工作经验与岗位经验要求的匹配分析结果，包含年限、职位和行业匹配",
             "type": "object",
             "properties": {
+                "career_progression": {
+                    "description": "CareerProgression 职业发展轨迹",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.CareerProgressionInfo"
+                        }
+                    ]
+                },
                 "industry_matches": {
                     "description": "IndustryMatches 行业匹配列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/domain.IndustryMatchInfo"
                     }
+                },
+                "overall_analysis": {
+                    "description": "OverallAnalysis 整体工作经验匹配度分析总结",
+                    "type": "string"
                 },
                 "position_matches": {
                     "description": "PositionMatches 职位匹配列表",
@@ -7991,6 +8463,11 @@
         "domain.IndustryMatchInfo": {
             "type": "object",
             "properties": {
+                "analysis": {
+                    "description": "Analysis 行业匹配分析说明",
+                    "type": "string",
+                    "example": "行业业务模式与目标岗位高度一致"
+                },
                 "company": {
                     "description": "Company 公司名称",
                     "type": "string",
@@ -8793,6 +9270,26 @@
                 }
             }
         },
+        "domain.ListWeightTemplatesResp": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "Items 模板列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.WeightTemplateResp"
+                    }
+                },
+                "page_info": {
+                    "description": "PageInfo 分页信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.PageInfo"
+                        }
+                    ]
+                }
+            }
+        },
         "domain.LoginReq": {
             "type": "object",
             "required": [
@@ -8875,9 +9372,9 @@
                     "example": "计算机科学与技术"
                 },
                 "relevance": {
-                    "description": "Relevance 相关度 (0-1)",
+                    "description": "Relevance 相关度 (0-100)",
                     "type": "number",
-                    "example": 0.95
+                    "example": 95
                 },
                 "resume_education_id": {
                     "description": "ResumeEducationID 简历教育经历ID",
@@ -9314,6 +9811,21 @@
         "domain.PositionMatchInfo": {
             "type": "object",
             "properties": {
+                "analysis": {
+                    "description": "Analysis 职位匹配分析说明",
+                    "type": "string",
+                    "example": "核心职责与目标岗位高度一致"
+                },
+                "company": {
+                    "description": "Company 公司名称",
+                    "type": "string",
+                    "example": "阿里巴巴"
+                },
+                "experience_type": {
+                    "description": "ExperienceType 简历经历类型（work/organization/volunteer/internship）",
+                    "type": "string",
+                    "example": "work"
+                },
                 "position": {
                     "description": "Position 职位名称",
                     "type": "string",
@@ -9333,6 +9845,46 @@
                     "description": "Score 职位匹配得分 (0-100)",
                     "type": "number",
                     "example": 85
+                }
+            }
+        },
+        "domain.PreviewWeightsReq": {
+            "type": "object",
+            "required": [
+                "job_position_id"
+            ],
+            "properties": {
+                "job_position_id": {
+                    "description": "JobPositionID 职位ID，用于获取岗位画像并推理权重",
+                    "type": "string"
+                },
+                "llm_config": {
+                    "description": "LLMConfig 用户自定义LLM配置，支持OpenAI等模型配置\n示例: {\"model_type\": \"openai\", \"model_name\": \"gpt-4\", \"api_key\": \"sk-xxx\", \"base_url\": \"https://api.openai.com/v1\"}\n如果不提供，系统将使用默认配置",
+                    "type": "object",
+                    "additionalProperties": {}
+                }
+            }
+        },
+        "domain.PreviewWeightsResp": {
+            "type": "object",
+            "properties": {
+                "token_usage": {
+                    "description": "TokenUsage Token使用情况，包含输入和输出的token数量",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "version": {
+                    "description": "Version Agent版本号",
+                    "type": "string"
+                },
+                "weight_schemes": {
+                    "description": "WeightSchemes 权重方案数组，包含三种不同评估角度的权重配置",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.WeightSchemeResp"
+                    }
                 }
             }
         },
@@ -9422,10 +9974,6 @@
                     "description": "年龄",
                     "type": "integer"
                 },
-                "available_date": {
-                    "description": "可入职时间",
-                    "type": "string"
-                },
                 "birthday": {
                     "type": "string"
                 },
@@ -9437,6 +9985,14 @@
                 },
                 "email": {
                     "type": "string"
+                },
+                "employment_status": {
+                    "description": "职业状态：在职employed、离职unemployed、求职中job_seeking",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.EmploymentStatus"
+                        }
+                    ]
                 },
                 "error_message": {
                     "type": "string"
@@ -9513,10 +10069,6 @@
                     "description": "年龄",
                     "type": "integer"
                 },
-                "available_date": {
-                    "description": "可入职时间",
-                    "type": "string"
-                },
                 "birthday": {
                     "type": "string"
                 },
@@ -9534,6 +10086,14 @@
                 },
                 "email": {
                     "type": "string"
+                },
+                "employment_status": {
+                    "description": "职业状态：在职employed、离职unemployed、求职中job_seeking",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.EmploymentStatus"
+                        }
+                    ]
                 },
                 "error_message": {
                     "type": "string"
@@ -10038,10 +10598,35 @@
         "domain.SchoolMatchInfo": {
             "type": "object",
             "properties": {
-                "reputation": {
-                    "description": "Reputation 学校声誉评分 (0-1)",
+                "analysis": {
+                    "description": "Analysis 学校匹配分析说明",
+                    "type": "string",
+                    "example": "院校声誉与岗位期望高度吻合"
+                },
+                "degree": {
+                    "description": "Degree 学位等级",
+                    "type": "string",
+                    "example": "硕士"
+                },
+                "gpa": {
+                    "description": "GPA 候选人在该学校的绩点",
                     "type": "number",
-                    "example": 0.98
+                    "example": 3.8
+                },
+                "graduation_year": {
+                    "description": "GraduationYear 毕业年份",
+                    "type": "integer",
+                    "example": 2022
+                },
+                "major": {
+                    "description": "Major 专业名称",
+                    "type": "string",
+                    "example": "计算机科学与技术"
+                },
+                "reputation": {
+                    "description": "Reputation 学校声誉评分 (0-100)",
+                    "type": "number",
+                    "example": 98
                 },
                 "resume_education_id": {
                     "description": "ResumeEducationID 简历教育经历ID",
@@ -10057,6 +10642,17 @@
                     "description": "Score 学校匹配得分 (0-100)",
                     "type": "number",
                     "example": 98
+                },
+                "university_types": {
+                    "description": "UniversityTypes 学校类型标签，如 985/211/QS Top 等",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/consts.UniversityType"
+                    },
+                    "example": [
+                        "[\"985\"",
+                        "\"double_first_class\"]"
+                    ]
                 }
             }
         },
@@ -11193,10 +11789,6 @@
                     "description": "年龄",
                     "type": "integer"
                 },
-                "available_date": {
-                    "description": "可入职时间",
-                    "type": "string"
-                },
                 "birthday": {
                     "type": "string"
                 },
@@ -11211,6 +11803,14 @@
                 },
                 "email": {
                     "type": "string"
+                },
+                "employment_status": {
+                    "description": "职业状态：在职employed、离职unemployed、求职中job_seeking",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/consts.EmploymentStatus"
+                        }
+                    ]
                 },
                 "expected_city": {
                     "description": "期望工作城市",
@@ -11450,6 +12050,33 @@
                 }
             }
         },
+        "domain.UpdateWeightTemplateReq": {
+            "type": "object",
+            "required": [
+                "name",
+                "weights"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Description 模板描述，可选，最大长度 500",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "description": "Name 模板名称，必填，最大长度 100",
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "weights": {
+                    "description": "Weights 权重配置，必填，支持的维度包括: skill(技能), responsibility(职责), experience(经验),\neducation(教育), industry(行业), basic(基本信息)\n示例: {\"skill\": 0.35, \"responsibility\": 0.20, \"experience\": 0.20, \"education\": 0.15, \"industry\": 0.07, \"basic\": 0.03}",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.DimensionWeights"
+                        }
+                    ]
+                }
+            }
+        },
         "domain.UpsertResumeMailboxStatisticRequest": {
             "type": "object",
             "required": [
@@ -11566,6 +12193,66 @@
                 }
             }
         },
+        "domain.WeightSchemeResp": {
+            "type": "object",
+            "properties": {
+                "rationale": {
+                    "description": "Rationale 推理说明数组，解释该方案的权重分配依据",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "description": "Type 方案类型标签，取值为：default（默认方案）、fresh_graduate（注重教育经历）、experienced（注重工作经验）",
+                    "type": "string"
+                },
+                "weights": {
+                    "description": "Weights 六个维度的权重对象",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "domain.WeightTemplateResp": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "CreatedAt 创建时间",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "CreatedBy 创建者ID",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description 模板描述",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID 模板ID",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name 模板名称",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt 更新时间",
+                    "type": "string"
+                },
+                "weights": {
+                    "description": "Weights 权重配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.DimensionWeights"
+                        }
+                    ]
+                }
+            }
+        },
         "domain.YearsMatchInfo": {
             "type": "object",
             "properties": {
@@ -11573,6 +12260,11 @@
                     "description": "ActualYears 实际工作年限",
                     "type": "number",
                     "example": 6.5
+                },
+                "analysis": {
+                    "description": "Analysis 年限匹配分析说明",
+                    "type": "string",
+                    "example": "候选人总年限满足岗位要求"
                 },
                 "gap": {
                     "description": "Gap 年限差距（正数表示超出要求，负数表示不足）",
@@ -11629,11 +12321,8 @@
                 1000000000,
                 60000000000,
                 3600000000000,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
@@ -11650,11 +12339,8 @@
                 "Second",
                 "Minute",
                 "Hour",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",

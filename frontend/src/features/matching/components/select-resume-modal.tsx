@@ -107,14 +107,12 @@ export function SelectResumeModal({
 
       // 如果有选择的岗位ID,使用它来筛选简历
       // 后端只支持单个job_position_id，所以只取第一个岗位ID
+      // 重要：只有当用户明确选择了某个岗位（不是"all"）时，才传递岗位ID进行筛选
       if (jobFilter && jobFilter !== 'all') {
         params.job_position_id = jobFilter;
         console.log('📋 使用jobFilter筛选简历:', jobFilter);
-      } else if (selectedJobIds && selectedJobIds.length > 0) {
-        // 如果第一步选择了多个岗位，只使用第一个进行筛选
-        params.job_position_id = selectedJobIds[0];
-        console.log('📋 使用selectedJobIds[0]筛选简历:', selectedJobIds[0]);
       }
+      // 如果用户选择了"全部岗位"，则不传递job_position_id参数，这样会显示所有简历
 
       console.log('📋 简历列表请求参数:', params);
       const response = await getResumeList(params);
@@ -145,7 +143,7 @@ export function SelectResumeModal({
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchKeyword, jobFilter, selectedJobIds]);
+  }, [currentPage, pageSize, searchKeyword, jobFilter]);
 
   // 当弹窗打开时，初始化岗位筛选条件；关闭时重置状态
   useEffect(() => {

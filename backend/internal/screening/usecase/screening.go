@@ -19,14 +19,16 @@ import (
 
 // ScreeningUsecase 筛选业务实现
 type ScreeningUsecase struct {
-	repo                domain.ScreeningRepo
-	nodeRunRepo         domain.ScreeningNodeRunRepo
-	jobUsecase          domain.JobProfileUsecase
-	resumeUsecase       domain.ResumeUsecase
-	matcher             service.MatchingService
-	notificationUsecase domain.NotificationUsecase
-	config              *config.Config
-	logger              *slog.Logger
+	repo                 domain.ScreeningRepo
+	nodeRunRepo          domain.ScreeningNodeRunRepo
+	jobUsecase           domain.JobProfileUsecase
+	resumeUsecase        domain.ResumeUsecase
+	matcher              service.MatchingService
+	weightPreviewService service.WeightPreviewService
+	notificationUsecase  domain.NotificationUsecase
+	weightTemplateRepo   domain.WeightTemplateRepo
+	config               *config.Config
+	logger               *slog.Logger
 	// 任务上下文管理器
 	taskContexts sync.Map // map[uuid.UUID]context.CancelFunc
 }
@@ -116,7 +118,9 @@ func NewScreeningUsecase(
 	resumeUsecase domain.ResumeUsecase,
 	userRepo domain.UserRepo,
 	matcher service.MatchingService,
+	weightPreviewService service.WeightPreviewService,
 	notificationUsecase domain.NotificationUsecase,
+	weightTemplateRepo domain.WeightTemplateRepo,
 	config *config.Config,
 	logger *slog.Logger,
 ) domain.ScreeningUsecase {
@@ -124,14 +128,16 @@ func NewScreeningUsecase(
 		logger = slog.Default()
 	}
 	return &ScreeningUsecase{
-		repo:                repo,
-		nodeRunRepo:         nodeRunRepo,
-		jobUsecase:          jobUsecase,
-		resumeUsecase:       resumeUsecase,
-		matcher:             matcher,
-		notificationUsecase: notificationUsecase,
-		config:              config,
-		logger:              logger.With("module", "screening_usecase"),
+		repo:                 repo,
+		nodeRunRepo:          nodeRunRepo,
+		jobUsecase:           jobUsecase,
+		resumeUsecase:        resumeUsecase,
+		matcher:              matcher,
+		weightPreviewService: weightPreviewService,
+		notificationUsecase:  notificationUsecase,
+		weightTemplateRepo:   weightTemplateRepo,
+		config:               config,
+		logger:               logger.With("module", "screening_usecase"),
 	}
 }
 
@@ -831,4 +837,281 @@ func (u *ScreeningUsecase) publishScreeningTaskCompletedNotification(ctx context
 		// 记录错误但不影响主流程
 		u.logger.Error("Failed to publish screening task completed notification", slog.Any("error", err), slog.Any("task_id", task.ID))
 	}
+}
+
+// PreviewWeights 预览权重，根据岗位信息自动推理维度权重
+func (u *ScreeningUsecase) PreviewWeights(ctx context.Context, req *domain.PreviewWeightsReq) (*domain.PreviewWeightsResp, error) {
+	if req == nil {
+		return nil, fmt.Errorf("请求参数不能为空")
+	}
+	if req.JobPositionID == uuid.Nil {
+		return nil, fmt.Errorf("岗位ID不能为空")
+	}
+
+	// 获取岗位画像详情
+	jobProfile, err := u.jobUsecase.GetByID(ctx, req.JobPositionID.String())
+	if err != nil {
+		return nil, fmt.Errorf("获取岗位画像失败: %w", err)
+	}
+	if jobProfile == nil {
+		return nil, fmt.Errorf("岗位画像不存在")
+	}
+
+	// 调用权重预览服务
+	result, tokenUsage, version, err := u.weightPreviewService.PreviewWeights(ctx, jobProfile, req.LLMConfig)
+	if err != nil {
+		return nil, fmt.Errorf("权重推理失败: %w", err)
+	}
+
+	// 转换为响应格式
+	var weightSchemes []domain.WeightSchemeResp
+	for _, scheme := range result.WeightSchemes {
+		weights := map[string]float64{
+			"skill":          scheme.Weights.Skill,
+			"responsibility": scheme.Weights.Responsibility,
+			"experience":     scheme.Weights.Experience,
+			"education":      scheme.Weights.Education,
+			"industry":       scheme.Weights.Industry,
+			"basic":          scheme.Weights.Basic,
+		}
+
+		weightSchemes = append(weightSchemes, domain.WeightSchemeResp{
+			Type:      scheme.Type,
+			Weights:   weights,
+			Rationale: scheme.Rationale,
+		})
+	}
+
+	resp := &domain.PreviewWeightsResp{
+		WeightSchemes: weightSchemes,
+		TokenUsage:    tokenUsage,
+		Version:       version,
+	}
+
+	return resp, nil
+}
+
+// =========================
+// 权重模板方法
+// =========================
+
+// validateWeights 验证和归一化权重配置
+func (u *ScreeningUsecase) validateAndNormalizeWeights(weights *domain.DimensionWeights) error {
+	if weights == nil {
+		return fmt.Errorf("权重配置不能为空")
+	}
+
+	// 检查各个维度权重是否在有效范围内 [0, 1]
+	if weights.Skill < 0 || weights.Skill > 1 {
+		return fmt.Errorf("技能权重必须在 0 到 1 之间")
+	}
+	if weights.Responsibility < 0 || weights.Responsibility > 1 {
+		return fmt.Errorf("职责权重必须在 0 到 1 之间")
+	}
+	if weights.Experience < 0 || weights.Experience > 1 {
+		return fmt.Errorf("经验权重必须在 0 到 1 之间")
+	}
+	if weights.Education < 0 || weights.Education > 1 {
+		return fmt.Errorf("教育权重必须在 0 到 1 之间")
+	}
+	if weights.Industry < 0 || weights.Industry > 1 {
+		return fmt.Errorf("行业权重必须在 0 到 1 之间")
+	}
+	if weights.Basic < 0 || weights.Basic > 1 {
+		return fmt.Errorf("基本信息权重必须在 0 到 1 之间")
+	}
+
+	// 计算权重总和
+	sum := weights.Skill + weights.Responsibility + weights.Experience +
+		weights.Education + weights.Industry + weights.Basic
+
+	// 检查权重总和是否等于 1.0（允许浮点数误差）
+	const epsilon = 0.0001
+	if sum < 1.0-epsilon || sum > 1.0+epsilon {
+		return fmt.Errorf("权重总和必须等于 1.0，当前总和为 %.6f", sum)
+	}
+
+	return nil
+}
+
+// CreateWeightTemplate 创建权重模板
+func (u *ScreeningUsecase) CreateWeightTemplate(ctx context.Context, req *domain.CreateWeightTemplateReq, userID uuid.UUID) (*domain.WeightTemplateResp, error) {
+	if req == nil {
+		return nil, fmt.Errorf("请求参数不能为空")
+	}
+	if req.Name == "" {
+		return nil, fmt.Errorf("模板名称不能为空")
+	}
+	if req.Weights == nil {
+		return nil, fmt.Errorf("权重配置不能为空")
+	}
+
+	// 验证和归一化权重
+	if err := u.validateAndNormalizeWeights(req.Weights); err != nil {
+		return nil, fmt.Errorf("权重验证失败: %w", err)
+	}
+
+	// 转换权重为 map[string]interface{}
+	weightsMap := map[string]interface{}{
+		"skill":          req.Weights.Skill,
+		"responsibility": req.Weights.Responsibility,
+		"experience":     req.Weights.Experience,
+		"education":      req.Weights.Education,
+		"industry":       req.Weights.Industry,
+		"basic":          req.Weights.Basic,
+	}
+
+	// 创建数据库实体
+	dbTemplate := &db.WeightTemplate{
+		ID:          uuid.New(),
+		Name:        req.Name,
+		Description: req.Description,
+		Weights:     weightsMap,
+		CreatedBy:   userID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	// 保存到数据库
+	created, err := u.weightTemplateRepo.Create(ctx, dbTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("创建权重模板失败: %w", err)
+	}
+
+	// 转换为响应格式
+	wt := &domain.WeightTemplate{}
+	wt.From(created)
+	resp := &domain.WeightTemplateResp{}
+	resp.From(wt)
+
+	return resp, nil
+}
+
+// GetWeightTemplate 获取权重模板详情
+func (u *ScreeningUsecase) GetWeightTemplate(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*domain.WeightTemplateResp, error) {
+	dbTemplate, err := u.weightTemplateRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, errcode.ErrWeightTemplateGetFailed.WithData("message", err.Error())
+	}
+
+	// 转换为响应格式
+	wt := &domain.WeightTemplate{}
+	wt.From(dbTemplate)
+	resp := &domain.WeightTemplateResp{}
+	resp.From(wt)
+
+	return resp, nil
+}
+
+// ListWeightTemplates 查询权重模板列表
+func (u *ScreeningUsecase) ListWeightTemplates(ctx context.Context, req *domain.ListWeightTemplatesReq, userID uuid.UUID) (*domain.ListWeightTemplatesResp, error) {
+	filter := &domain.WeightTemplateFilter{
+		Name: req.Name,
+		Page: req.Page,
+		Size: req.Size,
+	}
+
+	dbTemplates, pageInfo, err := u.weightTemplateRepo.List(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("查询权重模板列表失败: %w", err)
+	}
+
+	// 转换为响应格式
+	items := make([]*domain.WeightTemplateResp, 0, len(dbTemplates))
+	for _, dbTemplate := range dbTemplates {
+		wt := &domain.WeightTemplate{}
+		wt.From(dbTemplate)
+		resp := &domain.WeightTemplateResp{}
+		resp.From(wt)
+		items = append(items, resp)
+	}
+
+	return &domain.ListWeightTemplatesResp{
+		Items:    items,
+		PageInfo: pageInfo,
+	}, nil
+}
+
+// UpdateWeightTemplate 更新权重模板
+func (u *ScreeningUsecase) UpdateWeightTemplate(ctx context.Context, id uuid.UUID, req *domain.UpdateWeightTemplateReq, userID uuid.UUID) (*domain.WeightTemplateResp, error) {
+	if req == nil {
+		return nil, fmt.Errorf("请求参数不能为空")
+	}
+	if req.Name == "" {
+		return nil, fmt.Errorf("模板名称不能为空")
+	}
+	if req.Weights == nil {
+		return nil, fmt.Errorf("权重配置不能为空")
+	}
+
+	// 验证权限：只有创建者可以更新
+	dbTemplate, err := u.weightTemplateRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("获取权重模板失败: %w", err)
+	}
+
+	if dbTemplate.CreatedBy != userID {
+		return nil, fmt.Errorf("只有创建者可以更新模板")
+	}
+
+	// 验证和归一化权重
+	if err := u.validateAndNormalizeWeights(req.Weights); err != nil {
+		return nil, fmt.Errorf("权重验证失败: %w", err)
+	}
+
+	// 转换权重为 map[string]interface{}
+	weightsMap := map[string]interface{}{
+		"skill":          req.Weights.Skill,
+		"responsibility": req.Weights.Responsibility,
+		"experience":     req.Weights.Experience,
+		"education":      req.Weights.Education,
+		"industry":       req.Weights.Industry,
+		"basic":          req.Weights.Basic,
+	}
+
+	// 构建更新字段
+	updates := map[string]any{
+		"name":        req.Name,
+		"description": req.Description,
+		"weights":     weightsMap,
+	}
+
+	// 更新数据库
+	if err := u.weightTemplateRepo.Update(ctx, id, updates); err != nil {
+		return nil, fmt.Errorf("更新权重模板失败: %w", err)
+	}
+
+	// 重新获取更新后的数据
+	dbTemplate, err = u.weightTemplateRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("获取更新后的权重模板失败: %w", err)
+	}
+
+	// 转换为响应格式
+	wt := &domain.WeightTemplate{}
+	wt.From(dbTemplate)
+	resp := &domain.WeightTemplateResp{}
+	resp.From(wt)
+
+	return resp, nil
+}
+
+// DeleteWeightTemplate 删除权重模板
+func (u *ScreeningUsecase) DeleteWeightTemplate(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	// 验证权限：只有创建者可以删除
+	dbTemplate, err := u.weightTemplateRepo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("获取权重模板失败: %w", err)
+	}
+
+	if dbTemplate.CreatedBy != userID {
+		return fmt.Errorf("只有创建者可以删除模板")
+	}
+
+	// 执行删除（软删除）
+	if err := u.weightTemplateRepo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("删除权重模板失败: %w", err)
+	}
+
+	return nil
 }

@@ -14,12 +14,14 @@ import {
   Wrench,
   FileText,
   Bell,
+  Scale,
 } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { ConfirmDialog } from '@/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
 import { ResumeCollectionModal } from '@/features/resume-collection/components/ResumeCollectionModal';
 import { NotificationConfigModal } from '@/features/notification/components/notification-config-modal';
+import { WeightTemplateModal } from '@/features/notification/components/weight-template-modal';
 import {
   Department,
   listDepartments,
@@ -58,6 +60,10 @@ export default function PlatformConfig() {
 
   // 通知配置弹窗状态管理
   const [isNotificationConfigModalOpen, setIsNotificationConfigModalOpen] =
+    useState(false);
+
+  // 权重模板配置弹窗状态管理
+  const [isWeightTemplateModalOpen, setIsWeightTemplateModalOpen] =
     useState(false);
 
   // 删除确认弹窗状态
@@ -550,6 +556,19 @@ export default function PlatformConfig() {
     setIsResumeCollectionModalOpen(false);
   };
 
+  // ==================== 权重模板配置相关函数 ====================
+
+  // 打开权重模板配置弹窗
+  const handleOpenWeightTemplateModal = () => {
+    console.log('🔧 打开权重模板配置弹窗...');
+    setIsWeightTemplateModalOpen(true);
+  };
+
+  // 关闭权重模板配置弹窗
+  const handleCloseWeightTemplateModal = () => {
+    setIsWeightTemplateModalOpen(false);
+  };
+
   // 初始化数据加载
   useEffect(() => {
     fetchDepartments();
@@ -768,6 +787,46 @@ export default function PlatformConfig() {
               background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
             }}
             onClick={() => setIsNotificationConfigModalOpen(true)}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            配置
+          </Button>
+        </div>
+
+        {/* 卡片底部状态信息 */}
+        <div className="px-6 py-5">
+          {/* 此卡片目前无加载/错误状态，预留占位以统一布局 */}
+        </div>
+      </div>
+
+      {/* 智能匹配权重配置卡片 */}
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-sm overflow-hidden card-hover">
+        {/* 卡片头部 */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-4">
+            {/* 图标容器 */}
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-indigo-50">
+              <Scale className="w-4 h-4 text-indigo-500" />
+            </div>
+
+            {/* 标题和描述 */}
+            <div className="flex flex-col">
+              <h3 className="text-sm font-medium text-gray-900">
+                智能匹配权重配置
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                管理简历匹配权重模板
+              </p>
+            </div>
+          </div>
+
+          {/* 配置按钮 */}
+          <Button
+            className="gap-2 rounded-lg px-5 py-2 shadow-sm text-white"
+            style={{
+              background: 'linear-gradient(135deg, #7bb8ff 0%, #3F3663 100%)',
+            }}
+            onClick={handleOpenWeightTemplateModal}
           >
             <Settings className="w-3.5 h-3.5" />
             配置
@@ -1553,6 +1612,12 @@ export default function PlatformConfig() {
       <NotificationConfigModal
         open={isNotificationConfigModalOpen}
         onClose={() => setIsNotificationConfigModalOpen(false)}
+      />
+
+      {/* 权重模板配置弹窗 */}
+      <WeightTemplateModal
+        isOpen={isWeightTemplateModalOpen}
+        onClose={handleCloseWeightTemplateModal}
       />
     </div>
   );

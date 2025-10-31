@@ -114,3 +114,9 @@ other = "Invalid CSV file format"
 
 [err-university-import-failed]
 other = "Failed to import university data"
+
+[err-weight-template-create-failed]
+other = "Failed to create weight template: {{.message}}"
+
+[err-weight-template-get-failed]
+other = "Failed to get weight template: {{.message}}"

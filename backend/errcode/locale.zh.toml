@@ -114,3 +114,9 @@ other = "CSV文件格式无效"
 
 [err-university-import-failed]
 other = "高校数据导入失败"
+
+[err-weight-template-create-failed]
+other = "创建权重模板失败: {{.message}}"
+
+[err-weight-template-get-failed]
+other = "获取权重模版失败: {{.message}}"

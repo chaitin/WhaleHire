@@ -40,6 +40,9 @@ type JobProfileUsecase interface {
 	CreateSkillMeta(ctx context.Context, req *CreateSkillMetaReq) (*JobSkillMeta, error)
 	ListSkillMeta(ctx context.Context, req *ListSkillMetaReq) (*ListSkillMetaResp, error)
 	DeleteSkillMeta(ctx context.Context, id string) error
+
+	// Duplicate 复制岗位画像
+	Duplicate(ctx context.Context, req *DuplicateJobProfileReq, createdBy *string) (*JobProfileDetail, error)
 }
 
 // JobProfileRepo encapsulates persistence for job profiles aggregate.
@@ -506,4 +509,12 @@ type GenerateJobProfileReq struct {
 type GenerateJobProfileResp struct {
 	Profile             *ParseJobProfileResp `json:"profile"`              // 结构化岗位画像
 	DescriptionMarkdown string               `json:"description_markdown"` // Markdown 格式的岗位描述
+}
+
+// DuplicateJobProfileReq 复制岗位画像请求
+// @Description 基于现有岗位创建新岗位的请求参数
+type DuplicateJobProfileReq struct {
+	SourceJobID  string  `json:"source_job_id" validate:"required"` // 源岗位ID（从路径参数获取）
+	Name         *string `json:"name,omitempty"`                    // 新岗位名称（可选，如未提供则使用原名称 + "副本"）
+	DepartmentID *string `json:"department_id,omitempty"`           // 新岗位部门ID（可选，如未提供则使用原部门）
 }

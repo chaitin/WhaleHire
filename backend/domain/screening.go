@@ -24,6 +24,13 @@ type ScreeningUsecase interface {
 	GetTaskProgress(ctx context.Context, req *GetTaskProgressReq) (*GetTaskProgressResp, error)
 	GetResumeProgress(ctx context.Context, req *GetResumeProgressReq) (*GetResumeProgressResp, error)
 	GetNodeRuns(ctx context.Context, req *GetNodeRunsReq) (*GetNodeRunsResp, error)
+	PreviewWeights(ctx context.Context, req *PreviewWeightsReq) (*PreviewWeightsResp, error)
+	// Weight Template methods
+	CreateWeightTemplate(ctx context.Context, req *CreateWeightTemplateReq, userID uuid.UUID) (*WeightTemplateResp, error)
+	GetWeightTemplate(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*WeightTemplateResp, error)
+	ListWeightTemplates(ctx context.Context, req *ListWeightTemplatesReq, userID uuid.UUID) (*ListWeightTemplatesResp, error)
+	UpdateWeightTemplate(ctx context.Context, id uuid.UUID, req *UpdateWeightTemplateReq, userID uuid.UUID) (*WeightTemplateResp, error)
+	DeleteWeightTemplate(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 
 // ScreeningRepo 筛选数据访问接口
@@ -596,4 +603,34 @@ type ScreeningResultFilter struct {
 	MaxScore *float64
 	Page     int
 	PageSize int
+}
+
+// PreviewWeightsReq 预览权重请求
+type PreviewWeightsReq struct {
+	// JobPositionID 职位ID，用于获取岗位画像并推理权重
+	JobPositionID uuid.UUID `json:"job_position_id" validate:"required"`
+	// LLMConfig 用户自定义LLM配置，支持OpenAI等模型配置
+	// 示例: {"model_type": "openai", "model_name": "gpt-4", "api_key": "sk-xxx", "base_url": "https://api.openai.com/v1"}
+	// 如果不提供，系统将使用默认配置
+	LLMConfig map[string]any `json:"llm_config,omitempty"`
+}
+
+// WeightSchemeResp 权重方案响应结构
+type WeightSchemeResp struct {
+	// Type 方案类型标签，取值为：default（默认方案）、fresh_graduate（注重教育经历）、experienced（注重工作经验）
+	Type string `json:"type"`
+	// Weights 六个维度的权重对象
+	Weights map[string]float64 `json:"weights"`
+	// Rationale 推理说明数组，解释该方案的权重分配依据
+	Rationale []string `json:"rationale,omitempty"`
+}
+
+// PreviewWeightsResp 预览权重响应
+type PreviewWeightsResp struct {
+	// WeightSchemes 权重方案数组，包含三种不同评估角度的权重配置
+	WeightSchemes []WeightSchemeResp `json:"weight_schemes"`
+	// TokenUsage Token使用情况，包含输入和输出的token数量
+	TokenUsage map[string]int64 `json:"token_usage,omitempty"`
+	// Version Agent版本号
+	Version string `json:"version"`
 }

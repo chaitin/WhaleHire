@@ -55,6 +55,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/weighttemplate"
 
 	stdsql "database/sql"
 )
@@ -142,6 +143,8 @@ type Client struct {
 	UserIdentity *UserIdentityClient
 	// UserLoginHistory is the client for interacting with the UserLoginHistory builders.
 	UserLoginHistory *UserLoginHistoryClient
+	// WeightTemplate is the client for interacting with the WeightTemplate builders.
+	WeightTemplate *WeightTemplateClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -192,6 +195,7 @@ func (c *Client) init() {
 	c.User = NewUserClient(c.config)
 	c.UserIdentity = NewUserIdentityClient(c.config)
 	c.UserLoginHistory = NewUserLoginHistoryClient(c.config)
+	c.WeightTemplate = NewWeightTemplateClient(c.config)
 }
 
 type (
@@ -323,6 +327,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		User:                     NewUserClient(cfg),
 		UserIdentity:             NewUserIdentityClient(cfg),
 		UserLoginHistory:         NewUserLoginHistoryClient(cfg),
+		WeightTemplate:           NewWeightTemplateClient(cfg),
 	}, nil
 }
 
@@ -381,6 +386,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		User:                     NewUserClient(cfg),
 		UserIdentity:             NewUserIdentityClient(cfg),
 		UserLoginHistory:         NewUserLoginHistoryClient(cfg),
+		WeightTemplate:           NewWeightTemplateClient(cfg),
 	}, nil
 }
 
@@ -420,6 +426,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
 		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
 		c.UniversityProfile, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.WeightTemplate,
 	} {
 		n.Use(hooks...)
 	}
@@ -439,6 +446,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ResumeProject, c.ResumeSkill, c.Role, c.ScreeningNodeRun, c.ScreeningResult,
 		c.ScreeningRunMetric, c.ScreeningTask, c.ScreeningTaskResume, c.Setting,
 		c.UniversityProfile, c.User, c.UserIdentity, c.UserLoginHistory,
+		c.WeightTemplate,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -525,6 +533,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UserIdentity.mutate(ctx, m)
 	case *UserLoginHistoryMutation:
 		return c.UserLoginHistory.mutate(ctx, m)
+	case *WeightTemplateMutation:
+		return c.WeightTemplate.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("db: unknown mutation type %T", m)
 	}
@@ -6688,6 +6698,22 @@ func (c *UserClient) QueryCreatedScreeningTasks(u *User) *ScreeningTaskQuery {
 	return query
 }
 
+// QueryCreatedWeightTemplates queries the created_weight_templates edge of a User.
+func (c *UserClient) QueryCreatedWeightTemplates(u *User) *WeightTemplateQuery {
+	query := (&WeightTemplateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(weighttemplate.Table, weighttemplate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CreatedWeightTemplatesTable, user.CreatedWeightTemplatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	hooks := c.hooks.User
@@ -7015,6 +7041,157 @@ func (c *UserLoginHistoryClient) mutate(ctx context.Context, m *UserLoginHistory
 	}
 }
 
+// WeightTemplateClient is a client for the WeightTemplate schema.
+type WeightTemplateClient struct {
+	config
+}
+
+// NewWeightTemplateClient returns a client for the WeightTemplate from the given config.
+func NewWeightTemplateClient(c config) *WeightTemplateClient {
+	return &WeightTemplateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `weighttemplate.Hooks(f(g(h())))`.
+func (c *WeightTemplateClient) Use(hooks ...Hook) {
+	c.hooks.WeightTemplate = append(c.hooks.WeightTemplate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `weighttemplate.Intercept(f(g(h())))`.
+func (c *WeightTemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WeightTemplate = append(c.inters.WeightTemplate, interceptors...)
+}
+
+// Create returns a builder for creating a WeightTemplate entity.
+func (c *WeightTemplateClient) Create() *WeightTemplateCreate {
+	mutation := newWeightTemplateMutation(c.config, OpCreate)
+	return &WeightTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WeightTemplate entities.
+func (c *WeightTemplateClient) CreateBulk(builders ...*WeightTemplateCreate) *WeightTemplateCreateBulk {
+	return &WeightTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *WeightTemplateClient) MapCreateBulk(slice any, setFunc func(*WeightTemplateCreate, int)) *WeightTemplateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &WeightTemplateCreateBulk{err: fmt.Errorf("calling to WeightTemplateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*WeightTemplateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &WeightTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WeightTemplate.
+func (c *WeightTemplateClient) Update() *WeightTemplateUpdate {
+	mutation := newWeightTemplateMutation(c.config, OpUpdate)
+	return &WeightTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WeightTemplateClient) UpdateOne(wt *WeightTemplate) *WeightTemplateUpdateOne {
+	mutation := newWeightTemplateMutation(c.config, OpUpdateOne, withWeightTemplate(wt))
+	return &WeightTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WeightTemplateClient) UpdateOneID(id uuid.UUID) *WeightTemplateUpdateOne {
+	mutation := newWeightTemplateMutation(c.config, OpUpdateOne, withWeightTemplateID(id))
+	return &WeightTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WeightTemplate.
+func (c *WeightTemplateClient) Delete() *WeightTemplateDelete {
+	mutation := newWeightTemplateMutation(c.config, OpDelete)
+	return &WeightTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WeightTemplateClient) DeleteOne(wt *WeightTemplate) *WeightTemplateDeleteOne {
+	return c.DeleteOneID(wt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WeightTemplateClient) DeleteOneID(id uuid.UUID) *WeightTemplateDeleteOne {
+	builder := c.Delete().Where(weighttemplate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WeightTemplateDeleteOne{builder}
+}
+
+// Query returns a query builder for WeightTemplate.
+func (c *WeightTemplateClient) Query() *WeightTemplateQuery {
+	return &WeightTemplateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWeightTemplate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WeightTemplate entity by its id.
+func (c *WeightTemplateClient) Get(ctx context.Context, id uuid.UUID) (*WeightTemplate, error) {
+	return c.Query().Where(weighttemplate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WeightTemplateClient) GetX(ctx context.Context, id uuid.UUID) *WeightTemplate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCreator queries the creator edge of a WeightTemplate.
+func (c *WeightTemplateClient) QueryCreator(wt *WeightTemplate) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(weighttemplate.Table, weighttemplate.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, weighttemplate.CreatorTable, weighttemplate.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(wt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WeightTemplateClient) Hooks() []Hook {
+	hooks := c.hooks.WeightTemplate
+	return append(hooks[:len(hooks):len(hooks)], weighttemplate.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *WeightTemplateClient) Interceptors() []Interceptor {
+	inters := c.inters.WeightTemplate
+	return append(inters[:len(inters):len(inters)], weighttemplate.Interceptors[:]...)
+}
+
+func (c *WeightTemplateClient) mutate(ctx context.Context, m *WeightTemplateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WeightTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WeightTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WeightTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WeightTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("db: unknown WeightTemplate mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
@@ -7026,7 +7203,8 @@ type (
 		ResumeMailboxCursor, ResumeMailboxSetting, ResumeMailboxStatistic,
 		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
 		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting,
-		UniversityProfile, User, UserIdentity, UserLoginHistory []ent.Hook
+		UniversityProfile, User, UserIdentity, UserLoginHistory,
+		WeightTemplate []ent.Hook
 	}
 	inters struct {
 		Admin, AdminLoginHistory, AdminRole, Attachment, AuditLog, Conversation,
@@ -7037,7 +7215,8 @@ type (
 		ResumeMailboxCursor, ResumeMailboxSetting, ResumeMailboxStatistic,
 		ResumeProject, ResumeSkill, Role, ScreeningNodeRun, ScreeningResult,
 		ScreeningRunMetric, ScreeningTask, ScreeningTaskResume, Setting,
-		UniversityProfile, User, UserIdentity, UserLoginHistory []ent.Interceptor
+		UniversityProfile, User, UserIdentity, UserLoginHistory,
+		WeightTemplate []ent.Interceptor
 	}
 )
 

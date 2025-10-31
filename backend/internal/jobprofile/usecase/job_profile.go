@@ -241,6 +241,113 @@ func (u *JobProfileUsecase) GetByID(ctx context.Context, id string) (*domain.Job
 	return toJobProfileDetail(profile), nil
 }
 
+func (u *JobProfileUsecase) Duplicate(ctx context.Context, req *domain.DuplicateJobProfileReq, createdBy *string) (*domain.JobProfileDetail, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is required")
+	}
+
+	if strings.TrimSpace(req.SourceJobID) == "" {
+		return nil, fmt.Errorf("source job id is required")
+	}
+
+	// 获取原岗位详情
+	sourceProfile, err := u.GetByID(ctx, req.SourceJobID)
+	if err != nil {
+		if db.IsNotFound(err) {
+			return nil, errcode.ErrJobProfileRequired
+		}
+		return nil, fmt.Errorf("failed to get source job profile: %w", err)
+	}
+
+	// 构建新的 CreateJobProfileReq
+	draftStatus := "draft"
+	createReq := &domain.CreateJobProfileReq{
+		DepartmentID: sourceProfile.DepartmentID,
+		WorkType:     sourceProfile.WorkType,
+		Location:     sourceProfile.Location,
+		SalaryMin:    sourceProfile.SalaryMin,
+		SalaryMax:    sourceProfile.SalaryMax,
+		Description:  sourceProfile.Description,
+		Status:       &draftStatus, // 新岗位默认为草稿状态
+		CreatedBy:    createdBy,    // 设置创建者
+	}
+
+	// 处理岗位名称
+	if req.Name != nil && strings.TrimSpace(*req.Name) != "" {
+		createReq.Name = strings.TrimSpace(*req.Name)
+	} else {
+		// 如果没有提供名称，使用原名称 + "副本"
+		createReq.Name = sourceProfile.Name + "副本"
+	}
+
+	// 处理部门ID
+	if req.DepartmentID != nil && strings.TrimSpace(*req.DepartmentID) != "" {
+		createReq.DepartmentID = strings.TrimSpace(*req.DepartmentID)
+	}
+
+	// 复制职责
+	if len(sourceProfile.Responsibilities) > 0 {
+		createReq.Responsibilities = make([]*domain.JobResponsibilityInput, 0, len(sourceProfile.Responsibilities))
+		for _, resp := range sourceProfile.Responsibilities {
+			createReq.Responsibilities = append(createReq.Responsibilities, &domain.JobResponsibilityInput{
+				Responsibility: resp.Responsibility,
+			})
+		}
+	}
+
+	// 复制技能
+	if len(sourceProfile.Skills) > 0 {
+		createReq.Skills = make([]*domain.JobSkillInput, 0, len(sourceProfile.Skills))
+		for _, skill := range sourceProfile.Skills {
+			var skillID *string
+			if skill.SkillID != "" {
+				skillID = &skill.SkillID
+			}
+			createReq.Skills = append(createReq.Skills, &domain.JobSkillInput{
+				SkillID:   skillID,
+				SkillName: skill.Skill,
+				Type:      skill.Type,
+			})
+		}
+	}
+
+	// 复制学历要求
+	if len(sourceProfile.EducationRequirements) > 0 {
+		createReq.EducationRequirements = make([]*domain.JobEducationRequirementInput, 0, len(sourceProfile.EducationRequirements))
+		for _, edu := range sourceProfile.EducationRequirements {
+			createReq.EducationRequirements = append(createReq.EducationRequirements, &domain.JobEducationRequirementInput{
+				EducationType: edu.EducationType,
+			})
+		}
+	}
+
+	// 复制经验要求
+	if len(sourceProfile.ExperienceRequirements) > 0 {
+		createReq.ExperienceRequirements = make([]*domain.JobExperienceRequirementInput, 0, len(sourceProfile.ExperienceRequirements))
+		for _, exp := range sourceProfile.ExperienceRequirements {
+			createReq.ExperienceRequirements = append(createReq.ExperienceRequirements, &domain.JobExperienceRequirementInput{
+				ExperienceType: exp.ExperienceType,
+				MinYears:       exp.MinYears,
+				IdealYears:     exp.IdealYears,
+			})
+		}
+	}
+
+	// 复制行业要求
+	if len(sourceProfile.IndustryRequirements) > 0 {
+		createReq.IndustryRequirements = make([]*domain.JobIndustryRequirementInput, 0, len(sourceProfile.IndustryRequirements))
+		for _, ind := range sourceProfile.IndustryRequirements {
+			createReq.IndustryRequirements = append(createReq.IndustryRequirements, &domain.JobIndustryRequirementInput{
+				Industry:    ind.Industry,
+				CompanyName: ind.CompanyName,
+			})
+		}
+	}
+
+	// 创建新岗位（CreatedBy 会在 handler 层设置）
+	return u.Create(ctx, createReq)
+}
+
 func (u *JobProfileUsecase) GetByIDs(ctx context.Context, ids []string) ([]*domain.JobProfile, error) {
 	if len(ids) == 0 {
 		return []*domain.JobProfile{}, nil

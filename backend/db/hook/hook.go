@@ -477,6 +477,18 @@ func (f UserLoginHistoryFunc) Mutate(ctx context.Context, m db.Mutation) (db.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.UserLoginHistoryMutation", m)
 }
 
+// The WeightTemplateFunc type is an adapter to allow the use of ordinary
+// function as WeightTemplate mutator.
+type WeightTemplateFunc func(context.Context, *db.WeightTemplateMutation) (db.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WeightTemplateFunc) Mutate(ctx context.Context, m db.Mutation) (db.Value, error) {
+	if mv, ok := m.(*db.WeightTemplateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *db.WeightTemplateMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, db.Mutation) bool
 

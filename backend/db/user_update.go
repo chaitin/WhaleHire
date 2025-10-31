@@ -20,6 +20,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/weighttemplate"
 	"github.com/google/uuid"
 )
 
@@ -283,6 +284,21 @@ func (uu *UserUpdate) AddCreatedScreeningTasks(s ...*ScreeningTask) *UserUpdate 
 	return uu.AddCreatedScreeningTaskIDs(ids...)
 }
 
+// AddCreatedWeightTemplateIDs adds the "created_weight_templates" edge to the WeightTemplate entity by IDs.
+func (uu *UserUpdate) AddCreatedWeightTemplateIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddCreatedWeightTemplateIDs(ids...)
+	return uu
+}
+
+// AddCreatedWeightTemplates adds the "created_weight_templates" edges to the WeightTemplate entity.
+func (uu *UserUpdate) AddCreatedWeightTemplates(w ...*WeightTemplate) *UserUpdate {
+	ids := make([]uuid.UUID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uu.AddCreatedWeightTemplateIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -412,6 +428,27 @@ func (uu *UserUpdate) RemoveCreatedScreeningTasks(s ...*ScreeningTask) *UserUpda
 		ids[i] = s[i].ID
 	}
 	return uu.RemoveCreatedScreeningTaskIDs(ids...)
+}
+
+// ClearCreatedWeightTemplates clears all "created_weight_templates" edges to the WeightTemplate entity.
+func (uu *UserUpdate) ClearCreatedWeightTemplates() *UserUpdate {
+	uu.mutation.ClearCreatedWeightTemplates()
+	return uu
+}
+
+// RemoveCreatedWeightTemplateIDs removes the "created_weight_templates" edge to WeightTemplate entities by IDs.
+func (uu *UserUpdate) RemoveCreatedWeightTemplateIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveCreatedWeightTemplateIDs(ids...)
+	return uu
+}
+
+// RemoveCreatedWeightTemplates removes "created_weight_templates" edges to WeightTemplate entities.
+func (uu *UserUpdate) RemoveCreatedWeightTemplates(w ...*WeightTemplate) *UserUpdate {
+	ids := make([]uuid.UUID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uu.RemoveCreatedWeightTemplateIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -768,6 +805,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.CreatedWeightTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedWeightTemplatesTable,
+			Columns: []string{user.CreatedWeightTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(weighttemplate.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedCreatedWeightTemplatesIDs(); len(nodes) > 0 && !uu.mutation.CreatedWeightTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedWeightTemplatesTable,
+			Columns: []string{user.CreatedWeightTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(weighttemplate.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CreatedWeightTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedWeightTemplatesTable,
+			Columns: []string{user.CreatedWeightTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(weighttemplate.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(uu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1036,6 +1118,21 @@ func (uuo *UserUpdateOne) AddCreatedScreeningTasks(s ...*ScreeningTask) *UserUpd
 	return uuo.AddCreatedScreeningTaskIDs(ids...)
 }
 
+// AddCreatedWeightTemplateIDs adds the "created_weight_templates" edge to the WeightTemplate entity by IDs.
+func (uuo *UserUpdateOne) AddCreatedWeightTemplateIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddCreatedWeightTemplateIDs(ids...)
+	return uuo
+}
+
+// AddCreatedWeightTemplates adds the "created_weight_templates" edges to the WeightTemplate entity.
+func (uuo *UserUpdateOne) AddCreatedWeightTemplates(w ...*WeightTemplate) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uuo.AddCreatedWeightTemplateIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1165,6 +1262,27 @@ func (uuo *UserUpdateOne) RemoveCreatedScreeningTasks(s ...*ScreeningTask) *User
 		ids[i] = s[i].ID
 	}
 	return uuo.RemoveCreatedScreeningTaskIDs(ids...)
+}
+
+// ClearCreatedWeightTemplates clears all "created_weight_templates" edges to the WeightTemplate entity.
+func (uuo *UserUpdateOne) ClearCreatedWeightTemplates() *UserUpdateOne {
+	uuo.mutation.ClearCreatedWeightTemplates()
+	return uuo
+}
+
+// RemoveCreatedWeightTemplateIDs removes the "created_weight_templates" edge to WeightTemplate entities by IDs.
+func (uuo *UserUpdateOne) RemoveCreatedWeightTemplateIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveCreatedWeightTemplateIDs(ids...)
+	return uuo
+}
+
+// RemoveCreatedWeightTemplates removes "created_weight_templates" edges to WeightTemplate entities.
+func (uuo *UserUpdateOne) RemoveCreatedWeightTemplates(w ...*WeightTemplate) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uuo.RemoveCreatedWeightTemplateIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1544,6 +1662,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CreatedWeightTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedWeightTemplatesTable,
+			Columns: []string{user.CreatedWeightTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(weighttemplate.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedCreatedWeightTemplatesIDs(); len(nodes) > 0 && !uuo.mutation.CreatedWeightTemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedWeightTemplatesTable,
+			Columns: []string{user.CreatedWeightTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(weighttemplate.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CreatedWeightTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedWeightTemplatesTable,
+			Columns: []string{user.CreatedWeightTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(weighttemplate.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

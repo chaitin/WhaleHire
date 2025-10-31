@@ -343,3 +343,23 @@ export interface GetResumeProgressResp {
   error_message?: string; // 错误信息
   updated_at?: string; // 最近更新时间
 }
+
+// 预览权重请求
+export interface PreviewWeightsReq {
+  job_position_id: string; // 职位ID
+  llm_config?: Record<string, unknown>; // LLM配置（可选）
+}
+
+// 权重方案响应
+export interface WeightSchemeResp {
+  type: string; // 方案类型：default（默认）、fresh_graduate（应届）、experienced（经验）
+  weights: Record<string, number>; // 六个维度的权重对象
+  rationale: string[]; // 推理说明数组
+}
+
+// 预览权重响应
+export interface PreviewWeightsResp {
+  weight_schemes: WeightSchemeResp[]; // 权重方案数组（包含三种方案）
+  token_usage?: Record<string, number>; // Token使用情况
+  version: string; // Agent版本号
+}

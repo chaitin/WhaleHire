@@ -556,3 +556,17 @@ func (ulh *UserLoginHistoryQuery) Page(ctx context.Context, page, size int) ([]*
 	has := (page * size) < cnt
 	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
 }
+
+func (wt *WeightTemplateQuery) Page(ctx context.Context, page, size int) ([]*WeightTemplate, *PageInfo, error) {
+	cnt, err := wt.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	offset := size * (page - 1)
+	items, err := wt.Offset(offset).Limit(size).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	has := (page * size) < cnt
+	return items, &PageInfo{HasNextPage: has, TotalCount: int64(cnt)}, nil
+}

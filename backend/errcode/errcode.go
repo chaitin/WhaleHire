@@ -71,4 +71,8 @@ var (
 	ErrCSVParseError           = web.NewBadRequestBusinessErr(100003, "err-csv-parse-error")
 	ErrCSVInvalidFormat        = web.NewBadRequestBusinessErr(100004, "err-csv-invalid-format")
 	ErrUniversityImportFailed  = web.NewBadRequestBusinessErr(100005, "err-university-import-failed")
+
+	// ========== 权重模板模块 (110000-119999) ==========
+	ErrWeightTemplateCreateFailed = web.NewBadRequestBusinessErr(110000, "err-weight-template-create-failed")
+	ErrWeightTemplateGetFailed    = web.NewBadRequestBusinessErr(110001, "err-weight-template-get-failed")
 )

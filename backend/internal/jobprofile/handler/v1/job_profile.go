@@ -37,6 +37,7 @@ func NewJobProfileHandler(
 	g.POST("/parse", web.BindHandler(h.Parse))                         // 新增解析接口
 	g.POST("/polish-prompt", web.BindHandler(h.PolishPrompt))          // AI 润色接口
 	g.POST("/generate-by-prompt", web.BindHandler(h.GenerateByPrompt)) // AI 生成接口
+	g.POST("/:id/duplicate", web.BindHandler(h.Duplicate))             // 复制岗位接口
 
 	skillGroup := w.Group("/api/v1/job-skills/meta")
 	skillGroup.Use(auth.UserAuth())
@@ -198,6 +199,44 @@ func (h *JobProfileHandler) GenerateByPrompt(c *web.Context, req domain.Generate
 	}
 
 	return c.Success(result)
+}
+
+// Duplicate 复制岗位画像
+//
+//	@Tags			JobProfile
+//	@Summary		复制岗位画像
+//	@Description	基于现有岗位创建新岗位，新岗位包含原岗位的所有信息（基本信息、职责、技能、学历要求、经验要求、行业要求）。新岗位状态默认为草稿，创建者为当前用户
+//	@ID				duplicate-job-profile
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string							true	"源岗位ID"
+//	@Param			request	body		domain.DuplicateJobProfileReq	true	"复制请求（可选的名称和部门ID）"
+//	@Success		200		{object}	web.Resp{data=domain.JobProfileDetail}
+//	@Router			/api/v1/job-profiles/{id}/duplicate [post]
+func (h *JobProfileHandler) Duplicate(c *web.Context, req domain.DuplicateJobProfileReq) error {
+	// 从路径参数获取源岗位ID
+	sourceJobID := c.Param("id")
+	if sourceJobID == "" {
+		return errcode.ErrJobProfileRequired
+	}
+
+	// 设置源岗位ID
+	req.SourceJobID = sourceJobID
+
+	// 获取当前用户
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission.WithData("message", "user not found")
+	}
+
+	// 调用 usecase.Duplicate，传递当前用户ID
+	profile, err := h.usecase.Duplicate(c.Request().Context(), &req, &user.ID)
+	if err != nil {
+		h.logger.Error("failed to duplicate job profile", "error", err, "source_job_id", sourceJobID)
+		return err
+	}
+
+	return c.Success(profile)
 }
 
 // Search 搜索岗位画像
