@@ -48,6 +48,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/weighttemplate"
 )
 
 // The Query interface represents an operation that queries a graph.
@@ -1159,6 +1160,33 @@ func (f TraverseUserLoginHistory) Traverse(ctx context.Context, q db.Query) erro
 	return fmt.Errorf("unexpected query type %T. expect *db.UserLoginHistoryQuery", q)
 }
 
+// The WeightTemplateFunc type is an adapter to allow the use of ordinary function as a Querier.
+type WeightTemplateFunc func(context.Context, *db.WeightTemplateQuery) (db.Value, error)
+
+// Query calls f(ctx, q).
+func (f WeightTemplateFunc) Query(ctx context.Context, q db.Query) (db.Value, error) {
+	if q, ok := q.(*db.WeightTemplateQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *db.WeightTemplateQuery", q)
+}
+
+// The TraverseWeightTemplate type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseWeightTemplate func(context.Context, *db.WeightTemplateQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseWeightTemplate) Intercept(next db.Querier) db.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseWeightTemplate) Traverse(ctx context.Context, q db.Query) error {
+	if q, ok := q.(*db.WeightTemplateQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *db.WeightTemplateQuery", q)
+}
+
 // NewQuery returns the generic Query interface for the given typed query.
 func NewQuery(q db.Query) (Query, error) {
 	switch q := q.(type) {
@@ -1240,6 +1268,8 @@ func NewQuery(q db.Query) (Query, error) {
 		return &query[*db.UserIdentityQuery, predicate.UserIdentity, useridentity.OrderOption]{typ: db.TypeUserIdentity, tq: q}, nil
 	case *db.UserLoginHistoryQuery:
 		return &query[*db.UserLoginHistoryQuery, predicate.UserLoginHistory, userloginhistory.OrderOption]{typ: db.TypeUserLoginHistory, tq: q}, nil
+	case *db.WeightTemplateQuery:
+		return &query[*db.WeightTemplateQuery, predicate.WeightTemplate, weighttemplate.OrderOption]{typ: db.TypeWeightTemplate, tq: q}, nil
 	default:
 		return nil, fmt.Errorf("unknown query type %T", q)
 	}

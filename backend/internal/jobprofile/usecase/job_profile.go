@@ -263,13 +263,13 @@ func (u *JobProfileUsecase) Duplicate(ctx context.Context, req *domain.Duplicate
 	draftStatus := "draft"
 	createReq := &domain.CreateJobProfileReq{
 		DepartmentID: sourceProfile.DepartmentID,
-		WorkType:      sourceProfile.WorkType,
-		Location:      sourceProfile.Location,
-		SalaryMin:     sourceProfile.SalaryMin,
-		SalaryMax:     sourceProfile.SalaryMax,
-		Description:   sourceProfile.Description,
-		Status:        &draftStatus, // 新岗位默认为草稿状态
-		CreatedBy:     createdBy,    // 设置创建者
+		WorkType:     sourceProfile.WorkType,
+		Location:     sourceProfile.Location,
+		SalaryMin:    sourceProfile.SalaryMin,
+		SalaryMax:    sourceProfile.SalaryMax,
+		Description:  sourceProfile.Description,
+		Status:       &draftStatus, // 新岗位默认为草稿状态
+		CreatedBy:    createdBy,    // 设置创建者
 	}
 
 	// 处理岗位名称
@@ -327,8 +327,8 @@ func (u *JobProfileUsecase) Duplicate(ctx context.Context, req *domain.Duplicate
 		for _, exp := range sourceProfile.ExperienceRequirements {
 			createReq.ExperienceRequirements = append(createReq.ExperienceRequirements, &domain.JobExperienceRequirementInput{
 				ExperienceType: exp.ExperienceType,
-				MinYears:      exp.MinYears,
-				IdealYears:    exp.IdealYears,
+				MinYears:       exp.MinYears,
+				IdealYears:     exp.IdealYears,
 			})
 		}
 	}

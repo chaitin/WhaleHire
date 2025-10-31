@@ -46,6 +46,13 @@ func NewScreeningHandler(
 	group.GET("/results", web.BindHandler(handler.ListResults, web.WithPage()))
 	group.POST("/weights/preview", web.BindHandler(handler.PreviewWeights))
 
+	// Weight template routes
+	group.POST("/weights/templates", web.BindHandler(handler.CreateWeightTemplate))
+	group.GET("/weights/templates", web.BindHandler(handler.ListWeightTemplates, web.WithPage()))
+	group.GET("/weights/templates/:id", web.BaseHandler(handler.GetWeightTemplate))
+	group.PUT("/weights/templates/:id", web.BindHandler(handler.UpdateWeightTemplate))
+	group.DELETE("/weights/templates/:id", web.BaseHandler(handler.DeleteWeightTemplate))
+
 	return handler
 }
 
@@ -438,4 +445,170 @@ func parseUUIDParam(value string) (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("参数不能为空")
 	}
 	return uuid.Parse(value)
+}
+
+// CreateWeightTemplate 创建权重模板
+//
+//	@Tags			Screening
+//	@Summary		创建权重模板
+//	@Description	创建权重配置模板，支持保存常用权重配置以便复用
+//	@ID				create-weight-template
+//	@Accept			json
+//	@Produce		json
+//	@Param			param	body		domain.CreateWeightTemplateReq	true	"创建权重模板参数"
+//	@Success		200		{object}	web.Resp{data=domain.WeightTemplateResp}
+//	@Router			/api/v1/screening/weights/templates [post]
+func (h *ScreeningHandler) CreateWeightTemplate(c *web.Context, req domain.CreateWeightTemplateReq) error {
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission
+	}
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "当前用户ID格式不正确")
+	}
+
+	resp, err := h.usecase.CreateWeightTemplate(c.Request().Context(), &req, userID)
+	if err != nil {
+		h.logger.Error("创建权重模板失败", slog.Any("err", err), slog.String("user_id", user.ID))
+		return errcode.ErrWeightTemplateCreateFailed.WithData("message", err.Error())
+	}
+	return c.Success(resp)
+}
+
+// GetWeightTemplate 获取权重模板详情
+//
+//	@Tags			Screening
+//	@Summary		获取权重模板详情
+//	@Description	根据模板ID获取权重模板详情信息
+//	@ID				get-weight-template
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"模板ID"
+//	@Success		200	{object}	web.Resp{data=domain.WeightTemplateResp}
+//	@Router			/api/v1/screening/weights/templates/{id} [get]
+func (h *ScreeningHandler) GetWeightTemplate(c *web.Context) error {
+	templateID, err := parseUUIDParam(c.Param("id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "模板ID格式不正确")
+	}
+
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission
+	}
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "当前用户ID格式不正确")
+	}
+
+	resp, err := h.usecase.GetWeightTemplate(c.Request().Context(), templateID, userID)
+	if err != nil {
+		h.logger.Error("获取权重模板详情失败", slog.Any("err", err), slog.Any("template_id", templateID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// ListWeightTemplates 查询权重模板列表
+//
+//	@Tags			Screening
+//	@Summary		查询权重模板列表
+//	@Description	分页查询权重模板列表，支持按名称模糊搜索
+//	@ID				list-weight-templates
+//	@Accept			json
+//	@Produce		json
+//	@Param			page		query		web.Pagination	true	"分页参数"
+//	@Param			name		query		string			false	"模板名称（模糊匹配）"
+//	@Success		200			{object}	web.Resp{data=domain.ListWeightTemplatesResp}
+//	@Router			/api/v1/screening/weights/templates [get]
+func (h *ScreeningHandler) ListWeightTemplates(c *web.Context, req domain.ListWeightTemplatesReq) error {
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission
+	}
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "当前用户ID格式不正确")
+	}
+
+	// 设置分页参数
+	req.Page = c.Page().Page
+	req.Size = c.Page().Size
+
+	resp, err := h.usecase.ListWeightTemplates(c.Request().Context(), &req, userID)
+	if err != nil {
+		h.logger.Error("查询权重模板列表失败", slog.Any("err", err), slog.String("user_id", user.ID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// UpdateWeightTemplate 更新权重模板
+//
+//	@Tags			Screening
+//	@Summary		更新权重模板
+//	@Description	更新权重模板信息，仅创建者可以修改
+//	@ID				update-weight-template
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string							true	"模板ID"
+//	@Param			param	body		domain.UpdateWeightTemplateReq	true	"更新权重模板参数"
+//	@Success		200		{object}	web.Resp{data=domain.WeightTemplateResp}
+//	@Router			/api/v1/screening/weights/templates/{id} [put]
+func (h *ScreeningHandler) UpdateWeightTemplate(c *web.Context, req domain.UpdateWeightTemplateReq) error {
+	templateID, err := parseUUIDParam(c.Param("id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "模板ID格式不正确")
+	}
+
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission
+	}
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "当前用户ID格式不正确")
+	}
+
+	resp, err := h.usecase.UpdateWeightTemplate(c.Request().Context(), templateID, &req, userID)
+	if err != nil {
+		h.logger.Error("更新权重模板失败", slog.Any("err", err), slog.Any("template_id", templateID), slog.String("user_id", user.ID))
+		return err
+	}
+	return c.Success(resp)
+}
+
+// DeleteWeightTemplate 删除权重模板
+//
+//	@Tags			Screening
+//	@Summary		删除权重模板
+//	@Description	删除权重模板（软删除），仅创建者可以删除
+//	@ID				delete-weight-template
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"模板ID"
+//	@Success		200	{object}	web.Resp
+//	@Router			/api/v1/screening/weights/templates/{id} [delete]
+func (h *ScreeningHandler) DeleteWeightTemplate(c *web.Context) error {
+	templateID, err := parseUUIDParam(c.Param("id"))
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "模板ID格式不正确")
+	}
+
+	user := middleware.GetUser(c)
+	if user == nil {
+		return errcode.ErrPermission
+	}
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		return errcode.ErrInvalidParam.WithData("message", "当前用户ID格式不正确")
+	}
+
+	err = h.usecase.DeleteWeightTemplate(c.Request().Context(), templateID, userID)
+	if err != nil {
+		h.logger.Error("删除权重模板失败", slog.Any("err", err), slog.Any("template_id", templateID), slog.String("user_id", user.ID))
+		return err
+	}
+	return c.Success(nil)
 }

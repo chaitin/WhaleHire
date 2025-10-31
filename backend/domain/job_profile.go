@@ -514,7 +514,7 @@ type GenerateJobProfileResp struct {
 // DuplicateJobProfileReq 复制岗位画像请求
 // @Description 基于现有岗位创建新岗位的请求参数
 type DuplicateJobProfileReq struct {
-	SourceJobID  string  `json:"source_job_id" validate:"required"`   // 源岗位ID（从路径参数获取）
-	Name         *string `json:"name,omitempty"`                     // 新岗位名称（可选，如未提供则使用原名称 + "副本"）
-	DepartmentID *string `json:"department_id,omitempty"`            // 新岗位部门ID（可选，如未提供则使用原部门）
+	SourceJobID  string  `json:"source_job_id" validate:"required"` // 源岗位ID（从路径参数获取）
+	Name         *string `json:"name,omitempty"`                    // 新岗位名称（可选，如未提供则使用原名称 + "副本"）
+	DepartmentID *string `json:"department_id,omitempty"`           // 新岗位部门ID（可选，如未提供则使用原部门）
 }

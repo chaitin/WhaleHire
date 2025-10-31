@@ -1515,6 +1515,43 @@ var (
 			},
 		},
 	}
+	// WeightTemplateColumns holds the columns for the "weight_template" table.
+	WeightTemplateColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "weights", Type: field.TypeJSON},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID},
+	}
+	// WeightTemplateTable holds the schema information for the "weight_template" table.
+	WeightTemplateTable = &schema.Table{
+		Name:       "weight_template",
+		Columns:    WeightTemplateColumns,
+		PrimaryKey: []*schema.Column{WeightTemplateColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "weight_template_users_created_weight_templates",
+				Columns:    []*schema.Column{WeightTemplateColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "weighttemplate_created_by",
+				Unique:  false,
+				Columns: []*schema.Column{WeightTemplateColumns[7]},
+			},
+			{
+				Name:    "weighttemplate_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{WeightTemplateColumns[5]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AdminsTable,
@@ -1556,6 +1593,7 @@ var (
 		UsersTable,
 		UserIdentitiesTable,
 		UserLoginHistoriesTable,
+		WeightTemplateTable,
 	}
 )
 
@@ -1714,5 +1752,9 @@ func init() {
 	UserLoginHistoriesTable.ForeignKeys[0].RefTable = UsersTable
 	UserLoginHistoriesTable.Annotation = &entsql.Annotation{
 		Table: "user_login_histories",
+	}
+	WeightTemplateTable.ForeignKeys[0].RefTable = UsersTable
+	WeightTemplateTable.Annotation = &entsql.Annotation{
+		Table: "weight_template",
 	}
 }

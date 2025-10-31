@@ -20,6 +20,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/weighttemplate"
 	"github.com/google/uuid"
 )
 
@@ -251,6 +252,21 @@ func (uc *UserCreate) AddCreatedScreeningTasks(s ...*ScreeningTask) *UserCreate 
 		ids[i] = s[i].ID
 	}
 	return uc.AddCreatedScreeningTaskIDs(ids...)
+}
+
+// AddCreatedWeightTemplateIDs adds the "created_weight_templates" edge to the WeightTemplate entity by IDs.
+func (uc *UserCreate) AddCreatedWeightTemplateIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddCreatedWeightTemplateIDs(ids...)
+	return uc
+}
+
+// AddCreatedWeightTemplates adds the "created_weight_templates" edges to the WeightTemplate entity.
+func (uc *UserCreate) AddCreatedWeightTemplates(w ...*WeightTemplate) *UserCreate {
+	ids := make([]uuid.UUID, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return uc.AddCreatedWeightTemplateIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -490,6 +506,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(screeningtask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CreatedWeightTemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CreatedWeightTemplatesTable,
+			Columns: []string{user.CreatedWeightTemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(weighttemplate.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

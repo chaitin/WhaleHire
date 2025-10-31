@@ -25,6 +25,12 @@ type ScreeningUsecase interface {
 	GetResumeProgress(ctx context.Context, req *GetResumeProgressReq) (*GetResumeProgressResp, error)
 	GetNodeRuns(ctx context.Context, req *GetNodeRunsReq) (*GetNodeRunsResp, error)
 	PreviewWeights(ctx context.Context, req *PreviewWeightsReq) (*PreviewWeightsResp, error)
+	// Weight Template methods
+	CreateWeightTemplate(ctx context.Context, req *CreateWeightTemplateReq, userID uuid.UUID) (*WeightTemplateResp, error)
+	GetWeightTemplate(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*WeightTemplateResp, error)
+	ListWeightTemplates(ctx context.Context, req *ListWeightTemplatesReq, userID uuid.UUID) (*ListWeightTemplatesResp, error)
+	UpdateWeightTemplate(ctx context.Context, id uuid.UUID, req *UpdateWeightTemplateReq, userID uuid.UUID) (*WeightTemplateResp, error)
+	DeleteWeightTemplate(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 
 // ScreeningRepo 筛选数据访问接口

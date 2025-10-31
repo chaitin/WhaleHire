@@ -110,6 +110,7 @@ var Provider = wire.NewSet(
 	fileV1.NewFileHandler,
 	screeningrepo.NewScreeningRepo,
 	screeningrepo.NewScreeningNodeRunRepo,
+	screeningrepo.NewWeightTemplateRepo,
 	screeningservice.NewMatchingService,
 	screeningservice.NewWeightPreviewService,
 	screeningusecase.NewScreeningUsecase,

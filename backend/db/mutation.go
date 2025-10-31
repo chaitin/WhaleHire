@@ -52,6 +52,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/weighttemplate"
 	"github.com/chaitin/WhaleHire/backend/ent/types"
 	"github.com/google/uuid"
 	pgvector "github.com/pgvector/pgvector-go"
@@ -105,6 +106,7 @@ const (
 	TypeUser                     = "User"
 	TypeUserIdentity             = "UserIdentity"
 	TypeUserLoginHistory         = "UserLoginHistory"
+	TypeWeightTemplate           = "WeightTemplate"
 )
 
 // AdminMutation represents an operation that mutates the Admin nodes in the graph.
@@ -40870,40 +40872,43 @@ func (m *UniversityProfileMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                             Op
-	typ                            string
-	id                             *uuid.UUID
-	deleted_at                     *time.Time
-	username                       *string
-	password                       *string
-	email                          *string
-	avatar_url                     *string
-	platform                       *consts.UserPlatform
-	status                         *consts.UserStatus
-	created_at                     *time.Time
-	updated_at                     *time.Time
-	clearedFields                  map[string]struct{}
-	login_histories                map[uuid.UUID]struct{}
-	removedlogin_histories         map[uuid.UUID]struct{}
-	clearedlogin_histories         bool
-	identities                     map[uuid.UUID]struct{}
-	removedidentities              map[uuid.UUID]struct{}
-	clearedidentities              bool
-	conversations                  map[uuid.UUID]struct{}
-	removedconversations           map[uuid.UUID]struct{}
-	clearedconversations           bool
-	resumes                        map[uuid.UUID]struct{}
-	removedresumes                 map[uuid.UUID]struct{}
-	clearedresumes                 bool
-	created_positions              map[uuid.UUID]struct{}
-	removedcreated_positions       map[uuid.UUID]struct{}
-	clearedcreated_positions       bool
-	created_screening_tasks        map[uuid.UUID]struct{}
-	removedcreated_screening_tasks map[uuid.UUID]struct{}
-	clearedcreated_screening_tasks bool
-	done                           bool
-	oldValue                       func(context.Context) (*User, error)
-	predicates                     []predicate.User
+	op                              Op
+	typ                             string
+	id                              *uuid.UUID
+	deleted_at                      *time.Time
+	username                        *string
+	password                        *string
+	email                           *string
+	avatar_url                      *string
+	platform                        *consts.UserPlatform
+	status                          *consts.UserStatus
+	created_at                      *time.Time
+	updated_at                      *time.Time
+	clearedFields                   map[string]struct{}
+	login_histories                 map[uuid.UUID]struct{}
+	removedlogin_histories          map[uuid.UUID]struct{}
+	clearedlogin_histories          bool
+	identities                      map[uuid.UUID]struct{}
+	removedidentities               map[uuid.UUID]struct{}
+	clearedidentities               bool
+	conversations                   map[uuid.UUID]struct{}
+	removedconversations            map[uuid.UUID]struct{}
+	clearedconversations            bool
+	resumes                         map[uuid.UUID]struct{}
+	removedresumes                  map[uuid.UUID]struct{}
+	clearedresumes                  bool
+	created_positions               map[uuid.UUID]struct{}
+	removedcreated_positions        map[uuid.UUID]struct{}
+	clearedcreated_positions        bool
+	created_screening_tasks         map[uuid.UUID]struct{}
+	removedcreated_screening_tasks  map[uuid.UUID]struct{}
+	clearedcreated_screening_tasks  bool
+	created_weight_templates        map[uuid.UUID]struct{}
+	removedcreated_weight_templates map[uuid.UUID]struct{}
+	clearedcreated_weight_templates bool
+	done                            bool
+	oldValue                        func(context.Context) (*User, error)
+	predicates                      []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -41723,6 +41728,60 @@ func (m *UserMutation) ResetCreatedScreeningTasks() {
 	m.removedcreated_screening_tasks = nil
 }
 
+// AddCreatedWeightTemplateIDs adds the "created_weight_templates" edge to the WeightTemplate entity by ids.
+func (m *UserMutation) AddCreatedWeightTemplateIDs(ids ...uuid.UUID) {
+	if m.created_weight_templates == nil {
+		m.created_weight_templates = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.created_weight_templates[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCreatedWeightTemplates clears the "created_weight_templates" edge to the WeightTemplate entity.
+func (m *UserMutation) ClearCreatedWeightTemplates() {
+	m.clearedcreated_weight_templates = true
+}
+
+// CreatedWeightTemplatesCleared reports if the "created_weight_templates" edge to the WeightTemplate entity was cleared.
+func (m *UserMutation) CreatedWeightTemplatesCleared() bool {
+	return m.clearedcreated_weight_templates
+}
+
+// RemoveCreatedWeightTemplateIDs removes the "created_weight_templates" edge to the WeightTemplate entity by IDs.
+func (m *UserMutation) RemoveCreatedWeightTemplateIDs(ids ...uuid.UUID) {
+	if m.removedcreated_weight_templates == nil {
+		m.removedcreated_weight_templates = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.created_weight_templates, ids[i])
+		m.removedcreated_weight_templates[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCreatedWeightTemplates returns the removed IDs of the "created_weight_templates" edge to the WeightTemplate entity.
+func (m *UserMutation) RemovedCreatedWeightTemplatesIDs() (ids []uuid.UUID) {
+	for id := range m.removedcreated_weight_templates {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CreatedWeightTemplatesIDs returns the "created_weight_templates" edge IDs in the mutation.
+func (m *UserMutation) CreatedWeightTemplatesIDs() (ids []uuid.UUID) {
+	for id := range m.created_weight_templates {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCreatedWeightTemplates resets all changes to the "created_weight_templates" edge.
+func (m *UserMutation) ResetCreatedWeightTemplates() {
+	m.created_weight_templates = nil
+	m.clearedcreated_weight_templates = false
+	m.removedcreated_weight_templates = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -42025,7 +42084,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.login_histories != nil {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -42043,6 +42102,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.created_screening_tasks != nil {
 		edges = append(edges, user.EdgeCreatedScreeningTasks)
+	}
+	if m.created_weight_templates != nil {
+		edges = append(edges, user.EdgeCreatedWeightTemplates)
 	}
 	return edges
 }
@@ -42087,13 +42149,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCreatedWeightTemplates:
+		ids := make([]ent.Value, 0, len(m.created_weight_templates))
+		for id := range m.created_weight_templates {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedlogin_histories != nil {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -42111,6 +42179,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedcreated_screening_tasks != nil {
 		edges = append(edges, user.EdgeCreatedScreeningTasks)
+	}
+	if m.removedcreated_weight_templates != nil {
+		edges = append(edges, user.EdgeCreatedWeightTemplates)
 	}
 	return edges
 }
@@ -42155,13 +42226,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCreatedWeightTemplates:
+		ids := make([]ent.Value, 0, len(m.removedcreated_weight_templates))
+		for id := range m.removedcreated_weight_templates {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.clearedlogin_histories {
 		edges = append(edges, user.EdgeLoginHistories)
 	}
@@ -42179,6 +42256,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedcreated_screening_tasks {
 		edges = append(edges, user.EdgeCreatedScreeningTasks)
+	}
+	if m.clearedcreated_weight_templates {
+		edges = append(edges, user.EdgeCreatedWeightTemplates)
 	}
 	return edges
 }
@@ -42199,6 +42279,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedcreated_positions
 	case user.EdgeCreatedScreeningTasks:
 		return m.clearedcreated_screening_tasks
+	case user.EdgeCreatedWeightTemplates:
+		return m.clearedcreated_weight_templates
 	}
 	return false
 }
@@ -42232,6 +42314,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeCreatedScreeningTasks:
 		m.ResetCreatedScreeningTasks()
+		return nil
+	case user.EdgeCreatedWeightTemplates:
+		m.ResetCreatedWeightTemplates()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)
@@ -44372,4 +44457,768 @@ func (m *UserLoginHistoryMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown UserLoginHistory edge %s", name)
+}
+
+// WeightTemplateMutation represents an operation that mutates the WeightTemplate nodes in the graph.
+type WeightTemplateMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	deleted_at     *time.Time
+	name           *string
+	description    *string
+	weights        *map[string]interface{}
+	created_at     *time.Time
+	updated_at     *time.Time
+	clearedFields  map[string]struct{}
+	creator        *uuid.UUID
+	clearedcreator bool
+	done           bool
+	oldValue       func(context.Context) (*WeightTemplate, error)
+	predicates     []predicate.WeightTemplate
+}
+
+var _ ent.Mutation = (*WeightTemplateMutation)(nil)
+
+// weighttemplateOption allows management of the mutation configuration using functional options.
+type weighttemplateOption func(*WeightTemplateMutation)
+
+// newWeightTemplateMutation creates new mutation for the WeightTemplate entity.
+func newWeightTemplateMutation(c config, op Op, opts ...weighttemplateOption) *WeightTemplateMutation {
+	m := &WeightTemplateMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeWeightTemplate,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withWeightTemplateID sets the ID field of the mutation.
+func withWeightTemplateID(id uuid.UUID) weighttemplateOption {
+	return func(m *WeightTemplateMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *WeightTemplate
+		)
+		m.oldValue = func(ctx context.Context) (*WeightTemplate, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().WeightTemplate.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withWeightTemplate sets the old WeightTemplate of the mutation.
+func withWeightTemplate(node *WeightTemplate) weighttemplateOption {
+	return func(m *WeightTemplateMutation) {
+		m.oldValue = func(context.Context) (*WeightTemplate, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m WeightTemplateMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m WeightTemplateMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("db: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of WeightTemplate entities.
+func (m *WeightTemplateMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *WeightTemplateMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *WeightTemplateMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().WeightTemplate.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *WeightTemplateMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *WeightTemplateMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the WeightTemplate entity.
+// If the WeightTemplate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WeightTemplateMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *WeightTemplateMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[weighttemplate.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *WeightTemplateMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[weighttemplate.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *WeightTemplateMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, weighttemplate.FieldDeletedAt)
+}
+
+// SetName sets the "name" field.
+func (m *WeightTemplateMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *WeightTemplateMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the WeightTemplate entity.
+// If the WeightTemplate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WeightTemplateMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *WeightTemplateMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *WeightTemplateMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *WeightTemplateMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the WeightTemplate entity.
+// If the WeightTemplate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WeightTemplateMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *WeightTemplateMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[weighttemplate.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *WeightTemplateMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[weighttemplate.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *WeightTemplateMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, weighttemplate.FieldDescription)
+}
+
+// SetWeights sets the "weights" field.
+func (m *WeightTemplateMutation) SetWeights(value map[string]interface{}) {
+	m.weights = &value
+}
+
+// Weights returns the value of the "weights" field in the mutation.
+func (m *WeightTemplateMutation) Weights() (r map[string]interface{}, exists bool) {
+	v := m.weights
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWeights returns the old "weights" field's value of the WeightTemplate entity.
+// If the WeightTemplate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WeightTemplateMutation) OldWeights(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWeights is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWeights requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWeights: %w", err)
+	}
+	return oldValue.Weights, nil
+}
+
+// ResetWeights resets all changes to the "weights" field.
+func (m *WeightTemplateMutation) ResetWeights() {
+	m.weights = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *WeightTemplateMutation) SetCreatedBy(u uuid.UUID) {
+	m.creator = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *WeightTemplateMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the WeightTemplate entity.
+// If the WeightTemplate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WeightTemplateMutation) OldCreatedBy(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *WeightTemplateMutation) ResetCreatedBy() {
+	m.creator = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *WeightTemplateMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *WeightTemplateMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the WeightTemplate entity.
+// If the WeightTemplate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WeightTemplateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *WeightTemplateMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *WeightTemplateMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *WeightTemplateMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the WeightTemplate entity.
+// If the WeightTemplate object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WeightTemplateMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *WeightTemplateMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetCreatorID sets the "creator" edge to the User entity by id.
+func (m *WeightTemplateMutation) SetCreatorID(id uuid.UUID) {
+	m.creator = &id
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (m *WeightTemplateMutation) ClearCreator() {
+	m.clearedcreator = true
+	m.clearedFields[weighttemplate.FieldCreatedBy] = struct{}{}
+}
+
+// CreatorCleared reports if the "creator" edge to the User entity was cleared.
+func (m *WeightTemplateMutation) CreatorCleared() bool {
+	return m.clearedcreator
+}
+
+// CreatorID returns the "creator" edge ID in the mutation.
+func (m *WeightTemplateMutation) CreatorID() (id uuid.UUID, exists bool) {
+	if m.creator != nil {
+		return *m.creator, true
+	}
+	return
+}
+
+// CreatorIDs returns the "creator" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CreatorID instead. It exists only for internal usage by the builders.
+func (m *WeightTemplateMutation) CreatorIDs() (ids []uuid.UUID) {
+	if id := m.creator; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCreator resets all changes to the "creator" edge.
+func (m *WeightTemplateMutation) ResetCreator() {
+	m.creator = nil
+	m.clearedcreator = false
+}
+
+// Where appends a list predicates to the WeightTemplateMutation builder.
+func (m *WeightTemplateMutation) Where(ps ...predicate.WeightTemplate) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the WeightTemplateMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *WeightTemplateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.WeightTemplate, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *WeightTemplateMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *WeightTemplateMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (WeightTemplate).
+func (m *WeightTemplateMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *WeightTemplateMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.deleted_at != nil {
+		fields = append(fields, weighttemplate.FieldDeletedAt)
+	}
+	if m.name != nil {
+		fields = append(fields, weighttemplate.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, weighttemplate.FieldDescription)
+	}
+	if m.weights != nil {
+		fields = append(fields, weighttemplate.FieldWeights)
+	}
+	if m.creator != nil {
+		fields = append(fields, weighttemplate.FieldCreatedBy)
+	}
+	if m.created_at != nil {
+		fields = append(fields, weighttemplate.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, weighttemplate.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *WeightTemplateMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case weighttemplate.FieldDeletedAt:
+		return m.DeletedAt()
+	case weighttemplate.FieldName:
+		return m.Name()
+	case weighttemplate.FieldDescription:
+		return m.Description()
+	case weighttemplate.FieldWeights:
+		return m.Weights()
+	case weighttemplate.FieldCreatedBy:
+		return m.CreatedBy()
+	case weighttemplate.FieldCreatedAt:
+		return m.CreatedAt()
+	case weighttemplate.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *WeightTemplateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case weighttemplate.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case weighttemplate.FieldName:
+		return m.OldName(ctx)
+	case weighttemplate.FieldDescription:
+		return m.OldDescription(ctx)
+	case weighttemplate.FieldWeights:
+		return m.OldWeights(ctx)
+	case weighttemplate.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case weighttemplate.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case weighttemplate.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown WeightTemplate field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *WeightTemplateMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case weighttemplate.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case weighttemplate.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case weighttemplate.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case weighttemplate.FieldWeights:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWeights(v)
+		return nil
+	case weighttemplate.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case weighttemplate.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case weighttemplate.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown WeightTemplate field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *WeightTemplateMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *WeightTemplateMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *WeightTemplateMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown WeightTemplate numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *WeightTemplateMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(weighttemplate.FieldDeletedAt) {
+		fields = append(fields, weighttemplate.FieldDeletedAt)
+	}
+	if m.FieldCleared(weighttemplate.FieldDescription) {
+		fields = append(fields, weighttemplate.FieldDescription)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *WeightTemplateMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *WeightTemplateMutation) ClearField(name string) error {
+	switch name {
+	case weighttemplate.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case weighttemplate.FieldDescription:
+		m.ClearDescription()
+		return nil
+	}
+	return fmt.Errorf("unknown WeightTemplate nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *WeightTemplateMutation) ResetField(name string) error {
+	switch name {
+	case weighttemplate.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case weighttemplate.FieldName:
+		m.ResetName()
+		return nil
+	case weighttemplate.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case weighttemplate.FieldWeights:
+		m.ResetWeights()
+		return nil
+	case weighttemplate.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case weighttemplate.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case weighttemplate.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown WeightTemplate field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *WeightTemplateMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.creator != nil {
+		edges = append(edges, weighttemplate.EdgeCreator)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *WeightTemplateMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case weighttemplate.EdgeCreator:
+		if id := m.creator; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *WeightTemplateMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *WeightTemplateMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *WeightTemplateMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedcreator {
+		edges = append(edges, weighttemplate.EdgeCreator)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *WeightTemplateMutation) EdgeCleared(name string) bool {
+	switch name {
+	case weighttemplate.EdgeCreator:
+		return m.clearedcreator
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *WeightTemplateMutation) ClearEdge(name string) error {
+	switch name {
+	case weighttemplate.EdgeCreator:
+		m.ClearCreator()
+		return nil
+	}
+	return fmt.Errorf("unknown WeightTemplate unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *WeightTemplateMutation) ResetEdge(name string) error {
+	switch name {
+	case weighttemplate.EdgeCreator:
+		m.ResetCreator()
+		return nil
+	}
+	return fmt.Errorf("unknown WeightTemplate edge %s", name)
 }

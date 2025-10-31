@@ -57,9 +57,11 @@ type UserEdges struct {
 	CreatedPositions []*JobPosition `json:"created_positions,omitempty"`
 	// CreatedScreeningTasks holds the value of the created_screening_tasks edge.
 	CreatedScreeningTasks []*ScreeningTask `json:"created_screening_tasks,omitempty"`
+	// CreatedWeightTemplates holds the value of the created_weight_templates edge.
+	CreatedWeightTemplates []*WeightTemplate `json:"created_weight_templates,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // LoginHistoriesOrErr returns the LoginHistories value or an error if the edge
@@ -114,6 +116,15 @@ func (e UserEdges) CreatedScreeningTasksOrErr() ([]*ScreeningTask, error) {
 		return e.CreatedScreeningTasks, nil
 	}
 	return nil, &NotLoadedError{edge: "created_screening_tasks"}
+}
+
+// CreatedWeightTemplatesOrErr returns the CreatedWeightTemplates value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CreatedWeightTemplatesOrErr() ([]*WeightTemplate, error) {
+	if e.loadedTypes[6] {
+		return e.CreatedWeightTemplates, nil
+	}
+	return nil, &NotLoadedError{edge: "created_weight_templates"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -243,6 +254,11 @@ func (u *User) QueryCreatedPositions() *JobPositionQuery {
 // QueryCreatedScreeningTasks queries the "created_screening_tasks" edge of the User entity.
 func (u *User) QueryCreatedScreeningTasks() *ScreeningTaskQuery {
 	return NewUserClient(u.config).QueryCreatedScreeningTasks(u)
+}
+
+// QueryCreatedWeightTemplates queries the "created_weight_templates" edge of the User entity.
+func (u *User) QueryCreatedWeightTemplates() *WeightTemplateQuery {
+	return NewUserClient(u.config).QueryCreatedWeightTemplates(u)
 }
 
 // Update returns a builder for updating this User.

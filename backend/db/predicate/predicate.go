@@ -122,3 +122,6 @@ type UserIdentity func(*sql.Selector)
 
 // UserLoginHistory is the predicate function for userloginhistory builders.
 type UserLoginHistory func(*sql.Selector)
+
+// WeightTemplate is the predicate function for weighttemplate builders.
+type WeightTemplate func(*sql.Selector)

@@ -44,6 +44,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/weighttemplate"
 	"github.com/chaitin/WhaleHire/backend/ent/schema"
 	"github.com/google/uuid"
 )
@@ -1093,6 +1094,35 @@ func init() {
 	userloginhistoryDescCreatedAt := userloginhistoryFields[13].Descriptor()
 	// userloginhistory.DefaultCreatedAt holds the default value on creation for the created_at field.
 	userloginhistory.DefaultCreatedAt = userloginhistoryDescCreatedAt.Default.(func() time.Time)
+	weighttemplateMixin := schema.WeightTemplate{}.Mixin()
+	weighttemplateMixinHooks0 := weighttemplateMixin[0].Hooks()
+	weighttemplate.Hooks[0] = weighttemplateMixinHooks0[0]
+	weighttemplateMixinInters0 := weighttemplateMixin[0].Interceptors()
+	weighttemplate.Interceptors[0] = weighttemplateMixinInters0[0]
+	weighttemplateFields := schema.WeightTemplate{}.Fields()
+	_ = weighttemplateFields
+	// weighttemplateDescName is the schema descriptor for name field.
+	weighttemplateDescName := weighttemplateFields[1].Descriptor()
+	// weighttemplate.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	weighttemplate.NameValidator = weighttemplateDescName.Validators[0].(func(string) error)
+	// weighttemplateDescDescription is the schema descriptor for description field.
+	weighttemplateDescDescription := weighttemplateFields[2].Descriptor()
+	// weighttemplate.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	weighttemplate.DescriptionValidator = weighttemplateDescDescription.Validators[0].(func(string) error)
+	// weighttemplateDescCreatedAt is the schema descriptor for created_at field.
+	weighttemplateDescCreatedAt := weighttemplateFields[5].Descriptor()
+	// weighttemplate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	weighttemplate.DefaultCreatedAt = weighttemplateDescCreatedAt.Default.(func() time.Time)
+	// weighttemplateDescUpdatedAt is the schema descriptor for updated_at field.
+	weighttemplateDescUpdatedAt := weighttemplateFields[6].Descriptor()
+	// weighttemplate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	weighttemplate.DefaultUpdatedAt = weighttemplateDescUpdatedAt.Default.(func() time.Time)
+	// weighttemplate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	weighttemplate.UpdateDefaultUpdatedAt = weighttemplateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// weighttemplateDescID is the schema descriptor for id field.
+	weighttemplateDescID := weighttemplateFields[0].Descriptor()
+	// weighttemplate.DefaultID holds the default value on creation for the id field.
+	weighttemplate.DefaultID = weighttemplateDescID.Default.(func() uuid.UUID)
 }
 
 const (

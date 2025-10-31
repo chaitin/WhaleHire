@@ -51,6 +51,7 @@ import (
 	"github.com/chaitin/WhaleHire/backend/db/user"
 	"github.com/chaitin/WhaleHire/backend/db/useridentity"
 	"github.com/chaitin/WhaleHire/backend/db/userloginhistory"
+	"github.com/chaitin/WhaleHire/backend/db/weighttemplate"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -150,6 +151,7 @@ func checkColumn(table, column string) error {
 			user.Table:                     user.ValidColumn,
 			useridentity.Table:             useridentity.ValidColumn,
 			userloginhistory.Table:         userloginhistory.ValidColumn,
+			weighttemplate.Table:           weighttemplate.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

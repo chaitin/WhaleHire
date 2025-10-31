@@ -92,6 +92,8 @@ type Tx struct {
 	UserIdentity *UserIdentityClient
 	// UserLoginHistory is the client for interacting with the UserLoginHistory builders.
 	UserLoginHistory *UserLoginHistoryClient
+	// WeightTemplate is the client for interacting with the WeightTemplate builders.
+	WeightTemplate *WeightTemplateClient
 
 	// lazily loaded.
 	client     *Client
@@ -262,6 +264,7 @@ func (tx *Tx) init() {
 	tx.User = NewUserClient(tx.config)
 	tx.UserIdentity = NewUserIdentityClient(tx.config)
 	tx.UserLoginHistory = NewUserLoginHistoryClient(tx.config)
+	tx.WeightTemplate = NewWeightTemplateClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
