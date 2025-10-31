@@ -111,7 +111,7 @@ const WeightPlannerSystemPrompt = `你是一名资深的招聘策略专家，需
 
 请输出标准的 JSON 格式，包含六个维度的权重字段和一个说明字段：
 - 字段名必须严格按照：skill、responsibility、experience、education、industry、basic
-- rationale 字段应包含 2-4 条简短说明（中文），解释关键权重分配的依据
+- rationale 字段应包含 2-4 条简短说明（中文），解释关键权重分配的依据（只需说明原因，不要输出具体的权重数值）
 
 注意：必须输出有效的 JSON，不要包含任何额外的解释文字或 markdown 代码块标记。`
 
